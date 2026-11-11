@@ -34,8 +34,8 @@ struct SidebarView: View {
             .accessibilityIdentifier("openFinder")
         List(selection: Binding(get: { Optional(workspace.section) }, set: { if let value = $0 { workspace.section = value } })) {
             Section {
-                item(.today, "Today", count: store.matching(TaskQuery(scope: .today)).filter { TaskKind.mayComplete($0) && !$0.completed }.count, incomplete: store.productiveReading.incomplete, dropDay: today)
-                item(.inbox, "Inbox", count: store.inboxProductiveReading.work.filter(InboxReviewRequest.eligible).count, incomplete: store.inboxProductiveReading.incomplete, dropProject: "")
+                item(.today, "Today", count: store.matching(TaskQuery(scope: .today), focus: store.focusScope?.hideOtherBadges ?? true).filter { TaskKind.mayComplete($0) && !$0.completed }.count, incomplete: store.productiveReading.incomplete, dropDay: today)
+                item(.inbox, "Inbox", count: store.focusScope?.hideOtherBadges == true ? 0 : store.inboxProductiveReading.work.filter(InboxReviewRequest.eligible).count, incomplete: store.inboxProductiveReading.incomplete, dropProject: "")
                 item(.upcoming, "Upcoming", count: nil, dropDay: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!))
                 item(.calendar, "Calendar", count: nil)
             }
@@ -57,7 +57,7 @@ struct SidebarView: View {
                 }
             }
             Section(isExpanded: $projectsExpanded) {
-                ForEach(projectOrder.ordering.visible) { item in
+                ForEach(store.focusScope.map { scope in projectOrder.ordering.visible.filter { scope.allows(project: $0.project.id) } } ?? projectOrder.ordering.visible) { item in
                     let project = item.project
                     ProjectDropRow(project: project) {
                         Label {
@@ -78,9 +78,10 @@ struct SidebarView: View {
                     }
                     .accessibilityLabel(project.name).accessibilityIdentifier("project-" + project.id)
                 }
-                .onMove { source, destination in
+                .onMove(perform: store.focusScope != nil ? nil : { source, destination in
+                    // Reordering waits for the Focus filter to end, so hidden projects keep their place.
                     workspace.run("Reorder Projects") { store.moveProjectOrder(projectOrder, from: source, to: destination) }
-                }
+                })
                 Button { newProject() } label: { Label("New Project", systemImage: "plus").foregroundStyle(.secondary) }
                     .buttonStyle(.plain).accessibilityIdentifier("newProject")
             Button("Archived Projects", systemImage: "archivebox") { archivePresented = true }.accessibilityIdentifier("openArchivedProjects")
