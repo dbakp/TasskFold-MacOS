@@ -2586,6 +2586,21 @@ enum WidgetProjection {
                 taskState: task.map { $0.completed ? "completed" : "open" } ?? "unavailable",
                 title: task.map { PinnedNotes.excerpt($0.title, characters: 160, bytes: 1000).0 })
         }
+        // Pomodoro: a device-local overlay the app attaches to the record it hands the widget projection. It never
+        // comes from, or goes to, the synced row.
+        if let overlay = PomodoroCycle.widgetOverlay(row?["pomodoro"]) {
+            let task = tasks.first { $0.id.lowercased() == overlay.taskID }
+            let title = task.map { PinnedNotes.excerpt($0.title, characters: 160, bytes: 1000).0 }
+            let state = task.map { $0.completed ? "completed" : "open" } ?? "unavailable"
+            if overlay.phase != "work", let breakClock = overlay.clock {
+                clock = FocusWidgetClock(sessionID: overlay.breakID, taskID: overlay.taskID, durationSeconds: breakClock.durationSeconds,
+                    elapsedMilliseconds: breakClock.elapsedMilliseconds, startedAt: breakClock.startedAt, changedAt: breakClock.changedAt,
+                    runningSince: breakClock.runningSince, status: breakClock.isRunning ? "running" : "paused", taskState: state,
+                    title: title, phase: overlay.phase, round: overlay.round, rounds: overlay.rounds)
+            } else if clock?.sessionID == overlay.sessionID {
+                clock?.phase = overlay.phase; clock?.round = overlay.round; clock?.rounds = overlay.rounds
+            }
+        }
         return (try? TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(FocusWidgetSnapshot(account: account, clock: clock, conflict: conflict)))) ?? .null
     }
 

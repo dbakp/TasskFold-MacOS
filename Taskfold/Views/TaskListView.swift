@@ -264,6 +264,7 @@ struct TaskListView: View {
             HStack(spacing: DS.Space.s) {
                 if scope == .today { DayPlanTodayPrompt(plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
                 if scope == .today, let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
+                if scope == .today, let habits = store.habitTodaySummary { HabitsChip(summary: habits) { workspace.section = .habits } }
                 Spacer(minLength: 0)
                 HStack(spacing: DS.Space.s) {
                     Image(systemName: "magnifyingglass").foregroundStyle(DS.Palette.textSecondary)
@@ -681,6 +682,10 @@ struct TaskListView: View {
             if store.canMoveToEvening(targets) { Button("This Evening", systemImage: "moon.fill") { workspace.moveToEvening(targets) }.accessibilityIdentifier("moveToEvening") }
             if tasks.allSatisfy({ store.isInEvening($0) }) { Button("Back to Today", systemImage: "sun.max") { workspace.removeFromEvening(targets) }.accessibilityIdentifier("backToToday") }
             if store.canMoveToSomeday(targets) { Button("Move to Someday", systemImage: "moon.zzz") { workspace.moveToSomeday(targets) }.accessibilityIdentifier("moveToSomeday") }
+            if tasks.count == 1, let task = tasks.first, store.isHabit(task) || store.canTrackHabit(task) {
+                let tracked = store.isHabit(task)
+                Button(tracked ? "Stop Tracking Habit" : "Track as Habit", systemImage: "circle.hexagongrid") { workspace.run(tracked ? "Stop Tracking Habit" : "Track as Habit") { _ = store.setHabit(task, tracked: !tracked) } }.accessibilityIdentifier("trackHabit")
+            }
             Button("Edit Deadlines…", systemImage: "flag.checkered") { workspace.editDeadlines(targets) }.accessibilityIdentifier("bulkDeadlines")
             Button("Edit Estimates…", systemImage: "hourglass") { workspace.editEstimates(targets) }.accessibilityIdentifier("bulkEstimates")
             if store.hasSharedTaskSelection(targets) {

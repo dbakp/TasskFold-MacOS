@@ -2565,6 +2565,8 @@ final class Store {
         return InboxReviewRequest(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), tasks: tasks, batch: batch, order: order, excluding: excluding, reading: inboxProductiveReading)
     }
 
+    /// Pomodoro phase changes are device-local, so the widget projection is refreshed explicitly.
+    func refreshFocusWidgetForPomodoro() { publishWidgetSnapshot(scheduleCapacityRefresh: false) }
     static let appGroup = "group.com.dbakp.taskfold"
     /// The private cache is saved before its actionable projection is published.
     private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true, background: Bool = false) {
@@ -2592,7 +2594,7 @@ final class Store {
         }
         input.pendingSync = pendingCount; input.workingHours = workingHours
         input.calendarWindow = current; input.calendarFallback = fallback
-        input.notePins = rows("view_orders"); input.focusRecord = focusRecord
+        input.notePins = rows("view_orders"); input.focusRecord = widgetFocusRecord
         input.focusConflict = focusSyncConflict != nil; input.focusReadable = workspaceCacheReadable
         input.pulseActivity = rows(TaskActivity.table); input.pulseEpoch = rows(TaskActivity.epochTable)
         input.pulseChildren = childActivityHistory; input.datePreferences = datePhrasePreferences

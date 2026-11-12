@@ -12,10 +12,25 @@ public struct FocusWidgetClock: Codable, Equatable, Sendable {
     public var status: String
     public var taskState: String
     public var title: String?
-    public init(sessionID: String, taskID: String, durationSeconds: Int, elapsedMilliseconds: Int64, startedAt: Int64, changedAt: Int64, runningSince: Int64?, status: String, taskState: String, title: String?) {
+    /// Pomodoro, device-local and optional: "work", "break" or "longBreak", with the work round "2 of 4".
+    /// Absent for an ordinary session and ignored by older widgets.
+    public var phase: String?
+    public var round: Int?
+    public var rounds: Int?
+    public init(sessionID: String, taskID: String, durationSeconds: Int, elapsedMilliseconds: Int64, startedAt: Int64, changedAt: Int64, runningSince: Int64?, status: String, taskState: String, title: String?, phase: String? = nil, round: Int? = nil, rounds: Int? = nil) {
         self.sessionID = sessionID; self.taskID = taskID; self.durationSeconds = durationSeconds
         self.elapsedMilliseconds = elapsedMilliseconds; self.startedAt = startedAt; self.changedAt = changedAt
         self.runningSince = runningSince; self.status = status; self.taskState = taskState; self.title = title
+        self.phase = phase; self.round = round; self.rounds = rounds
+    }
+    /// "Work · 2 of 4", "Break" or "Long break"; nil for an ordinary session or an unreadable phase.
+    public var phaseLabel: String? {
+        switch phase {
+        case "work": if let round, let rounds, rounds >= 2, (1...rounds).contains(round) { return "Work · \(round) of \(rounds)" } else { return "Work" }
+        case "break": return "Break"
+        case "longBreak": return "Long break"
+        default: return nil
+        }
     }
     public var valid: Bool {
         guard UUID(uuidString: sessionID) != nil, UUID(uuidString: taskID) != nil,

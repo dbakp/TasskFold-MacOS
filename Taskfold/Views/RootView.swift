@@ -273,6 +273,28 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if arguments.contains("--capture-habits") {
+                    // Habits hosted alone, like the other captures: add --habits-fixture and optionally --habit-detail.
+                    workspace.section = .habits
+                    let size = NSSize(width: 760, height: arguments.contains("--habit-detail") ? 1040 : 760)
+                    let host = NSHostingView(rootView: HabitsView().environment(store).environment(workspace).frame(width: size.width, height: size.height).background(Color(nsColor: .textBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(2.5))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
+                    }
+                } else if arguments.contains("--capture-focus") {
+                    // The Focus sheet hosted alone (a sheet cannot be captured with the window): add --pomodoro-fixture=work|break|ready.
+                    let request = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+                    let size = NSSize(width: 580, height: arguments.contains("--pomodoro-fixture=work") ? 760 : 640)
+                    let host = NSHostingView(rootView: FocusSessionView(request: request).environment(store).environment(workspace).frame(width: size.width, height: size.height).background(Color(nsColor: .windowBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(3))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if option("capture-toast") != nil {
                     // The bottom bar hosted alone: --capture-toast=goal shows the daily-goal celebration.
                     // =streak shows a milestone alone, =combined a goal that lands with one, =level a level-up.
@@ -681,6 +703,14 @@ struct RootView: View {
             if DayPlanFixture.enabled { store.snapshot.tables["tasks"] = DayPlanFixture.tasks(user: store.userID, shutdown: DayPlanFixture.step == "shutdown") }
             // Momentum captures: --momentum-fixture=streak|vacation|milestone adds a recorded history and goals.
             if let value = MomentumFixture.variant(arguments) { MomentumFixture.apply(to: &store.snapshot, account: store.userID, variant: value) }
+            // Habit captures: --habits-fixture adds four tracked habits with a history (add --section=habits, and --habit-detail for the detail).
+            if HabitFixture.enabled { HabitFixture.apply(to: &store.snapshot, account: store.userID, today: store.calendarContext.today, calendar: store.habitCalendar) }
+            // Pomodoro captures: --pomodoro-fixture=work|break|ready with --capture-focus. Device-local state only.
+            if let value = PomodoroFixture.variant(arguments) {
+                let fixture = PomodoroFixture.apply(to: &store.snapshot, account: store.userID, today: store.calendarContext.today, calendar: store.habitCalendar, variant: value)
+                PomodoroSettings.saveMode(.pomodoro); fixture.settings.save()
+                PomodoroStorage.saveCycle(fixture.cycle, account: store.userID); PomodoroStorage.saveTally(fixture.tally, account: store.userID)
+            }
             // Empty-state captures: --empty-fixture removes every task; =done leaves only one finished today.
             if let value = option("empty-fixture") ?? (arguments.contains("--empty-fixture") ? "" : nil) {
                 store.snapshot.tables["tasks"] = []
@@ -713,6 +743,7 @@ struct WorkspaceView: View {
             } detail: {
                 Group {
                     if workspace.section == .someday { SomedayView() }
+                    else if workspace.section == .habits { HabitsView() }
                     else if workspace.section == .calendar {
                         // Use the window budget, including space for the expanded sidebar, so
                         // toggling it cannot trigger a second calendar layout mid-transition.

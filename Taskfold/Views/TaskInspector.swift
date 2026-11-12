@@ -1184,6 +1184,7 @@ struct BulkDeadlineEditor: View {
 
 /// Native rule controls expose every property produced by quick entry.
 struct RecurrenceFields: View {
+    @Environment(Store.self) private var store
     @Binding var task: Record
     private var pattern: Record { Recurrence.effective(task) }
     private func field(_ key: String, _ value: JSON) { var p = pattern.fields; p[key] = value; task["recurrence_pattern"] = .object(p); task["recurrence_end_date"] = .null }
@@ -1205,6 +1206,10 @@ struct RecurrenceFields: View {
                 if task.string("due_date").isEmpty { task["due_date"] = .string(Dates.day(Date())) }
             }
         })).accessibilityIdentifier("repeatEnabled")
+        if task["is_recurring"].flag, let saved = store.record("tasks", id: task.id), store.isHabit(saved) || store.canTrackHabit(saved) {
+            Toggle("Track as habit", isOn: Binding(get: { store.isHabit(saved) }, set: { store.setHabit(saved, tracked: $0) })).accessibilityIdentifier("trackHabitToggle")
+            Text("Shows streaks and a history in Habits. The task keeps repeating as usual.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
         if task["is_recurring"].flag {
             Text(Recurrence.summary(pattern)).font(.callout.weight(.medium)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("repeatRuleSummary")
             Picker("Frequency", selection: Binding(get: { pattern.string("type") }, set: type)) {

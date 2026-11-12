@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 /// One entry in the sidebar. Task sections map onto the shared `TaskScope`; Calendar is its own surface.
 enum SidebarItem: Hashable {
-    case today, inbox, upcoming, calendar, all, completed, assigned, someday, project(String), label(String), saved(String)
+    case today, inbox, upcoming, calendar, all, completed, assigned, someday, habits, project(String), label(String), saved(String)
     var scope: TaskScope? {
         switch self {
         case .today: return .today
@@ -15,14 +15,15 @@ enum SidebarItem: Hashable {
         case .project(let id): return .project(id)
         case .label(let id): return .label(id)
         case .saved(let id): return .saved(id)
-        case .calendar, .someday: return nil
+        case .calendar, .someday, .habits: return nil
         }
     }
-    var key: String { self == .assigned ? "assigned" : self == .someday ? "someday" : scope?.preferenceKey ?? "calendar" }
+    var key: String { self == .assigned ? "assigned" : self == .someday ? "someday" : self == .habits ? "habits" : scope?.preferenceKey ?? "calendar" }
     init(key: String) {
         if key == "calendar" { self = .calendar; return }
         if key == "assigned" { self = .assigned; return }
         if key == "someday" { self = .someday; return }
+        if key == "habits" { self = .habits; return }
         switch TaskScope(preferenceKey: key) ?? .today {
         case .today: self = .today
         case .inbox: self = .inbox
@@ -43,6 +44,7 @@ enum SidebarItem: Hashable {
         case .all: return "tray.full"
         case .assigned: return "person.crop.circle.badge.checkmark"
         case .someday: return "moon.zzz"
+        case .habits: return "circle.hexagongrid"
         case .completed: return "checkmark.circle"
         case .project: return "folder.fill"
         case .label: return "tag.fill"
@@ -136,6 +138,7 @@ final class Workspace {
         switch section {
         case .calendar: return "Calendar"
         case .someday: return "Someday"
+        case .habits: return "Habits"
         case .assigned: return "Assigned to Me"
         case .project(let id): return store.record("projects", id: id)?.name ?? "Project"
         case .label(let id): return store.record("labels", id: id)?.name ?? "Label"

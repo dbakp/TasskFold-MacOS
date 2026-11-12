@@ -25,6 +25,8 @@ struct FocusSessionView: View {
     @State private var message: String?
     @State private var replacing = false
     @State private var replacementBase: Record?
+    @State private var pomodoro = PomodoroModel()
+    @State private var showPomodoroSettings = false
     private var activeWorkspace: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) && store.focusAvailable }
     private var choices: [FocusTaskCatalog.Choice] { guard activeWorkspace else { return [] }; return FocusTaskCatalog(tasks: store.activeTasks, projects: store.projects, sections: store.rows("sections")).choices }
     private var currentChoice: FocusTaskCatalog.Choice? { choices.first { $0.id == selectedTask?.id && $0.generation == selectedTask?.generation } }
@@ -40,13 +42,15 @@ struct FocusSessionView: View {
                     } else if let row = store.focusRecord, !FocusSessionChange.validRow(row, account: store.userID) {
                         ContentUnavailableView("Refresh Focus", systemImage: "arrow.clockwise", description: Text("This session could not be read. Refresh your workspace before changing it."))
                     } else {
-                        if let row = store.focusRecord, let session = FocusSessionChange.session(in: row, account: store.userID) {
+                        if let cycle = pomodoro.cycle, cycle.phase.isBreak || cycle.stage == .ready {
+                            TimelineView(.periodic(from: .now, by: 1)) { context in breakCard(cycle, now: context.date) }
+                        } else if let row = store.focusRecord, let session = FocusSessionChange.session(in: row, account: store.userID) {
                             TimelineView(.periodic(from: .now, by: 1)) { context in sessionCard(session, row: row, now: context.date) }
                         } else {
                             Label("One task. A little uninterrupted time.", systemImage: "timer").font(.title2.weight(.semibold))
                             Text("Choose a task and give it your attention. The timer continues when you close Taskfold.").foregroundStyle(.secondary)
                         }
-                        newSession
+                        if !(pomodoro.cycle.map { $0.phase.isBreak || $0.stage == .ready } ?? false) { newSession }
                     }
                     if activeWorkspace { finishAlerts }
                     #if DEBUG
@@ -62,7 +66,15 @@ struct FocusSessionView: View {
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closeFocusSession") } }
             .task { await store.reschedule() }
+            .task {
+                // Pomodoro: keep the device-local cycle in line with the synced session, and move on when an interval ends.
+                while !Task.isCancelled {
+                    pomodoro.reconcile(store, workspace: request.workspace)
+                    try? await Task.sleep(for: .seconds(1))
+                }
+            }
             .onAppear {
+                pomodoro.load(account: store.userID)
                 if let session = store.focusSession, let task = choices.first(where: { $0.id == session.taskID }) {
                     selectedTask = task; minutes = session.durationSeconds / 60
                 }
@@ -128,6 +140,7 @@ struct FocusSessionView: View {
     private var newSession: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Your next session").font(.headline)
+            PomodoroModeControl(mode: pomodoro.mode) { pomodoro.setMode($0) }
             if choices.isEmpty { Text("Add an open task to start focusing.").foregroundStyle(.secondary) }
             else {
                 Button { choosingTask = true } label: {
@@ -142,6 +155,17 @@ struct FocusSessionView: View {
                 if selectedTask != nil && currentChoice == nil {
                     Text("The selected task changed or is no longer open. Choose it again.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusSelectionStatus")
                 }
+                if pomodoro.mode == .pomodoro {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("\(PomodoroFormat.minutes(pomodoro.settings.workMinutes)) work · \(pomodoro.settings.shortBreakMinutes) break · \(pomodoro.settings.longBreakMinutes) long break")
+                            .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pomodoroSummary")
+                        Spacer(minLength: 0)
+                        if let choice = currentChoice { PomodoroCount(count: pomodoro.rounds(task: choice.id, store: store)) }
+                    }
+                    DisclosureGroup("Pomodoro settings", isExpanded: $showPomodoroSettings) {
+                        PomodoroSettingsCard(settings: pomodoro.settings) { pomodoro.setSettings($0) }.padding(.top, 8)
+                    }.accessibilityIdentifier("pomodoroSettingsDisclosure")
+                } else {
                 #if os(iOS)
                 HStack {
                     Text("\(minutes) \(minutes == 1 ? "minute" : "minutes")").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusDuration")
@@ -152,14 +176,15 @@ struct FocusSessionView: View {
                 #else
                 Stepper(value: $minutes, in: 1...180) { Text("\(minutes) \(minutes == 1 ? "minute" : "minutes")").fixedSize(horizontal: false, vertical: true) }.accessibilityIdentifier("focusDuration")
                 #endif
+                }
                 Button {
                     let row = store.focusRecord
                     if let session = store.focusSession, session.status != .stopped && !session.finished(at: Date()) {
                         replacementBase = row; replacing = true
                     } else { start(expected: row) }
-                } label: { Label("Start Focus", systemImage: "play.fill").frame(maxWidth: .infinity, minHeight: 44) }
+                } label: { Label(pomodoro.mode == .pomodoro ? "Start Pomodoro" : "Start Focus", systemImage: "play.fill").frame(maxWidth: .infinity, minHeight: 44) }
                     .buttonStyle(.borderedProminent).disabled(currentChoice == nil)
-                    .accessibilityIdentifier("startFocus")
+                    .accessibilityIdentifier(pomodoro.mode == .pomodoro ? "startPomodoro" : "startFocus")
             }
             Text(store.localMode ? "Saved on this device." : store.pendingCount > 0 ? "Changes are saved here and waiting to sync. Open Taskfold on both devices to receive the latest session." : "Your session syncs with your workspace.")
                 .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -167,9 +192,15 @@ struct FocusSessionView: View {
     }
     private func sessionCard(_ session: FocusSession, row: Record?, now: Date) -> some View {
         let task = store.tasks.first { $0.id.lowercased() == session.taskID }
+        let cycle = pomodoro.cycle.flatMap { $0.phase == .work && $0.sessionID == session.id ? $0 : nil }
         return VStack(alignment: .leading, spacing: 16) {
-            Label(session.status == .stopped ? "Session ended" : session.finished(at: now) ? "Time well spent" : session.status == .paused ? "Paused" : "Time to focus", systemImage: "timer")
-                .font(.headline).foregroundStyle(.secondary).accessibilityIdentifier("focusStatus")
+            HStack {
+                Label(session.status == .stopped ? "Session ended" : session.finished(at: now) ? "Time well spent" : cycle.map { $0.label(rounds: pomodoro.rounds) + (session.status == .paused ? " · Paused" : "") } ?? (session.status == .paused ? "Paused" : "Time to focus"), systemImage: "timer")
+                    .font(.headline).foregroundStyle(.secondary).accessibilityIdentifier("focusStatus")
+                Spacer(minLength: 0)
+                PomodoroCount(count: pomodoro.rounds(task: session.taskID, store: store))
+            }
+            if let cycle { PomodoroRoundDots(cycle: cycle, rounds: pomodoro.rounds) }
             Text(task?.title ?? "Task unavailable").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskTitle")
             if let task { Text(taskContext(task)).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskContext") }
             VStack(alignment: .leading, spacing: 4) {
@@ -192,10 +223,20 @@ struct FocusSessionView: View {
                     } label: { Label(session.status == .paused ? "Resume" : "Pause", systemImage: session.status == .paused ? "play.fill" : "pause.fill").frame(maxWidth: .infinity, minHeight: 44) }
                         .buttonStyle(.borderedProminent).accessibilityIdentifier("pauseResumeFocus")
                 }
-                Button { change(expected: row) { try session.stopped(at: Date()) } } label: { Text("End session").frame(maxWidth: .infinity, minHeight: 44) }
+                Button { change(expected: row) { try session.stopped(at: Date()) }; if cycle != nil { pomodoro.endCycle(store) } } label: { Text("End session").frame(maxWidth: .infinity, minHeight: 44) }
                     .buttonStyle(.bordered).accessibilityIdentifier("endFocus")
             }
         }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 24))
+        .accessibilityElement(children: .contain)
+        .accessibilityValue(cycle.map { $0.spoken(rounds: pomodoro.rounds, remaining: session.remaining(at: now)) } ?? "")
+    }
+    private func breakCard(_ cycle: PomodoroCycle, now: Date) -> some View {
+        PomodoroBreakCard(cycle: cycle, rounds: pomodoro.rounds, settings: pomodoro.settings,
+                          taskTitle: store.tasks.first { $0.id.lowercased() == cycle.taskID }?.title, count: pomodoro.rounds(task: cycle.taskID, store: store), now: now,
+                          startBreak: { pomodoro.startBreak(store) }, skip: { pomodoro.skipBreak(store) },
+                          pause: { pomodoro.pauseBreak(store) }, resume: { pomodoro.resumeBreak(store) },
+                          backToWork: { if !pomodoro.backToWork(store, workspace: request.workspace) { message = store.error; store.error = nil } },
+                          end: { pomodoro.endCycle(store) })
     }
     private func conflictReview(_ conflict: FocusSyncConflict) -> some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -223,6 +264,12 @@ struct FocusSessionView: View {
         guard activeWorkspace, let choice = currentChoice, FocusTaskCatalog.selectable(choice, tasks: store.activeTasks) else {
             message = "Choose an open task from your current workspace."; return
         }
+        if pomodoro.mode == .pomodoro {
+            if pomodoro.startCycle(store, taskID: choice.id, workspace: request.workspace, expected: expected) { message = nil }
+            else { message = store.error ?? "Could not start Pomodoro."; store.error = nil }
+            return
+        }
+        pomodoro.endCycle(store)
         change(expected: expected) { try FocusSession(taskID: choice.id, minutes: minutes) }
     }
     private func change(expected: Record?, _ make: () throws -> FocusSession) {
