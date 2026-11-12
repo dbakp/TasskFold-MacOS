@@ -80,6 +80,24 @@
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Use on-device speech recognition to create an editable transcript. Taskfold does not send recordings to a cloud transcription service.</string>
 	<key>TaskfoldMixedCompletionEnabled</key>
-	<false/>
+	<true/>
+	<key>TaskfoldChildRecordReadsEnabled</key>
+	<true/>
+	<key>TaskfoldChildRecordWritesEnabled</key>
+	<true/>
+	<key>TaskfoldChildRecordCompletionsEnabled</key>
+	<true/>
+	<key>TaskfoldChildCompletionBatchesEnabled</key>
+	<true/>
+	<key>TaskfoldChildStructureReadsEnabled</key>
+	<true/>
+	<key>TaskfoldChildStructureWritesEnabled</key>
+	<true/>
+	<key>TaskfoldChildAdoptionEnabled</key>
+	<true/>
+	<key>TaskfoldChildTransfersEnabled</key>
+	<true/>
+	<key>TaskfoldChildRepairEnabled</key>
+	<true/>
 </dict>
 </plist>
