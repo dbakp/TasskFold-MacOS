@@ -171,6 +171,8 @@ struct TodayTasksIntent: AppIntent {
     static let title: LocalizedStringResource = "What’s Due Today"
     static let description = IntentDescription("Reads back the open tasks due today or overdue.")
     static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog & ReturnsValue<[TaskEntity]> {
         let store = Store.shared
         guard store.signedIn else { return .result(value: [], dialog: "Open Taskfold and sign in first.") }
@@ -188,6 +190,8 @@ struct CompleteTaskIntent: AppIntent {
     static let title: LocalizedStringResource = "Complete Task"
     static let description = IntentDescription("Marks a task as done.")
     static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     @Parameter(title: "Task") var task: TaskEntity
     static var parameterSummary: some ParameterSummary { Summary("Complete \(\.$task)") }
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -203,6 +207,8 @@ struct SearchTasksIntent: AppIntent {
     static let title: LocalizedStringResource = "Search Tasks"
     static let description = IntentDescription("Finds open tasks whose title or notes contain your words.")
     static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     @Parameter(title: "Search", requestValueDialog: "What are you looking for?") var query: String
     static var parameterSummary: some ParameterSummary { Summary("Search tasks for \(\.$query)") }
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog & ReturnsValue<[TaskEntity]> & ShowsSnippetView {
@@ -219,6 +225,8 @@ struct GetTasksIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Tasks"
     static let description = IntentDescription("Returns open tasks that are due today, overdue, due in the next 7 days, or in a project.")
     static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     @Parameter(title: "Tasks", default: .today) var filter: TaskListFilterOption
     @Parameter(title: "Project") var project: ProjectEntity?
     static var parameterSummary: some ParameterSummary {
@@ -272,6 +280,8 @@ struct RescheduleTaskIntent: AppIntent {
     static let title: LocalizedStringResource = "Reschedule Task"
     static let description = IntentDescription("Moves a task to another day. Give a date, or a phrase such as tomorrow or next Friday.")
     static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     @Parameter(title: "Task") var task: TaskEntity
     @Parameter(title: "Phrase", description: "A phrase such as tomorrow, next Friday or Dec 3.") var phrase: String?
     @Parameter(title: "Date") var date: Date?
