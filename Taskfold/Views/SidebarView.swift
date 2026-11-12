@@ -38,6 +38,7 @@ struct SidebarView: View {
                 item(.today, "Today", count: store.matching(TaskQuery(scope: .today), focus: store.focusScope?.hideOtherBadges ?? true).filter { TaskKind.mayComplete($0) && !$0.completed }.count, incomplete: store.productiveReading.incomplete, dropDay: today)
                 item(.inbox, "Inbox", count: store.focusScope?.hideOtherBadges == true ? 0 : store.inboxProductiveReading.work.filter { InboxReviewRequest.eligible($0) && !Planning.hides($0, listed: somedayListed) }.count, incomplete: store.inboxProductiveReading.incomplete, dropProject: "")
                 item(.someday, "Someday", count: store.focusScope?.hideOtherBadges == true ? nil : store.somedayCount)
+                item(.habits, "Habits", count: nil)
                 item(.upcoming, "Upcoming", count: nil, dropDay: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!))
                 item(.calendar, "Calendar", count: nil)
             }

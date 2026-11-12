@@ -30,7 +30,7 @@ struct FinderView: View {
     private var terms: [String] { query.split(whereSeparator: \.isWhitespace).map(String.init) }
     private func matches(_ text: String) -> Bool { terms.allSatisfy { text.localizedStandardContains($0) } }
     private var destinations: [Result] {
-        let standard: [(SidebarItem, String)] = [(.today, "Today"), (.inbox, "Inbox"), (.someday, "Someday"), (.upcoming, "Upcoming"), (.calendar, "Calendar"), (.all, "All Tasks"), (.completed, "Completed")]
+        let standard: [(SidebarItem, String)] = [(.today, "Today"), (.inbox, "Inbox"), (.someday, "Someday"), (.habits, "Habits"), (.upcoming, "Upcoming"), (.calendar, "Calendar"), (.all, "All Tasks"), (.completed, "Completed")]
         return standard.map { Result(id: "destination-\($0.0.key)", title: $0.1, detail: "Go to", symbol: $0.0.symbol, target: .destination($0.0)) }
             + store.projects.map { Result(id: "destination-project:\($0.id)", title: $0.name, detail: "Project", symbol: "folder", target: .destination(.project($0.id))) }
             + store.labels.map { Result(id: "destination-label:\($0.id)", title: $0.name, detail: "Label", symbol: "tag", target: .destination(.label($0.id))) }

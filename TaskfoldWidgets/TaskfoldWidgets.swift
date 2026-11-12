@@ -1623,6 +1623,8 @@ struct FocusSessionWidgetView: View {
     private var status: FocusWidgetStatus { entry.snapshot.focusSessionStatus(at: entry.date) }
     private var clock: FocusWidgetClock? { status == .refresh ? nil : entry.snapshot.focusSession?.clock }
     private var heading: String {
+        // Pomodoro: the phase and round lead while a work or break interval is running or paused.
+        if status == .running || status == .paused, let phase = clock?.phaseLabel { return status == .paused ? phase + " · Paused" : phase }
         switch status {
         case .running: return "Time to focus"
         case .paused: return "Paused"
@@ -1969,15 +1971,23 @@ struct ToggleFocusTimerIntent: SetValueIntent {
         return .result()
     }
 }
+/// Whether a session runs, and its Pomodoro phase ("Work · 2 of 4", "Break") when there is one.
+struct FocusTimerState: Equatable, Sendable {
+    var running: Bool
+    var phase: String?
+}
 struct FocusTimerValueProvider: ControlValueProvider {
-    var previewValue: Bool { false }
-    func currentValue() async throws -> Bool { WidgetSnapshot.load().focusSessionStatus(at: Date()) == .running }
+    var previewValue: FocusTimerState { FocusTimerState(running: false, phase: nil) }
+    func currentValue() async throws -> FocusTimerState {
+        let snapshot = WidgetSnapshot.load(), running = snapshot.focusSessionStatus(at: Date()) == .running
+        return FocusTimerState(running: running, phase: running ? snapshot.focusSession?.clock?.phaseLabel : nil)
+    }
 }
 struct FocusTimerControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
-        StaticControlConfiguration(kind: "TaskfoldFocusTimer", provider: FocusTimerValueProvider()) { running in
-            ControlWidgetToggle("Focus timer", isOn: running, action: ToggleFocusTimerIntent()) { isOn in
-                Label(isOn ? "Running" : "Start", systemImage: isOn ? "timer" : "play.circle.fill")
+        StaticControlConfiguration(kind: "TaskfoldFocusTimer", provider: FocusTimerValueProvider()) { state in
+            ControlWidgetToggle("Focus timer", isOn: state.running, action: ToggleFocusTimerIntent()) { isOn in
+                Label(isOn ? (state.phase ?? "Running") : "Start", systemImage: isOn ? "timer" : "play.circle.fill")
             }
         }
         .displayName("Focus timer").description("Starts or stops a Focus session and shows when one is running.")
