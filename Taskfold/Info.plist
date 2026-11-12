@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>TaskfoldAudioDraftsEnabled</key>
+	<true/>
+	<key>TaskfoldAudioPublishingEnabled</key>
+	<true/>
 	<key>TaskfoldAudioRestorationEnabled</key>
 	<false/>
 	<key>TaskfoldTeamAudioPublishingEnabled</key>
@@ -76,7 +80,7 @@
 	<key>TaskfoldMicrosoftCalendarClientID</key>
 	<string>$(TASKFOLD_MICROSOFT_CALENDAR_CLIENT_ID)</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Use the microphone only when you start dictation or record an audio draft. Review the result before applying text or sharing audio.</string>
+	<string>Taskfold uses the microphone only when you tap Record to dictate text or to record an audio comment on a task. A recording stays private on this device until you review who can listen and choose to publish it.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Use on-device speech recognition to create an editable transcript. Taskfold does not send recordings to a cloud transcription service.</string>
 	<key>TaskfoldWebhooksEnabled</key>
