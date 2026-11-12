@@ -5,7 +5,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadWorkflowRunSchema} from './team-workflow-run-schema.mjs';
 import {loadChildTaskRecordsSchema} from './child-task-records-schema.mjs';
-const candidate=await readFile(process.env.TASKFOLD_STRUCTURE_COMMAND_SQL??new URL('../../supabase/migrations/20261030004452_independent_child_structure_commands.sql',import.meta.url),'utf8');
+const candidate=await readFile(process.env.TASKFOLD_STRUCTURE_COMMAND_SQL??new URL('../../supabase/migrations/20261030004453_independent_child_structure_commands.sql',import.meta.url),'utf8');
 const report={checks:{},candidateSHA256:createHash('sha256').update(candidate).digest('hex'),deployed:false};
 const check=(name,actual,expected)=>{assert.deepEqual(actual,expected,name);report.checks[name]=true;};
 const json=x=>lit(JSON.stringify(x))+'::jsonb';
@@ -14,7 +14,7 @@ try {
  pg=await createPostgresFixture({advisors:true});
  process.env.TASKFOLD_TEST_NODE_ADOPTION='0';process.env.TASKFOLD_TEST_HISTORY_CUSTODY='0';
  await loadWorkflowRunSchema(pg.raw,{taskTypes:true});
- for(const file of ['20261026095807_task_node_activity_history.sql','20261026104450_task_activity_root_context.sql','20261026113556_task_node_activity_custody.sql','20261026121332_task_node_project_adoption_review.sql','20261026122805_reviewed_history_custody.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['20261026095807_task_node_activity_history.sql','20261026104450_task_activity_root_context.sql','20261026113556_task_node_activity_custody.sql','20261026121006_task_node_project_adoption_review.sql','20261026122215_reviewed_history_custody.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
  await loadChildTaskRecordsSchema(pg.raw);
  for(const file of ['20261029001127_child_task_record_reads.sql','20261029005723_child_task_field_edits.sql','20261029194600_child_task_field_resolution.sql','20261029211038_child_task_completion_commands.sql','20261029215232_child_task_completion_resolution.sql','20261030002245_child_structure_revision_and_assignment_bridge.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
  report.baselineAdvisors=await pg.advisors();report.stage='direct candidate SQL';
@@ -26,7 +26,7 @@ try {
     report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
   }
  if (process.env.TASKFOLD_RECORD_AUTHORITY_SQL) {
-  if (!process.env.TASKFOLD_FIELD_NATIVE_SQL) await pg.raw(await readFile(new URL('../../supabase/migrations/20261030012858_native_team_child_field_adapter.sql',import.meta.url),'utf8'));
+  if (!process.env.TASKFOLD_FIELD_NATIVE_SQL) await pg.raw(await readFile(new URL('../../supabase/migrations/20261030012905_native_team_child_field_adapter.sql',import.meta.url),'utf8'));
   const authority=await readFile(process.env.TASKFOLD_RECORD_AUTHORITY_SQL,'utf8');await pg.raw(authority);
   report.recordAuthorityMigrationSHA256=createHash('sha256').update(authority).digest('hex');
   check('record authority candidate never automatically enrolls roots',await pg.scalar('select count(*) from taskfold_private.child_task_record_authority'),0);

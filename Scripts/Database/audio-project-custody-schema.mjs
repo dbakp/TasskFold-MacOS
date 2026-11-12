@@ -7,8 +7,8 @@ export const audioProjectCustodyMigration =
   "20261102150524_reviewed_audio_project_custody.sql";
 export const audioProjectDependencies = [
   childAuthorityMigration,
-  "20261030093035_child_record_reviewed_team_transfers.sql",
-  "20261101212844_task_bound_file_custody.sql",
+  "20261030093036_child_record_reviewed_team_transfers.sql",
+  "20261101212845_task_bound_file_custody.sql",
 ];
 export const audioProjectLedgerDependencies = [
   "20261028134424_audio_comment_publication_ledger.sql",

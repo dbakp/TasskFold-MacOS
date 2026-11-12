@@ -9,7 +9,7 @@ const check=(name,a,b=true)=>{assert.deepEqual(a,b,name);report.checks[name]=tru
 const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg;
 try {
  pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);
- for(const name of [childAuthorityMigration,'20261030093035_child_record_reviewed_team_transfers.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
+ for(const name of [childAuthorityMigration,'20261030093036_child_record_reviewed_team_transfers.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
  report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);
  if(process.env.TASKFOLD_PERSONAL_MOVE_SQL){const personal=await readFile(process.env.TASKFOLD_PERSONAL_MOVE_SQL,'utf8');await pg.raw(personal);report.personalMoveMigrationSHA256=createHash('sha256').update(personal).digest('hex');}
  if(process.env.TASKFOLD_CROSS_ROOT_SQL){const cross=await readFile(process.env.TASKFOLD_CROSS_ROOT_SQL,'utf8');await pg.raw(cross);report.crossRootMigrationSHA256=createHash('sha256').update(cross).digest('hex');}

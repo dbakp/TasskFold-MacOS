@@ -3,11 +3,11 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-const candidate=await readFile(new URL('../../supabase/migrations/20261030104147_personal_child_record_task_moves.sql',import.meta.url),'utf8');
+const candidate=await readFile(new URL('../../supabase/migrations/20261030104148_personal_child_record_task_moves.sql',import.meta.url),'utf8');
 const report={checks:{},candidateSHA256:createHash('sha256').update(candidate).digest('hex'),deployed:false};const check=(n,a,b=true)=>{assert.deepEqual(a,b,n);report.checks[n]=true;};const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg;
 try {
  pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);
- for(const f of [childAuthorityMigration,'20261030093035_child_record_reviewed_team_transfers.sql','20261030102036_child_record_project_adoption_custody.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+f,import.meta.url),'utf8'));
+ for(const f of [childAuthorityMigration,'20261030093036_child_record_reviewed_team_transfers.sql','20261030102036_child_record_project_adoption_custody.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+f,import.meta.url),'utf8'));
  report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);
  if(process.env.TASKFOLD_CROSS_ROOT_SQL){const cross=await readFile(process.env.TASKFOLD_CROSS_ROOT_SQL,'utf8');await pg.raw(cross);report.crossRootMigrationSHA256=createHash('sha256').update(cross).digest('hex');}
 
@@ -53,7 +53,7 @@ try {
  const legacyIdentity=await seed([],p,false);const originalGeneration=(await row(legacyIdentity)).task_generation;
  await pg.raw(`alter table public.tasks disable trigger taskfold_guard_generation;update public.tasks set task_generation=null where id=${lit(legacyIdentity)};alter table public.tasks enable trigger taskfold_guard_generation;delete from taskfold_private.task_generations where task_id=${lit(legacyIdentity)};insert into taskfold_private.task_generations(user_id,task_id,generation,eligible_at) values(${lit(owner.id)},${lit(legacyIdentity)},'00000000-0000-0000-0000-000000000000',now());select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks where id=${lit(legacyIdentity)};select taskfold_private.promote_child_task_records(t.id,t.task_generation,t.project_id,r.revision,t.subtasks) from public.tasks t join taskfold_private.child_task_projections r on r.task_id=t.id where t.id=${lit(legacyIdentity)};`);
  const legacyCommand=await command(legacyIdentity,dest);const legacyReply=await rpc(legacyCommand);check('legacy null generation is not silently replaced',(await row(legacyIdentity)).task_generation,null);check('legacy null-generation destination',(await row(legacyIdentity)).project_id,dest);check('legacy receipt preserves nullable identity',legacyReply.task_generation,null);check('legacy receipt retries without new movement',(await rpc(legacyCommand)).replayed);
- const assignmentGuard=await readFile(new URL('../../supabase/migrations/20261101201038_scoped_task_assignment_guard.sql',import.meta.url),'utf8');
+ const assignmentGuard=await readFile(new URL('../../supabase/migrations/20261101201039_scoped_task_assignment_guard.sql',import.meta.url),'utf8');
  report.assignmentGuardSHA256=createHash('sha256').update(assignmentGuard).digest('hex');
  const unguardedTaskPatch=await pg.raw("select pg_get_functiondef('public.taskfold_patch_task(uuid,jsonb,jsonb)'::regprocedure)");
  await expect('new assignment endpoint is absent on an older server',()=>run(`public.taskfold_assign_task_scoped('${randomUUID()}'::uuid,'{}'::jsonb,'{}'::jsonb)`),'42883');

@@ -117,7 +117,7 @@ try {
   );
   await pg.raw(await migrationSQL("20261102194929_recording_restore_recovery_fence.sql"));
   if (platform !== "service") {
-    await pg.raw(await migrationSQL("20261103021256_reviewed_audio_publication_audience.sql"));
+    await pg.raw(await migrationSQL("20261103021255_reviewed_audio_publication_audience.sql"));
     await pg.raw("update taskfold_private.audio_comment_config set audience_review_enabled=true");
   }
   if (selectionRecovery) await pg.raw(await migrationSQL("20261102212850_recording_selection_recovery_fence.sql"));

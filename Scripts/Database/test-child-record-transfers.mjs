@@ -3,7 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-const migration='20261030093035_child_record_reviewed_team_transfers.sql';const candidate=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');
+const migration='20261030093036_child_record_reviewed_team_transfers.sql';const candidate=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');
 const report={checks:{},candidateSHA256:createHash('sha256').update(candidate).digest('hex'),deployed:false};const check=(n,a,b=true)=>{assert.deepEqual(a,b,n);report.checks[n]=true;};const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg;
 try {
  pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);await pg.raw(await readFile(new URL('../../supabase/migrations/'+childAuthorityMigration,import.meta.url),'utf8'));report.baselineAdvisors=await pg.advisors();

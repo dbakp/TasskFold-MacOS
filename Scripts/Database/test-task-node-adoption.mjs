@@ -4,14 +4,14 @@ import {randomUUID,createHash} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadProjectAdoptionSchema} from './project-adoption-schema.mjs';
-const migration='20261026121332_task_node_project_adoption_review.sql';
+const migration='20261026121006_task_node_project_adoption_review.sql';
 const report={checks:{},hostedChanges:false,realUserDataChanged:false};
 const check=(name,a,b=true)=>{assert.deepEqual(a,b,name);report.checks[name]=true};
 const json=x=>lit(JSON.stringify(x))+'::jsonb',owner=randomUUID(),member=randomUUID(),actor=randomUUID(),team=randomUUID(),session=randomUUID();
 const source=async file=>readFile(new URL('../../'+file,import.meta.url),'utf8');
 const sql=await source('supabase/migrations/'+migration);
 function definition(text,name){const starts=[...text.matchAll(new RegExp('create (?:or replace )?function taskfold_private\\.'+name+'\\(','g'))];assert.equal(starts.length,1);const start=starts[0].index,end=text.indexOf('$$;',text.indexOf('as $$',start))+3;return text.slice(start,end).replace('create or replace function','create function');}
-for(const [name,file] of [['capture_project_realm_write','20261025011154_team_project_ownership_fences.sql'],['project_adoption_people','20261025031915_team_project_adoption_connection_fences.sql'],['project_adoption_contents','20261025033903_team_project_adoption_connection_policy.sql'],['project_adoption_review','20261025033903_team_project_adoption_connection_policy.sql']]) {
+for(const [name,file] of [['capture_project_realm_write','20261025011154_team_project_ownership_fences.sql'],['project_adoption_people','20261025031915_team_project_adoption_connection_fences.sql'],['project_adoption_contents','20261025033902_team_project_adoption_connection_policy.sql'],['project_adoption_review','20261025033902_team_project_adoption_connection_policy.sql']]) {
  let actual=definition(sql,name).split('\n').filter(l=>!l.includes('public.task_node_activity')&&!l.includes("('task_node_activity',")).join('\n');
  actual=actual.replace("elsif tg_table_name in('task_activity','task_node_activity') then","elsif tg_table_name='task_activity' then").replace("'child_history_protocol',1,",'').replace("'to_jsonb(x)'),\n ) v(rel", "'to_jsonb(x)')\n ) v(rel");
  check('preserved existing '+name,actual,definition(await source('supabase/migrations/'+file),name));
