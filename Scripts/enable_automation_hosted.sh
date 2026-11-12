@@ -102,16 +102,42 @@ sb_query() { # read-only SQL, printed output is parsed by callers, never shown r
 secret_names() { # prints secret NAMES only (digests are discarded here)
   supabase secrets list --output-format json | python3 -c '
 import json, sys
+def _pick(t):
+    d=json.JSONDecoder(); i=0; found=[]
+    while True:
+        j=t.find("{",i)
+        if j<0: break
+        try:
+            o,i=d.raw_decode(t,j); found.append(o)
+        except ValueError:
+            i=j+1
+    for o in found:
+        if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
+    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+    raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
 t = sys.stdin.read()
-for s in json.loads(t[t.index("{"):]).get("secrets", []):
+for s in _pick(t).get("secrets", []):
     print(s["name"])'
 }
 
 secret_digest() { # $1 name -> sha256 digest of the stored value, used only for comparison
   supabase secrets list --output-format json | NAME="$1" python3 -c '
 import json, os, sys
+def _pick(t):
+    d=json.JSONDecoder(); i=0; found=[]
+    while True:
+        j=t.find("{",i)
+        if j<0: break
+        try:
+            o,i=d.raw_decode(t,j); found.append(o)
+        except ValueError:
+            i=j+1
+    for o in found:
+        if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
+    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+    raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
 t = sys.stdin.read()
-for s in json.loads(t[t.index("{"):]).get("secrets", []):
+for s in _pick(t).get("secrets", []):
     if s["name"] == os.environ["NAME"]:
         print(s["value"])'
 }
@@ -146,8 +172,21 @@ else
   EXISTING="$(secret_names)"
   VAULT_HAS="$(sb_query "select exists(select 1 from vault.secrets where name='$VAULT_NAME') as present" | python3 -c '
 import json, sys
+def _pick(t):
+    d=json.JSONDecoder(); i=0; found=[]
+    while True:
+        j=t.find("{",i)
+        if j<0: break
+        try:
+            o,i=d.raw_decode(t,j); found.append(o)
+        except ValueError:
+            i=j+1
+    for o in found:
+        if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
+    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+    raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
 t = sys.stdin.read()
-print("true" if json.loads(t[t.index("{"):])["rows"][0]["present"] else "false")')"
+print("true" if _pick(t)["rows"][0]["present"] else "false")')"
 fi
 has() { printf '%s\n' "$EXISTING" | grep -qx "$1"; }
 for name in $SECRET_NAMES; do
@@ -276,7 +315,20 @@ FUNCTIONS_JSON="$(supabase functions list --output-format json)"
 STATUS_JSON="$STATUS_JSON" SECRETS_PRESENT="$SECRETS_PRESENT" FUNCTIONS_JSON="$FUNCTIONS_JSON" \
   WANT_SECRETS="$SECRET_NAMES" WANT_FUNCTIONS="$FUNCTIONS" python3 - << 'PY'
 import json, os
-def load(t): return json.loads(t[t.index("{"):])
+def _pick(t):
+    d=json.JSONDecoder(); i=0; found=[]
+    while True:
+        j=t.find("{",i)
+        if j<0: break
+        try:
+            o,i=d.raw_decode(t,j); found.append(o)
+        except ValueError:
+            i=j+1
+    for o in found:
+        if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
+    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+    raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
+def load(t): return _pick(t)
 status = load(os.environ["STATUS_JSON"])["rows"][0]["status"]
 if isinstance(status, str): status = json.loads(status)
 have = set(os.environ["SECRETS_PRESENT"].split())
