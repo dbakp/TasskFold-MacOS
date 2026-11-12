@@ -5,8 +5,20 @@ import Foundation
 enum SyncTiming {
     /// Realtime events closer together than this share one sync (a bulk edit sends many).
     static let realtimeDebounce: Duration = .milliseconds(250)
-    /// Safety-net poll while the realtime socket is joined.
-    static let pollIntervalRealtimeJoined: TimeInterval = 120
+    /// Safety-net poll while the realtime socket is joined. Realtime already requests a sync for every change.
+    static let pollIntervalRealtimeJoined: TimeInterval = 600
+    /// The poll waits in slices of this length and re-reads `pollInterval` each time, so a socket that drops
+    /// mid-wait falls back to the short poll within one slice instead of after the whole safety-net interval.
+    static let pollWaitSlice: TimeInterval = 30
+    /// The socket counts as alive only if some frame (event or heartbeat reply) arrived this recently.
+    static let realtimeFreshness: TimeInterval = 75
+    /// Every table is re-read at least this often while realtime is joined, to catch anything an event could not
+    /// signal (a row an access change hid, a missed frame). Below `pollIntervalRealtimeJoined`, so each safety-net poll reconciles.
+    static let reconcileInterval: TimeInterval = 540
+    /// Append-only history is trusted incrementally for this long before it is read whole again.
+    static let deepReadInterval: TimeInterval = 6 * 3600
+    /// Incremental history re-reads rows recorded this close to the newest row it already holds.
+    static let activityOverlap: TimeInterval = 600
     /// Poll while realtime is down.
     static let pollIntervalRealtimeDown: TimeInterval = 60
     static let reconnectBase: TimeInterval = 1
@@ -189,5 +201,181 @@ extension SyncStatus {
         formatter.unitsStyle = .full
         formatter.dateTimeStyle = .numeric
         return formatter.localizedString(for: date, relativeTo: now)
+    }
+}
+
+
+/// Which tables realtime reported since the last read, and whether the socket stayed provably alive.
+/// It only decides how much to re-read; the REST read remains the source of truth.
+@MainActor
+final class RealtimeChangeLedger {
+    struct Evidence: Equatable, Sendable {
+        /// Changes whenever the socket (re)joined, dropped, or went quiet longer than `freshness`.
+        var continuity: UUID
+        var joined: Bool
+        /// A frame arrived recently enough that no change can have slipped by unnoticed.
+        var fresh: Bool
+        var dirty: Set<String>
+        /// An event arrived that named no table, so nothing can be ruled out.
+        var unknown: Bool
+    }
+    private(set) var continuity = UUID()
+    private var joined = false
+    private var lastFrame: Date?
+    private var dirty: Set<String> = []
+    private var unknown = false
+    private let now: () -> Date
+    private let freshness: TimeInterval
+    init(now: @escaping () -> Date = { Date() }, freshness: TimeInterval = SyncTiming.realtimeFreshness) {
+        self.now = now; self.freshness = freshness
+    }
+    func noteJoined() { continuity = UUID(); joined = true; lastFrame = now() }
+    func noteDisconnected() { if joined { continuity = UUID() }; joined = false }
+    /// Any received frame. A silence longer than `freshness` (a suspended app, a sleeping Mac) or a clock that
+    /// moved backwards breaks continuity, because events may have been lost without a close frame.
+    func noteFrame() {
+        let t = now()
+        if joined, let last = lastFrame, t < last || t.timeIntervalSince(last) > freshness { continuity = UUID() }
+        lastFrame = t
+    }
+    func noteEvent(table: String?) {
+        noteFrame()
+        if let table, !table.isEmpty { dirty.insert(table) } else { unknown = true }
+    }
+    func evidence() -> Evidence {
+        var fresh = false
+        if joined, let last = lastFrame { let age = now().timeIntervalSince(last); fresh = age >= 0 && age <= freshness }
+        return Evidence(continuity: continuity, joined: joined, fresh: fresh, dirty: dirty, unknown: unknown)
+    }
+    /// Takes the pending changes before a read starts, so an event arriving during it is kept for the next one.
+    func consume() -> Evidence { let value = evidence(); dirty = []; unknown = false; return value }
+    func restore(_ value: Evidence) { dirty.formUnion(value.dirty); unknown = unknown || value.unknown }
+}
+
+/// What one workspace read must fetch. `full` is today's behaviour: every table, the whole history.
+struct WorkspaceReadPlan: Equatable, Sendable {
+    enum Reason: String, Sendable {
+        case requested, mutation, conflict, noBase, accountChanged, boundaryChanged, realtimeGap, unknownChange, deepDue, clockMoved
+    }
+    var full: Bool
+    var reason: Reason?
+    /// Ordinary tables to read whole again. Ignored for a full read.
+    var tables: Set<String> = []
+    /// Read append-only history after its overlap, and re-read the assignment provenance that task edits change.
+    var activity = false
+    static func full(_ reason: Reason) -> Self { Self(full: true, reason: reason) }
+    var isSkip: Bool { !full && tables.isEmpty && !activity }
+}
+
+/// Server-side effects of mutations this sync sent, beyond the row they name.
+enum SentChanges: Equatable, Sendable {
+    case none
+    case tables(Set<String>)
+    /// An RPC or a shape whose side effects this client cannot enumerate.
+    case unknown
+
+    /// An ordinary single-row task or label write. Everything else (team scope, batches, workflow Undo, project
+    /// moves, ordering, projects, sections, preferences) is `unknown`, which forces a full read.
+    static func effects(of change: Mutation) -> SentChanges {
+        guard change.teamTaskScope == nil, change.teamCompletion == nil, change.teamTaskBatch == nil,
+              change.organizationOrder == nil, change.personalTaskMove != true, change.workflowRun == nil,
+              !WorkflowUndo.matches(change), change.reminderPreferenceField == nil,
+              ["POST", "PATCH", "DELETE"].contains(change.method) else { return .unknown }
+        switch change.table {
+        case "tasks": return .tables(["tasks"])
+        case "labels": return .tables(["labels"])
+        default: return .unknown
+        }
+    }
+    func adding(_ change: Mutation) -> Self {
+        switch (self, Self.effects(of: change)) {
+        case (.unknown, _), (_, .unknown): return .unknown
+        case (.none, let next): return next
+        case (let current, .none): return current
+        case (.tables(let a), .tables(let b)): return .tables(a.union(b))
+        }
+    }
+    var tables: Set<String> { if case .tables(let value) = self { return value }; return [] }
+}
+
+/// The complete remote read of the last successful sync. Held in memory only: a launch always starts from a
+/// full read, so nothing here can outlive the process or leak across accounts.
+struct WorkspaceReadBase: Sendable {
+    var account: String
+    var origin: String
+    var generation: UUID
+    /// `nil` while the service has no team boundary (an older deployment): that absence is itself the state compared.
+    var boundary: TeamWorkspaceBoundary?
+    var continuity: UUID
+    /// Every table exactly as the server returned it, before access filtering.
+    var tables: [String: [Record]]
+    /// Last time every ordinary table was read whole.
+    var lastFull: Date
+    /// Last time history was read whole.
+    var lastDeep: Date
+}
+
+enum WorkspaceReadPlanner {
+    /// History and the rows derived from task edits. Everything else is read whole when it changes.
+    static let derivedTables: Set<String> = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable, TaskAssignmentProvenance.table]
+    static let ordinaryTables: Set<String> = ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, FocusSessionChange.table]
+    /// A project change may also move or remove its sections and members.
+    static let related: [String: Set<String>] = ["projects": ["sections", "project_collaborators"]]
+
+    struct Input {
+        var base: WorkspaceReadBase?
+        var account: String
+        var origin: String
+        var generation: UUID
+        var boundary: TeamWorkspaceBoundary?
+        var evidence: RealtimeChangeLedger.Evidence
+        var requestedFull: Bool
+        var sent: SentChanges
+        var hadConflict: Bool
+        var now: Date
+        var reconcileInterval: TimeInterval = SyncTiming.reconcileInterval
+        var deepInterval: TimeInterval = SyncTiming.deepReadInterval
+    }
+
+    static func plan(_ input: Input) -> WorkspaceReadPlan {
+        if input.requestedFull { return .full(.requested) }
+        if input.sent == .unknown { return .full(.mutation) }
+        if input.hadConflict { return .full(.conflict) }
+        guard let base = input.base else { return .full(.noBase) }
+        guard base.account == input.account, base.origin == input.origin, base.generation == input.generation else { return .full(.accountChanged) }
+        guard base.boundary == input.boundary else { return .full(.boundaryChanged) }
+        let e = input.evidence
+        guard e.joined, e.fresh, e.continuity == base.continuity else { return .full(.realtimeGap) }
+        if e.unknown { return .full(.unknownChange) }
+        let sinceDeep = input.now.timeIntervalSince(base.lastDeep), sinceFull = input.now.timeIntervalSince(base.lastFull)
+        if sinceDeep < 0 || sinceFull < 0 { return .full(.clockMoved) }
+        if sinceDeep >= input.deepInterval { return .full(.deepDue) }
+        if sinceFull >= input.reconcileInterval { return WorkspaceReadPlan(full: false, tables: ordinaryTables, activity: true) }
+        var touched = e.dirty.union(input.sent.tables)
+        for (table, more) in related where touched.contains(table) { touched.formUnion(more) }
+        // Changing a task appends history and can change who assigned it.
+        let activity = touched.contains("tasks") || !touched.isDisjoint(with: derivedTables)
+        return WorkspaceReadPlan(full: false, tables: touched.intersection(ordinaryTables), activity: activity)
+    }
+}
+
+/// Append-only history carries a global identity sequence, which commits out of order. Reading only above the newest
+/// sequence seen could skip a row that committed late, so the read starts below every row recorded within `overlap`
+/// of the newest one and replaces that window wholesale.
+enum ActivityIncrement {
+    /// Highest sequence that may stay as held; rows above it are read again. `nil` when nothing is held.
+    static func floor(_ held: [Record], overlap: TimeInterval = SyncTiming.activityOverlap) -> Int64? {
+        let rows: [(sequence: Int64, at: Date)] = held.compactMap { row in
+            guard let sequence = TaskActivity.integer(row["sequence"]), let at = TaskPlanning.instant(row.string("recorded_at")) else { return nil }
+            return (sequence, at)
+        }
+        // A held row that cannot be placed in time makes the window unknowable: read the whole history.
+        guard rows.count == held.count, let newest = rows.map(\.at).max() else { return held.isEmpty ? nil : 0 }
+        let start = newest.addingTimeInterval(-overlap)
+        guard let first = rows.filter({ $0.at >= start }).map(\.sequence).min() else { return 0 }
+        return max(0, first - 1)
+    }
+    static func kept(_ held: [Record], through floor: Int64) -> [Record] {
+        held.filter { (TaskActivity.integer($0["sequence"]) ?? .max) <= floor }
     }
 }

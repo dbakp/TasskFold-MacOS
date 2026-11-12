@@ -302,7 +302,12 @@ struct TeamAccessFenceDisk:Sendable {
     }
 }
 
-struct TeamWorkspaceRead: Sendable {let tables:[String:[Record]];let boundary:TeamWorkspaceBoundary?}
+struct TeamWorkspaceRead: Sendable {
+    let tables:[String:[Record]];let boundary:TeamWorkspaceBoundary?
+    /// The complete unfiltered server read, merged with any earlier one. It becomes the next incremental base.
+    var raw:[String:[Record]]?=nil
+    var plan:WorkspaceReadPlan = .full(.requested)
+}
 
 /// A result is usable only for the exact editable source and access context that
 /// produced it. Even a change followed by Undo produces a new source revision.
@@ -353,27 +358,54 @@ struct WorkspaceRefreshPreparation: Sendable {
         }
         return try TeamWorkspaceBoundary(TaskfoldJSONDecoder().decode([String:JSON].self,from:data),account:account,origin:origin)
     }
-    func workspaceRead(account:String,initial:TeamWorkspaceBoundary?,allowLegacy:Bool) async throws -> TeamWorkspaceRead {
+    /// `plan` and `base` let a caller that already holds a complete earlier read fetch only what may have changed.
+    /// Any doubt, including an access change while reading, restarts as the full read.
+    func workspaceRead(account:String,initial:TeamWorkspaceBoundary?,allowLegacy:Bool,
+                       plan requested:WorkspaceReadPlan = .full(.requested),base held:WorkspaceReadBase?=nil) async throws -> TeamWorkspaceRead {
         if let initial {guard initial.belongs(account:account,origin:try accountRemovalOrigin) else {throw CancellationError()}}
-        var before=initial
+        var before=initial,plan=requested,base=held
+        // A caller reading incrementally against an older service already knows it has no boundary RPC; probing again is wasted calls.
+        let legacyIncremental = initial==nil && held != nil && held?.boundary==nil && !requested.full
         for _ in 0..<3 {
-            if before==nil {
+            if before==nil && !legacyIncremental {
                 do {before=try await workspaceBoundary(account:account)}
                 catch is TeamWorkspaceUnavailable {guard allowLegacy else {throw TeamWorkspaceUnavailable()}}
             }
-            var remote:[String:[Record]]=[:]
-            for table in Self.workspaceTables {remote[table]=try await rows(table,expectedAccount:account,maximumRows:100000)}
-            remote[TaskAssignmentProvenance.table]=await assignmentProvenanceRows()
-            if let history = await nodeActivityHistory(expectedAccount: account) { remote.merge(history.tables) { _, new in new } }
+            if plan.full || base==nil || base?.boundary != before {plan = plan.full ? plan : .full(.boundaryChanged);base=nil}
+            var remote:[String:[Record]]=base?.tables ?? [:]
+            if let base {
+                if plan.isSkip {
+                    guard session?.user.id==account else {throw CancellationError()}
+                    guard let before else {return TeamWorkspaceRead(tables:remote,boundary:nil,raw:remote,plan:plan)}
+                    return TeamWorkspaceRead(tables:try TeamWorkspaceCache(boundary:before,previous:nil,pending:[]).filtering(remote),boundary:before,raw:remote,plan:plan)
+                }
+                for table in Self.workspaceTables where plan.tables.contains(table) {remote[table]=try await rows(table,expectedAccount:account,maximumRows:100000)}
+                if plan.activity {
+                    let epoch=try await rows(TaskActivity.epochTable,expectedAccount:account,maximumRows:100000)
+                    if let held=base.tables[TaskActivity.table],base.tables[TaskActivity.epochTable]==epoch,let floor=ActivityIncrement.floor(held) {
+                        remote[TaskActivity.table]=try await activityRows(TaskActivity.table,owner:account,maximumRows:100000,kept:ActivityIncrement.kept(held,through:floor),after:floor)
+                    } else {remote[TaskActivity.table]=try await rows(TaskActivity.table,expectedAccount:account,maximumRows:100000)}
+                    remote[TaskActivity.epochTable]=epoch
+                    remote[TaskAssignmentProvenance.table]=await assignmentProvenanceRows()
+                    var feed:TaskNodeActivity.Feed?=nil
+                    if let rows=base.tables[TaskNodeActivity.table],let epoch=base.tables[TaskNodeActivity.epochTable] {feed=TaskNodeActivity.Feed(rows:rows,epoch:epoch)}
+                    remote.removeValue(forKey:TaskNodeActivity.table);remote.removeValue(forKey:TaskNodeActivity.epochTable)
+                    if let history=await nodeActivityHistory(expectedAccount:account,held:feed) {remote.merge(history.tables){_,new in new}}
+                }
+            } else {
+                for table in Self.workspaceTables {remote[table]=try await rows(table,expectedAccount:account,maximumRows:100000)}
+                remote[TaskAssignmentProvenance.table]=await assignmentProvenanceRows()
+                if let history = await nodeActivityHistory(expectedAccount: account) { remote.merge(history.tables) { _, new in new } }
+            }
             guard session?.user.id==account else {throw CancellationError()}
-            guard let expected=before else {return TeamWorkspaceRead(tables:remote,boundary:nil)}
+            guard let expected=before else {return TeamWorkspaceRead(tables:remote,boundary:nil,raw:remote,plan:plan)}
             let after=try await workspaceBoundary(account:account)
             if expected==after {
-                return TeamWorkspaceRead(tables:try TeamWorkspaceCache(boundary:after,previous:nil,pending:[]).filtering(remote),boundary:after)
+                return TeamWorkspaceRead(tables:try TeamWorkspaceCache(boundary:after,previous:nil,pending:[]).filtering(remote),boundary:after,raw:remote,plan:plan)
             }
             // Discard the entire partial read and restart under the new access
             // boundary. Ordinary content edits do not change this boundary.
-            before=after
+            before=after;plan = .full(.boundaryChanged);base=nil
         }
         throw TeamWorkspaceChanged()
     }

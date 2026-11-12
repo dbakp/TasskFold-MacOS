@@ -69,7 +69,7 @@ final class ReconnectBackoffTests: XCTestCase {
         XCTAssertEqual(backoff.next(jitter: 0), 1)
     }
     func testPollingRelaxesOnlyWhileRealtimeIsJoined() {
-        XCTAssertEqual(SyncTiming.pollInterval(realtimeConnected: true), 120)
+        XCTAssertEqual(SyncTiming.pollInterval(realtimeConnected: true), 600)
         XCTAssertEqual(SyncTiming.pollInterval(realtimeConnected: false), 60)
     }
 }

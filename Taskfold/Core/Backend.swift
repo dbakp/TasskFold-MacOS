@@ -204,6 +204,8 @@ private final class LocationHandoffRedirectRefusal: NSObject, URLSessionTaskDele
 
 @MainActor
 final class Backend: NSObject {
+    /// Which tables realtime reported since the last workspace read, and whether the socket stayed alive.
+    let changeLedger = RealtimeChangeLedger()
     var session: Session? { didSet { if oldValue?.user.id != session?.user.id { onSessionContextChange?() } } }
     var onSessionContextChange: (() -> Void)?
     #if DEBUG
@@ -1437,23 +1439,7 @@ final class Backend: NSObject {
         let expected=expectedAccount ?? session?.user.id,epoch=sessionGeneration
         guard expected==session?.user.id else {throw CancellationError()}
         if table == TaskActivity.table || table == TaskNodeActivity.table {
-            let owner = expected, generation = sessionGeneration
-            var result: [Record] = []; var cursor: Int64 = 0; var seen = Set<String>(); let nodeParser = TaskNodeActivity.Parser()
-            while true {
-                try Task.checkCancellation()
-                guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
-                let data = try await request(table == TaskNodeActivity.table ? TaskNodeActivity.query(after: cursor) : TaskActivityPage.query(after: cursor), expectedAccount: owner)
-                guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
-                let page = try await TaskfoldJSONDecoder.decodeResponse([Record].self, from: data)
-                guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
-                if table == TaskNodeActivity.table {
-                    guard page.count <= 500, result.count + page.count <= (maximumRows ?? 100_000),
-                          page.allSatisfy({ nodeParser.event($0) != nil && seen.insert($0.id.lowercased()).inserted }) else { throw TeamProjectValue.invalid }
-                }
-                cursor = try TaskActivityPage.cursor(page, after: cursor); result += page
-                if let maximumRows,result.count>maximumRows {throw TeamProjectValue.invalid}
-                if page.count < 500 { return result }
-            }
+            return try await activityRows(table, owner: expected, maximumRows: maximumRows)
         }
         // PostgREST caps responses; paginate so large task libraries are not truncated.
         var result: [Record] = []; var offset = 0; var seen=Set<String>()
@@ -1469,6 +1455,28 @@ final class Backend: NSObject {
             if page.count < 500 { return result }; offset += page.count
         }
     }
+    /// Reads an append-only ledger by sequence. With `kept`/`floor` it continues a held history: the rows above `floor`
+    /// are read again and replace whatever was held there, so a row that committed late is never skipped or duplicated.
+    func activityRows(_ table: String, owner: String?, maximumRows: Int?, kept: [Record] = [], after floor: Int64 = 0) async throws -> [Record] {
+        let generation = sessionGeneration
+        var result: [Record] = []; var cursor = floor; var seen = Set(kept.map { $0.id.lowercased() }); let nodeParser = TaskNodeActivity.Parser()
+        let limit = maximumRows ?? 100_000
+        while true {
+            try Task.checkCancellation()
+            guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
+            let data = try await request(table == TaskNodeActivity.table ? TaskNodeActivity.query(after: cursor) : TaskActivityPage.query(after: cursor), expectedAccount: owner)
+            guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
+            let page = try await TaskfoldJSONDecoder.decodeResponse([Record].self, from: data)
+            guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
+            if table == TaskNodeActivity.table {
+                guard page.count <= 500, kept.count + result.count + page.count <= limit,
+                      page.allSatisfy({ nodeParser.event($0) != nil && seen.insert($0.id.lowercased()).inserted }) else { throw TeamProjectValue.invalid }
+            }
+            cursor = try TaskActivityPage.cursor(page, after: cursor); result += page
+            if let maximumRows, kept.count + result.count > maximumRows { throw TeamProjectValue.invalid }
+            if page.count < 500 { return kept + result }
+        }
+    }
     /// Optional feature reads cannot stop core task sync or reuse a previous
     /// account's evidence. A missing table, denial or transport failure is unknown.
     func assignmentProvenanceRows() async -> [Record]? {
@@ -1479,13 +1487,19 @@ final class Backend: NSObject {
     }
     /// Missing/denied/partial/future history is unavailable, never an empty
     /// certified feed. A start/end epoch and session fence cover the full read.
-    func nodeActivityHistory(expectedAccount: String? = nil) async -> TaskNodeActivity.Feed? {
+    func nodeActivityHistory(expectedAccount: String? = nil, held: TaskNodeActivity.Feed? = nil) async -> TaskNodeActivity.Feed? {
         let generation = sessionGeneration, account = expectedAccount ?? session?.user.id
         guard let account, session?.user.id == account else { return nil }
         do {
             let before = try await rows(TaskNodeActivity.epochTable, expectedAccount: account, maximumRows: 1)
             guard TaskNodeActivity.validEpoch(before) else { return nil }
-            let events = try await rows(TaskNodeActivity.table, expectedAccount: account, maximumRows: 100_000)
+            let events: [Record]
+            // The same epoch means the ledger was only appended to since the held read.
+            if let held, held.epoch == before, let floor = ActivityIncrement.floor(held.rows) {
+                events = try await activityRows(TaskNodeActivity.table, owner: account, maximumRows: 100_000, kept: ActivityIncrement.kept(held.rows, through: floor), after: floor)
+            } else {
+                events = try await rows(TaskNodeActivity.table, expectedAccount: account, maximumRows: 100_000)
+            }
             let after = try await rows(TaskNodeActivity.epochTable, expectedAccount: account, maximumRows: 1)
             guard before == after, generation == sessionGeneration, session?.user.id == account else { return nil }
             return TaskNodeActivity.Feed(rows: events, epoch: after)
@@ -1774,7 +1788,7 @@ extension Backend {
         components.queryItems = [URLQueryItem(name: "apikey", value: config["Key"]), URLQueryItem(name: "vsn", value: "1.0.0")]
         let socket = URLSession.shared.webSocketTask(with: components.url!)
         socket.resume()
-        defer { socket.cancel(with: .goingAway, reason: nil) }
+        defer { socket.cancel(with: .goingAway, reason: nil); changeLedger.noteDisconnected() }
         let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", SharedComment.table, SharedMention.table].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
         let join: [String: JSON] = ["topic": .string("realtime:taskfold-ios"), "event": .string("phx_join"), "ref": .string("1"), "join_ref": .string("1"), "payload": .object(["access_token": .string(session.access_token), "config": .object(["postgres_changes": .array(subscriptions)])])]
         try await socket.send(.string(String(decoding: TaskfoldJSONEncoder().encode(join), as: UTF8.self)))
@@ -1798,11 +1812,15 @@ extension Backend {
                 let data: Data
                 switch message { case .data(let bytes): data = bytes; case .string(let text): data = Data(text.utf8); @unknown default: continue }
                 let event = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+                changeLedger.noteFrame()
                 switch event.string("event") {
-                case "postgres_changes": await onChange()
+                case "postgres_changes":
+                    // The named table lets the next sync re-read only what changed; a missing name forces a full read.
+                    changeLedger.noteEvent(table: event["payload"].object["data"]?.object["table"]?.text)
+                    await onChange()
                 case "phx_reply" where event.string("ref") == "1":
                     guard event["payload"].object["status"]?.text == "ok" else { throw AppFailure(message: "Realtime subscription was refused.") }
-                    if !joined { joined = true; await onJoined() }
+                    if !joined { joined = true; changeLedger.noteJoined(); await onJoined() }
                 case "phx_error", "phx_close": throw AppFailure(message: "Realtime connection interrupted.")
                 default: break
                 }
