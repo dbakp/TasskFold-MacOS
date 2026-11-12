@@ -148,7 +148,7 @@ Rules that keep this token-efficient without losing quality:
 
 ### Phase 3: decide the half-finished advanced work
 Finish, hide or cut each of these:
-- subtask storage migration
+- ~~subtask storage migration~~ Done 12 November 2026: server deployed and switches on ([Mac #138](https://github.com/dbakp/TasskFold-MacOS/pull/138), [iOS #140](https://github.com/dbakp/TaskFold-iOS/pull/140)). Archive cleanup and restore stay off. Native signed-in acceptance is still open.
 - audio comment publishing
 - team workspaces
 - webhooks and API
