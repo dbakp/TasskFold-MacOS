@@ -102,9 +102,9 @@ struct RootView: View {
             await store.reschedule()
             await store.sync()
             while !Task.isCancelled {
-                do { try await Task.sleep(for: .seconds(store.pollInterval)) } catch { return }
+                do { try await store.waitForNextPoll() } catch { return }
                 await store.reschedule()
-                await store.sync()
+                await store.syncAutomatically()
             }
         }
         .task(id: "realtime-\(store.signedIn)-\(store.localMode)") {

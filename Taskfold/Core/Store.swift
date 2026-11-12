@@ -1334,6 +1334,11 @@ final class Store {
     @ObservationIgnored private var syncIndicatorShownAt: Date?
     @ObservationIgnored private var realtimeSupervisor: RealtimeSupervisor?
     @ObservationIgnored private lazy var syncRunner = CoalescingRunner { [weak self] in await self?.performSync() }
+    /// The complete remote read of the last successful sync (memory only). Lets an automatic sync fetch just what changed.
+    @ObservationIgnored private var workspaceReadBase: WorkspaceReadBase?
+    /// Set by every explicit `sync()`; the next read is then whole, as it always was. Only the automatic triggers
+    /// (realtime, the safety-net poll, the follow-up to a local edit) may read less.
+    @ObservationIgnored private var fullReadRequested = true
     @ObservationIgnored private var recentLocalTaskEdits: [String: Date] = [:]
     @ObservationIgnored private var remoteHighlightTask: Task<Void, Never>?
     @ObservationIgnored private var teamCompletionErrorRevision = UUID()
@@ -1418,6 +1423,7 @@ final class Store {
     private let monitor = NWPathMonitor()
     @ObservationIgnored private let projectMemberReads = ProjectMemberReads()
     private var accountGeneration = UUID() { didSet {
+        workspaceReadBase = nil
         widgetCompletionSignatures.clear()
         spotlight.suspend()
         recordReadCache.clear()
@@ -3466,7 +3472,7 @@ final class Store {
         workflowSaveSucceeded = true
         if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         // Push first: reminder scheduling must never delay sending the edit.
-        Task { await sync() }
+        Task { await syncAutomatically() }
         Task { await reschedule() }
         return true
     }
@@ -3810,7 +3816,18 @@ final class Store {
         return true
     }
     /// Requests a sync. One runs at a time; a request made during a sync is kept and served by exactly one follow-up.
-    func sync() async { await syncRunner.request() }
+    func sync() async { fullReadRequested = true; await syncRunner.request() }
+    /// A sync that may fetch only what changed: realtime events, the safety-net poll and the follow-up to a local edit.
+    /// Anything unproven falls back to the full read inside `WorkspaceReadPlanner`.
+    func syncAutomatically() async { await syncRunner.request() }
+    /// Waits for the next safety-net poll, re-reading the interval so a dropped socket shortens the wait.
+    func waitForNextPoll() async throws {
+        var waited: TimeInterval = 0
+        while waited < pollInterval {
+            try await Task.sleep(for: .seconds(min(SyncTiming.pollWaitSlice, max(pollInterval - waited, 1))))
+            waited += SyncTiming.pollWaitSlice
+        }
+    }
     /// Seconds between safety-net polls: relaxed while realtime is joined.
     var pollInterval: TimeInterval { SyncTiming.pollInterval(realtimeConnected: realtimeConnected) }
     private func syncingChanged() {
@@ -3844,7 +3861,7 @@ final class Store {
                 try await self.backend.watchChanges(onJoined: joined, onChange: changed)
             },
             setConnected: { [weak self] in if self?.realtimeConnected != $0 { self?.realtimeConnected = $0 } },
-            requestSync: { [weak self] in await self?.sync() })
+            requestSync: { [weak self] in await self?.syncAutomatically() })
         realtimeSupervisor = supervisor
         await supervisor.run()
         realtimeSupervisor = nil
@@ -3887,11 +3904,17 @@ final class Store {
         consumeWidgetCompletions()
         guard !signingOut, !accountRemovalBlocked, signedIn, !localMode, online, !syncing else { return }
         let hadConflict=syncConflict != nil || focusSyncConflict != nil
+        // Take the request and the realtime evidence now; a failed read gives both back.
+        let requestedFull = fullReadRequested; fullReadRequested = false
+        let evidence = backend.changeLedger.consume()
+        var readApplied = false
+        var sent: SentChanges = .none
         syncing = true; let generation = accountGeneration, account = userID
         let refreshSession = backend.reminderSessionIncarnation
         var sending: Mutation?
         defer {
             syncing = false
+            if !readApplied { fullReadRequested = fullReadRequested || requestedFull; workspaceReadBase = nil; backend.changeLedger.restore(evidence) }
             #if DEBUG
             if TeamBatchRecoveryNativePeer.blockedSync {
                 let proof: [String: JSON] = ["completionReview": .bool(syncConflict?.completionReview != nil), "batchReview": .bool(syncConflict?.completionBatchReview != nil), "notice": notice.map(JSON.string) ?? .null, "error": error.map(JSON.string) ?? .null,
@@ -3937,6 +3960,7 @@ final class Store {
                         let confirmed = try await backend.confirmPersonalTaskMove(mutation, expectedAccount: account)
                         guard generation == accountGeneration, snapshot.pending.first == mutation else { return }
                         if confirmed {
+                            sent = .unknown
                             guard snapshot.acknowledge(mutation, saved: nil) else { throw PersonalTaskMove.invalid }
                             try persist(backgroundWidgets: true); continue
                         }
@@ -3950,6 +3974,7 @@ final class Store {
                 if !PersonalTaskTypes.canSend(mutation, boundary: boundary) || !WorkflowUndo.canSend(mutation, boundary: boundary, service: workflowService, origin: try? backend.accountRemovalOrigin) { break }
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
+                sent = sent.adding(mutation)
                 guard generation == accountGeneration else { return }
                 guard snapshot.acknowledge(mutation, saved: saved) else { throw TeamCompletion.conflict }
                 if WorkflowUndo.matches(mutation), WorkflowUndo.reply(saved, change: mutation)?.applied == false {
@@ -3968,12 +3993,22 @@ final class Store {
             #if DEBUG
             traceTeamAudioNativeSync("Workspace read")
             #endif
-            let read=try await backend.workspaceRead(account:account,initial:boundary,allowLegacy:allowLegacy)
+            let readStart=Date()
+            let plan=WorkspaceReadPlanner.plan(.init(base:workspaceReadBase,account:account,origin:(try? backend.accountRemovalOrigin) ?? "",generation:generation,
+                boundary:boundary,evidence:evidence,requestedFull:requestedFull,sent:sent,hadConflict:hadConflict,now:readStart))
+            let read=try await backend.workspaceRead(account:account,initial:boundary,allowLegacy:allowLegacy,plan:plan,base:workspaceReadBase)
             guard generation==accountGeneration else {return}
             guard try await applyWorkspaceRefresh(read, generation: generation, account: account, hadConflict: hadConflict, session: refreshSession) else {
                 scheduleWorkspaceRefreshRetry(generation: generation)
                 return
             }
+            readApplied=true
+            if let raw=read.raw,let origin=try? backend.accountRemovalOrigin {let boundary=read.boundary
+                let previous=workspaceReadBase,whole=read.plan.full
+                let reconciled=whole || read.plan.tables.isSuperset(of:WorkspaceReadPlanner.ordinaryTables)
+                workspaceReadBase=WorkspaceReadBase(account:account,origin:origin,generation:generation,boundary:boundary,continuity:evidence.continuity,tables:raw,
+                    lastFull:reconciled ? readStart:(previous?.lastFull ?? readStart),lastDeep:whole ? readStart:(previous?.lastDeep ?? readStart))
+            } else {workspaceReadBase=nil}
             lastSync=Date();migrateOrganization()
             #if DEBUG
             traceTeamAudioNativeSync("Conversation read")
@@ -4061,7 +4096,7 @@ final class Store {
         if headingBlocked, syncSignInWorkspace == nil { notice = "Your heading changes are saved on this device. This service needs heading support before they can sync." }
         if !accessBlocked && !headingBlocked && !workflowUndoBlocked && !workflowUndoRefused && !hadConflict {notice = widgetActionStatus}
         // A blocked head needs review, not an immediate busy retry loop.
-        if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && !workflowUndoBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.sync()}}
+        if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && !workflowUndoBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.syncAutomatically()}}
     }
     /// Only fill missing remote rows after a successful fetch. Existing synchronized choices win.
     private func migrateOrganization() {
