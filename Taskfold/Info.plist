@@ -79,6 +79,10 @@
 	<string>Use the microphone only when you start dictation or record an audio draft. Review the result before applying text or sharing audio.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Use on-device speech recognition to create an editable transcript. Taskfold does not send recordings to a cloud transcription service.</string>
+	<key>TaskfoldWebhooksEnabled</key>
+	<true/>
+	<key>TaskfoldAutomationEnabled</key>
+	<true/>
 	<key>TaskfoldMixedCompletionEnabled</key>
 	<true/>
 	<key>TaskfoldChildRecordReadsEnabled</key>
