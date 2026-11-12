@@ -521,6 +521,7 @@ struct TaskListView: View {
                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).insert(at: $0, providers: $1) }
             }
         } header: {
+            HStack(spacing: DS.Space.m) {
             Button { withAnimation(layout) { overdueCollapsed.toggle() } } label: {
             HStack(spacing: DS.Space.s) {
                 Image(systemName: overdueCollapsed ? "chevron.right" : "chevron.down").font(DS.Font.chip)
@@ -536,6 +537,13 @@ struct TaskListView: View {
             .accessibilityLabel(count == 0 ? "Earlier dates" : "Overdue, \(count) \(count == 1 ? "task" : "tasks")")
             .accessibilityValue(overdueCollapsed ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("overdueToggle")
+            if tasks.contains(where: { Planning.eligible($0) && store.smartRescheduleIsEditable($0) }) {
+                Button { workspace.openSmartReschedule() } label: { Label("Reschedule smartly…", systemImage: "sparkles").font(DS.Font.chip) }
+                        .buttonStyle(.borderless).foregroundStyle(DS.Palette.accent).help("Spread overdue tasks over your next working days")
+                        .accessibilityIdentifier("rescheduleSmartly")
+                }
+                Spacer(minLength: 0)
+            }
         }
     }
     private func eveningSection(_ tasks: [Record]) -> some View {

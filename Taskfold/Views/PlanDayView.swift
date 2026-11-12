@@ -37,9 +37,20 @@ struct PlanDayView: View {
     @State private var handled: [String: String] = [:]
     @State private var pickingDate = false
     @State private var picked = Date()
+    @State private var rescheduling: SmartRescheduleRequest?
     @FocusState private var sheetFocused: Bool
     private var current: Record? { index < queue.count ? (try? store.selectionRecord(queue[index].id)) ?? queue[index] : nil }
     private var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
+    /// Tasks Smart reschedule moved are no longer overdue, so they leave the triage queue.
+    private func dropRescheduledFromQueue() {
+        let today = store.calendarContext.today
+        queue.removeAll { task in
+            let before = TaskPlanner.plannedDay(task)
+            guard !before.isEmpty, before < today, let current = store.record("tasks", id: task.id) else { return false }
+            return TaskPlanner.plannedDay(current) >= today
+        }
+        index = min(index, queue.count)
+    }
 
     var body: some View {
         VStack(spacing: 18) {
@@ -103,6 +114,9 @@ struct PlanDayView: View {
             if guided && step == .estimate {
                 if direction == .up { plan.moveHighlight(-1) } else if direction == .down { plan.moveHighlight(1) }
             } else if inTriage, direction == .right, current != nil, !pickingDate { advance("Skip") { _ in true } }
+        }
+        .sheet(item: $rescheduling) { request in
+            SmartRescheduleView(request: request, onApplied: { _ in dropRescheduledFromQueue() })
         }
         .popover(isPresented: $pickingDate, arrowEdge: .bottom) {
             VStack(spacing: 12) {
@@ -226,6 +240,11 @@ struct PlanDayView: View {
         VStack(spacing: 10) {
             actionRow
             if guided { planningActions }
+            if guided && store.smartRescheduleCandidateCount() >= 3 {
+                Button("Reschedule overdue tasks smartly…", systemImage: "sparkles") {
+                    rescheduling = SmartRescheduleRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+                }.buttonStyle(.link).font(.callout).accessibilityIdentifier("planRescheduleSmartly")
+            }
             if guided {
                 Button("Skip triage, go to estimates") { go(DayPlan.next(after: .triage, eligible: eligible)) }
                     .buttonStyle(.link).font(.callout).accessibilityIdentifier("planSkipTriage")

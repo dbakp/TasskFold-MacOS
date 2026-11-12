@@ -259,6 +259,7 @@ struct TaskfoldCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Task") { workspace.quickAddFocusRequest += 1 }.keyboardShortcut("n", modifiers: .command)
             Button("New Project…") { workspace.newProjectRequest += 1 }.keyboardShortcut("n", modifiers: [.command, .shift])
+            Button("Brain Dump…") { workspace.openBrainDump() }.keyboardShortcut("b", modifiers: [.command, .option]).disabled(!store.signedIn)
         }
         CommandGroup(after: .pasteboard) {
             Divider()
@@ -340,6 +341,7 @@ struct TaskfoldCommands: Commands {
             Divider()
             Button("Plan Your Day…") { workspace.planning = .day }.keyboardShortcut("p", modifiers: [.command, .option]).disabled(!store.signedIn)
             Button("Review This Week…") { workspace.planning = .week }.keyboardShortcut("w", modifiers: [.command, .option]).disabled(!store.signedIn)
+            Button("Reschedule Overdue Smartly…") { workspace.openSmartReschedule() }.disabled(!store.signedIn)
             Button("Shut Down Day…") { workspace.shuttingDown = true }.keyboardShortcut("e", modifiers: [.command, .option]).disabled(!store.signedIn)
             Divider()
             Button("Sync Now") { Task { await store.sync() } }.keyboardShortcut("r", modifiers: .command).disabled(store.localMode || !store.signedIn)
