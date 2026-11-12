@@ -3,7 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184402_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql"];
+const migrations=["20261030093036_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104148_personal_child_record_task_moves.sql", "20261030114139_cross_root_child_task_transfers.sql", "20261030134131_reviewed_child_record_adoption.sql", "20261030170754_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184403_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql"];
 const candidate=await readFile(new URL('../../supabase/migrations/'+migrations.at(-1),import.meta.url),'utf8');
 const report={checks:{},candidateSHA256:createHash('sha256').update(candidate).digest('hex'),deployed:false};
 const check=(name,value,expected=true)=>{assert.deepEqual(value,expected,name);report.checks[name]=true;};
@@ -18,7 +18,7 @@ try {
  if(migration.code){report.migrationDiagnostic=migration;throw Object.assign(new Error(migration.reason),{code:migration.code});}
  if(process.env.TASKFOLD_DUPLICATE_HISTORY_SQL){const sql=await readFile(process.env.TASKFOLD_DUPLICATE_HISTORY_SQL,'utf8');report.duplicateCandidateSHA256=createHash('sha256').update(sql).digest('hex');await pg.raw(sql);}
  if(process.env.TASKFOLD_COPY_CHOICE_REGRESSION_SQL){
-  for(const name of ['20261030204000_child_repair_bounded_originals.sql','20261101091417_reviewed_child_copy_comparison.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
+  for(const name of ['20261030204005_child_repair_bounded_originals.sql','20261101091417_reviewed_child_copy_comparison.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
   const sql=await readFile(process.env.TASKFOLD_COPY_CHOICE_REGRESSION_SQL,'utf8');report.copyChoiceCandidateSHA256=createHash('sha256').update(sql).digest('hex');await pg.raw(sql);
  }
  const users=Object.fromEntries(['owner','outside'].map(k=>[k,{id:randomUUID(),session:randomUUID()}]));const owner=users.owner;

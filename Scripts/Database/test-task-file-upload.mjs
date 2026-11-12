@@ -3,7 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-const migrations=['20261030093035_child_record_reviewed_team_transfers.sql','20261101212844_task_bound_file_custody.sql','20261101220633_task_file_upload_admission.sql'];
+const migrations=['20261030093036_child_record_reviewed_team_transfers.sql','20261101212845_task_bound_file_custody.sql','20261101220634_task_file_upload_admission.sql'];
 const cleanup=!!process.env.TASKFOLD_TASK_FILE_CLEANUP_SQL;
 const report={checks:{},deployed:false,providerBytesTested:false};let pg;
 const check=(name,actual,expected=true)=>{assert.deepEqual(actual,expected,name);report.checks[name]=true;};

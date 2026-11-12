@@ -3,7 +3,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184402_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql"];
+const migrations=["20261030093036_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104148_personal_child_record_task_moves.sql", "20261030114139_cross_root_child_task_transfers.sql", "20261030134131_reviewed_child_record_adoption.sql", "20261030170754_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184403_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql"];
 const output=new URL('../../TaskfoldTests/Fixtures/',import.meta.url);
 const hashes={};let pg;const report={deployed:false};
 try{

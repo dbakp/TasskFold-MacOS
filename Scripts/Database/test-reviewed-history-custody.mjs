@@ -4,13 +4,13 @@ import {randomUUID,createHash} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadProjectAdoptionSchema} from './project-adoption-schema.mjs';
-const migration='20261026122805_reviewed_history_custody.sql',source=async file=>readFile(new URL('../../'+file,import.meta.url),'utf8');
+const migration='20261026122215_reviewed_history_custody.sql',source=async file=>readFile(new URL('../../'+file,import.meta.url),'utf8');
 const sql=await source('supabase/migrations/'+migration),json=x=>lit(JSON.stringify(x))+'::jsonb';
 const report={checks:{},hostedChanges:false,realUserDataChanged:false,migrationSHA256:createHash('sha256').update(sql).digest('hex')};
 const check=(n,a,b=true)=>{assert.deepEqual(a,b,n);report.checks[n]=true};
 const users=Object.fromEntries(['creator','ownerA','memberA','ownerB','memberB','both','outsider'].map(n=>[n,{id:randomUUID(),session:randomUUID()}]));
 function definition(text,name){const match=new RegExp('create (?:or replace )?function taskfold_private\\.'+name+'\\(').exec(text);assert(match);const start=match.index,end=text.indexOf('$$;',text.indexOf('as $$',start))+3;return text.slice(start,end).replace('create or replace function','create function');}
-for(const [name,file] of [['project_adoption_review','20261026121332_task_node_project_adoption_review.sql'],['project_adoption_commit','20261025033903_team_project_adoption_connection_policy.sql'],['remove_content_identity','20261026113556_task_node_activity_custody.sql'],['delete_team_content','20261026113556_task_node_activity_custody.sql']]){
+for(const [name,file] of [['project_adoption_review','20261026121006_task_node_project_adoption_review.sql'],['project_adoption_commit','20261025033902_team_project_adoption_connection_policy.sql'],['remove_content_identity','20261026113556_task_node_activity_custody.sql'],['delete_team_content','20261026113556_task_node_activity_custody.sql']]){
  let actual=definition(sql,name),expected=definition(await source('supabase/migrations/'+file),name);
  if(name==='project_adoption_review')actual=actual.replace("'history_custody_protocol',1,",'');
  if(name==='project_adoption_commit')actual=actual.replace('folder_id,history_custody_version)','folder_id)').replace('visibility,folder,1 from','visibility,folder from').split('\n').filter(l=>!l.includes('perform taskfold_private.register_reviewed_history_custody')).join('\n');

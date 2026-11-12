@@ -49,11 +49,11 @@ export async function createTaskFileProviderDatabase() {
     for (
       const file of [
         childAuthorityMigration,
-        "20261030093035_child_record_reviewed_team_transfers.sql",
-        "20261101212844_task_bound_file_custody.sql",
-        "20261101220633_task_file_upload_admission.sql",
-        "20261101225002_task_file_sender_stop.sql",
-        "20261101232206_task_file_upload_cleanup.sql",
+        "20261030093036_child_record_reviewed_team_transfers.sql",
+        "20261101212845_task_bound_file_custody.sql",
+        "20261101220634_task_file_upload_admission.sql",
+        "20261101225004_task_file_sender_stop.sql",
+        "20261101232208_task_file_upload_cleanup.sql",
       ]
     ) {
       await pg.raw(

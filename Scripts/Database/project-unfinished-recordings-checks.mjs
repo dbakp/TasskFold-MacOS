@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
 import {literal as lit} from './postgres-fixture.mjs';
 import {migrationSQL} from './audio-project-custody-schema.mjs';
-export const unfinishedTransferMigration='20261103050051_reviewed_project_unfinished_recordings.sql';
+export const unfinishedTransferMigration='20261103050050_reviewed_project_unfinished_recordings.sql';
 export async function loadUnfinishedTransfer(pg,report) {
- await pg.raw(await migrationSQL('20261103021256_reviewed_audio_publication_audience.sql'));
+ await pg.raw(await migrationSQL('20261103021255_reviewed_audio_publication_audience.sql'));
  const sql=await migrationSQL(unfinishedTransferMigration);await pg.raw(sql);
  report.unfinishedCandidate=unfinishedTransferMigration;report.unfinishedCandidateSHA256=createHash('sha256').update(sql).digest('hex');
 }

@@ -3,12 +3,12 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-const migration='20261101212844_task_bound_file_custody.sql';const candidate=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');
+const migration='20261101212845_task_bound_file_custody.sql';const candidate=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');
 const report={checks:{},candidateSHA256:createHash('sha256').update(candidate).digest('hex'),deployed:false,providerBytesTested:false};
 const check=(n,a,b=true)=>{assert.deepEqual(a,b,n);report.checks[n]=true;};const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg;
 try {
  pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);
- for(const f of [childAuthorityMigration,'20261030093035_child_record_reviewed_team_transfers.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+f,import.meta.url),'utf8'));
+ for(const f of [childAuthorityMigration,'20261030093036_child_record_reviewed_team_transfers.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+f,import.meta.url),'utf8'));
  // Only the owned fixture adds these inspected Storage metadata columns. The candidate never alters Storage tables.
  await pg.raw('alter table storage.objects add column metadata jsonb,add column version text');
  report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);

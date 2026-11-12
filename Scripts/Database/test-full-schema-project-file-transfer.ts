@@ -12,7 +12,7 @@ const report={checks:{},genuineLocalAuth:true,genuineLocalPostgREST:true,genuine
 const check=(name,value,expected=true)=>{assert.deepEqual(value,expected,name);report.checks[name]=true;console.log('passed',name)};
 const ok=(name,r,status=200)=>{if(r.status!==status)report.lastFailure={name,status:r.status,value:r.value};check(name,r.status,status);return r.value};
 const lit=x=>"'"+String(x).replaceAll("'","''")+"'";
-const sourcePaths=['Scripts/Database/project-file-producer-cases.ts','supabase/migrations/20261106073018_project_file_producer_terminal_recovery.sql','supabase/functions/project-files/handler.ts','supabase/functions/task-files/handler.ts','Scripts/Database/test-full-schema-project-file-transfer.ts','supabase/migrations/20261105210740_reviewed_project_file_transfer.sql','supabase/migrations/20261105214041_native_project_file_preparation_recovery.sql','supabase/migrations/20261105221349_canonical_project_file_copy_receipts.sql'];
+const sourcePaths=['Scripts/Database/project-file-producer-cases.ts','supabase/migrations/20261106072929_project_file_producer_terminal_recovery.sql','supabase/functions/project-files/handler.ts','supabase/functions/task-files/handler.ts','Scripts/Database/test-full-schema-project-file-transfer.ts','supabase/migrations/20261105205804_reviewed_project_file_transfer.sql','supabase/migrations/20261105212643_native_project_file_preparation_recovery.sql','supabase/migrations/20261105221234_canonical_project_file_copy_receipts.sql'];
 const hash=async p=>createHash('sha256').update(await readFile(new URL('../../'+p,import.meta.url))).digest('hex');
 report.sourceSHA256=Object.fromEntries(await Promise.all(sourcePaths.map(async p=>[p,await hash(p)])));
 let runtime,contract;

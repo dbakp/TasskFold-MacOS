@@ -9,7 +9,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadAudioProjectCustodyDependencies,audioProjectCustodyMigration,migrationSQL} from './audio-project-custody-schema.mjs';
 import {createAudioHttpFixture} from './audio-comments-postgres-http-fixture.mjs';
-const candidateName='20261103013213_reviewed_project_recording_transfer.sql',inventoryName='20261103010517_reviewed_project_recording_inventory.sql';
+const candidateName='20261103013213_reviewed_project_recording_transfer.sql',inventoryName='20261103010516_reviewed_project_recording_inventory.sql';
 const candidate=await migrationSQL(candidateName),output=process.argv[2];assert(output?.startsWith('/tmp/taskfold-')&&output.endsWith('.json'));
 const report={checks:{},candidate:candidateName,candidateSHA256:createHash('sha256').update(candidate).digest('hex'),actualLocalSQL:true,productionGateway:true,genuineAuthOrProvider:false,normalUseEnabled:false,deployed:false};
 const check=(n,a,...expected)=>{const b=expected.length?expected[0]:true;assert.deepEqual(a,b,n);report.checks[n]=true;console.log('passed:',n)};

@@ -12,7 +12,7 @@ const check=(name,a,b=true)=>{assert.deepEqual(a,b,name);report.checks[name]=tru
 const j=x=>lit(JSON.stringify(x))+'::jsonb';let pg,wire;
 try {
  pg=await createPostgresFixture({advisors:true});await loadAudioProjectCustodyDependencies(pg);
- for(const name of ['20261030102036_child_record_project_adoption_custody.sql',audioProjectCustodyMigration,'20261103010517_reviewed_project_recording_inventory.sql','20261103013213_reviewed_project_recording_transfer.sql'])await pg.raw(await migrationSQL(name));
+ for(const name of ['20261030102036_child_record_project_adoption_custody.sql',audioProjectCustodyMigration,'20261103010516_reviewed_project_recording_inventory.sql','20261103013213_reviewed_project_recording_transfer.sql'])await pg.raw(await migrationSQL(name));
  await loadUnfinishedTransfer(pg,report);await loadPrivateHistory(pg,report);
  const owner={id:randomUUID(),session:randomUUID()},outside={id:randomUUID(),session:randomUUID()},team=randomUUID();
  for(const u of [owner,outside])await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});insert into public.profiles(user_id) values(${lit(u.id)})`);

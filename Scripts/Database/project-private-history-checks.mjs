@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
 import {literal as lit} from './postgres-fixture.mjs';
 import {migrationSQL} from './audio-project-custody-schema.mjs';
-export const privateHistoryMigration='20261103072324_reviewed_project_private_recording_history.sql';
+export const privateHistoryMigration='20261103072323_reviewed_project_private_recording_history.sql';
 export async function loadPrivateHistory(pg,report) {
  const sql=await migrationSQL(privateHistoryMigration);await pg.raw(sql);
  report.privateHistoryCandidate=privateHistoryMigration;report.privateHistoryCandidateSHA256=createHash('sha256').update(sql).digest('hex');

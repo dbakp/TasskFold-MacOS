@@ -5,7 +5,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 const baseline=JSON.parse(await readFile(new URL('./fixtures/scoped-assignment-baseline.json',import.meta.url),'utf8'));
-const migration=await readFile(new URL('../../supabase/migrations/20261101201038_scoped_task_assignment_guard.sql',import.meta.url),'utf8');
+const migration=await readFile(new URL('../../supabase/migrations/20261101201039_scoped_task_assignment_guard.sql',import.meta.url),'utf8');
 const deployment=await readFile(new URL('./fixtures/scoped-assignment-daily-deploy.sql',import.meta.url),'utf8');
 const rollback=await readFile(new URL('./fixtures/scoped-assignment-daily-rollback.sql',import.meta.url),'utf8');
 const original=baseline.functions.find(f=>f.identity==='taskfold_patch_task(uuid,jsonb,jsonb)');
