@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Private inventory for reviewed project file custody. This does not authorize
 -- a transfer or mutate Storage. Existing provider-file refusal remains in force.
 create function taskfold_private.project_adoption_file_references(document jsonb) returns jsonb
@@ -100,3 +103,5 @@ do $$declare d text;anchor text;begin
  anchor:=' return jsonb_build_object(';if cardinality(string_to_array(d,anchor))<>2 then raise exception 'Current project contents result required';end if;
  d:=replace(d,anchor,' return jsonb_build_object(''file_custody'',file_rows->''summary'',');execute d;
 end$$;
+
+commit;

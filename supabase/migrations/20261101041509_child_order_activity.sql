@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- One metadata-only ordering entry per changed sibling list. No values or new grants.
 lock table auth.users in share row exclusive mode;
 lock table public.tasks in share row exclusive mode;
@@ -148,3 +151,5 @@ end $$;
 revoke all on function taskfold_private.node_activity_nodes(public.tasks),taskfold_private.capture_task_node_activity() from public,anon,authenticated,service_role;
 
 revoke all on function taskfold_private.valid_node_order_context(jsonb),taskfold_private.node_activity_order_changes(jsonb,jsonb) from public,anon,authenticated,service_role;
+
+commit;

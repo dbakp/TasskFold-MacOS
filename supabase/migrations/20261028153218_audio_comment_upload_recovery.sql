@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Recover a retired upload only after complete stored-byte evidence. Absence is
 -- never terminal evidence; unresolved attempts remain fenced and quota-counted.
 alter table taskfold_private.audio_upload_attempts add column next_probe_at timestamptz not null default clock_timestamp();
@@ -42,3 +45,5 @@ create or replace function public.taskfold_audio_comment_maintenance(_action tex
 language sql volatile security invoker set search_path='' as $$select taskfold_private.audio_maintenance(_action,_body)$$;
 revoke all on function public.taskfold_audio_comment_maintenance(text,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_audio_comment_maintenance(text,jsonb) to service_role;
+
+commit;

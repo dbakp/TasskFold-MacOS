@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Contentless, live recovery state. Immutable decision receipts are unchanged.
 create function taskfold_private.child_restore_status(b jsonb,restore_actor uuid,restore_key uuid) returns jsonb
 language plpgsql volatile security definer set search_path='' set lock_timeout='3s' as $$
@@ -40,3 +43,5 @@ language plpgsql volatile security invoker set search_path='' as $$declare reply
 end$$;
 revoke all on function taskfold_private.child_restore_status(jsonb,uuid,uuid),public.taskfold_child_restore_status(jsonb,uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_restore_status(jsonb,uuid,uuid),public.taskfold_child_restore_status(jsonb,uuid,uuid) to authenticated;
+
+commit;

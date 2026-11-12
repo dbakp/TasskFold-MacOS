@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Opt-in record authority. No roots are promoted and no app gates enabled here.
 create table taskfold_private.child_task_record_authority (
  task_id uuid primary key references taskfold_private.child_task_projections(task_id) on delete cascade,
@@ -525,3 +528,5 @@ declare plan jsonb;receipt jsonb;begin
  if not exists(select 1 from public.tasks where id=(_body->>'task_id')::uuid) then raise exception using errcode='42501',message='This task is unavailable';end if;
  return receipt;
 end$$;
+
+commit;

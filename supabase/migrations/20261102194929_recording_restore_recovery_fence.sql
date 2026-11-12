@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed prerequisite for reviewing an expired, already-queued recording Undo.
 -- Closing certifies non-application and permanently fences the exact old intent.
 create table taskfold_private.audio_restore_closures (
@@ -98,3 +101,5 @@ declare d text;anchor text:=' select * into prior from taskfold_private.team_tas
 $guard$||anchor);
 end$patch$;
 notify pgrst,'reload schema';
+
+commit;

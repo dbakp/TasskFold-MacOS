@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Atomic groups of independent child completion commands. Disabled by default.
 -- batch_id is a separate group namespace; item request IDs remain individually
 -- reserved by the existing completion/terminal ledgers. No task policy changes.
@@ -165,3 +168,5 @@ revoke all on function taskfold_private.validate_child_completion_batch(jsonb,uu
  public.taskfold_complete_child_tasks(jsonb),public.taskfold_close_child_completion_batch(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.complete_child_task_batch(jsonb),taskfold_private.close_child_task_batch(jsonb),
  public.taskfold_complete_child_tasks(jsonb),public.taskfold_close_child_completion_batch(jsonb) to authenticated;
+
+commit;

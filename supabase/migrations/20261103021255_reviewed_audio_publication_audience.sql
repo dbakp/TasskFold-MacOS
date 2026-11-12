@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed candidate. Existing immutable sender intents/receipts remain v1.
 -- Publication approval is separate, audience-bound authority, never read access.
 alter table taskfold_private.audio_comment_config add column audience_review_enabled boolean not null default false;
@@ -121,3 +124,5 @@ create or replace function public.taskfold_audio_comment_command(_action text,_a
 language sql volatile security invoker set search_path='' as $$select taskfold_private.audio_comment_command(_action,_actor,_session,_body)$$;
 revoke all on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) to service_role;
+
+commit;

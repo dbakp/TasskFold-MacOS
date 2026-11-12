@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Cache the request identity once per statement. Keep every existing ownership,
 -- membership, role and command rule; row-dependent access helpers stay per-row.
 -- ALTER POLICY preserves policy identity, permissiveness and role assignments.
@@ -29,3 +32,5 @@ alter policy projects_delete_owner on public.projects using ((select auth.uid())
 alter policy "Users can create accessible tasks" on public.tasks
  with check ((select auth.uid()) = user_id
              and (project_id is null or public.has_project_access((select auth.uid()), project_id)));
+
+commit;

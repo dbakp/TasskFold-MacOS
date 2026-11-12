@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Match both the permissive and restrictive current child-history policies.
 -- Root read access alone never authorizes older/private history in an original.
 create function taskfold_private.child_repair_history_visible(h public.task_node_activity) returns boolean
@@ -58,3 +61,5 @@ end$$;
 revoke all on function taskfold_private.child_repair_history_visible(public.task_node_activity),taskfold_private.child_repair_history_conflict(public.tasks,jsonb),
  taskfold_private.commit_child_repair(text,jsonb),public.taskfold_repair_children(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.commit_child_repair(text,jsonb),public.taskfold_repair_children(text,jsonb) to authenticated;
+
+commit;

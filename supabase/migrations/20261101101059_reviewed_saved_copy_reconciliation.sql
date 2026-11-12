@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Explicit, archived reconciliation. Rollout remains off; no automatic winner.
 alter table taskfold_private.child_task_record_config add column copy_reconciliation_enabled boolean not null default false;
 create function taskfold_private.child_copy_history(root_id uuid) returns jsonb
@@ -213,3 +216,5 @@ do $$declare p record;begin
 end$$;
 
 grant execute on function taskfold_private.taskfold_preview_child_repair_before_copy_choice(jsonb),taskfold_private.taskfold_repair_children_before_copy_choice(text,jsonb) to authenticated;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Candidate only. New team publication is separately disabled by default.
 -- Media remains bound to its exact task generation and project. Existing custody
 -- triggers still refuse moves/replacement while live recordings exist.
@@ -103,3 +106,5 @@ create or replace function public.taskfold_audio_comment_command(_action text,_a
 language sql volatile security invoker set search_path='' as $$select taskfold_private.audio_comment_command(_action,_actor,_session,_body)$$;
 revoke all on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) to service_role;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Inactive candidate. No task data, receiver credentials or worker token in cron.
 -- Hosted pg_net grants cannot be changed by postgres. Never enqueue a reusable
 -- credential: use a 90-second HMAC proof and one-use private admission instead.
@@ -114,3 +117,5 @@ do $$declare job bigint;begin
  job:=cron.schedule('taskfold-audio-maintenance','* * * * *','select taskfold_private.invoke_audio_maintenance_worker();');
  perform cron.alter_job(job,active:=false);
 end$$;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Metadata discovery is independent of legacy JSON decoding. It never reads or
 -- rewrites subtasks, and never seeds the editable task cache with partial rows.
 create function taskfold_private.child_adoption_discovery_actor() returns uuid
@@ -34,3 +37,5 @@ begin
 end$$;
 revoke all on function taskfold_private.child_adoption_discovery_actor(),public.taskfold_child_adoption_targets(uuid,integer,uuid) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_adoption_discovery_actor(),public.taskfold_child_adoption_targets(uuid,integer,uuid) to authenticated;
+
+commit;

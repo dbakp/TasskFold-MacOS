@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Atomic mixed completion/reopen, still behind the disabled mixed gate.
 -- No normal client flag or hosted configuration is enabled by this candidate.
 alter table taskfold_private.child_task_record_config add column mixed_completion_writes_enabled boolean not null default false;
@@ -463,3 +466,5 @@ revoke all on function taskfold_private.completion_selection_task(uuid,boolean),
  taskfold_private.mixed_completion_can_edit(public.tasks),taskfold_private.mixed_completion(jsonb,boolean),
  public.taskfold_complete_mixed_tasks(jsonb),public.taskfold_close_mixed_completion(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.mixed_completion(jsonb,boolean),public.taskfold_complete_mixed_tasks(jsonb),public.taskfold_close_mixed_completion(jsonb) to authenticated;
+
+commit;

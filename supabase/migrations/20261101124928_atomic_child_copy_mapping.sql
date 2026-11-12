@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Explicit history mapping, still disabled. No automatic migration/backfill.
 alter table taskfold_private.child_task_record_config add column mapping_reconciliation_enabled boolean not null default false;
 
@@ -367,3 +370,5 @@ language plpgsql volatile security definer set search_path='' as $$declare t pub
 end$$;
 revoke all on function taskfold_private.valid_child_reconciliation(jsonb),taskfold_private.prepare_child_copy_mapping(public.tasks,jsonb,jsonb,jsonb,text,text[],uuid[]),taskfold_private.capture_child_mapping(public.tasks,public.tasks),taskfold_private.capture_task_node_activity(),taskfold_private.preview_child_copy_choice(jsonb),taskfold_private.commit_child_repair(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.preview_child_copy_choice(jsonb),taskfold_private.commit_child_repair(text,jsonb) to authenticated;
+
+commit;

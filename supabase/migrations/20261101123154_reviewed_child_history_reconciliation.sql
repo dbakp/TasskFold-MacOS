@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Pure planning for explicit saved-copy identity/lifecycle reconciliation.
 -- No RPC, grants, writes, rollout or automatic winner. A future transaction must
 -- bind this plan to fresh caller-readable copies/history and archive originals.
@@ -108,3 +111,5 @@ begin
  return jsonb_build_object('protocol',1,'proposed_tree',proposed,'nodes',summary,'retired',to_jsonb(retired),'new_identity_count',(select count(*) from jsonb_array_elements(summary) n where n->'new_identity'='true'::jsonb),'reset_completion_count',(select count(*) from jsonb_array_elements(summary) n where n->'reset_completion'='true'::jsonb));
 end$$;
 revoke all on function taskfold_private.plan_child_copy_mapping(public.tasks,jsonb,jsonb,jsonb,text,text[],uuid[]) from public,anon,authenticated,service_role;
+
+commit;

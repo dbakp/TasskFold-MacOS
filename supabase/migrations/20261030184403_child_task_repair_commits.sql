@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Disabled explicit repairs. Never automatically reconcile indexed copies.
 alter table taskfold_private.child_task_record_config add column repair_writes_enabled boolean not null default false;
 create table taskfold_private.child_task_repair_originals (
@@ -231,3 +234,5 @@ end$$;
 revoke all on function taskfold_private.child_repair_history_conflict(public.tasks,jsonb),taskfold_private.guard_child_repair_nonce(),
  taskfold_private.child_repair_reply(taskfold_private.child_task_repairs,boolean),taskfold_private.commit_child_repair(text,jsonb),public.taskfold_repair_children(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.commit_child_repair(text,jsonb),public.taskfold_repair_children(text,jsonb) to authenticated;
+
+commit;

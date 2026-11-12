@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed: settle the complete original recording selection before a new
 -- policy is chosen. No task rows, captions, media paths or session values persist.
 create table taskfold_private.audio_selection_restore_closures (
@@ -153,3 +156,5 @@ declare d text;anchor text;begin
  $guard$||anchor);
 end$patch$;
 notify pgrst,'reload schema';
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed candidate. Publication receipts and object paths remain immutable.
 -- Only a signed, acknowledged same-team/project move changes live audience.
 create table taskfold_private.audio_comment_custody (
@@ -201,3 +204,5 @@ declare d text;anchor text;begin
 end$patch$;
 revoke all on function taskfold_private.audio_bind_publication(),taskfold_private.guard_audio_custody(),taskfold_private.team_task_audio_inventory(public.tasks),taskfold_private.audio_live_receipt(taskfold_private.audio_comment_publications,uuid,uuid),taskfold_private.audio_read_comment(uuid,uuid,jsonb) from public,anon,authenticated,service_role;
 notify pgrst,'reload schema';
+
+commit;

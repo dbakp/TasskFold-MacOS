@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Opt-in cross-root transfer candidate. No hosted migration or normal-use rollout.
 alter table taskfold_private.child_task_record_config add column transfers_enabled boolean not null default false;
 create table taskfold_private.child_task_transfers (
@@ -277,3 +280,5 @@ declare reply jsonb;begin
 end$$;
 revoke all on function taskfold_private.tag_child_transfer_history(),taskfold_private.child_transfer_reply(taskfold_private.child_task_transfers,boolean),taskfold_private.guard_child_transfer_nonce(),taskfold_private.transfer_child(text,jsonb),taskfold_private.child_transfer_assign(jsonb,text,boolean,jsonb),public.taskfold_transfer_child(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.transfer_child(text,jsonb),public.taskfold_transfer_child(text,jsonb) to authenticated;
+
+commit;

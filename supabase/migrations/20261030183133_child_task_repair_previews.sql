@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Preview only. No source mutation, adoption, archive, receipt or automatic repair.
 alter table taskfold_private.child_task_record_config add column repair_reviews_enabled boolean not null default false;
 
@@ -159,3 +162,5 @@ end$$;
 revoke all on function taskfold_private.child_repair_path(jsonb,jsonb),taskfold_private.plan_child_repair(jsonb,jsonb),
  taskfold_private.preview_child_repair(jsonb),public.taskfold_preview_child_repair(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.preview_child_repair(jsonb),public.taskfold_preview_child_repair(jsonb) to authenticated;
+
+commit;

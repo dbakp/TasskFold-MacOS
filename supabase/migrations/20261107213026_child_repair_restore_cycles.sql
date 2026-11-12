@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Reversible, explicit subtask-original restoration. No rollout is enabled.
 alter table taskfold_private.child_task_record_config
  add column archive_restore_enabled boolean not null default false,
@@ -353,3 +356,5 @@ revoke all on function taskfold_private.refresh_child_task_records(),taskfold_pr
  taskfold_private.guard_child_restore_file(),taskfold_private.guard_child_restore_object(),taskfold_private.validate_child_restore_files(jsonb),taskfold_private.guard_restored_child_content(),taskfold_private.guard_child_restore_original_budget(),taskfold_private.child_restore_digest(jsonb),taskfold_private.child_restore_snapshot(public.tasks),taskfold_private.child_restore_history_counts(uuid),taskfold_private.child_restore_root(uuid,uuid,uuid,uuid),
  taskfold_private.review_child_restore(text,uuid,uuid,uuid),taskfold_private.commit_child_restore(text,jsonb),public.taskfold_review_child_restore(text,uuid,uuid,uuid),public.taskfold_restore_child_original(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.review_child_restore(text,uuid,uuid,uuid),taskfold_private.commit_child_restore(text,jsonb),public.taskfold_review_child_restore(text,uuid,uuid,uuid),public.taskfold_restore_child_original(text,jsonb) to authenticated;
+
+commit;

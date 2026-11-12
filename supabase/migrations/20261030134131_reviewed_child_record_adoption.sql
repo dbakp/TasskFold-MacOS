@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Explicit, incremental adoption. No backfill, hosted rollout or normal-use enablement.
 alter table taskfold_private.child_task_record_config add column adoption_enabled boolean not null default false;
 create table taskfold_private.child_task_adoptions (
@@ -198,3 +201,5 @@ language plpgsql volatile security invoker set search_path='' as $$declare reply
 end$$;
 revoke all on function taskfold_private.child_adoption_root(uuid,uuid,boolean),taskfold_private.child_adoption_snapshot(public.tasks),taskfold_private.review_child_adoption(uuid,uuid),taskfold_private.child_adoption_reply(taskfold_private.child_task_adoptions,boolean),taskfold_private.guard_child_adoption_nonce(),taskfold_private.adopt_reviewed_children(text,jsonb),public.taskfold_review_child_adoption(uuid,uuid),public.taskfold_adopt_child_records(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.review_child_adoption(uuid,uuid),taskfold_private.adopt_reviewed_children(text,jsonb),public.taskfold_review_child_adoption(uuid,uuid),public.taskfold_adopt_child_records(text,jsonb) to authenticated;
+
+commit;

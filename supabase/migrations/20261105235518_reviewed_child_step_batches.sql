@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Reviewed literal step insertion. Disabled until both clients complete native acceptance.
 alter table taskfold_private.child_task_record_config add column step_batches_enabled boolean not null default false;
 create table taskfold_private.child_task_step_receipts (
@@ -247,3 +250,5 @@ create function public.taskfold_child_steps(_operation text,_body jsonb) returns
 language sql volatile security invoker set search_path='' as $$select taskfold_private.child_step_request(_operation,_body)$$;
 revoke all on function taskfold_private.child_step_receipt(taskfold_private.child_task_step_receipts,boolean),taskfold_private.validate_child_step_request(jsonb,uuid),taskfold_private.edit_child_step_batch(jsonb),taskfold_private.guard_child_step_identity(),taskfold_private.child_step_request(text,jsonb),public.taskfold_child_steps(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_step_request(text,jsonb),public.taskfold_child_steps(text,jsonb) to authenticated;
+
+commit;

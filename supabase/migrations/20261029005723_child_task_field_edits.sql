@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Private field-change fences for independent edits. No ordinary exposure.
 alter table taskfold_private.child_task_record_config add column edits_enabled boolean not null default false;
 alter table taskfold_private.child_task_records add column field_versions jsonb not null default '{}' check(jsonb_typeof(field_versions)='object');
@@ -235,3 +238,5 @@ declare plan jsonb;begin
 end $$;
 revoke all on function taskfold_private.child_task_field_tree(jsonb,text,jsonb),taskfold_private.child_task_edit_prepare(jsonb),taskfold_private.child_task_edit_finish(jsonb),public.taskfold_edit_child_task(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_task_edit_prepare(jsonb),taskfold_private.child_task_edit_finish(jsonb),public.taskfold_edit_child_task(jsonb) to authenticated;
+
+commit;

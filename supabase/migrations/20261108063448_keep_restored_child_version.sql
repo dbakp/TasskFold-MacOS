@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Explicitly keep an older restored structure editable; no rollout is enabled.
 alter table taskfold_private.child_task_record_config add column archive_restore_adoption_enabled boolean not null default false;
 alter table taskfold_private.child_repair_restorations drop constraint child_repair_restorations_phase_check;
@@ -204,3 +207,5 @@ language plpgsql volatile security invoker set search_path='' as $$declare prior
 end$$;
 revoke all on function taskfold_private.require_child_adoption_custodian(public.tasks,uuid),taskfold_private.repair_child_copies(jsonb),taskfold_private.retained_child_adoption(jsonb),taskfold_private.pin_child_adoption(uuid,jsonb),taskfold_private.child_adoption_mirror(public.tasks,public.tasks),taskfold_private.finish_child_adoption(jsonb,jsonb),taskfold_private.require_complete_child_adoption(),public.taskfold_repair_children(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.finish_child_adoption(jsonb,jsonb),taskfold_private.taskfold_repair_children_before_restored_adoption(text,jsonb),public.taskfold_repair_children(text,jsonb) to authenticated;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Terminal completion resolution is metadata-only and never grants task access.
 -- Apply transactionally; ordinary app/server feature gates remain unchanged.
 create table taskfold_private.child_task_completion_closures (
@@ -273,3 +276,5 @@ begin
  if mode='undo' then update taskfold_private.child_task_completion_receipts set reversed_by=q where actor_id=a and request_id=undo_id;end if;
  return taskfold_private.child_task_completion_receipt(prior,false);
 end$$;
+
+commit;

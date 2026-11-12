@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Administrator-only, read-only manifests for files left after Auth removal.
 -- Normal deletion/status proofs gain no new authority. Never delete Storage metadata here.
 create function taskfold_private.account_removal_repair_manifest(_account uuid) returns jsonb
@@ -31,3 +34,5 @@ language sql security invoker set search_path='' as $$
 $$;
 revoke all on function public.taskfold_account_removal_repair_manifest(uuid) from public,anon,authenticated;
 grant execute on function public.taskfold_account_removal_repair_manifest(uuid) to service_role;
+
+commit;

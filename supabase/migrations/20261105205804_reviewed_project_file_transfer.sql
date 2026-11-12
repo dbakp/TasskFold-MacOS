@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed: explicit reviewed copy policy, atomic project/custody commit.
 -- Original objects remain private and unchanged; SQL never mutates Storage.
 -- File and project custody are one atomic graph. Keep the same parent FK,
@@ -176,3 +179,5 @@ do $$declare d text;anchor text;entry text;begin
  execute replace(d,anchor,'''project_transferred'',p.state=''committed''');
 end$$;
 notify pgrst,'reload schema';
+
+commit;

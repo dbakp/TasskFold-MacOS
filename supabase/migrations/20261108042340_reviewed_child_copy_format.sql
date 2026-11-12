@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Review format repairs and history mapping as one exact metadata-only choice.
 -- This does not enable restoration adoption or any normal-use rollout gate.
 create function taskfold_private.format_child_copy_for_mapping(tree jsonb,choice jsonb) returns jsonb
@@ -73,3 +76,5 @@ begin
   'steps',jsonb_build_array(jsonb_build_object('ordinal',1,'kind','choose_copy','path','[]'::jsonb,'before_kind',jsonb_typeof(coalesce(t.subtasks,'null'::jsonb)),'after_kind',jsonb_typeof(tree))),
   'custody_blocker',blocker,'mutation_available',may_write,'mapping_plan',plan-'proposed_tree');
 end$$;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Explicit saved-version selection; no rollout gate is enabled.
 create or replace function taskfold_private.review_child_restore(mode text,repair_request uuid,archive uuid,restoration uuid) returns jsonb
 language plpgsql volatile security definer set search_path='' set lock_timeout='3s' as $$
@@ -212,3 +215,5 @@ end$$;
 
 revoke all on function taskfold_private.review_child_restore(text,uuid,uuid,uuid),taskfold_private.commit_child_restore(text,jsonb),public.taskfold_review_child_restore(text,uuid,uuid,uuid),public.taskfold_restore_child_original(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.review_child_restore(text,uuid,uuid,uuid),taskfold_private.commit_child_restore(text,jsonb),public.taskfold_review_child_restore(text,uuid,uuid,uuid),public.taskfold_restore_child_original(text,jsonb) to authenticated;
+
+commit;

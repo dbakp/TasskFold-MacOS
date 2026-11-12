@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Local candidate. Sender history is not live task/file read authority.
 create table taskfold_private.task_file_sender_stops (
  actor_id uuid not null references auth.users(id) on delete cascade,
@@ -76,3 +79,5 @@ language sql volatile security invoker set search_path='' as $$select taskfold_p
 revoke all on function public.taskfold_task_file_command(text,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_task_file_command(text,uuid,uuid,jsonb) to service_role;
 notify pgrst,'reload schema';
+
+commit;

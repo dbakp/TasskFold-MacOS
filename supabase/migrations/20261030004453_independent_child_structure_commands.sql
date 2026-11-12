@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Disabled structural command candidate. Ordinary reads and app gates stay off.
 alter table taskfold_private.child_task_record_config
  add column structure_reads_enabled boolean not null default false,
@@ -455,3 +458,5 @@ create function public.taskfold_child_structure_undo_archives() returns jsonb
 language sql volatile security invoker set search_path='' as $$select taskfold_private.child_structure_undo_archives()$$;
 revoke all on function taskfold_private.child_structure_undo_archives(),public.taskfold_child_structure_undo_archives() from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_structure_undo_archives(),public.taskfold_child_structure_undo_archives() to authenticated;
+
+commit;

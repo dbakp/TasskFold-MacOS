@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Forward-only keyset pages. A cursor is a position, never authority; every page
 -- rechecks the live actor/session and the exact current task/project scope.
 create function taskfold_private.audio_comment_page(a uuid,s uuid,b jsonb) returns jsonb
@@ -130,3 +133,5 @@ begin
  return taskfold_private.audio_receipt(x,a);
 end$$;
 revoke all on function taskfold_private.audio_comment_ledger_v1(text,uuid,uuid,jsonb) from public,anon,authenticated,service_role;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Reviewed personal-project adoption with independent child records. No rollout
 -- gates change. Private deletion copies never become team content or restorable
 -- in the new realm. Current record identities are renewed to fence queued edits.
@@ -542,3 +545,5 @@ begin
  end if;
  return taskfold_private.child_structure_receipt(prior,false);
 end$$;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Typed lifecycle transport is separate from authoring availability. All gates stay off.
 create function taskfold_private.team_lifecycle_types(t jsonb) returns boolean
 language plpgsql stable security invoker set search_path='' as $$
@@ -345,3 +348,5 @@ begin
  if octet_length(result::text)>3000000 then raise exception using errcode='54000',message='This workspace access list is too large to refresh safely';end if;
  return result;
 end$$;
+
+commit;

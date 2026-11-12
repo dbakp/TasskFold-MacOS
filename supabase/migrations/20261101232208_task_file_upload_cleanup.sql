@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Disabled local candidate. Only versioned, leased writers can be reclaimed.
 alter table taskfold_private.task_file_uploads add column writer_protocol smallint not null default 0 check(writer_protocol in(0,1)),add column object_nonce uuid;
 alter table taskfold_private.task_file_uploads add constraint task_file_writer_path check(
@@ -180,3 +183,5 @@ language sql volatile security invoker set search_path='' as $$select taskfold_p
 revoke all on function public.taskfold_task_file_maintenance(text,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_task_file_maintenance(text,jsonb) to service_role;
 notify pgrst,'reload schema';
+
+commit;

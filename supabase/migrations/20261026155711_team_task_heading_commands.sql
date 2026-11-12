@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Source-only team heading edit protocol. No public grants, rollout or personal writer changes.
 alter table taskfold_private.team_project_config add column native_task_types_enabled boolean not null default false;
 
@@ -379,3 +382,5 @@ begin
  if octet_length(result::text)>3000000 then raise exception using errcode='54000',message='This workspace access list is too large to refresh safely';end if;
  return result;
 end$$;
+
+commit;
