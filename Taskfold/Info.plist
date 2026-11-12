@@ -99,5 +99,7 @@
 	<true/>
 	<key>TaskfoldChildRepairEnabled</key>
 	<true/>
+	<key>TaskfoldTeamsEnabled</key>
+	<true/>
 </dict>
 </plist>

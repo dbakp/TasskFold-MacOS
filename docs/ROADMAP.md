@@ -150,7 +150,7 @@ Rules that keep this token-efficient without losing quality:
 Finish, hide or cut each of these:
 - ~~subtask storage migration~~ Done 12 November 2026: server deployed and switches on ([Mac #138](https://github.com/dbakp/TasskFold-MacOS/pull/138), [iOS #140](https://github.com/dbakp/TaskFold-iOS/pull/140)). Archive cleanup and restore stay off. Native signed-in acceptance is still open.
 - audio comment publishing
-- team workspaces
+- ~~team workspaces~~ Done 12 November 2026: server switches on stage by stage (team setup, native reads, task edits, project adoption, task types, template library) with rolled-back SQL acceptance after each ([Mac #141](https://github.com/dbakp/TasskFold-MacOS/pull/141), [iOS #143](https://github.com/dbakp/TaskFold-iOS/pull/143)). Team audio publishing, audio restoration and file uploads stay off, and team invitations send no email. Multi-device signed-in acceptance is still open.
 - webhooks and API
 - email capture
 - physical geofence delivery
