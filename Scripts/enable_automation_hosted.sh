@@ -105,15 +105,17 @@ import json, sys
 def _pick(t):
     d=json.JSONDecoder(); i=0; found=[]
     while True:
-        j=t.find("{",i)
-        if j<0: break
+        js=[x for x in (t.find("{",i),t.find("[",i)) if x>=0]
+        if not js: break
+        j=min(js)
         try:
             o,i=d.raw_decode(t,j); found.append(o)
         except ValueError:
             i=j+1
     for o in found:
         if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
-    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+        if isinstance(o,list) and all(isinstance(x,dict) for x in o): return {"rows": o, "secrets": o, "functions": o}
+    keys=[sorted(o)[:5] if isinstance(o,dict) else type(o).__name__ for o in found]
     raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
 t = sys.stdin.read()
 for s in _pick(t).get("secrets", []):
@@ -126,15 +128,17 @@ import json, os, sys
 def _pick(t):
     d=json.JSONDecoder(); i=0; found=[]
     while True:
-        j=t.find("{",i)
-        if j<0: break
+        js=[x for x in (t.find("{",i),t.find("[",i)) if x>=0]
+        if not js: break
+        j=min(js)
         try:
             o,i=d.raw_decode(t,j); found.append(o)
         except ValueError:
             i=j+1
     for o in found:
         if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
-    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+        if isinstance(o,list) and all(isinstance(x,dict) for x in o): return {"rows": o, "secrets": o, "functions": o}
+    keys=[sorted(o)[:5] if isinstance(o,dict) else type(o).__name__ for o in found]
     raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
 t = sys.stdin.read()
 for s in _pick(t).get("secrets", []):
@@ -175,15 +179,17 @@ import json, sys
 def _pick(t):
     d=json.JSONDecoder(); i=0; found=[]
     while True:
-        j=t.find("{",i)
-        if j<0: break
+        js=[x for x in (t.find("{",i),t.find("[",i)) if x>=0]
+        if not js: break
+        j=min(js)
         try:
             o,i=d.raw_decode(t,j); found.append(o)
         except ValueError:
             i=j+1
     for o in found:
         if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
-    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+        if isinstance(o,list) and all(isinstance(x,dict) for x in o): return {"rows": o, "secrets": o, "functions": o}
+    keys=[sorted(o)[:5] if isinstance(o,dict) else type(o).__name__ for o in found]
     raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
 t = sys.stdin.read()
 print("true" if _pick(t)["rows"][0]["present"] else "false")')"
@@ -318,15 +324,17 @@ import json, os
 def _pick(t):
     d=json.JSONDecoder(); i=0; found=[]
     while True:
-        j=t.find("{",i)
-        if j<0: break
+        js=[x for x in (t.find("{",i),t.find("[",i)) if x>=0]
+        if not js: break
+        j=min(js)
         try:
             o,i=d.raw_decode(t,j); found.append(o)
         except ValueError:
             i=j+1
     for o in found:
         if isinstance(o,dict) and any(k in o for k in ("secrets","rows","functions")): return o
-    keys=[sorted(o)[:5] for o in found if isinstance(o,dict)]
+        if isinstance(o,list) and all(isinstance(x,dict) for x in o): return {"rows": o, "secrets": o, "functions": o}
+    keys=[sorted(o)[:5] if isinstance(o,dict) else type(o).__name__ for o in found]
     raise SystemExit("Unexpected Supabase CLI output; JSON keys seen: %s" % keys)
 def load(t): return _pick(t)
 status = load(os.environ["STATUS_JSON"])["rows"][0]["status"]
