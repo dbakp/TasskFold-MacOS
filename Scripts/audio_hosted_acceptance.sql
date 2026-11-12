@@ -410,7 +410,10 @@ begin
  select jobid, schedule into jid, s from cron.job where jobname = 'taskfold-audio-maintenance';
  perform pg_temp.require(jid is not null, 'maintenance cron job exists');
  perform pg_temp.require(s in ('* * * * *', '*/15 * * * *'), 'cron schedule is known: ' || s);
- perform vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'taskfold_audio_maintenance_key', 'acceptance, rolled back');
+ -- The live key stays untouched when setup already stored it; otherwise a synthetic one is rolled back.
+ if not exists(select 1 from vault.secrets where name = 'taskfold_audio_maintenance_key') then
+  perform vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'taskfold_audio_maintenance_key', 'acceptance, rolled back');
+ end if;
  perform taskfold_private.configure_audio_maintenance_scheduler('abcdefghijklmnopqrst', true);
  perform pg_temp.require((select active from cron.job where jobid = jid), 'cron job active after configure');
  perform pg_temp.require((select enabled and project_ref = 'abcdefghijklmnopqrst' and last_state = 'unconfigured' from taskfold_private.audio_maintenance_scheduler where singleton), 'scheduler row enabled');
@@ -429,5 +432,6 @@ select 'AUDIO ACCEPTANCE PASSED' as result,
  not exists(select 1 from auth.users where email like 'taskfold-audio-acceptance-%@example.invalid') as fixtures_removed,
  not exists(select 1 from taskfold_private.audio_comment_publications) as no_audio_rows,
  not exists(select 1 from storage.objects where bucket_id = 'taskfold-audio-v1') as no_audio_objects,
- (select not enabled and not audience_review_enabled and not team_publication_enabled and not restoration_enabled from taskfold_private.audio_comment_config where singleton) as flags_unchanged,
- (select not active from cron.job where jobname = 'taskfold-audio-maintenance') as cron_still_inactive;
+ (select not team_publication_enabled and not restoration_enabled from taskfold_private.audio_comment_config where singleton) as team_and_restore_off,
+ (select enabled and audience_review_enabled from taskfold_private.audio_comment_config where singleton) as personal_audio_live,
+ (select active from cron.job where jobname = 'taskfold-audio-maintenance') as cron_active;
