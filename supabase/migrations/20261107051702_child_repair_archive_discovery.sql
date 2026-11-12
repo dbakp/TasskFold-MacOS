@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Recovery remains available when new repair writes are paused. No content in discovery.
 create function taskfold_private.child_repair_archives(after_request uuid,page_limit integer) returns jsonb
 language plpgsql volatile security definer set search_path='' set lock_timeout='3s' as $$
@@ -62,3 +65,5 @@ language plpgsql volatile security invoker set search_path='' as $$declare reply
 end$$;
 revoke all on function taskfold_private.child_repair_archives(uuid,integer),taskfold_private.discovered_child_repair_original(uuid,uuid),public.taskfold_child_repair_archives(uuid,integer),public.taskfold_child_repair_original(uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_repair_archives(uuid,integer),taskfold_private.discovered_child_repair_original(uuid,uuid),public.taskfold_child_repair_archives(uuid,integer),public.taskfold_child_repair_original(uuid,uuid) to authenticated;
+
+commit;

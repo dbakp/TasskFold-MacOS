@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Child history follows the same stable creator custody and native-team read
 -- boundary as parent activity. No actor, role, rollout or task-write grant changes.
 -- Apply transactionally. Auth deletion takes Auth then task locks as well; drain
@@ -103,3 +106,5 @@ revoke all on function taskfold_private.capture_task_node_activity(),taskfold_pr
 -- Earlier events remain intact, but an already-applied foundation could have lost
 -- team events through Auth cascades. Do not certify that earlier interval.
 update public.task_node_activity_epoch set recorded_from=greatest(recorded_from,clock_timestamp()) where id='current';
+
+commit;

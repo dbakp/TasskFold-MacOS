@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Disabled private preparation. Copies do not publish files or move projects.
 create table taskfold_private.project_file_preparation_config(singleton boolean primary key default true check(singleton),enabled boolean not null default false);
 insert into taskfold_private.project_file_preparation_config values(true,false);
@@ -176,3 +179,5 @@ language sql volatile security invoker set search_path='' as $$select taskfold_p
 revoke all on function public.taskfold_project_file_preparation(text,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_project_file_preparation(text,uuid,uuid,jsonb) to service_role;
 notify pgrst,'reload schema';
+
+commit;

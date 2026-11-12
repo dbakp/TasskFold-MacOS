@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Read-only availability hint. Applying still repeats current write admission.
 create function taskfold_private.child_steps_available(root_id uuid,expected_generation uuid) returns jsonb
 language plpgsql volatile security definer set search_path='' set lock_timeout='3s' as $$
@@ -24,3 +27,5 @@ create function public.taskfold_child_steps_available(_id uuid,_generation uuid)
 language sql volatile security invoker set search_path='' as $$select taskfold_private.child_steps_available(_id,_generation)$$;
 revoke all on function taskfold_private.child_steps_available(uuid,uuid),public.taskfold_child_steps_available(uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_steps_available(uuid,uuid),public.taskfold_child_steps_available(uuid,uuid) to authenticated;
+
+commit;

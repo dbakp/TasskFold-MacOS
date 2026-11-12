@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed foundation for reviewed whole-project recording custody. This
 -- binds actual ledger/provider metadata into the existing signed inspection.
 -- Transfer remains refused until the explicit custody commit is implemented.
@@ -56,3 +59,5 @@ do $$declare d text;anchor text;begin
  raise exception using errcode=''PT409'',message=''Review recording custody before transferring these projects'';end if;');
  execute d;
 end$$;
+
+commit;

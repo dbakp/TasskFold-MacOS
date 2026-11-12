@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- A service producer owns only the write ticket it actually created. A lost
 -- reservation reply can be closed without guessing that an absent upload ended.
 create table taskfold_private.project_file_copy_producers (
@@ -99,3 +102,5 @@ language sql volatile security invoker set search_path='' as $$select taskfold_p
 revoke all on function public.taskfold_project_file_producer_terminal(uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_project_file_producer_terminal(uuid,jsonb) to service_role;
 notify pgrst,'reload schema';
+
+commit;

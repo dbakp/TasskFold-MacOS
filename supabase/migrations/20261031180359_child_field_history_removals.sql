@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Exact optional-field removal for guarded field Undo/Redo. No gates are enabled.
 -- Existing v1 payloads, nonce fences, authority and authorization are retained.
 create function taskfold_private.child_field_removals(b jsonb) returns text[]
@@ -244,3 +247,5 @@ declare a uuid:=auth.uid();q uuid;scope taskfold_private.child_task_edit_prepara
  values(team,q,a,fingerprint,t.id,t.task_generation,'child_field');
 end$$;
 revoke all on function taskfold_private.child_field_removals(jsonb),taskfold_private.child_field_validation(jsonb),taskfold_private.child_task_field_tree_v2(jsonb,text,jsonb,text[]) from public,anon,authenticated,service_role;
+
+commit;

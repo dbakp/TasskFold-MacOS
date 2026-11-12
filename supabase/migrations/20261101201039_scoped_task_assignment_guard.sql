@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Scoped assignment deliberately uses the destination project as a precondition.
 -- Keep the existing task editor's authorization, locking, generation and merge
 -- rules. Only the explicit no-op project/assignment pair gains this strict fence.
@@ -57,3 +60,5 @@ $$;
 revoke all on function public.taskfold_assign_task_scoped(uuid,jsonb,jsonb) from public,anon,authenticated,service_role;
 grant execute on function public.taskfold_assign_task_scoped(uuid,jsonb,jsonb) to authenticated;
 notify pgrst,'reload schema';
+
+commit;

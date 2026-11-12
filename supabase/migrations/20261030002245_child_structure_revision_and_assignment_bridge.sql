@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Independent structural fence. Private preparation only: v1 reads stay exact,
 -- no command endpoint or automatic adoption is enabled by this migration.
 -- Keep the existing creator/project/recipient checks while traversing every
@@ -66,3 +69,5 @@ create trigger taskfold_advance_child_task_structure before update on taskfold_p
  for each row execute function taskfold_private.advance_child_task_structure();
 revoke all on function taskfold_private.child_task_topology(jsonb),taskfold_private.advance_child_task_structure()
  from public,anon,authenticated,service_role;
+
+commit;

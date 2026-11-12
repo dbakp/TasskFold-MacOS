@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Capture a hosted-only function in version control (12 November 2026).
 --
 -- public.create_project(text,text) exists on the hosted project (created
@@ -28,3 +31,5 @@ end;
 $function$;
 revoke all on function public.create_project(text,text) from public,anon;
 grant execute on function public.create_project(text,text) to authenticated,service_role;
+
+commit;

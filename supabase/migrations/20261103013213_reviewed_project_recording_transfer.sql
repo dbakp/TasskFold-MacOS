@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed reviewed personal-project adoption of existing published audio.
 -- Normal use stays separately disabled. Immutable publication/object identities
 -- stay intact; only the current audience/custody is registered in this commit.
@@ -155,3 +158,5 @@ language sql volatile security invoker set search_path='' as $$
  ||case when r.recording_policy is null then '{}'::jsonb else jsonb_build_object('recording_policy',r.recording_policy,'recording_count',r.recording_count) end
 $$;
 revoke all on function taskfold_private.project_adoption_receipt_reply(taskfold_private.project_adoption_receipts,boolean) from public,anon,authenticated,service_role;
+
+commit;

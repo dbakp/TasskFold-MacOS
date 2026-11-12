@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Review-owned history is separate from current task custody. No source event
 -- or actor is rewritten, and a history binding never grants live-task access.
 -- Apply transactionally in Auth -> task -> history order, matching cleanup.
@@ -430,3 +433,5 @@ grant execute on function taskfold_private.history_is_custodied(text,uuid),taskf
 -- unbound history. Do not certify a pre-upgrade interval or invent a backfill.
 update public.task_activity_epoch set recorded_from=greatest(recorded_from,clock_timestamp()) where id='current';
 update public.task_node_activity_epoch set recorded_from=greatest(recorded_from,clock_timestamp()) where id='current';
+
+commit;

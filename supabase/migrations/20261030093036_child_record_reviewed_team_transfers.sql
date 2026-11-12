@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Reviewed same-team transfers for opt-in record-authoritative roots.
 -- Personal/cross-team adoption and normal rollout remain separate.
 create function taskfold_private.child_record_move_index(tree jsonb) returns jsonb
@@ -225,3 +228,5 @@ language plpgsql security definer set search_path='' as $$begin
 end$$;
 create trigger a0_child_record_project_transfer before insert or update of team_id on taskfold_private.team_content_projects for each row execute function taskfold_private.guard_child_record_project_transfer();
 revoke all on function taskfold_private.guard_child_record_project_transfer() from public,anon,authenticated,service_role;
+
+commit;

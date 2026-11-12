@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Inactive publication coordinator. This does not provision a bucket, upload
 -- media, expose a client RPC, or establish physical Storage verification.
 create table taskfold_private.audio_comment_config (
@@ -235,3 +238,5 @@ create function public.taskfold_audio_comment_command(_action text,_actor uuid,_
 language sql volatile security invoker set search_path='' as $$select taskfold_private.audio_comment_command(_action,_actor,_session,_body)$$;
 revoke all on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) to service_role;
+
+commit;

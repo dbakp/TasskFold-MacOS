@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Inspect before reconciling. No tree, row, history, receipt or custody writes.
 create function taskfold_private.child_copy_summary(name text,tree jsonb,visibility text,reason text default null) returns jsonb
 language plpgsql immutable security invoker set search_path='' as $$
@@ -83,3 +86,5 @@ language plpgsql volatile security invoker set search_path='' as $$declare reply
 end$$;
 revoke all on function taskfold_private.child_copy_summary(text,jsonb,text,text),taskfold_private.review_child_copies(jsonb),public.taskfold_review_child_copies(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.review_child_copies(jsonb),public.taskfold_review_child_copies(jsonb) to authenticated;
+
+commit;

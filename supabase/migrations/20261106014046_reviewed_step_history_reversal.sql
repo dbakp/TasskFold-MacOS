@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Compose reviewed step history against a fresh structural read.
 -- Exact inserted-record digests still refuse changed content or placement;
 -- unrelated work and live container contents are preserved.
@@ -161,3 +164,5 @@ begin
  if mode='undo' then update taskfold_private.child_task_step_receipts set reversed_by=q where actor_id=a and request_id=undo_id;end if;
  return taskfold_private.child_step_receipt(prior,false);
 end$$;
+
+commit;

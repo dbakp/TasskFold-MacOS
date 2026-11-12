@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- An explicit duplicate separation keeps history under its original identity.
 -- No event is reassigned, copied, deleted, or credited to the fresh reference.
 alter function taskfold_private.plan_child_repair(jsonb,jsonb) rename to plan_child_repair_before_history_choice;
@@ -129,3 +132,5 @@ begin
 end$$;
 revoke all on function public.taskfold_preview_child_repair(jsonb),public.taskfold_repair_children(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function public.taskfold_preview_child_repair(jsonb),public.taskfold_repair_children(text,jsonb) to authenticated;
+
+commit;

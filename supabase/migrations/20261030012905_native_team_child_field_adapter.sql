@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Candidate: preserve sparse/null team child containers and bounded large roots.
 -- Keep v1 requests/receipts and existing field/read gates; no ordinary rollout.
 alter table taskfold_private.team_task_edits drop constraint team_task_edits_operation_check;
@@ -90,3 +93,5 @@ end$$;
 revoke all on function taskfold_private.guard_child_field_team_identity(),taskfold_private.guard_child_field_receipt_identity(),taskfold_private.guard_child_field_close_identity(),
  taskfold_private.apply_prepared_team_child_field(jsonb),public.taskfold_edit_child_task(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.apply_prepared_team_child_field(jsonb),public.taskfold_edit_child_task(jsonb) to authenticated;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed native preflight. Counts and retention metadata only: no media,
 -- captions, provider paths, task content or session values are returned.
 create function taskfold_private.team_audio_lifecycle_review(b jsonb) returns jsonb
@@ -66,3 +69,5 @@ declare d text;anchor text:='''restore_from'',''task_type_lifecycle_protocol''))
  execute replace(d,anchor,'''restore_from'',''task_type_lifecycle_protocol'',''audio_restoration_ack''))');
 end$patch$;
 notify pgrst,'reload schema';
+
+commit;

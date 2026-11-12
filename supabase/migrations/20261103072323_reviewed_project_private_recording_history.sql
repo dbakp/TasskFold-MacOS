@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed: reviewed personal-to-team adoption keeps removed operations
 -- permanently closed and private. Normal-use gates remain disabled.
 alter table taskfold_private.audio_comment_config add column project_private_history_enabled boolean not null default false;
@@ -188,3 +191,5 @@ language sql volatile security invoker set search_path='' as $$
  ||case when r.recording_policy='move_recordings_keep_removed_private_v1' then jsonb_build_object('retained_recording_count',r.retained_recording_count) else '{}'::jsonb end
 $$;
 revoke all on function taskfold_private.project_adoption_receipt_reply(taskfold_private.project_adoption_receipts,boolean) from public,anon,authenticated,service_role;
+
+commit;

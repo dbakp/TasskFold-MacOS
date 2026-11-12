@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Explicit completion after Undo. No hosted/client gate is enabled.
 alter table taskfold_private.child_task_record_config add column archive_restore_finish_enabled boolean not null default false;
 alter table taskfold_private.child_repair_restorations drop constraint child_repair_restorations_phase_check;
@@ -172,3 +175,5 @@ end$$;
 -- Existing invoker wrappers and least-privilege grants are retained by replacement.
 revoke all on function taskfold_private.review_child_restore(text,uuid,uuid,uuid),taskfold_private.commit_child_restore(text,jsonb) from public,anon,service_role;
 grant execute on function taskfold_private.review_child_restore(text,uuid,uuid,uuid),taskfold_private.commit_child_restore(text,jsonb) to authenticated;
+
+commit;

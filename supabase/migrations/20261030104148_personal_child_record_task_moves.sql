@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Opt-in personal project moves reuse the ordinary durable mutation identity.
 -- Confirmation is metadata-only on replay: later work is never projected back.
 create table taskfold_private.personal_task_moves (
@@ -276,3 +279,5 @@ begin
  end if;
  return new;
 end $$;
+
+commit;

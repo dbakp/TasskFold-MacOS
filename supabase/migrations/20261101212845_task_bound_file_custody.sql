@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Candidate only: task-bound attachment metadata follows the reviewed same-team
 -- move. No Storage bytes/paths are changed; legacy project-only files stay closed.
 alter table taskfold_private.team_content_files
@@ -221,3 +224,5 @@ declare d text;anchor text:='insert into public.tasks select (desired).* returni
 end$migration$;
 revoke all on function taskfold_private.task_file_references(jsonb),taskfold_private.team_task_file_inventory(public.tasks),taskfold_private.guard_task_file_reference() from public,anon,authenticated,service_role;
 notify pgrst,'reload schema';
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Read-only recovery, independent of repair/migration authoring switches.
 -- Original export authorization (including every archived history row) remains
 -- authoritative. No receipt, task, record, projection or archive is changed.
@@ -35,3 +38,5 @@ begin
 end$$;
 revoke all on function taskfold_private.child_repair_comparison_current(uuid,uuid),public.taskfold_compare_child_repair_original(uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_repair_comparison_current(uuid,uuid),public.taskfold_compare_child_repair_original(uuid,uuid) to authenticated;
+
+commit;

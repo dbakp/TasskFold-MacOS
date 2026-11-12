@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Separate media viewing from the unchanged publication/removal authority.
 create function taskfold_private.audio_read_scope(a uuid,t uuid,g uuid,p uuid) returns boolean
 language plpgsql volatile security definer set search_path='' as $$
@@ -74,3 +77,5 @@ declare target jsonb;cursor_value jsonb;t uuid;g uuid;p uuid;stamp timestamptz;i
  end if;
  return jsonb_build_object('protocol',1,'account',a,'items',rows,'next',next_value);
 end$$;
+
+commit;

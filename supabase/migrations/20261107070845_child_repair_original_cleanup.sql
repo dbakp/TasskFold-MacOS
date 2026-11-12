@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Explicit retention cleanup is separate from task repair authoring and stays off.
 alter table taskfold_private.child_task_record_config add column archive_cleanup_enabled boolean not null default false;
 
@@ -59,3 +62,5 @@ language sql volatile security invoker set search_path='' as $$
 $$;
 revoke all on function taskfold_private.child_repair_original_cleanup(text,uuid,uuid,text,integer),public.taskfold_child_repair_original_cleanup(text,uuid,uuid,text,integer) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.child_repair_original_cleanup(text,uuid,uuid,text,integer),public.taskfold_child_repair_original_cleanup(text,uuid,uuid,text,integer) to authenticated;
+
+commit;

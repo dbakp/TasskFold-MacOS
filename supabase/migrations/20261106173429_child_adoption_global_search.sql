@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Read-only title search. Caller RLS, live session and rollout checks remain
 -- identical to browsing; partial metadata never authorizes an upgrade.
 create function public.taskfold_search_child_adoption_targets(_query text,_after uuid default null,_limit integer default 100) returns jsonb
@@ -27,3 +30,5 @@ begin
 end$$;
 revoke all on function public.taskfold_search_child_adoption_targets(text,uuid,integer) from public,anon,authenticated,service_role;
 grant execute on function public.taskfold_search_child_adoption_targets(text,uuid,integer) to authenticated;
+
+commit;

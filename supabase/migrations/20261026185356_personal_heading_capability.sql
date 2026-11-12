@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Refuse partial installation rather than advertising unsupported native writes.
 do $$begin
  if not exists(select 1 from pg_catalog.pg_attribute where attrelid='public.tasks'::regclass and attname='is_heading' and atttypid='boolean'::regtype and not attisdropped)
@@ -43,3 +46,5 @@ begin
  if octet_length(result::text)>3000000 then raise exception using errcode='54000',message='This workspace access list is too large to refresh safely';end if;
  return result;
 end$$;
+
+commit;

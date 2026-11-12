@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Disabled source candidate. Unknown network outcomes never expire into proof.
 create table taskfold_private.audio_upload_attempts(
  ticket_id uuid primary key default gen_random_uuid(),
@@ -96,3 +99,5 @@ create function public.taskfold_audio_comment_maintenance(_action text,_body jso
 language sql volatile security invoker set search_path='' as $$select taskfold_private.audio_maintenance(_action,_body)$$;
 revoke all on function public.taskfold_audio_comment_maintenance(text,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_audio_comment_maintenance(text,jsonb) to service_role;
+
+commit;

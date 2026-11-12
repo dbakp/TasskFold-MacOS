@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Privacy-preserving field details share the existing atomic node ledger.
 -- No values, request bodies, new grants, gate enablement or hosted rollout.
 -- Match the existing Auth → task → history lock order during schema changes.
@@ -100,3 +103,5 @@ begin
 end $$;
 
 revoke all on function taskfold_private.node_activity_nodes(public.tasks),taskfold_private.capture_task_node_activity() from public,anon,authenticated,service_role;
+
+commit;

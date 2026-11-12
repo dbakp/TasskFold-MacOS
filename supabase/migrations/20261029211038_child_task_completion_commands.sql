@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Disabled, independently addressed completion and receipt-certified Undo.
 -- No direct task policy, normal app flag or hosted configuration is enabled.
 alter table taskfold_private.child_task_record_config add column completions_enabled boolean not null default false;
@@ -262,3 +265,5 @@ revoke all on function taskfold_private.guard_child_completion_identity(),taskfo
  taskfold_private.child_task_completion_tree(jsonb,text,jsonb),taskfold_private.child_task_completion_receipt(taskfold_private.child_task_completion_receipts,boolean),
  taskfold_private.complete_child_task(jsonb),public.taskfold_complete_child_task(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.complete_child_task(jsonb),public.taskfold_complete_child_task(jsonb) to authenticated;
+
+commit;

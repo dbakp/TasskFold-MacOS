@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Include child history in the existing bounded, reviewed project transfer.
 -- Existing receipts/retry bodies are unchanged. A new counts key makes old
 -- strict readers request an update; old uncommitted proofs become stale.
@@ -260,3 +263,5 @@ end$$;
 
 revoke all on function taskfold_private.capture_project_realm_write(),
  taskfold_private.project_adoption_contents(uuid[]),taskfold_private.project_adoption_people(uuid[],uuid) from public,anon,authenticated,service_role;
+
+commit;

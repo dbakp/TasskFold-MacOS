@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed, separately disabled candidate. Original receipts and Storage paths
 -- stay immutable. Certified Undo alone renews the current audience generation.
 alter table taskfold_private.audio_comment_config add column restoration_enabled boolean not null default false;
@@ -169,3 +172,5 @@ declare d text;anchor text;begin
 end$patch$;
 revoke all on function taskfold_private.record_audio_task_deletion(public.tasks,uuid,uuid,jsonb),taskfold_private.prepare_audio_task_restore(public.tasks,uuid,uuid,uuid,jsonb) from public,anon,authenticated,service_role;
 notify pgrst,'reload schema';
+
+commit;

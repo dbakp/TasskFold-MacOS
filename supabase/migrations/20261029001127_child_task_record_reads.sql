@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Stage 2 read-only contract. Disabled by default, with no direct table grants.
 create table taskfold_private.child_task_record_config(singleton boolean primary key default true check(singleton),reads_enabled boolean not null default false);
 insert into taskfold_private.child_task_record_config default values;
@@ -57,3 +60,5 @@ begin
 end $$;
 revoke all on function taskfold_private.read_child_task_records(uuid,uuid),public.taskfold_read_child_tasks(uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.read_child_task_records(uuid,uuid),public.taskfold_read_child_tasks(uuid,uuid) to authenticated;
+
+commit;

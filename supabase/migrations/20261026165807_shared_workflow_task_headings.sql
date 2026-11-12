@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Heading-aware reusable shared workflows. No rollout flags or public grants change.
 -- Library storage remains opaque for older/future definitions. Typed publishing
 -- opts into full v2 validation and a matching durable acknowledgment. Execution
@@ -394,3 +397,5 @@ begin
 end$$;
 revoke all on function taskfold_private.team_templates_manage(text,jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.team_templates_manage(text,jsonb) to authenticated;
+
+commit;

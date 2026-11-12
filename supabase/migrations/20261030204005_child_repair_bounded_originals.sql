@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Stream one historical row at a time, retaining only an admitted byte budget.
 -- The cursor pins one snapshot: no second aggregation can race the preflight.
 create index task_node_activity_task_sequence on public.task_node_activity(task_id,sequence);
@@ -119,3 +122,5 @@ begin
  return taskfold_private.child_repair_reply(prior,false);
 end$$;
 revoke all on function taskfold_private.commit_child_repair_before_history_access(text,jsonb) from public,anon,authenticated,service_role;
+
+commit;

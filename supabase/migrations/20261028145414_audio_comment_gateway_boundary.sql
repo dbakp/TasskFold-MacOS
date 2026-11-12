@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Source candidate only. Does not enable publication or deploy the gateway.
 -- A compatible private bucket may be reused; an unexpected bucket is never
 -- silently reconfigured, broadened or emptied.
@@ -106,3 +109,5 @@ create or replace function public.taskfold_audio_comment_command(_action text,_a
 language sql volatile security invoker set search_path='' as $$select taskfold_private.audio_comment_command(_action,_actor,_session,_body)$$;
 revoke all on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_audio_comment_command(text,uuid,uuid,jsonb) to service_role;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Undeployed: independently reviewed handling of unfinished sends during
 -- personal-project adoption. Published media moves; unfinished publication is
 -- closed using the existing sender-history/cleanup semantics, never adopted.
@@ -139,3 +142,5 @@ language sql volatile security invoker set search_path='' as $$
  ||case when r.recording_policy='move_published_stop_unfinished_v1' then jsonb_build_object('unfinished_recording_count',r.unfinished_recording_count) else '{}'::jsonb end
 $$;
 revoke all on function taskfold_private.project_adoption_receipt_reply(taskfold_private.project_adoption_receipts,boolean) from public,anon,authenticated,service_role;
+
+commit;

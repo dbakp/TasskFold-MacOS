@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Receipt-certified, all-or-nothing Undo for a mixed selection. Uses the same
 -- disabled write gate and immutable outcome ledger as forward completion.
 alter table taskfold_private.mixed_completion_batches add column undo_of uuid,add column reversed_by uuid;
@@ -175,3 +178,5 @@ create or replace function public.taskfold_close_mixed_completion(_body jsonb) r
 language sql volatile security invoker set search_path='' as $$select case when _body ? 'undo_of' then taskfold_private.undo_mixed_completion(_body,true) else taskfold_private.mixed_completion(_body,true) end$$;
 revoke all on function taskfold_private.undo_mixed_completion(jsonb,boolean),public.taskfold_undo_mixed_completion(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.undo_mixed_completion(jsonb,boolean),public.taskfold_undo_mixed_completion(jsonb) to authenticated;
+
+commit;

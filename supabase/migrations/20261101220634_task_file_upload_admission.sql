@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Local candidate. Publishing stays off until native/provider acceptance.
 -- Storage metadata is read-only; bytes are written only through its API.
 create table taskfold_private.task_file_upload_config (
@@ -217,3 +220,5 @@ language sql volatile security invoker set search_path='' as $$select taskfold_p
 revoke all on function public.taskfold_task_file_command(text,uuid,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.taskfold_task_file_command(text,uuid,uuid,jsonb) to service_role;
 notify pgrst,'reload schema';
+
+commit;

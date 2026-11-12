@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Stage 1: opt-in, private, lossless projection of the existing child tree.
 -- Legacy JSON remains authoritative. No client read/write grants or rollout.
 create table taskfold_private.child_task_projections (
@@ -130,3 +133,5 @@ create trigger taskfold_refresh_child_task_records after update of subtasks,task
 revoke all on function taskfold_private.decode_child_task_tree(jsonb),
  taskfold_private.sync_child_task_records(uuid,uuid,jsonb),taskfold_private.adopt_child_task_records(uuid,uuid,jsonb),
  taskfold_private.refresh_child_task_records() from public,anon,authenticated,service_role;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Root observations for the future atomic root/child completion executor.
 -- Read/guard only: no completion write endpoint or rollout enablement here.
 alter table taskfold_private.child_task_record_config add column mixed_completions_enabled boolean not null default false;
@@ -115,3 +118,5 @@ revoke all on function taskfold_private.completion_selection_root_baseline(publi
  taskfold_private.completion_selection_root(uuid),taskfold_private.guard_completion_selection_roots(jsonb),taskfold_private.read_completion_selection_roots(jsonb),
  public.taskfold_read_completion_selection_roots(jsonb) from public,anon,authenticated,service_role;
 grant execute on function taskfold_private.read_completion_selection_roots(jsonb),public.taskfold_read_completion_selection_roots(jsonb) to authenticated;
+
+commit;

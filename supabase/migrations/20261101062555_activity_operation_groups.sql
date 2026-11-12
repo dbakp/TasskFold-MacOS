@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Display-only correlation for rows committed in the same server transaction.
 -- Old rows stay ungrouped. No RPCs, grants, values or timestamp heuristics.
 lock table auth.users in share row exclusive mode;
@@ -31,3 +34,5 @@ end $$;
 create trigger task_activity_operation before insert on public.task_activity for each row execute function taskfold_private.tag_activity_operation();
 create trigger task_node_activity_operation before insert on public.task_node_activity for each row execute function taskfold_private.tag_activity_operation();
 revoke all on function taskfold_private.tag_activity_operation() from public,anon,authenticated,service_role;
+
+commit;

@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Terminal child-field resolution stores only an actor/request fingerprint.
 -- It never reads task content, grants task access, or expires a closed identity.
 create table taskfold_private.child_task_edit_closures (
@@ -173,3 +176,5 @@ declare a uuid:=auth.uid();q uuid;scope taskfold_private.child_task_edit_prepara
  delete from taskfold_private.child_task_edit_preparations where actor_id=a and request_id=q;
  return jsonb_build_object('protocol',1,'account',a,'request_id',q,'task_id',t.id,'task_generation',t.task_generation,'project_id',t.project_id,'node_key',n.node_key,'incarnation',n.incarnation,'revision',n.revision,'replayed',false);
 end $$;
+
+commit;

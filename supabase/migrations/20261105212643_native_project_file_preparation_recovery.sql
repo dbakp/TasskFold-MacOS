@@ -1,3 +1,6 @@
+-- Applied atomically: the Supabase CLI does not wrap migrations in a transaction.
+begin;
+
 -- Recovery never implicitly starts a preparation. Cancelling an unacknowledged
 -- request closes its exact identity before a late prepare can create any work.
 alter function taskfold_private.project_file_preparation_impl(text,uuid,jsonb) rename to project_file_preparation_transfer_v1;
@@ -54,3 +57,5 @@ do $$declare d text;anchor text:=' if operation=''inspect'' then return result;e
  if operation='inspect' then return result;end if;$patch$);
 end$$;
 notify pgrst,'reload schema';
+
+commit;
