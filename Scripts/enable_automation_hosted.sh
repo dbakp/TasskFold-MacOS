@@ -158,7 +158,7 @@ if [ "$DISABLE" = 1 ]; then
   fi
   TMP="$(mktemp -d "${TMPDIR:-/tmp}/taskfold-automation.XXXXXX")"
   printf 'select taskfold_private.configure_webhook_scheduler(null,false);\n' > "$TMP/disable.sql"
-  supabase db query --remote -f "$TMP/disable.sql" > /dev/null
+  supabase db query --remote -f "$TMP/disable.sql" ${SB_YES[@]+"${SB_YES[@]}"} > /dev/null
   printf 'TASKFOLD_WEBHOOK_DISPATCH_ENABLED=0\n' > "$TMP/disable.env"
   supabase secrets set --env-file "$TMP/disable.env" ${SB_YES[@]+"${SB_YES[@]}"} > /dev/null
   say "Dispatch cron deactivated and TASKFOLD_WEBHOOK_DISPATCH_ENABLED=0. Functions stay deployed."
@@ -263,7 +263,7 @@ step "3/6 Store the worker token in Vault for the cron-side proof"
 if [ "$DRY" = 1 ]; then
   say "would run: supabase db query --remote -f <temp>/vault.sql  # only when a new token was generated; SQL file lives in the private temp directory"
 elif [ "$NEW_TOKEN" = 1 ]; then
-  supabase db query --remote -f "$TMP/vault.sql" > /dev/null
+  supabase db query --remote -f "$TMP/vault.sql" ${SB_YES[@]+"${SB_YES[@]}"} > /dev/null
   say "  Vault secret $VAULT_NAME created/updated."
 else
   say "  unchanged."
@@ -301,7 +301,7 @@ if [ "$DRY" = 1 ]; then
 else
   [ -n "$TMP" ] || TMP="$(mktemp -d "${TMPDIR:-/tmp}/taskfold-automation.XXXXXX")"
   printf "select taskfold_private.configure_webhook_scheduler('%s',true);\n" "$PROJECT_REF" > "$TMP/scheduler.sql"
-  supabase db query --remote -f "$TMP/scheduler.sql" > /dev/null
+  supabase db query --remote -f "$TMP/scheduler.sql" ${SB_YES[@]+"${SB_YES[@]}"} > /dev/null
   say "  scheduler configured; cron job $CRON_JOB active."
 fi
 
