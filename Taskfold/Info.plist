@@ -83,6 +83,10 @@
 	<string>Taskfold uses the microphone only when you tap Record to dictate text or to record an audio comment on a task. A recording stays private on this device until you review who can listen and choose to publish it.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Use on-device speech recognition to create an editable transcript. Taskfold does not send recordings to a cloud transcription service.</string>
+	<key>TaskfoldWebhooksEnabled</key>
+	<true/>
+	<key>TaskfoldAutomationEnabled</key>
+	<true/>
 	<key>TaskfoldMixedCompletionEnabled</key>
 	<true/>
 	<key>TaskfoldChildRecordReadsEnabled</key>

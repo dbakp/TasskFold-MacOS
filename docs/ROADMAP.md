@@ -149,11 +149,11 @@ Rules that keep this token-efficient without losing quality:
 ### Phase 3: decide the half-finished advanced work
 Finish, hide or cut each of these:
 - ~~subtask storage migration~~ Done 12 November 2026: server deployed and switches on ([Mac #138](https://github.com/dbakp/TasskFold-MacOS/pull/138), [iOS #140](https://github.com/dbakp/TaskFold-iOS/pull/140)). Archive cleanup and restore stay off. Native signed-in acceptance is still open.
-- audio comment publishing
+- audio comment publishing (personal): ready 12 November 2026, waiting on one hosted setup run (`Scripts/enable_audio_hosted.sh`) before [Mac #142](https://github.com/dbakp/TasskFold-MacOS/pull/142) / [iOS #144](https://github.com/dbakp/TaskFold-iOS/pull/144) merge. Rolled-back hosted acceptance passed. Maintenance cron moves to every 15 minutes. Team audio and restoration stay off. Real microphone and playback need a device.
 - ~~team workspaces~~ Done 12 November 2026: server switches on stage by stage (team setup, native reads, task edits, project adoption, task types, template library) with rolled-back SQL acceptance after each ([Mac #141](https://github.com/dbakp/TasskFold-MacOS/pull/141), [iOS #143](https://github.com/dbakp/TaskFold-iOS/pull/143)). Team audio publishing, audio restoration and file uploads stay off, and team invitations send no email. Multi-device signed-in acceptance is still open.
-- webhooks and API
-- email capture
-- physical geofence delivery
+- webhooks and API: ready 12 November 2026, waiting on one hosted setup run (`Scripts/enable_automation_hosted.sh`) before [Mac #140](https://github.com/dbakp/TasskFold-MacOS/pull/140) / [iOS #142](https://github.com/dbakp/TaskFold-iOS/pull/142) merge. Security review found no defects; rolled-back hosted acceptance passed.
+- ~~email capture~~ Skipped (your decision, 12 November 2026): it needs an inbound mail provider and domain. It stays hidden and its server parts stay off and undeployed.
+- physical geofence delivery: code complete; needs one walk-past test on a real iPhone once a new build is installed (the simulator cannot fire region monitoring).
 
 I'd finish the subtask migration, because it protects data. The rest should ship only if you actually want them.
 
