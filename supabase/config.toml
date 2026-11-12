@@ -1,0 +1,71 @@
+# Keeps gateway JWT flags stable across redeploys. Only function settings are
+# declared here; do not run `supabase config push` from this file.
+project_id = "zqxflydiyfjeedqvyova"
+
+# --- Native session JWT is required at the gateway -------------------------
+
+[functions.import-todoist]
+verify_jwt = true
+
+[functions.audio-comments]
+verify_jwt = true
+
+[functions.automation-keys]
+verify_jwt = true
+
+[functions.automation-webhooks]
+verify_jwt = true
+
+# Not deployed yet. Handler checks the Auth user itself; gateway check stays on.
+[functions.email-routes]
+verify_jwt = true
+
+# Not deployed yet. Handler checks the Auth user itself; gateway check stays on.
+[functions.project-files]
+verify_jwt = true
+
+# Not deployed yet. Handler checks the Auth user itself; gateway check stays on.
+[functions.task-files]
+verify_jwt = true
+
+# Not deployed yet. Source comment says JWT verification stays on; the handler
+# additionally requires its own maintenance key header.
+[functions.task-file-maintenance]
+verify_jwt = true
+
+# --- Custom credentials, so the gateway JWT check must be off --------------
+
+# Authenticates with the x-cron-secret header (constant-time compare, fails
+# closed when the secret is unset).
+[functions.check-due-tasks]
+verify_jwt = false
+
+# Authenticates with the x-cron-secret header (constant-time compare, minimum
+# 32-character secret, fails closed).
+[functions.dispatch-reminders]
+verify_jwt = false
+
+# Handler requires a Bearer user token and validates it against Auth
+# (/auth/v1/user), then checks sub and session id in the claims.
+[functions.delete-account]
+verify_jwt = false
+
+# Authenticates with an HMAC schedule proof from pg_cron, or the maintenance
+# key header (hashed constant-time compare).
+[functions.audio-comment-maintenance]
+verify_jwt = false
+
+# Authenticates with a tfk_v1_ task key; the database validates the key hash,
+# account and action.
+[functions.automation-tasks]
+verify_jwt = false
+
+# Authenticates with an HMAC Taskfold-Schedule proof or the 64-hex worker
+# bearer token (HMAC compare); disabled unless the dispatch switch is set.
+[functions.dispatch-webhooks]
+verify_jwt = false
+
+# Not deployed yet. Authenticates with the X-Taskfold-Removal-Repair operator
+# key header; disabled unless its enable switch is set.
+[functions.account-removal-repair]
+verify_jwt = false

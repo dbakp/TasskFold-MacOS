@@ -325,6 +325,10 @@ Deno.test("webhook actual TLS and HTTP receiver behavior", async (t) => {
         "/CN=receiver.example",
         "-addext",
         "subjectAltName=DNS:receiver.example",
+        // OpenSSL 3+/4 marks -x509 certificates CA:TRUE by default; the TLS stack
+        // refuses a CA certificate used as the server leaf. LibreSSL does not.
+        "-addext",
+        "basicConstraints=critical,CA:FALSE",
         "-keyout",
         directory + "/key.pem",
         "-out",
