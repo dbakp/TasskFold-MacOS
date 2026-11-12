@@ -273,6 +273,21 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if let name = option("capture-ai") {
+                    // Brain dump or Smart reschedule hosted alone (a sheet cannot be captured with the window):
+                    // --capture-ai=braindump|reschedule with --ai-fixture; --braindump-review opens the review, --ai-fixture-notes adds day notes.
+                    let binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+                    let root: AnyView = name == "braindump"
+                        ? AnyView(BrainDumpView(request: (try? BrainDumpRequest(workspace: binding, session: store.backend.reminderSessionIncarnation))!))
+                        : AnyView(SmartRescheduleView(request: SmartRescheduleRequest(workspace: binding)))
+                    let size = NSSize(width: 560, height: name == "braindump" ? 780 : 1280)
+                    let host = NSHostingView(rootView: root.environment(store).environment(workspace).frame(width: size.width, height: size.height).background(Color(nsColor: .windowBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(3))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if arguments.contains("--capture-habits") {
                     // Habits hosted alone, like the other captures: add --habits-fixture and optionally --habit-detail.
                     workspace.section = .habits
@@ -701,6 +716,8 @@ struct RootView: View {
             }
             // Daily planning captures: --dayplan-fixture replaces the samples with nine tasks due today (six estimated, over the free time).
             if DayPlanFixture.enabled { store.snapshot.tables["tasks"] = DayPlanFixture.tasks(user: store.userID, shutdown: DayPlanFixture.step == "shutdown") }
+            // On-device AI captures: --ai-fixture seeds seven overdue tasks and two for today, keyed to today's date.
+            if AIFixture.enabled { store.snapshot.tables["tasks"] = AIFixture.tasks(user: store.userID, today: store.calendarContext.today) }
             // Momentum captures: --momentum-fixture=streak|vacation|milestone adds a recorded history and goals.
             if let value = MomentumFixture.variant(arguments) { MomentumFixture.apply(to: &store.snapshot, account: store.userID, variant: value) }
             // Habit captures: --habits-fixture adds four tracked habits with a history (add --section=habits, and --habit-detail for the detail).
@@ -768,6 +785,8 @@ struct WorkspaceView: View {
         .sheet(isPresented: $workspace.finderPresented, onDismiss: { workspace.finishFinderDismissal() }) { FinderView() }
         .sheet(item: $workspace.planning) { kind in PlanDayView(kind: kind, queue: workspace.planQueue(kind)) }
         .sheet(isPresented: $workspace.shuttingDown) { DayPlanShutdownView() }
+        .sheet(item: $workspace.brainDump) { BrainDumpView(request: $0) }
+        .sheet(item: $workspace.smartReschedule) { SmartRescheduleView(request: $0) }
         .sheet(isPresented: $workspace.onboarding) { OnboardingView() }
         .onAppear {
             // First launch shows the tour once; fixtures opt in with --onboarding so tests stay deterministic.

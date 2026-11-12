@@ -189,6 +189,20 @@ final class Workspace {
     var planning: PlanKind?
     /// Presents the end-of-day shutdown review.
     var shuttingDown = false
+    /// Brain dump and Smart reschedule: on-device proposals the person reviews before anything is saved.
+    var brainDump: BrainDumpRequest?
+    var smartReschedule: SmartRescheduleRequest?
+    func openBrainDump(project: String = "", text: String = "") {
+        guard store.signedIn else { return }
+        do {
+            brainDump = try BrainDumpRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration),
+                                             session: store.backend.reminderSessionIncarnation, project: project, initialText: text)
+        } catch { store.error = error.localizedDescription }
+    }
+    func openSmartReschedule() {
+        guard store.signedIn else { return }
+        smartReschedule = SmartRescheduleRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+    }
     /// Presents the welcome tour.
     var onboarding = false
     var confirmation: Confirmation?

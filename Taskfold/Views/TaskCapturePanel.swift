@@ -344,6 +344,16 @@ struct TaskCapturePanel: View {
                     applyEdit(record, from: effectiveNow)
                 })
             }
+            if onClose == nil {
+                Button {
+                    // The composer closes first, so the Brain dump sheet is presented by the window itself.
+                    let draft = text, project = effective.string("project_id")
+                    close()
+                    DispatchQueue.main.async { workspace.openBrainDump(project: project, text: draft) }
+                } label: { Label("Brain dump", systemImage: "sparkles").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.accent) }
+                    .buttonStyle(.plain).pointerStyle(.link).help("Turn a messy paragraph into tasks, on this device")
+                    .accessibilityIdentifier("quickBrainDump")
+            }
             Spacer()
             Button("Add Task", action: submitInWorkspace).buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction).disabled(!canAdd)
