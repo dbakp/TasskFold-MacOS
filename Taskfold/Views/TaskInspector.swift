@@ -8,11 +8,19 @@ import AppKit
 struct TaskInspector: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
+    /// UI-test fixtures that still use embedded legacy subtasks open the classic editor instead of the independent-subtask detail.
+    private var legacySubtaskFixture: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("--legacy-subtasks")
+        #else
+        false
+        #endif
+    }
     var body: some View {
         Group {
             if let task = workspace.primaryTask {
                 Group {
-                    if store.childTaskFieldEditingEnabled, let path = SubtaskTree.referencePath(task.id) {
+                    if store.childTaskFieldEditingEnabled, !legacySubtaskFixture, let path = SubtaskTree.referencePath(task.id) {
                         ChildTaskFieldDetailView(reference: task.id, root: store.record("tasks", id: path[0]), workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
                     } else { TaskInspectorForm(taskID: task.id) }
                 }.id(task.id).transition(.panelReveal(distance: 24))

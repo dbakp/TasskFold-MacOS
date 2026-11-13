@@ -223,6 +223,8 @@ final class Workspace {
     @ObservationIgnored weak var undoManager: UndoManager?
     @ObservationIgnored private var confirmationTimer: Task<Void, Never>?
     var drag = DragCoordinator()
+    /// DEBUG launch option `--section=` kept through the workspace's first load, which otherwise resets navigation to Today.
+    @ObservationIgnored var launchSection: SidebarItem?
 
     init(store: Store) {
         self.store = store
