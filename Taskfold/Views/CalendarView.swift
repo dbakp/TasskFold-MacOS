@@ -216,6 +216,10 @@ struct CalendarView: View {
             guard store.canApplyHistory(request), let manager = workspace.undoManager, manager.canUndo else { return false }
             manager.undo()
             return store.redoStack.last?.id == request.entry
+        }, fitDay: { fit, tasks in
+            var saved = false
+            workspace.run("Fit My Day") { saved = store.applyDayFit(fit, tasks: tasks) }
+            return saved
         })
     }
 
