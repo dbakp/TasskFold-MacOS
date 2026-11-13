@@ -29,7 +29,8 @@ extension Workspace {
         guard rosterAccount != store.userID else { return }
         rosterAccount = store.userID
         rosterCache = (try? Data(contentsOf: memberCacheURL)).flatMap { try? TaskfoldJSONDecoder().decode(MemberCache.self, from: $0) } ?? MemberCache()
-        projectMembers = rosterCache.people
+        // Rosters already in memory (a DEBUG fixture seeds them before the first load) win over the saved cache.
+        projectMembers = rosterCache.people.merging(projectMembers) { _, current in current }
     }
     func persistMemberCache() {
         guard rosterAccount == store.userID else { return }

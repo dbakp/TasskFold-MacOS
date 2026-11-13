@@ -307,7 +307,7 @@ struct TaskCapturePanel: View {
                 if canDeadline { Button("Deadline", systemImage: "flag.checkered") { setField("deadline_date", .string(Dates.day(Date()))); DispatchQueue.main.async { openChip = .deadline } } }
                 if canEstimate { Button("Estimate", systemImage: "hourglass") { setField("duration_minutes", .number(30)); DispatchQueue.main.async { openChip = .estimate } } }
                 if canRepeat { Button("Repeat", systemImage: "repeat") { repeatExpanded = true; openChip = .date } }
-            } label: { ChipLabel(icon: "plus") }
+            } label: { ChipLabel(icon: "plus", iconLabel: "Add property") }
             // The button menu style keeps the outlined chip label; borderless would strip it to a bare glyph.
             .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
             .help("Add property").accessibilityLabel("Add property").accessibilityIdentifier("quickChipMore")

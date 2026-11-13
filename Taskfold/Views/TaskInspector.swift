@@ -8,19 +8,12 @@ import AppKit
 struct TaskInspector: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
-    /// UI-test fixtures that still use embedded legacy subtasks open the classic editor instead of the independent-subtask detail.
-    private var legacySubtaskFixture: Bool {
-        #if DEBUG
-        ProcessInfo.processInfo.arguments.contains("--legacy-subtasks")
-        #else
-        false
-        #endif
-    }
     var body: some View {
         Group {
             if let task = workspace.primaryTask {
                 Group {
-                    if store.childTaskFieldEditingEnabled, !legacySubtaskFixture, let path = SubtaskTree.referencePath(task.id) {
+                    // Independent child records live on the server; a local workspace only has embedded subtasks, which the classic editor handles.
+                    if store.childTaskFieldEditingEnabled, !store.localMode, let path = SubtaskTree.referencePath(task.id) {
                         ChildTaskFieldDetailView(reference: task.id, root: store.record("tasks", id: path[0]), workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
                     } else { TaskInspectorForm(taskID: task.id) }
                 }.id(task.id).transition(.panelReveal(distance: 24))
@@ -561,7 +554,7 @@ struct TaskInspectorForm: View {
                 if draft.durationMinutes == nil { Button("Estimate", systemImage: "hourglass") { draft["duration_minutes"] = .number(30); DispatchQueue.main.async { openChip = .estimate } } }
                 if !isSubtask, !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; openChip = .date } }
                 if canAssign { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
-            } label: { ChipLabel(icon: "plus") }
+            } label: { ChipLabel(icon: "plus", iconLabel: "Add property") }
             // The button menu style keeps the outlined chip label; borderless would strip it to a bare glyph.
             .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
             .help("Add property").accessibilityLabel("Add property").accessibilityIdentifier("taskAddProperty")

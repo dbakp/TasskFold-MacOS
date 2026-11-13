@@ -223,8 +223,17 @@ final class Workspace {
     @ObservationIgnored weak var undoManager: UndoManager?
     @ObservationIgnored private var confirmationTimer: Task<Void, Never>?
     var drag = DragCoordinator()
-    /// DEBUG launch option `--section=` kept through the workspace's first load, which otherwise resets navigation to Today.
-    @ObservationIgnored var launchSection: SidebarItem?
+    /// The workspace (account and generation) the current navigation belongs to.
+    @ObservationIgnored private var recordedWorkspace: (account: String, generation: UUID)?
+    /// Navigation resets only when a workspace that was already signed in is replaced. The first workspace of a launch keeps the restored
+    /// section and whatever state was prepared for it (a signed-out launch has nothing to clear, and a DEBUG fixture seeds before it signs in).
+    func workspaceChanged(account: String, generation: UUID) {
+        guard recordedWorkspace?.account != account || recordedWorkspace?.generation != generation else { return }
+        let previous = recordedWorkspace
+        recordedWorkspace = (account, generation)
+        guard let previous, !previous.account.isEmpty else { return }
+        clearNavigationMemory(); section = .today
+    }
 
     init(store: Store) {
         self.store = store
@@ -627,7 +636,8 @@ final class Workspace {
         guard TaskKind.mayComplete(task) else { store.error = "Headings stay open. Open the heading to edit its details."; return }
         // Checking a row that is still lingering undoes its completion instead of completing it again.
         if lingering[task.id] != nil, cancelLingerByUndo(task.id) { return }
-        if store.childTaskCompletionEnabled, Self.subtaskPath(task.id) != nil { completeIndependentChild(task); return }
+        // Independent child records exist only on the server; a local workspace completes its embedded subtasks in place.
+        if store.childTaskCompletionEnabled, !store.localMode, Self.subtaskPath(task.id) != nil { completeIndependentChild(task); return }
         if Self.subtaskPath(task.id) == nil, store.hasSharedTaskSelection([task.id]) {
             var saved = false
             run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { saved = store.toggleNativeTask(task) } }
@@ -663,7 +673,7 @@ final class Workspace {
         if !task.completed { Feedback.complete(); beginLinger(task); confirm("Completed “\(task.title)”"); celebrateDailyGoalIfReached() }
     }
     func toggle(_ ids: Set<String>) {
-        if store.childTaskCompletionEnabled, ids.contains(where: { Self.subtaskPath($0) != nil }) {
+        if store.childTaskCompletionEnabled, !store.localMode, ids.contains(where: { Self.subtaskPath($0) != nil }) {
             if ids.count == 1, let id = ids.first, let task = taskRecord(id) { complete(task); return }
             guard store.childTaskCompletionBatchesEnabled else { store.error = "Bulk subtask completion is not available yet."; return }
             do {

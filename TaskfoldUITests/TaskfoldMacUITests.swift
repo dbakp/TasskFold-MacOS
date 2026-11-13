@@ -5,8 +5,9 @@ import Darwin
 
 extension XCUIApplication {
     /// Static text by what it displays. Row titles carry a `title-<id>` identifier and macOS 27 reports their text as the value, so the plain subscript no longer finds them.
+    /// A static text showing `text`. A task row's title text is spoken as "title, due …, in Project", so the row matches by its title prefix too.
     func textNamed(_ text: String) -> XCUIElement {
-        staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", text, text)).firstMatch
+        staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@ OR value BEGINSWITH %@ OR label BEGINSWITH %@", text, text, text + ", ", text + ", ")).firstMatch
     }
 }
 
@@ -327,6 +328,11 @@ final class TaskfoldMacUITests: XCTestCase {
         for _ in 0..<5 where !toggle.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
         XCTAssertTrue(toggle.isHittable); toggle.click()
         if app.alerts.buttons["Allow"].waitForExistence(timeout: 3) { app.alerts.buttons["Allow"].click() }
+        // Focus alerts need notification permission, which the system grants (or prompts for) outside the app; the runner cannot grant it.
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: toggle)
+        if XCTWaiter.wait(for: [enabled], timeout: 8) != .completed {
+            throw XCTSkip("Notification permission is not granted to this Taskfold build, so Focus alerts cannot be enabled (\(app.staticTexts["focusAlertStatus"].shownText)). Allow notifications for Taskfold in System Settings to run this test.")
+        }
         let picker = app.descendants(matching: .any).matching(identifier: "focusTaskPicker").firstMatch
         for _ in 0..<5 where !picker.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: 400) }
         picker.click(); app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"].click(); app.buttons["startFocus"].click()
@@ -369,7 +375,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock shift at midnight")
         let rollover = app.buttons["quickChipDate"]
         XCTAssertTrue(rollover.waitForExistence(timeout: 5)); XCTAssertTrue(rollover.label.contains("Tomorrow")); app.buttons["Add Task"].click()
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.textNamed("Clock plan").waitForExistence(timeout: 5)); XCTAssertTrue(app.textNamed("Clock shift").exists); XCTAssertTrue(app.textNamed("Literal clock at 13pm").exists)
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch(); XCTAssertTrue(app.textNamed("Clock plan").waitForExistence(timeout: 5)); XCTAssertTrue(app.textNamed("Clock shift").exists); XCTAssertTrue(app.textNamed("Literal clock at 13pm").exists)
     }
 
     @MainActor func testPlanningSuggestionsKeyboardCaptureAndRelaunch() throws {
@@ -378,7 +384,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["referenceSuggestion-due_date:planning:tomorrow"].waitForExistence(timeout: 5)); app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue((input.value as? String ?? "").contains("tomorrow")); input.typeText("every d")
         app.buttons["referenceSuggestion-recurrence:planning:every day"].click(); input.typeText("!30mb"); app.buttons["referenceSuggestion-reminder_specs:planning:!30mb"].click(); app.buttons["Add Task"].click()
-        XCTAssertTrue(app.textNamed("Planned conversation").waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.textNamed("Planned conversation").waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
         XCTAssertTrue(app.textNamed("Planned conversation").waitForExistence(timeout: 5)); app.terminate()
     }
 
@@ -415,7 +421,7 @@ final class TaskfoldMacUITests: XCTestCase {
         link.click()
         XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("2028-01-05")); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("3 left"))
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch(); XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         openChip(app, "taskDate"); if link.isHittable { link.click() }
         XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("2028-01-05")); app.terminate()
     }
@@ -447,8 +453,8 @@ final class TaskfoldMacUITests: XCTestCase {
         let plan = app.staticTexts["inboxFixturePlan"].shownText
         app.buttons["reviewInbox"].click(); XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox launch notes")
-        app.menuButtons["inboxReviewMove"].click(); app.menuItems["Studio"].click()
-        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox studio sketch"); app.buttons["inboxReviewKeep"].click()
+        app.menuButtons["inboxReviewMove"].click(); sleep(1); app.typeKey(.downArrow, modifierFlags: []); app.typeKey(.return, modifierFlags: [])  // the popup's items are not exposed to accessibility on macOS 27 (only the menu bar's are); "Studio" is its only project
+        sleep(1); XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox studio sketch"); app.buttons["inboxReviewKeep"].click()
         XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
         XCTAssertTrue(app.staticTexts["inboxReviewSummary"].waitForExistence(timeout: 5)); app.buttons["inboxReviewUndo"].click()
         XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
@@ -467,7 +473,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCUIElement.perform(withKeyModifiers: [.command]) { second.click() }
         XCTAssertTrue(app.buttons["bulkDeadlines"].waitForExistence(timeout: 5)); app.buttons["bulkDeadlines"].click()
         XCTAssertTrue(app.buttons["bulkDeadlineApply"].waitForExistence(timeout: 5)); app.buttons["bulkDeadlineApply"].click()
-        XCTAssertTrue(app.buttons["undoConfirmation"].waitForExistence(timeout: 5)); app.buttons["undoConfirmation"].click()
+        XCTAssertTrue(app.links["undoConfirmation"].waitForExistence(timeout: 5)); app.links["undoConfirmation"].click()
         app.typeKey("z", modifierFlags: [.command, .shift])
         app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
         XCTAssertTrue(first.waitForExistence(timeout: 10)); first.click()
@@ -597,7 +603,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("project:parity-project AND no date")
         app.popUpButtons["savedViewLayout"].click(); app.menuItems["Board"].click(); app.buttons["saveSavedView"].click()
-        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()  // sidebar only: the selected filter's name is also the window title
         let column = app.scrollViews["savedFilterColumn-all"]; XCTAssertTrue(column.waitForExistence(timeout: 5))
         let last = app.buttons["savedFilterOpen-parity-44"]
         for _ in 0..<30 where !last.isHittable { column.swipeUp(velocity: .slow) }
@@ -621,7 +627,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created:today at 14:00")
         XCTAssertFalse(app.buttons["saveSavedView"].isEnabled); XCTAssertTrue(app.descendants(matching: .any)["filterValidationError"].shownText.contains("creation date without a time"))
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created before:-30 days"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()  // sidebar only: the selected filter's name is also the window title
         XCTAssertTrue(app.buttons["Complete Older reference"].waitForExistence(timeout: 5)); for title in ["Recent addition", "Unknown creation", "Old completed task"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
         view.rightClick(); app.menuItems["Edit Filter…"].click(); app.descendants(matching: .any)["advancedFilter"].click()
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created after:-30 days"); app.buttons["saveSavedView"].click()
@@ -641,7 +647,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("time before:25:00")
         XCTAssertFalse(app.buttons["saveSavedView"].isEnabled)
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("time before:2pm"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()  // sidebar only: the selected filter's name is also the window title
         XCTAssertTrue(app.buttons["Complete Morning plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Tomorrow morning"].exists); XCTAssertFalse(app.buttons["Complete On the hour"].exists)
         view.rightClick(); app.menuItems["Edit Filter…"].click(); app.descendants(matching: .any)["advancedFilter"].click()
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:today at 2pm"); app.buttons["saveSavedView"].click()
@@ -660,7 +666,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("effective-due:today")
         XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()  // sidebar only: the selected filter's name is also the window title
         XCTAssertTrue(app.buttons["Complete Plan only"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Deadline only"].exists)
         XCTAssertFalse(app.buttons["Complete Both uses plan"].exists); XCTAssertFalse(app.buttons["Complete Neither date"].exists)
         view.rightClick(); app.menuItems["Edit Filter…"].click(); app.descendants(matching: .any)["advancedFilter"].click()
@@ -681,7 +687,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText(#"search:"cafe email" & recurring & no time & no labels & #Studio"#)
         XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()  // sidebar only: the selected filter's name is also the window title
         XCTAssertTrue(app.buttons["Complete Send email agenda"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Send email call"].exists); XCTAssertFalse(app.buttons["Complete Email café notes"].exists); XCTAssertFalse(app.buttons["Complete Send email café report"].exists)
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click(); XCTAssertTrue(app.buttons["Complete Send email agenda"].exists)
         app.textNamed("Future filter").click(); app.buttons["Edit Filter…"].click()
@@ -842,8 +848,9 @@ final class TaskfoldMacUITests: XCTestCase {
         let list = app.outlines["taskList"]
         XCTAssertTrue(list.waitForExistence(timeout: 10))
         list.scroll(byDeltaX: 0, deltaY: -600)
+        // Rows scrolled partly under the toolbar still report as hittable but lose their frame on the next layout: anchor on rows fully inside the list.
         let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "complete-parity-"))
-            .allElementsBoundByIndex.prefix(30).filter(\.isHittable)
+            .allElementsBoundByIndex.prefix(30).filter { $0.isHittable && list.frame.contains($0.frame) }
         let anchor = app.buttons[try XCTUnwrap(rows.first).identifier]
         let target = app.buttons[try XCTUnwrap(rows.dropFirst(3).first).identifier]
         let y = anchor.frame.minY
@@ -856,14 +863,15 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("4", modifierFlags: .command)
         app.textNamed("Release workshop").firstMatch.click()
         XCTAssertTrue(anchor.waitForExistence(timeout: 5))
-        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Returning to the project must restore the viewport")
+        sleep(1)
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Returning to the project must restore the viewport (anchor \(anchor.frame) was y=\(y); list \(list.frame); window title \(app.windows.firstMatch.title))")
     }
 
     @MainActor func testAssignmentsIncludeNestedTasksAndPersist() throws {
         func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
         let child = try nestedID(["assignment-root", "assigned-child"])
         let grand = try nestedID(["assignment-root", "assigned-child", "assigned-grand"])
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--assignment-fixture", "--legacy-subtasks"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--assignment-fixture"]; app.launch()
         XCTAssertTrue(app.staticTexts["title-assignment-root"].waitForExistence(timeout: 10))
         app.textNamed("Assigned to Me").firstMatch.click()
         XCTAssertTrue(app.staticTexts["title-" + child].waitForExistence(timeout: 5))
@@ -880,7 +888,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.staticTexts["title-assignment-root"].click()
         app.textNamed("Assigned to Me").firstMatch.click()
         XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 5))
-        app.terminate(); app.launchArguments = ["--uitesting", "--legacy-subtasks"]; app.launch()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         XCTAssertTrue(app.textNamed("Assigned to Me").firstMatch.waitForExistence(timeout: 10))
         app.textNamed("Assigned to Me").firstMatch.click()
         XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 10))
@@ -1049,7 +1057,7 @@ final class TaskfoldMacUITests: XCTestCase {
         func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
         let childID = try nestedID(["hierarchy-root", "child-one"])
         let grandchildID = try nestedID(["hierarchy-root", "child-one", "grandchild-one"])
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture", "--legacy-subtasks"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture"]; app.launch()
         let root = app.staticTexts["title-hierarchy-root"], child = app.staticTexts["title-" + childID], grandchild = app.staticTexts["title-" + grandchildID]
         XCTAssertTrue(root.waitForExistence(timeout: 10))
         XCTAssertFalse(child.exists)
@@ -1063,10 +1071,11 @@ final class TaskfoldMacUITests: XCTestCase {
         let title = app.descendants(matching: .any)["taskTitle"]
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         XCTAssertEqual(title.value as? String, "Review checklist")
-        XCTAssertFalse(app.textFields["addSubtask"].exists, "Sub-subtasks cannot have another level")
+        XCTAssertTrue(app.textFields["addSubtask"].exists, "Nesting continues below a sub-subtask, up to the depth limit")
         title.click(); app.typeKey("a", modifierFlags: .command); app.typeText("Review final checklist"); app.typeKey(.return, modifierFlags: [])
         app.buttons["complete-" + grandchildID].click()
         XCTAssertTrue(app.buttons["reopen-" + grandchildID].waitForExistence(timeout: 5))
+        grandchild.click()  // the title field still has keyboard focus and would take ⌘Z for its own typing
         app.typeKey("z", modifierFlags: .command)
         XCTAssertTrue(app.buttons["complete-" + grandchildID].waitForExistence(timeout: 5))
         child.click(); app.typeKey(" ", modifierFlags: [])
@@ -1074,7 +1083,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["complete-hierarchy-root"].exists, "The parent stays independent")
         app.buttons["expand-hierarchy-root"].click()
         XCTAssertTrue(waitForDisappearance(child, timeout: 5))
-        app.terminate(); app.launchArguments = ["--uitesting", "--legacy-subtasks"]; app.launch()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         XCTAssertTrue(root.waitForExistence(timeout: 10))
         app.buttons["expand-hierarchy-root"].click(); app.buttons["expand-" + childID].click()
         XCTAssertTrue(app.buttons["reopen-" + childID].waitForExistence(timeout: 5))
@@ -1093,7 +1102,8 @@ final class TaskfoldMacUITests: XCTestCase {
         let childID = "subtask:" + (try JSONEncoder().encode(["hierarchy-root", "child-one"])).base64EncodedString()
         let child = app.staticTexts["title-" + childID]
         XCTAssertTrue(child.waitForExistence(timeout: 5))
-        other.press(forDuration: 0.4, thenDragTo: root)
+        // XCUIElement.press(forDuration:thenDragTo:) synthesizes no mouse events on macOS 27; click(forDuration:thenDragTo:) does, and starts the table drag.
+        other.click(forDuration: 0.4, thenDragTo: root)
         sleep(1)
         XCTAssertLessThan(other.frame.minY, root.frame.minY)
         XCTAssertGreaterThan(child.frame.minY, root.frame.minY)
@@ -1104,7 +1114,7 @@ final class TaskfoldMacUITests: XCTestCase {
     }
 
     @MainActor func testCreateSubSubtaskAndEnforceDepthLimit() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture", "--legacy-subtasks"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture"]; app.launch()
         let childID = "subtask:" + (try JSONEncoder().encode(["hierarchy-root", "child-two"])).base64EncodedString()
         XCTAssertTrue(app.buttons["expand-hierarchy-root"].waitForExistence(timeout: 10))
         app.buttons["expand-hierarchy-root"].click()
@@ -1115,8 +1125,19 @@ final class TaskfoldMacUITests: XCTestCase {
         let created = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "Write release email")).firstMatch
         XCTAssertTrue(created.waitForExistence(timeout: 5))
         created.click()
-        XCTAssertFalse(input.exists)
         XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Write release email")
+        // Subtasks nest to 10 levels (SubtaskTree.maximumDepth): keep adding one level at a time until the field disappears.
+        var depth = 2
+        while input.exists, depth < 12 {
+            depth += 1
+            input.click(); input.typeText("Level \(depth)"); app.typeKey(.return, modifierFlags: [])
+            let next = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "Level \(depth)")).firstMatch
+            XCTAssertTrue(next.waitForExistence(timeout: 5), "Level \(depth) should appear under its parent")
+            next.click()
+            XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Level \(depth)")
+        }
+        XCTAssertEqual(depth, 10, "The inspector must stop offering Add a subtask exactly at the 10-level limit")
+        XCTAssertFalse(input.exists)
     }
 
     @MainActor func testTaskEntryIsExplicitAndFilterLivesAboveTasks() throws {
@@ -1159,7 +1180,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("2", modifierFlags: .command)
         let first = app.staticTexts["title-drag-fixture-1"], last = app.staticTexts["title-drag-fixture-2"]
         XCTAssertTrue(last.waitForExistence(timeout: 5))
-        last.press(forDuration: 0.4, thenDragTo: first)
+        last.click(forDuration: 0.4, thenDragTo: first)
         sleep(1)
         XCTAssertLessThan(last.frame.minY, first.frame.minY)
         let snapshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
@@ -1177,7 +1198,7 @@ final class TaskfoldMacUITests: XCTestCase {
         // Reordering this section must not change either task's due date.
         let source = first.frame.minY > second.frame.minY ? first : second
         let target = first.frame.minY > second.frame.minY ? second : first
-        source.press(forDuration: 0.4, thenDragTo: target)
+        source.click(forDuration: 0.4, thenDragTo: target)
         sleep(1)
         XCTAssertLessThan(source.frame.minY, target.frame.minY)
         app.buttons["overdueToggle"].click()
@@ -1186,7 +1207,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("3", modifierFlags: .command)
         let tomorrow = app.staticTexts["title-drag-fixture-3"]
         XCTAssertTrue(tomorrow.waitForExistence(timeout: 5))
-        second.press(forDuration: 0.4, thenDragTo: tomorrow)
+        second.click(forDuration: 0.4, thenDragTo: tomorrow)
         sleep(1)
         XCTAssertGreaterThan(second.frame.minY, first.frame.minY)
         let snapshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
@@ -1226,7 +1247,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let target = app.staticTexts["title-drag-fixture-3"]
         XCTAssertTrue(source.waitForExistence(timeout: 10), "Fixture rows should appear\n" + app.debugDescription.prefix(6000)); XCTAssertTrue(target.waitForExistence(timeout: 5))
         XCTAssertLessThan(source.frame.minY, target.frame.minY)
-        source.press(forDuration: 0.4, thenDragTo: target)
+        source.click(forDuration: 0.4, thenDragTo: target)
         XCTAssertTrue(source.waitForExistence(timeout: 5))
         let formatter = DateFormatter(); formatter.dateFormat = "yyyy-MM-dd"; formatter.locale = Locale(identifier: "en_US_POSIX")
         let tomorrowHeader = app.descendants(matching: .any)["day-" + formatter.string(from: Calendar.current.date(byAdding: .day, value: 1, to: Date())!)]
@@ -1249,7 +1270,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(delta.waitForExistence(timeout: 10))
         XCTAssertLessThan(beta.frame.minY, gamma.frame.minY, "Bands order P1 before P3")
         // Aim delta above the whole P1 band.
-        delta.press(forDuration: 0.4, thenDragTo: alpha)
+        delta.click(forDuration: 0.4, thenDragTo: alpha)
         sleep(1)
         XCTAssertGreaterThan(delta.frame.minY, beta.frame.minY, "The drop must stay below the P1 band")
         XCTAssertLessThan(delta.frame.minY, gamma.frame.minY, "Aimed above the band, the task lands at the top of its band")
@@ -1766,7 +1787,7 @@ extension TaskfoldMacUITests {
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:+169 hours")
         XCTAssertFalse(app.buttons["saveSavedView"].isEnabled)
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:+1 minute"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()  // sidebar only: the selected filter's name is also the window title
         XCTAssertTrue(app.buttons["Complete Window past"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Window boundary"].exists)
         app.buttons["calendarFixtureAdvanceWindow"].click()
         XCTAssertTrue(app.buttons["Complete Window boundary"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Window later"].exists)
@@ -2065,10 +2086,16 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(report.value as? String, "Open")
         let cards = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "calendar-card-"))
         XCTAssertGreaterThanOrEqual(cards.count, 2)
-        let firstID = cards.element(boundBy: 0).identifier, secondID = cards.element(boundBy: 1).identifier
-        app.buttons[firstID].click(); app.typeKey(.downArrow, modifierFlags: [])
-        XCTAssertTrue(app.buttons[secondID].isSelected)
-        app.typeKey(.upArrow, modifierFlags: []); XCTAssertTrue(app.buttons[firstID].isSelected)
+        // Top-to-bottom order, not query order: the card list settles a moment after the undo.
+        let ordered = cards.allElementsBoundByIndex.sorted { $0.frame.minY < $1.frame.minY }
+        let firstID = ordered[0].identifier, secondID = ordered[1].identifier
+        func selected(_ id: String) -> Bool {
+            for _ in 0..<50 { if app.buttons[id].isSelected { return true }; usleep(100_000) }
+            return false
+        }
+        app.buttons[firstID].click(); sleep(1); app.typeKey(.downArrow, modifierFlags: [])
+        XCTAssertTrue(selected(secondID), "cards: " + ordered.map { "\($0.identifier)=\($0.isSelected)" }.joined(separator: ", ") + " first \(firstID) second \(secondID)")
+        app.typeKey(.upArrow, modifierFlags: []); XCTAssertTrue(selected(firstID))
         app.typeKey(.escape, modifierFlags: []); XCTAssertFalse(app.buttons[firstID].isSelected)
         retainWindow(app, name: "Compact Calendar cards keep their own keyboard focus")
     }
@@ -2108,6 +2135,8 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["widgetQueueFixture"].waitForExistence(timeout: 10))
         app.buttons["widgetQueueFixture"].click()
         app.buttons["widgetConsumeFixture"].click()
+        let failure = app.sheets.firstMatch.buttons["OK"]
+        XCTAssertTrue(failure.waitForExistence(timeout: 5), "The failed save raises the \"Something needs attention\" alert"); failure.click()
         let notice = app.staticTexts["widgetNoticeFixture"]
         XCTAssertTrue(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Widget actions need attention:", "Widget actions need attention:").evaluate(with: notice))
         app.buttons["widgetRecoverFixture"].click()
@@ -2893,7 +2922,7 @@ extension TaskfoldMacUITests {
         if chip.waitForExistence(timeout: 3) { chip.click(); return }
         let plus = app.descendants(matching: .any)["taskAddProperty"].firstMatch
         XCTAssertTrue(plus.waitForExistence(timeout: 5)); plus.click()
-        let item = app.menuItems["Assignee"]; XCTAssertTrue(item.waitForExistence(timeout: 5)); item.click()
+        let item = app.menuItems.matching(NSPredicate(format: "title == %@ AND enabled == true", "Assignee")).firstMatch; XCTAssertTrue(item.waitForExistence(timeout: 5)); item.click()
     }
     /// "Show notes in widgets" now lives in the header's "…" menu. Reads 1 or 0, then closes the menu.
     @MainActor private func notesPinned(_ app: XCUIApplication) -> Int? {
