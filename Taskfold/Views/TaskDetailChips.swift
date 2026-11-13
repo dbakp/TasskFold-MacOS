@@ -16,9 +16,12 @@ struct ChipLabel: View {
     var trailingIcon: String? = nil
     /// Room kept at the trailing edge for controls a container draws over the chip, such as Quick Add's decline "×".
     var trailingInset: CGFloat = 0
+    /// For an icon-only chip inside a Menu: the glyph carries the label, since macOS 27 drops a menu whose label has nothing accessible.
+    var iconLabel: String? = nil
     var body: some View {
         HStack(spacing: DS.Space.xs) {
-            Image(systemName: icon).font(DS.Font.chip).accessibilityHidden(true)
+            if let iconLabel { Image(systemName: icon).font(DS.Font.chip).accessibilityLabel(iconLabel) }
+            else { Image(systemName: icon).font(DS.Font.chip).accessibilityHidden(true) }
             if let text { Text(text).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading) }
             if let trailingIcon { Image(systemName: trailingIcon).font(DS.Font.badge).accessibilityHidden(true) }
         }

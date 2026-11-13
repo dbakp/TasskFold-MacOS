@@ -253,7 +253,7 @@ struct TodoistImportView: View {
             if let preview = flow.preview {
                 Section("Ready to import") {
                     ForEach(TodoistImportFlow.countKeys, id: \.self) { key in
-                        TodoistCountRow(title: key.capitalized, count: preview["counts"].object[key]?.integer ?? 0, identifier: "todoistCount-" + key)
+                        LabeledCountRow(title: key.capitalized, count: preview["counts"].object[key]?.integer ?? 0, identifier: "todoistCount-" + key)
                     }
                     if flow.headingCount > 0 {
                         LabeledContent("Headings included above", value: String(flow.headingCount)).accessibilityIdentifier("todoistHeadingCount")
@@ -280,7 +280,7 @@ struct TodoistImportView: View {
             if let result = flow.result {
                 Section("Import complete") {
                     ForEach(TodoistImportFlow.resultKeys, id: \.self) { key in
-                        TodoistCountRow(title: TodoistImportFlow.resultTitle(key), count: result[key].integer, identifier: "todoistReceipt-" + key)
+                        LabeledCountRow(title: TodoistImportFlow.resultTitle(key), count: result[key].integer, identifier: "todoistReceipt-" + key)
                     }
                 }.accessibilityElement(children: .contain)
             }
@@ -334,8 +334,9 @@ struct TodoistImportView: View {
     #endif
 }
 
-/// A title/count row. The count is its own accessibility element so its label and value stay separate: macOS 27 drops the value of a grouped row.
-private struct TodoistCountRow: View {
+/// A title/count row. The count is its own accessibility element that carries both the label and the value: macOS 27 drops the value of a
+/// grouped row, and exposes a plain Text's string only through its value.
+struct LabeledCountRow: View {
     let title: String
     let count: Int
     let identifier: String
@@ -343,7 +344,7 @@ private struct TodoistCountRow: View {
         HStack {
             Text(title).accessibilityHidden(true)
             Spacer()
-            Text("\(count)").foregroundStyle(.secondary).accessibilityLabel(title).accessibilityIdentifier(identifier)
+            Text("\(count)").foregroundStyle(.secondary).accessibilityLabel(title).accessibilityValue("\(count)").accessibilityIdentifier(identifier)
         }
     }
 }

@@ -5299,7 +5299,7 @@ extension Store {
         let changes = TaskCompletion.complete(root, tasks: tasks, account: userID)
         for change in changes { snapshot.apply(change); snapshot.pending.append(change) }
         if ProcessInfo.processInfo.arguments.contains("--edited-occurrence-fixture"), let creation = changes.last, creation.method == "POST" {
-            let edit = Mutation(table: "tasks", recordID: creation.recordID, method: "PATCH", fields: ["title": .string("Saved occurrence draft")], baseline: ["title": creation.fields["title"] ?? .null])
+            let edit = Mutation(table: "tasks", recordID: creation.recordID, method: "PATCH", fields: ["title": .string("Saved occurrence draft")], baseline: ["title": creation.fields["title"] ?? .null, "task_generation": creation.fields["task_generation"] ?? .null])
             snapshot.apply(edit); snapshot.pending.append(edit)
         }
         var remote = root; remote["completion_version"] = .number(2); remote["description"] = .string("Updated on another device")

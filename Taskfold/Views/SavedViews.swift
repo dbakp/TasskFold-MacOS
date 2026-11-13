@@ -161,7 +161,7 @@ struct SavedViewEditor: View {
                     Toggle("Include completed", isOn: Binding(get: { record["include_completed"].flag }, set: { record["include_completed"] = .bool($0) }))
                 }
                 Section {
-                    if failure == nil { LabeledContent("Matching tasks", value: "\(previewCount)").accessibilityElement(children: .combine).accessibilityValue("\(previewCount)").accessibilityIdentifier("filterPreviewCount") }
+                    if failure == nil { LabeledCountRow(title: "Matching tasks", count: previewCount, identifier: "filterPreviewCount") }
                     Text(store.localMode ? "This filter and its view settings are saved on this device. Sign in to keep them available across devices." : "This filter and its view settings sync with your account. Renaming projects or labels keeps the filter intact.").font(.caption).foregroundStyle(.secondary)
                 }
                 if store.record("saved_views", id: record.id) != nil { Section { Button("Delete filter", role: .destructive) { deleting = true } } }
