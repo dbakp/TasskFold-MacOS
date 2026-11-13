@@ -378,7 +378,10 @@ private struct WebhookHistoryView: View {
 /// Exact isolated host only. The default peer/storage are in memory; the
 /// opt-in recovery fixture uses the real Backend and private OS Keychain.
 @MainActor enum WebhookManagementFixture {
-    static var enabled: Bool { WebhookAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") && UserDefaults.standard.bool(forKey:"localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") }
+    static var enabled: Bool { WebhookAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") && UserDefaults.standard.bool(forKey:"localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test")
+        // Dedicated flag and host: with webhooks shipped on, plain --uitesting launches must reach the real app.
+        && ProcessInfo.processInfo.arguments.contains("--webhook-management-testing")
+        && ["com.dbakp.taskfold.workflowtestsp1","com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") }
     static var authorizationTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-authorization-testing") }
     static var noticeTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-notice-testing") }
     static var clipboardTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-clipboard-testing") }
