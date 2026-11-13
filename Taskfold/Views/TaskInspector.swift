@@ -612,7 +612,7 @@ struct TaskInspectorForm: View {
                     Button { LinkOpener.open(url, workspace: workspace) } label: {
                         Label {
                             VStack(alignment: .leading, spacing: DS.Space.xxs) {
-                                Text(LinkTitles.shared.title(for: url) ?? Linkify.shortLabel(url)).lineLimit(1)
+                                Text(LinkTitles.shared.label(for: url, autoFetch: store.mayAutoFetchLinkTitles(draft))).lineLimit(1)
                                 Text(Linkify.host(url)).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).lineLimit(1)
                             }
                         } icon: { Image(systemName: "safari") }

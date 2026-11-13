@@ -103,7 +103,14 @@ enum SecureSession {
     }
     static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: "com.taskfold.ios.session", kSecAttrAccount as String: "supabase"]
+    /// Items live in the data-protection keychain with the same device-only accessibility everywhere.
     private static var activeQuery: [String: Any] {
+        var value = legacyQuery
+        value[kSecUseDataProtectionKeychain as String] = true
+        return value
+    }
+    /// The query that addresses the pre-hardening item (the file-based login keychain on macOS).
+    private static var legacyQuery: [String: Any] {
         var value = query
         #if DEBUG && !SWIFT_PACKAGE
         if FullSchemaNativeFixture.protectedStorageRequested {
@@ -112,25 +119,26 @@ enum SecureSession {
         #endif
         return value
     }
-    static func read() -> Session? {
-        var q = activeQuery; q[kSecReturnData as String] = true
+    private static func readData(_ query: [String: Any]) -> Data? {
+        var q = query; q[kSecReturnData as String] = true
         var result: CFTypeRef?
-        guard SecItemCopyMatching(q as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
-        return try? Foundation.JSONDecoder().decode(Session.self, from: data)
+        guard SecItemCopyMatching(q as CFDictionary, &result) == errSecSuccess else { return nil }
+        return result as? Data
     }
-    static func save(_ session: Session?) throws {
-        let query = activeQuery
-        guard let session else {
-            let status = SecItemDelete(query as CFDictionary)
-            guard status == errSecSuccess || status == errSecItemNotFound else {
-                throw AppFailure(message: "Could not securely clear your session (\(status)).")
-            }
-            return
-        }
-        let data = try TaskfoldJSONEncoder().encode(session)
-        let update = [kSecValueData as String: data]
-        var status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
+    static func read() -> Session? {
+        if let data = readData(activeQuery), let session = try? Foundation.JSONDecoder().decode(Session.self, from: data) { return session }
+        #if os(macOS)
+        // Migrate a legacy item on read: read the old item, write the new one, then delete the old one,
+        // so nobody is signed out. If the new write fails the old item stays in place.
+        guard let data = readData(legacyQuery), let session = try? Foundation.JSONDecoder().decode(Session.self, from: data) else { return nil }
+        if (try? write(data, query: activeQuery)) != nil { SecItemDelete(legacyQuery as CFDictionary) }
+        return session
+        #else
+        return nil
+        #endif
+    }
+    private static func write(_ data: Data, query: [String: Any]) throws {
+        var status = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         if status == errSecItemNotFound {
             var q = query; q[kSecValueData as String] = data
             q[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
@@ -138,7 +146,61 @@ enum SecureSession {
         }
         guard status == errSecSuccess else { throw AppFailure(message: "Could not securely save your session (\(status)).") }
     }
+    static func save(_ session: Session?) throws {
+        guard let session else {
+            var statuses = [SecItemDelete(activeQuery as CFDictionary)]
+            #if os(macOS)
+            statuses.append(SecItemDelete(legacyQuery as CFDictionary))
+            #endif
+            guard let bad = statuses.first(where: { $0 != errSecSuccess && $0 != errSecItemNotFound }) else { return }
+            throw AppFailure(message: "Could not securely clear your session (\(bad)).")
+        }
+        let data = try TaskfoldJSONEncoder().encode(session)
+        #if os(macOS)
+        do { try write(data, query: activeQuery) }
+        catch {
+            // Without a keychain access group (an unsigned build) the data-protection keychain refuses the write.
+            // Keep the legacy item so the session still persists; it migrates on a signed build.
+            guard readData(legacyQuery) != nil || (error as? AppFailure)?.message.contains("(\(errSecMissingEntitlement))") == true else { throw error }
+            try write(data, query: legacyQuery)
+            return
+        }
+        SecItemDelete(legacyQuery as CFDictionary)
+        #else
+        try write(data, query: activeQuery)
+        #endif
+    }
 }
+
+/// Pure rules behind the client-side hardening: link labels, link-title fetching, and password validation.
+enum ClientHardening {
+    static let minimumPasswordLength = 10
+    static func passwordIsAcceptable(_ password: String) -> Bool { password.count >= minimumPasswordLength }
+    static var passwordRequirement: String { "at least \(minimumPasswordLength) characters" }
+    /// A fetched page title is untrusted text. Drop newlines, control and bidirectional-override characters.
+    static func sanitizedTitle(_ title: String?) -> String? {
+        guard let title else { return nil }
+        let blocked: Set<UInt32> = [0x061C, 0x200E, 0x200F, 0x2028, 0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x2066, 0x2067, 0x2068, 0x2069, 0xFEFF]
+        var cleaned = String.UnicodeScalarView()
+        for scalar in title.unicodeScalars where !blocked.contains(scalar.value) {
+            if CharacterSet.whitespacesAndNewlines.contains(scalar) { cleaned.append(" ") }
+            else if !CharacterSet.controlCharacters.contains(scalar) { cleaned.append(scalar) }
+        }
+        let collapsed = String(cleaned).split(separator: " ").joined(separator: " ")
+        return collapsed.isEmpty ? nil : collapsed
+    }
+    /// The visible label for a link. The real host is always part of it, so a title can never fully replace it.
+    static func linkLabel(host: String, title: String?, fallback: String) -> String {
+        guard let title = sanitizedTitle(title) else { return fallback.isEmpty ? host : fallback }
+        let shown = title.count > 60 ? String(title.prefix(57)) + "…" : title
+        return shown.lowercased() == host.lowercased() ? host : shown + " · " + host
+    }
+    /// Pages are fetched on their own only for the current user's own tasks in non-shared projects.
+    static func mayAutoFetchLinkTitle(taskOwner: String, currentUser: String, shared: Bool) -> Bool {
+        !shared && !currentUser.isEmpty && taskOwner == currentUser
+    }
+}
+
 
 
 #if DEBUG
@@ -675,6 +737,16 @@ final class Backend: NSObject {
         if let password { body["password"] = .string(password) }
         guard !body.isEmpty else { return }
         _ = try await request("/auth/v1/user", method: "PUT", body: body)
+    }
+    /// Changing a password proves the current one first: the account signs in again with it, then the new one is set.
+    func changePassword(current: String, new: String) async throws {
+        guard ClientHardening.passwordIsAcceptable(new) else { throw AppFailure(message: "Use \(ClientHardening.passwordRequirement).") }
+        guard !current.isEmpty else { throw AppFailure(message: "Enter your current password.") }
+        guard current != new else { throw AppFailure(message: "Choose a password that differs from the current one.") }
+        guard let user = session?.user, let email = user.email, !email.isEmpty else { throw AppFailure(message: "Sign in to change your password.") }
+        let context = try reauthenticationContext(account: user.id)
+        guard try await signIn(email: email, password: current, signup: false, reauthenticating: context) else { throw AppFailure(message: "Could not confirm your current password.") }
+        try await updateAccount(password: new)
     }
     func sendPasswordReset(email: String) async throws {
         _ = try await request("/auth/v1/recover", method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)

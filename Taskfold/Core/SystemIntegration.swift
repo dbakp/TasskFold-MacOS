@@ -142,7 +142,13 @@ extension Store {
     private(set) var debugIdentifiers: [String] = []
 
     private static let batchSize = 100
-    private var arguments: [String] { ProcessInfo.processInfo.arguments }
+    private var arguments: [String] {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments
+        #else
+        return []
+        #endif
+    }
     private var debugBuild: Bool {
         #if DEBUG
         return true

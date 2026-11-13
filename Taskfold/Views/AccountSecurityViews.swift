@@ -39,6 +39,7 @@ struct ChangeEmailSheet: View {
 struct ChangePasswordSheet: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @State private var currentPassword = ""
     @State private var password = ""
     @State private var confirmation = ""
     @State private var busy = false
@@ -48,7 +49,8 @@ struct ChangePasswordSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Change Password").font(.headline)
-            SecureField("New password (at least 6 characters)", text: $password).textContentType(.newPassword).textFieldStyle(.roundedBorder).accessibilityIdentifier("newPassword")
+            SecureField("Current password", text: $currentPassword).textContentType(.password).textFieldStyle(.roundedBorder).accessibilityIdentifier("currentPassword")
+            SecureField("New password (\(ClientHardening.passwordRequirement))", text: $password).textContentType(.newPassword).textFieldStyle(.roundedBorder).accessibilityIdentifier("newPassword")
             SecureField("Confirm new password", text: $confirmation).textContentType(.newPassword).textFieldStyle(.roundedBorder).accessibilityIdentifier("confirmPassword")
             if mismatch { Text("The passwords do not match.").font(.caption).foregroundStyle(.red) }
             if let message { Text(message).font(.callout).foregroundStyle(done ? Color.secondary : Color.red).textSelection(.enabled).accessibilityIdentifier("accountMessage") }
@@ -58,7 +60,7 @@ struct ChangePasswordSheet: View {
                 Button(done ? "Done" : "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 if !done {
                     Button("Change Password") { submit() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
-                        .disabled(busy || password.count < 6 || confirmation != password)
+                        .disabled(busy || currentPassword.isEmpty || !ClientHardening.passwordIsAcceptable(password) || confirmation != password)
                 }
             }
         }.padding(20).frame(width: 420)
@@ -67,7 +69,7 @@ struct ChangePasswordSheet: View {
         busy = true; message = nil
         Task {
             defer { busy = false }
-            do { try await store.backend.updateAccount(password: password); done = true; message = "Your password was changed." }
+            do { try await store.backend.changePassword(current: currentPassword, new: password); currentPassword = ""; done = true; message = "Your password was changed." }
             catch { message = error.localizedDescription }
         }
     }

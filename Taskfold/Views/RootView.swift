@@ -798,9 +798,14 @@ struct WorkspaceView: View {
         .sheet(isPresented: $workspace.onboarding) { OnboardingView() }
         .onAppear {
             // First launch shows the tour once; fixtures opt in with --onboarding so tests stay deterministic.
+            #if DEBUG
             let arguments = ProcessInfo.processInfo.arguments
             let fixture = arguments.contains("--uitesting") || arguments.contains("--preview")
-            if arguments.contains("--onboarding") || (!fixture && !UserDefaults.standard.bool(forKey: "onboardingSeen")) {
+            let forced = arguments.contains("--onboarding")
+            #else
+            let fixture = false, forced = false
+            #endif
+            if forced || (!fixture && !UserDefaults.standard.bool(forKey: "onboardingSeen")) {
                 Task { try? await Task.sleep(for: .milliseconds(600)); workspace.onboarding = true }
             }
         }

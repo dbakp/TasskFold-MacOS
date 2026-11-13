@@ -63,7 +63,7 @@ struct AuthView: View {
         .onAppear { focus = .email }
         .accessibilityElement(children: .contain)
     }
-    private var canSubmit: Bool { email.contains("@") && (signup ? password.count >= 6 : !password.isEmpty) }
+    private var canSubmit: Bool { email.contains("@") && (signup ? ClientHardening.passwordIsAcceptable(password) : !password.isEmpty) }
     private func useLocally() {
         guard !switchingLocal else { return }
         switchingLocal = true; message = nil
