@@ -34,6 +34,18 @@ final class ClientHardeningTests: XCTestCase {
         XCTAssertFalse(ClientHardening.linkLabel(host: "example.com", title: spoof, fallback: "x").unicodeScalars.contains { $0.value == 0x202E })
     }
 
+    func testMissingProjectRecordFailsClosed() {
+        XCTAssertTrue(ClientHardening.projectIsShared(projectID: "p1", projectRecordExists: false, inTeamCache: false))
+        XCTAssertFalse(ClientHardening.projectIsShared(projectID: "p1", projectRecordExists: true, inTeamCache: false))
+        XCTAssertTrue(ClientHardening.projectIsShared(projectID: "p1", projectRecordExists: true, inTeamCache: true))
+    }
+
+    func testTaskWithoutProjectIsNotShared() {
+        XCTAssertFalse(ClientHardening.projectIsShared(projectID: "", projectRecordExists: false, inTeamCache: false))
+        XCTAssertTrue(ClientHardening.mayAutoFetchLinkTitle(taskOwner: "me", currentUser: "me", shared: ClientHardening.projectIsShared(projectID: "", projectRecordExists: false, inTeamCache: false)))
+        XCTAssertFalse(ClientHardening.mayAutoFetchLinkTitle(taskOwner: "me", currentUser: "me", shared: ClientHardening.projectIsShared(projectID: "gone", projectRecordExists: false, inTeamCache: false)))
+    }
+
     func testAutoFetchOnlyForOwnTasksInUnsharedProjects() {
         XCTAssertTrue(ClientHardening.mayAutoFetchLinkTitle(taskOwner: "me", currentUser: "me", shared: false))
         XCTAssertFalse(ClientHardening.mayAutoFetchLinkTitle(taskOwner: "me", currentUser: "me", shared: true))

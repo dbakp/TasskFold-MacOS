@@ -375,7 +375,8 @@ final class LinkAwareTextView: NSTextView, NSTextViewDelegate {
 extension Store {
     /// Page titles are fetched without a click only for tasks the current user created in projects that are not shared.
     func mayAutoFetchLinkTitles(_ task: Record) -> Bool {
-        let shared = hasSharedTaskSelection([task.id]) || nativeConversationTeamCache?.knownTeams[task.string("project_id")] != nil
+        let project = task.string("project_id")
+        let shared = hasSharedTaskSelection([task.id]) || ClientHardening.projectIsShared(projectID: project, projectRecordExists: record("projects", id: project) != nil, inTeamCache: nativeConversationTeamCache?.knownTeams[project] != nil)
         return ClientHardening.mayAutoFetchLinkTitle(taskOwner: task.string("user_id"), currentUser: userID, shared: shared)
     }
 }

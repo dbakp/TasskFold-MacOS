@@ -195,6 +195,11 @@ enum ClientHardening {
         let shown = title.count > 60 ? String(title.prefix(57)) + "…" : title
         return shown.lowercased() == host.lowercased() ? host : shown + " · " + host
     }
+    /// A task's project counts as shared when the team cache knows it, or when the task names a project
+    /// whose record is missing (fail closed). A task with no project, such as the Inbox, is not shared.
+    static func projectIsShared(projectID: String, projectRecordExists: Bool, inTeamCache: Bool) -> Bool {
+        inTeamCache || (!projectID.isEmpty && !projectRecordExists)
+    }
     /// Pages are fetched on their own only for the current user's own tasks in non-shared projects.
     static func mayAutoFetchLinkTitle(taskOwner: String, currentUser: String, shared: Bool) -> Bool {
         !shared && !currentUser.isEmpty && taskOwner == currentUser
