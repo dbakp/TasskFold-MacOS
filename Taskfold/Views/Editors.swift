@@ -253,11 +253,7 @@ struct TodoistImportView: View {
             if let preview = flow.preview {
                 Section("Ready to import") {
                     ForEach(TodoistImportFlow.countKeys, id: \.self) { key in
-                        LabeledContent(key.capitalized, value: "\(preview["counts"].object[key]?.integer ?? 0)")
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(key.capitalized)
-                            .accessibilityValue("\(preview["counts"].object[key]?.integer ?? 0)")
-                            .accessibilityIdentifier("todoistCount-" + key)
+                        TodoistCountRow(title: key.capitalized, count: preview["counts"].object[key]?.integer ?? 0, identifier: "todoistCount-" + key)
                     }
                     if flow.headingCount > 0 {
                         LabeledContent("Headings included above", value: String(flow.headingCount)).accessibilityIdentifier("todoistHeadingCount")
@@ -284,11 +280,7 @@ struct TodoistImportView: View {
             if let result = flow.result {
                 Section("Import complete") {
                     ForEach(TodoistImportFlow.resultKeys, id: \.self) { key in
-                        LabeledContent(TodoistImportFlow.resultTitle(key), value: "\(result[key].integer)")
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(TodoistImportFlow.resultTitle(key))
-                            .accessibilityValue("\(result[key].integer)")
-                            .accessibilityIdentifier("todoistReceipt-" + key)
+                        TodoistCountRow(title: TodoistImportFlow.resultTitle(key), count: result[key].integer, identifier: "todoistReceipt-" + key)
                     }
                 }.accessibilityElement(children: .contain)
             }
@@ -340,4 +332,18 @@ struct TodoistImportView: View {
         return try TaskfoldJSONEncoder().encode(Record(fields))
     }
     #endif
+}
+
+/// A title/count row. The count is its own accessibility element so its label and value stay separate: macOS 27 drops the value of a grouped row.
+private struct TodoistCountRow: View {
+    let title: String
+    let count: Int
+    let identifier: String
+    var body: some View {
+        HStack {
+            Text(title).accessibilityHidden(true)
+            Spacer()
+            Text("\(count)").foregroundStyle(.secondary).accessibilityLabel(title).accessibilityIdentifier(identifier)
+        }
+    }
 }

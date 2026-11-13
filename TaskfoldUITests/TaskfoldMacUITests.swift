@@ -3,6 +3,18 @@ import AppKit
 import PDFKit
 import Darwin
 
+extension XCUIApplication {
+    /// Static text by what it displays. Row titles carry a `title-<id>` identifier and macOS 27 reports their text as the value, so the plain subscript no longer finds them.
+    func textNamed(_ text: String) -> XCUIElement {
+        staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", text, text)).firstMatch
+    }
+}
+
+extension XCUIElement {
+    /// macOS 27 exposes SwiftUI `Text` through the accessibility value instead of the label, so read whichever is populated.
+    var shownText: String { if let value = value as? String, !value.isEmpty { return value }; return label }
+}
+
 extension TaskfoldMacUITests {
     @MainActor private func outputTables() throws -> NSDictionary {
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName()).appendingPathComponent("Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
@@ -23,7 +35,7 @@ extension TaskfoldMacUITests {
         if pinned { app.launchArguments.append("--pinned-output-fixture") }
         if let race { app.launchArguments.append("--task-output-race-" + race) }
         try launchHeadingWorkspace(app)
-        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 15), app.debugDescription); today.click()
+        let today = app.textNamed("Today").firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 15), app.debugDescription); today.click()
         if pinned {
             app.buttons["openPinnedNotes"].click()
             let note = app.buttons["pinnedNote-f1810000-0000-4000-8000-000000000001"]
@@ -103,23 +115,25 @@ extension TaskfoldMacUITests {
 }
 
 final class TaskfoldMacUITests: XCTestCase {
-    @MainActor func testTeamOrganizationOverviewAndRoleScopedDetail() {
+    @MainActor func testTeamOrganizationOverviewAndRoleScopedDetail() throws {
+        let reserved = "com.dbakp.taskfold.mac.workflowteststeams"
+        guard [reserved + ".uitests", reserved + ".runner"].contains(Bundle(for: Self.self).bundleIdentifier ?? "") else { throw XCTSkip("Reserved workflowteststeams Mac host required (the team overview fixture only exists in that isolated build)") }
         let app = XCUIApplication()
         app.launchArguments = ["--team-overview-testing"]
         app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.staticTexts["A place for shared work"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.textNamed("A place for shared work").waitForExistence(timeout: 15))
         let overview = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
         overview.name = "Mac team organization overview"; overview.lifetime = .keepAlways; add(overview)
         let team = app.descendants(matching: .any)["team-ea300000-0000-4000-8000-000000000002"].firstMatch
         XCTAssertTrue(team.waitForExistence(timeout: 5)); team.click()
-        XCTAssertTrue(app.staticTexts["Product design"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Launch planning"].exists)
-        XCTAssertTrue(app.staticTexts["Your role: Owner"].exists)
-        XCTAssertTrue(app.staticTexts["You"].exists)
+        XCTAssertTrue(app.textNamed("Product design").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textNamed("Launch planning").exists)
+        XCTAssertTrue(app.textNamed("Your role: Owner").exists)
+        XCTAssertTrue(app.textNamed("You").exists)
         let detail = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
         detail.name = "Mac team organization detail"; detail.lifetime = .keepAlways; add(detail)
         app.buttons["Refresh teams"].click()
-        XCTAssertTrue(app.staticTexts["Product design"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textNamed("Product design").waitForExistence(timeout: 10))
     }
 
     @MainActor func testNormalQuitRetainsLatestInspectorEdit() throws {
@@ -139,7 +153,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.wait(for: .notRunning, timeout: 5), "Exercise normal Quit, not runner force termination")
         app.launchArguments = ["--uitesting", "--section=inbox"]
         app.launch()
-        let row = app.staticTexts[name].firstMatch
+        let row = app.textNamed(name).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 5)); row.click()
         app.typeKey(.return, modifierFlags: [])
         XCTAssertEqual(app.textFields["taskTitle"].value as? String, name)
@@ -223,7 +237,7 @@ final class TaskfoldMacUITests: XCTestCase {
             let updated = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", title), object: editor)
             XCTAssertEqual(XCTWaiter.wait(for: [updated], timeout: 5), .completed,
                            "New capture must show its inspector without navigating or reselecting")
-            XCTAssertFalse(app.staticTexts["No Task Selected"].exists)
+            XCTAssertFalse(app.textNamed("No Task Selected").exists)
         }
     }
 
@@ -288,12 +302,12 @@ final class TaskfoldMacUITests: XCTestCase {
     @MainActor func testOpenListAndFilterPreviewRefreshWithCivilClockEvents() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--calendar-context-testing"]; app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["Complete Yesterday plan"].waitForExistence(timeout: 10))
-        func advance(_ action: String, editor: Bool = false) { app.buttons[editor ? "calendarEditorFixtureClock" : "calendarFixtureClock"].click(); app.menuItems[action].click() }
+        func advance(_ action: String, editor: Bool = false) { app.menuButtons[editor ? "calendarEditorFixtureClock" : "calendarFixtureClock"].click(); app.menuItems[action].click() }
         advance("Fixture silent next day")
         XCTAssertTrue(app.buttons["Complete Today plan A"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Fixed Copenhagen plan"].exists); XCTAssertFalse(app.buttons["Complete Yesterday plan"].exists)
         advance("Fixture Honolulu")
         XCTAssertTrue(app.buttons["Complete Yesterday plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Fixed Copenhagen plan"].exists); XCTAssertFalse(app.buttons["Complete Today plan A"].exists)
-        let view = app.staticTexts["Live calendar"].firstMatch; view.rightClick(); app.menuItems["Edit filter"].click()
+        let view = app.outlines["Sidebar"].staticTexts["Live calendar"].firstMatch; view.rightClick(); app.menuItems["Edit Filter…"].click()
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("effective-due:today")
         let preview = app.descendants(matching: .any)["filterPreviewCount"].firstMatch
@@ -302,7 +316,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let value = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "4"), object: preview)
         XCTAssertEqual(XCTWaiter.wait(for: [value], timeout: 5), .completed)
         XCTAssertEqual(expression.value as? String, "effective-due:today")
-        XCTAssertEqual(app.staticTexts["calendarEditorFixtureDataStatus"].label, "Workspace unchanged")
+        XCTAssertEqual(app.staticTexts["calendarEditorFixtureDataStatus"].shownText, "Workspace unchanged")
         app.buttons["Cancel"].click(); XCTAssertTrue(app.buttons["Complete Today plan A"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Today deadline"].exists)
     }
 
@@ -320,7 +334,7 @@ final class TaskfoldMacUITests: XCTestCase {
             let refresh = app.buttons["focusRefreshAlerts"]
             for _ in 0..<5 where !refresh.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
             refresh.click()
-            XCTAssertTrue(app.staticTexts["Pending Focus alerts: \(count)"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.textNamed("Pending Focus alerts: \(count)").waitForExistence(timeout: 5))
         }
         pending(1)
         let pause = app.buttons["pauseResumeFocus"]
@@ -337,25 +351,25 @@ final class TaskfoldMacUITests: XCTestCase {
         let picker = app.descendants(matching: .any).matching(identifier: "focusTaskPicker").firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 10)); picker.click(); app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"].click(); app.buttons["startFocus"].click()
         XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); app.buttons["pauseResumeFocus"].click()
-        XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); let remaining = app.staticTexts["focusRemaining"].label
+        XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Paused"); let remaining = app.staticTexts["focusRemaining"].shownText
         app.buttons["closeFocusSession"].click(); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         let open = app.buttons["openFocusSession"]; XCTAssertTrue(open.waitForExistence(timeout: 10)); open.click()
-        XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); XCTAssertEqual(app.staticTexts["focusRemaining"].label, remaining)
-        app.buttons["pauseResumeFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].label, "Time to focus")
-        app.buttons["endFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].label, "Session ended"); app.terminate()
+        XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Paused"); XCTAssertEqual(app.staticTexts["focusRemaining"].shownText, remaining)
+        app.buttons["pauseResumeFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Time to focus")
+        app.buttons["endFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Session ended"); app.terminate()
     }
     @MainActor func testStrictClockFeedbackSuggestionAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch(); defer { app.terminate() }
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Literal clock at 13pm")
-        let warning = app.staticTexts["quickEntryWarning"].firstMatch; XCTAssertTrue(warning.waitForExistence(timeout: 5)); XCTAssertTrue(warning.label.contains("valid planned time"))
+        let warning = app.staticTexts["quickEntryWarning"].firstMatch; XCTAssertTrue(warning.waitForExistence(timeout: 5)); XCTAssertTrue(warning.shownText.contains("valid planned time"))
         app.buttons["Add Task"].click(); app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock plan tomorrow in the mor")
         let choice = app.buttons["referenceSuggestion-due_time:planning:in the morning"]; XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click(); app.buttons["Add Task"].click()
-        app.buttons["Inbox"].firstMatch.click(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5))
+        app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(app.textNamed("Clock plan").waitForExistence(timeout: 5))
         app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock shift at midnight")
         let rollover = app.buttons["quickChipDate"]
         XCTAssertTrue(rollover.waitForExistence(timeout: 5)); XCTAssertTrue(rollover.label.contains("Tomorrow")); app.buttons["Add Task"].click()
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["Clock shift"].exists); XCTAssertTrue(app.staticTexts["Literal clock at 13pm"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.textNamed("Clock plan").waitForExistence(timeout: 5)); XCTAssertTrue(app.textNamed("Clock shift").exists); XCTAssertTrue(app.textNamed("Literal clock at 13pm").exists)
     }
 
     @MainActor func testPlanningSuggestionsKeyboardCaptureAndRelaunch() throws {
@@ -364,8 +378,8 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["referenceSuggestion-due_date:planning:tomorrow"].waitForExistence(timeout: 5)); app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue((input.value as? String ?? "").contains("tomorrow")); input.typeText("every d")
         app.buttons["referenceSuggestion-recurrence:planning:every day"].click(); input.typeText("!30mb"); app.buttons["referenceSuggestion-reminder_specs:planning:!30mb"].click(); app.buttons["Add Task"].click()
-        XCTAssertTrue(app.staticTexts["Planned conversation"].waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        XCTAssertTrue(app.staticTexts["Planned conversation"].waitForExistence(timeout: 5)); app.terminate()
+        XCTAssertTrue(app.textNamed("Planned conversation").waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.textNamed("Planned conversation").waitForExistence(timeout: 5)); app.terminate()
     }
 
     @MainActor func testReferenceSuggestionsKeyboardCaptureAndRelaunch() throws {
@@ -377,9 +391,9 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue((input.value as? String ?? "").contains("Client Work")); XCTAssertTrue(app.buttons["Add Task"].exists)
         input.typeText("/Ne"); app.buttons["referenceSuggestion-section_id:qe-next"].click()
         input.typeText("@Cli"); app.buttons["referenceSuggestion-labels:qe-client-label"].click()
-        app.buttons["Add Task"].click(); app.buttons["Client Work"].firstMatch.click()
-        XCTAssertTrue(app.staticTexts["Suggested proposal"].waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        app.buttons["Client Work"].firstMatch.click(); XCTAssertTrue(app.staticTexts["Suggested proposal"].waitForExistence(timeout: 5)); app.terminate()
+        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click()
+        XCTAssertTrue(app.textNamed("Suggested proposal").waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click(); XCTAssertTrue(app.textNamed("Suggested proposal").waitForExistence(timeout: 5)); app.terminate()
     }
 
     @MainActor func testNamedRepeatBoundariesCaptureInspectorAndRelaunch() throws {
@@ -388,8 +402,8 @@ final class TaskfoldMacUITests: XCTestCase {
         let name = "Boundary review " + String(UUID().uuidString.prefix(6))
         input.typeText(name + " every day from 3 January 2028 until 5 January 2028 for 3 occurrences {6 January 2028} ~25m")
         let summary = app.staticTexts["quickRepeatSummary"]; XCTAssertTrue(summary.waitForExistence(timeout: 5))
-        XCTAssertTrue(summary.label.contains("2028-01-05")); XCTAssertTrue(summary.label.contains("3 left"))
-        app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click(); XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        XCTAssertTrue(summary.shownText.contains("2028-01-05")); XCTAssertTrue(summary.shownText.contains("3 left"))
+        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         let link = app.buttons["taskRepeat"]
         openChip(app, "taskDate")
         XCTAssertTrue(link.isHittable); link.click(); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
@@ -400,10 +414,10 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertEqual(app.textFields["taskTitle"].value as? String, name, "Space on Repeat must not complete the selected task")
         link.click()
         XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("2028-01-05")); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("3 left"))
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("2028-01-05")); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("3 left"))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         openChip(app, "taskDate"); if link.isHittable { link.click() }
-        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("2028-01-05")); app.terminate()
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("2028-01-05")); app.terminate()
     }
 
     @MainActor func testRecurrenceCaptureInspectorAndRelaunch() throws {
@@ -413,42 +427,42 @@ final class TaskfoldMacUITests: XCTestCase {
         let name = "Studio review " + String(UUID().uuidString.prefix(6))
         input.typeText(name + " every 2 months on last friday starting 2027-01-01 until 2027-06-30 for 3 occurrences")
         XCTAssertTrue(app.staticTexts["quickRepeatSummary"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["quickRepeatSummary"].label.contains("Last Friday"))
-        app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click()
-        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        XCTAssertTrue(app.staticTexts["quickRepeatSummary"].shownText.contains("Last Friday"))
+        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click()
+        XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         let link = app.buttons["taskRepeat"]
         openChip(app, "taskDate")
         XCTAssertTrue(link.isHittable); link.click()
         XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("3 left"))
-        app.typeKey(.escape, modifierFlags: []); app.buttons["Today"].firstMatch.click(); app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
-        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("3 left"))
+        app.typeKey(.escape, modifierFlags: []); app.outlines["Sidebar"].staticTexts["Today"].firstMatch.click(); app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         openChip(app, "taskDate")
-        link.click(); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("Last Friday")); app.terminate()
+        link.click(); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].shownText.contains("Last Friday")); app.terminate()
     }
 
     @MainActor func testInboxReviewMoveKeepCompleteUndoAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--inbox-review-testing", "--inbox-review-seed"]; app.launch()
-        XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].label, "Inbox: 3")
-        let plan = app.staticTexts["inboxFixturePlan"].label
+        XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].shownText, "Inbox: 3")
+        let plan = app.staticTexts["inboxFixturePlan"].shownText
         app.buttons["reviewInbox"].click(); XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox launch notes")
-        app.buttons["inboxReviewMove"].click(); app.buttons["Studio"].click()
-        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox studio sketch"); app.buttons["inboxReviewKeep"].click()
-        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox launch notes")
+        app.menuButtons["inboxReviewMove"].click(); app.menuItems["Studio"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox studio sketch"); app.buttons["inboxReviewKeep"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
         XCTAssertTrue(app.staticTexts["inboxReviewSummary"].waitForExistence(timeout: 5)); app.buttons["inboxReviewUndo"].click()
-        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
-        XCTAssertEqual(app.staticTexts["inboxReviewRemaining"].label, "1 open task remains in Inbox."); app.buttons["inboxReviewClose"].click()
-        XCTAssertEqual(app.staticTexts["inboxProjection"].label, "Inbox: 1"); XCTAssertEqual(app.staticTexts["inboxFixturePlan"].label, plan)
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewRemaining"].shownText, "1 open task remains in Inbox."); app.buttons["inboxReviewClose"].click()
+        XCTAssertEqual(app.staticTexts["inboxProjection"].shownText, "Inbox: 1"); XCTAssertEqual(app.staticTexts["inboxFixturePlan"].shownText, plan)
         app.terminate(); app.launchArguments.removeAll { $0 == "--inbox-review-seed" }; app.launch()
-        XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].label, "Inbox: 1")
+        XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].shownText, "Inbox: 1")
         app.buttons["reviewInbox"].click(); XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox studio sketch"); app.buttons["inboxReviewClose"].click(); app.terminate()
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox studio sketch"); app.buttons["inboxReviewClose"].click(); app.terminate()
     }
 
     @MainActor func testBulkDeadlineInspectorSetUndoAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--deadline-fixture"]; app.launch()
-        let first = app.staticTexts["Prepare launch"], second = app.staticTexts["Review copy"]
+        let first = app.textNamed("Prepare launch"), second = app.textNamed("Review copy")
         XCTAssertTrue(first.waitForExistence(timeout: 10)); first.click()
         XCUIElement.perform(withKeyModifiers: [.command]) { second.click() }
         XCTAssertTrue(app.buttons["bulkDeadlines"].waitForExistence(timeout: 5)); app.buttons["bulkDeadlines"].click()
@@ -459,7 +473,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(first.waitForExistence(timeout: 10)); first.click()
         XCUIElement.perform(withKeyModifiers: [.command]) { second.click() }
         app.buttons["bulkDeadlines"].click()
-        XCTAssertFalse(app.staticTexts["No deadline"].exists)
+        XCTAssertFalse(app.textNamed("No deadline").exists)
         XCTAssertFalse(app.buttons["bulkDeadlineApply"].isEnabled); app.buttons["bulkDeadlineCancel"].click(); app.terminate()
     }
 
@@ -471,15 +485,15 @@ final class TaskfoldMacUITests: XCTestCase {
         input.typeText(name + " tomorrow at 4pm !30mb !2h !tomorrow 9am")
         let chips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "decline-reminder_specs:"))
         XCTAssertTrue(chips.firstMatch.waitForExistence(timeout: 5)); XCTAssertEqual(chips.count, 3)
-        app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click()
-        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click()
+        XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         let link = app.buttons["taskReminders"]
         for _ in 0..<6 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
         XCTAssertTrue(link.isHittable); link.click()
         XCTAssertTrue(app.buttons["30 min before"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@ OR label BEGINSWITH %@", "Fixed instant", "Fixed instant")).count, 2)
         app.buttons["Done"].click(); app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
-        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         for _ in 0..<6 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
         link.click(); XCTAssertTrue(app.buttons["30 min before"].waitForExistence(timeout: 5)); app.terminate()
     }
@@ -494,8 +508,8 @@ final class TaskfoldMacUITests: XCTestCase {
         let rule = app.textFields["reminderRepeatRule"]; XCTAssertTrue(rule.waitForExistence(timeout: 5))
         rule.click(); app.typeKey("a", modifierFlags: .command); rule.typeText("every! day"); XCTAssertFalse(app.buttons["reminderSave"].isEnabled)
         app.typeKey("a", modifierFlags: .command); rule.typeText("every 2 weeks on monday and friday for 5 occurrences")
-        XCTAssertTrue(app.buttons["reminderSave"].isEnabled); XCTAssertTrue(app.staticTexts["reminderRepeatSummary"].label.contains("5 occurrences total")); app.buttons["reminderSave"].click()
-        XCTAssertTrue(app.buttons["reminderEdit-1"].waitForExistence(timeout: 5)); app.buttons["Done"].click(); app.buttons["Today"].firstMatch.click()
+        XCTAssertTrue(app.buttons["reminderSave"].isEnabled); XCTAssertTrue(app.staticTexts["reminderRepeatSummary"].shownText.contains("5 occurrences total")); app.buttons["reminderSave"].click()
+        XCTAssertTrue(app.buttons["reminderEdit-1"].waitForExistence(timeout: 5)); app.buttons["Done"].click(); app.outlines["Sidebar"].staticTexts["Today"].firstMatch.click()
         app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
         XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
         for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }; reminders.click()
@@ -515,7 +529,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["reminderEdit-1"].waitForExistence(timeout: 5))
         app.buttons["Done"].click()
         // Selecting another scope flushes the inspector's autosave before relaunch.
-        app.buttons["Today"].firstMatch.click()
+        app.outlines["Sidebar"].staticTexts["Today"].firstMatch.click()
         app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
         XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
         for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
@@ -533,11 +547,11 @@ final class TaskfoldMacUITests: XCTestCase {
         input.typeText(title + #" #"Client Work" /"Next steps" +Alex @"Client notes""#)
         XCTAssertTrue(app.buttons["decline-project_id"].waitForExistence(timeout: 5))
         app.buttons["Add Task"].click()
-        app.buttons["Client Work"].firstMatch.click()
-        XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Next steps"].exists)
+        app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click()
+        XCTAssertTrue(app.textNamed(title).waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Next steps").exists)
         app.terminate(); app.launchArguments = ["--uitesting", "--section=project:qe-work"]; app.launch()
-        XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed(title).waitForExistence(timeout: 5))
     }
     override func setUp() { continueAfterFailure = false }
 
@@ -545,19 +559,19 @@ final class TaskfoldMacUITests: XCTestCase {
     @MainActor func testHourlyPlannerScheduleAndUndo() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--planner-fixture"]; app.launch()
         XCTAssertTrue(app.buttons["plannerSchedule"].waitForExistence(timeout: 10))
-        app.buttons["plannerShowAllDay"].tap()
+        app.buttons["plannerShowAllDay"].click()
         XCTAssertTrue(app.buttons["plannerAllDay-planner-report"].waitForExistence(timeout: 5))
-        app.buttons["plannerAllDay-planner-report"].tap()
+        app.buttons["plannerAllDay-planner-report"].click()
         XCTAssertTrue(app.textFields["plannerEstimate"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.textFields["plannerEstimate"].value as? String, "25")
-        app.buttons["plannerSave"].tap()
-        XCTAssertTrue(app.buttons["plannerUndo"].waitForExistence(timeout: 5)); app.buttons["plannerUndo"].tap()
-        app.buttons["plannerShowAllDay"].tap()
+        app.buttons["plannerSave"].click()
+        XCTAssertTrue(app.buttons["plannerUndo"].waitForExistence(timeout: 5)); app.buttons["plannerUndo"].click()
+        app.buttons["plannerShowAllDay"].click()
         XCTAssertTrue(app.buttons["plannerAllDay-planner-report"].waitForExistence(timeout: 5))
-        app.buttons["plannerAllDay-planner-report"].tap(); app.buttons["plannerSave"].tap()
+        app.buttons["plannerAllDay-planner-report"].click(); app.buttons["plannerSave"].click()
         app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day"]; app.launch()
-        app.buttons["Calendar"].firstMatch.tap()
-        XCTAssertTrue(app.otherElements["plannerBlock-planner-report"].waitForExistence(timeout: 10))
+        app.outlines["Sidebar"].staticTexts["Calendar"].firstMatch.click()
+        XCTAssertTrue(app.descendants(matching: .any)["plannerBlock-planner-report"].firstMatch.waitForExistence(timeout: 10))
     }
 
     @MainActor func testPlannerEstimateValidationCancelAndRelaunch() throws {
@@ -571,7 +585,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["plannerSave"].isEnabled); XCTAssertFalse(app.staticTexts["plannerEstimateValidation"].exists)
         app.buttons["Cancel"].click(); XCTAssertTrue(report.waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["plannerUndo"].exists)
         app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day"]; app.launch()
-        app.buttons["Calendar"].firstMatch.click(); XCTAssertTrue(app.buttons["plannerShowAllDay"].waitForExistence(timeout: 10)); app.buttons["plannerShowAllDay"].click()
+        app.outlines["Sidebar"].staticTexts["Calendar"].firstMatch.click(); XCTAssertTrue(app.buttons["plannerShowAllDay"].waitForExistence(timeout: 10)); app.buttons["plannerShowAllDay"].click()
         XCTAssertTrue(report.waitForExistence(timeout: 5)); report.click(); XCTAssertEqual(estimate.value as? String, "25"); app.buttons["Cancel"].click()
     }
 
@@ -583,7 +597,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("project:parity-project AND no date")
         app.popUpButtons["savedViewLayout"].click(); app.menuItems["Board"].click(); app.buttons["saveSavedView"].click()
-        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         let column = app.scrollViews["savedFilterColumn-all"]; XCTAssertTrue(column.waitForExistence(timeout: 5))
         let last = app.buttons["savedFilterOpen-parity-44"]
         for _ in 0..<30 where !last.isHittable { column.swipeUp(velocity: .slow) }
@@ -605,15 +619,15 @@ final class TaskfoldMacUITests: XCTestCase {
         let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created:today at 14:00")
-        XCTAssertFalse(app.buttons["saveSavedView"].isEnabled); XCTAssertTrue(app.staticTexts["filterValidationError"].label.contains("creation date without a time"))
+        XCTAssertFalse(app.buttons["saveSavedView"].isEnabled); XCTAssertTrue(app.descendants(matching: .any)["filterValidationError"].shownText.contains("creation date without a time"))
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created before:-30 days"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Older reference"].waitForExistence(timeout: 5)); for title in ["Recent addition", "Unknown creation", "Old completed task"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
-        view.rightClick(); app.menuItems["Edit filter"].click(); app.descendants(matching: .any)["advancedFilter"].click()
+        view.rightClick(); app.menuItems["Edit Filter…"].click(); app.descendants(matching: .any)["advancedFilter"].click()
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created after:-30 days"); app.buttons["saveSavedView"].click()
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Recent addition"].waitForExistence(timeout: 5)); for title in ["Older reference", "Unknown creation", "Old completed task"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
-        view.rightClick(); app.menuItems["Edit filter"].click()
+        view.rightClick(); app.menuItems["Edit Filter…"].click()
         let value = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", "filterConditionValue-")).firstMatch
         XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "30 days ago"); app.buttons["Cancel"].click()
     }
@@ -627,13 +641,13 @@ final class TaskfoldMacUITests: XCTestCase {
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("time before:25:00")
         XCTAssertFalse(app.buttons["saveSavedView"].isEnabled)
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("time before:2pm"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Morning plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Tomorrow morning"].exists); XCTAssertFalse(app.buttons["Complete On the hour"].exists)
-        view.rightClick(); app.menuItems["Edit filter"].click(); app.descendants(matching: .any)["advancedFilter"].click()
+        view.rightClick(); app.menuItems["Edit Filter…"].click(); app.descendants(matching: .any)["advancedFilter"].click()
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:today at 2pm"); app.buttons["saveSavedView"].click()
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Morning plan"].waitForExistence(timeout: 5)); for title in ["Tomorrow morning", "On the hour", "Afternoon plan", "All-day plan", "Deadline only"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
-        view.rightClick(); app.menuItems["Edit filter"].click()
+        view.rightClick(); app.menuItems["Edit Filter…"].click()
         let value = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", "filterConditionValue-")).firstMatch
         XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "today at 14:00"); app.buttons["Cancel"].click()
     }
@@ -646,15 +660,15 @@ final class TaskfoldMacUITests: XCTestCase {
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("effective-due:today")
         XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Plan only"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Deadline only"].exists)
         XCTAssertFalse(app.buttons["Complete Both uses plan"].exists); XCTAssertFalse(app.buttons["Complete Neither date"].exists)
-        view.rightClick(); app.menuItems["Edit filter"].click(); app.descendants(matching: .any)["advancedFilter"].click()
+        view.rightClick(); app.menuItems["Edit Filter…"].click(); app.descendants(matching: .any)["advancedFilter"].click()
         XCTAssertTrue((expression.value as? String ?? "").contains(#"effective-due:"today""#))
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date: tomorrow"); app.buttons["saveSavedView"].click()
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Both uses plan"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Plan only"].exists); XCTAssertFalse(app.buttons["Complete Deadline only"].exists)
-        view.rightClick(); app.menuItems["Edit filter"].click()
+        view.rightClick(); app.menuItems["Edit Filter…"].click()
         let value = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", "filterConditionValue-")).firstMatch
         XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "tomorrow"); app.buttons["Cancel"].click()
     }
@@ -667,13 +681,13 @@ final class TaskfoldMacUITests: XCTestCase {
         app.descendants(matching: .any)["advancedFilter"].click()
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText(#"search:"cafe email" & recurring & no time & no labels & #Studio"#)
         XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Send email agenda"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Send email call"].exists); XCTAssertFalse(app.buttons["Complete Email café notes"].exists); XCTAssertFalse(app.buttons["Complete Send email café report"].exists)
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click(); XCTAssertTrue(app.buttons["Complete Send email agenda"].exists)
-        app.staticTexts["Future filter"].click(); app.buttons["Edit filter"].click()
+        app.textNamed("Future filter").click(); app.buttons["Edit Filter…"].click()
         XCTAssertFalse(app.buttons["saveSavedView"].isEnabled); XCTAssertFalse(app.descendants(matching: .any)["advancedFilter"].isEnabled)
-        XCTAssertTrue(app.staticTexts["filterValidationError"].firstMatch.label.contains("preserved")); app.buttons["Cancel"].click()
-        app.terminate(); app.launch(); app.staticTexts["Future filter"].click(); XCTAssertTrue(app.descendants(matching: .any)["savedFilterError"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["filterValidationError"].firstMatch.shownText.contains("preserved")); app.buttons["Cancel"].click()
+        app.terminate(); app.launch(); app.textNamed("Future filter").click(); XCTAssertTrue(app.descendants(matching: .any)["savedFilterError"].exists)
     }
 
     @MainActor func testSavedFilterSurvivesRelaunch() throws {
@@ -685,7 +699,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5))
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("project:parity-project AND no date")
         XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title
         XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.descendants(matching: .any)["task-parity-1"].waitForExistence(timeout: 5))
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Saved filter list on Mac"; shot.lifetime = .keepAlways; add(shot)
@@ -738,7 +752,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(first.waitForExistence(timeout: 5))
         XCTAssertLessThan(first.frame.height, roomy - 3, "Compact must reduce the actual native row height")
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        app.staticTexts["Release workshop"].firstMatch.click()
+        app.textNamed("Release workshop").firstMatch.click()
         XCTAssertTrue(first.waitForExistence(timeout: 5))
         XCTAssertLessThan(first.frame.height, roomy - 3)
     }
@@ -749,7 +763,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(collapse.waitForExistence(timeout: 10)); collapse.click()
         XCTAssertFalse(app.staticTexts["title-parity-0"].exists)
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        app.staticTexts["Release workshop"].firstMatch.click()
+        app.textNamed("Release workshop").firstMatch.click()
         XCTAssertTrue(collapse.waitForExistence(timeout: 5)); XCTAssertEqual(collapse.value as? String, "Collapsed")
         collapse.click()
         app.menuButtons["Task options"].click(); app.menuItems["Layout"].hover(); app.menuItems["Board"].click()
@@ -783,10 +797,10 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testInvitationLinkSurvivesSignedOutDestination() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--invitation-link-fixture"]; app.launch()
-        XCTAssertTrue(app.staticTexts["Project invitations"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textNamed("Project invitations").waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["Sign In…"].exists || app.buttons["Sign In"].exists)
         app.terminate(); app.launchArguments = ["--uitesting", "--keep-invitation-route"]; app.launch()
-        XCTAssertTrue(app.staticTexts["Project invitations"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textNamed("Project invitations").waitForExistence(timeout: 10))
     }
 
     @MainActor func testMemberPhotoLoadsAndNamesSurviveRelaunch() throws {
@@ -798,7 +812,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: loaded, object: photo)], timeout: 25), .completed, "A real remote image must decode and render")
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Live remote image"; shot.lifetime = .keepAlways; self.add(shot)
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        app.staticTexts["Release workshop"].firstMatch.click()
+        app.textNamed("Release workshop").firstMatch.click()
         XCTAssertTrue(person.waitForExistence(timeout: 5)); XCTAssertTrue(person.label.contains("Morgan Lee"))
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: loaded, object: photo)], timeout: 5), .completed)
     }
@@ -840,7 +854,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(target.waitForExistence(timeout: 5))
         XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Undo must preserve the anchor")
         app.typeKey("4", modifierFlags: .command)
-        app.staticTexts["Release workshop"].firstMatch.click()
+        app.textNamed("Release workshop").firstMatch.click()
         XCTAssertTrue(anchor.waitForExistence(timeout: 5))
         XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Returning to the project must restore the viewport")
     }
@@ -849,26 +863,26 @@ final class TaskfoldMacUITests: XCTestCase {
         func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
         let child = try nestedID(["assignment-root", "assigned-child"])
         let grand = try nestedID(["assignment-root", "assigned-child", "assigned-grand"])
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--assignment-fixture"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--assignment-fixture", "--legacy-subtasks"]; app.launch()
         XCTAssertTrue(app.staticTexts["title-assignment-root"].waitForExistence(timeout: 10))
-        app.staticTexts["Assigned to Me"].firstMatch.click()
+        app.textNamed("Assigned to Me").firstMatch.click()
         XCTAssertTrue(app.staticTexts["title-" + child].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["title-assignment-personal"].exists)
         XCTAssertFalse(app.staticTexts["title-assignment-root"].exists)
         app.staticTexts["title-" + child].click()
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Prepare launch notes")
-        app.staticTexts["Today"].firstMatch.click()
+        app.textNamed("Today").firstMatch.click()
         app.buttons["expand-assignment-root"].click(); app.buttons["expand-" + child].click()
         app.staticTexts["title-" + grand].click()
         openAssigneePicker(app); app.buttons["assign-member-ui-testing"].click()
         // Changing selection flushes the inspector's debounced save.
         app.staticTexts["title-assignment-root"].click()
-        app.staticTexts["Assigned to Me"].firstMatch.click()
+        app.textNamed("Assigned to Me").firstMatch.click()
         XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 5))
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        XCTAssertTrue(app.staticTexts["Assigned to Me"].firstMatch.waitForExistence(timeout: 10))
-        app.staticTexts["Assigned to Me"].firstMatch.click()
+        app.terminate(); app.launchArguments = ["--uitesting", "--legacy-subtasks"]; app.launch()
+        XCTAssertTrue(app.textNamed("Assigned to Me").firstMatch.waitForExistence(timeout: 10))
+        app.textNamed("Assigned to Me").firstMatch.click()
         XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 10))
         app.buttons["complete-" + grand].click()
         XCTAssertTrue(waitForDisappearance(app.staticTexts["title-" + grand], timeout: 5))
@@ -885,12 +899,12 @@ final class TaskfoldMacUITests: XCTestCase {
         app.buttons["keepMyEdit"].click()
         XCTAssertTrue(waitForDisappearance(app.links["reviewSyncConflict"], timeout: 5))
         app.staticTexts["title-conflict-task"].click()
-        XCTAssertTrue(app.staticTexts["My revised comment"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Independent teammate comment"].exists)
+        XCTAssertTrue(app.textNamed("My revised comment").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Independent teammate comment").exists)
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         XCTAssertTrue(app.staticTexts["title-conflict-task"].waitForExistence(timeout: 10))
         app.staticTexts["title-conflict-task"].click()
-        XCTAssertTrue(app.staticTexts["Independent teammate comment"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Independent teammate comment").waitForExistence(timeout: 5))
     }
 
 
@@ -952,22 +966,22 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertEqual(currentTask, expectedTask, "Retain every other task field, including the later estimate")
         for key in beforeTables.allKeys as! [String] where key != "tasks" { XCTAssertEqual(afterTables[key] as? NSArray, beforeTables[key] as? NSArray) }
         app.staticTexts["title-conflict-task"].click()
-        XCTAssertTrue(app.staticTexts["Shared revised comment"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Shared revised comment").waitForExistence(timeout: 5))
         openChip(app, "taskDuration"); XCTAssertTrue(app.steppers["taskDuration"].exists)
-        XCTAssertTrue(app.staticTexts["Estimate · 45 min"].exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
-        XCTAssertTrue(app.staticTexts["Independent teammate comment"].exists)
-        if keepLocal { XCTAssertTrue(app.staticTexts["My revised comment"].exists) }
-        else { XCTAssertFalse(app.staticTexts["My revised comment"].exists) }
+        XCTAssertTrue(app.textNamed("Estimate · 45 min").exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
+        XCTAssertTrue(app.textNamed("Independent teammate comment").exists)
+        if keepLocal { XCTAssertTrue(app.textNamed("My revised comment").exists) }
+        else { XCTAssertFalse(app.textNamed("My revised comment").exists) }
         retainWindow(app, name: "Mac synced comment keeps independent work")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
         app.launchArguments = ["--uitesting"]; liveConflictLaunch(app)
         XCTAssertTrue(app.staticTexts["title-conflict-task"].waitForExistence(timeout: 10))
         app.staticTexts["title-conflict-task"].click()
-        XCTAssertTrue(app.staticTexts["Shared revised comment"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Shared revised comment").waitForExistence(timeout: 5))
         openChip(app, "taskDuration"); XCTAssertTrue(app.steppers["taskDuration"].exists)
-        XCTAssertTrue(app.staticTexts["Estimate · 45 min"].exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
-        XCTAssertTrue(app.staticTexts["Independent teammate comment"].exists)
-        if keepLocal { XCTAssertTrue(app.staticTexts["My revised comment"].exists) }
+        XCTAssertTrue(app.textNamed("Estimate · 45 min").exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
+        XCTAssertTrue(app.textNamed("Independent teammate comment").exists)
+        if keepLocal { XCTAssertTrue(app.textNamed("My revised comment").exists) }
         XCTAssertEqual(try saved(), after, "Normal Quit/relaunch must preserve the whole resolved workspace")
         retainWindow(app, name: "Mac offline conflict resolution retained after normal Quit")
     }
@@ -975,26 +989,28 @@ final class TaskfoldMacUITests: XCTestCase {
     @MainActor func testCapacityWidgetDayLinksAndRetainedProjection() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--capacity-widget-testing", "--capacity-widget-seed"]; app.launch()
         let projection = app.staticTexts["capacityProjection"]
-        XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.label, "Work 480 · Tasks 90 · Unknown 1 · Calendar off")
-        app.links["capacityOpenTomorrow"].click(); XCTAssertTrue(app.otherElements["hourlyPlanner"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["plannerCapacity"].label, "30 min estimated · 0 without estimates")
+        XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.shownText, "Work 480 · Tasks 90 · Unknown 1 · Calendar off")
+        app.links["capacityOpenTomorrow"].click(); XCTAssertTrue(app.descendants(matching: .any)["hourlyPlanner"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["plannerCapacity"].shownText, "30 min estimated · 0 without estimates")
         app.buttons["plannerShowAllDay"].click(); XCTAssertTrue(app.buttons["plannerAllDay-capacity-tomorrow"].waitForExistence(timeout: 5))
-        app.links["capacityOpenToday"].click(); XCTAssertEqual(app.staticTexts["plannerCapacity"].label, "90 min estimated · 1 without estimates")
+        app.links["capacityOpenToday"].click()
+        let capacity = app.staticTexts["plannerCapacity"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR label == %@", "90 min estimated · 1 without estimates", "90 min estimated · 1 without estimates"), object: capacity)], timeout: 5), .completed, capacity.shownText)
         app.terminate(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--capacity-widget-testing"]; app.launch()
-        XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.label, "Work 480 · Tasks 90 · Unknown 1 · Calendar off"); app.terminate()
+        XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.shownText, "Work 480 · Tasks 90 · Unknown 1 · Calendar off"); app.terminate()
     }
 
     @MainActor func testCompletionCycleUseSyncedKeepsLaterOccurrenceDraftAndSurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--completion-cycle-fixture", "--edited-occurrence-fixture"]; app.launch()
         XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10)); app.links["reviewSyncConflict"].click()
         XCTAssertTrue(app.buttons["useSharedEdit"].waitForExistence(timeout: 5)); app.buttons["useSharedEdit"].click()
-        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: open")
-        XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 0")
-        XCTAssertEqual(app.staticTexts["widgetDraftCount"].label, "Drafts: 1")
+        XCTAssertEqual(app.staticTexts["widgetRootState"].shownText, "Original: open")
+        XCTAssertEqual(app.staticTexts["widgetCopyCount"].shownText, "Next copies: 0")
+        XCTAssertEqual(app.staticTexts["widgetDraftCount"].shownText, "Drafts: 1")
         app.terminate(); app.launchArguments = ["--uitesting", "--widget-action-testing"]; app.launch()
         XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: open")
-        XCTAssertEqual(app.staticTexts["widgetDraftCount"].label, "Drafts: 1"); app.terminate()
+        XCTAssertEqual(app.staticTexts["widgetRootState"].shownText, "Original: open")
+        XCTAssertEqual(app.staticTexts["widgetDraftCount"].shownText, "Drafts: 1"); app.terminate()
     }
     @MainActor func testWidgetIntentRecurringCompletionRetryUndoAndOldTap() throws {
         func text(_ element: XCUIElement) -> String { (element.value as? String).flatMap { $0.isEmpty ? nil : $0 } ?? element.label }
@@ -1024,7 +1040,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.buttons["useSharedEdit"].click()
         XCTAssertTrue(waitForDisappearance(app.links["reviewSyncConflict"], timeout: 5))
         app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"].click()
-        XCTAssertTrue(app.staticTexts["New work from another device"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("New work from another device").waitForExistence(timeout: 5))
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         XCTAssertTrue(app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"].waitForExistence(timeout: 10))
     }
@@ -1033,7 +1049,7 @@ final class TaskfoldMacUITests: XCTestCase {
         func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
         let childID = try nestedID(["hierarchy-root", "child-one"])
         let grandchildID = try nestedID(["hierarchy-root", "child-one", "grandchild-one"])
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture", "--legacy-subtasks"]; app.launch()
         let root = app.staticTexts["title-hierarchy-root"], child = app.staticTexts["title-" + childID], grandchild = app.staticTexts["title-" + grandchildID]
         XCTAssertTrue(root.waitForExistence(timeout: 10))
         XCTAssertFalse(child.exists)
@@ -1058,7 +1074,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["complete-hierarchy-root"].exists, "The parent stays independent")
         app.buttons["expand-hierarchy-root"].click()
         XCTAssertTrue(waitForDisappearance(child, timeout: 5))
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        app.terminate(); app.launchArguments = ["--uitesting", "--legacy-subtasks"]; app.launch()
         XCTAssertTrue(root.waitForExistence(timeout: 10))
         app.buttons["expand-hierarchy-root"].click(); app.buttons["expand-" + childID].click()
         XCTAssertTrue(app.buttons["reopen-" + childID].waitForExistence(timeout: 5))
@@ -1088,7 +1104,7 @@ final class TaskfoldMacUITests: XCTestCase {
     }
 
     @MainActor func testCreateSubSubtaskAndEnforceDepthLimit() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture", "--legacy-subtasks"]; app.launch()
         let childID = "subtask:" + (try JSONEncoder().encode(["hierarchy-root", "child-two"])).base64EncodedString()
         XCTAssertTrue(app.buttons["expand-hierarchy-root"].waitForExistence(timeout: 10))
         app.buttons["expand-hierarchy-root"].click()
@@ -1248,7 +1264,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 5))
-        for id in ["quickChipDate", "quickChipPriority", "quickChipLabels", "quickChipReminders", "quickChipMore"] { XCTAssertTrue(app.buttons[id].exists, id) }
+        for id in ["quickChipDate", "quickChipPriority", "quickChipLabels", "quickChipReminders", "quickChipMore"] { XCTAssertTrue(app.descendants(matching: .any)[id].firstMatch.exists, id) }  // quickChipMore is a menu, so match any element type
         app.typeText("Chip capture p1")
         XCTAssertTrue(app.buttons["decline-priority"].waitForExistence(timeout: 5))
         app.buttons["quickChipPriority"].click()
@@ -1320,7 +1336,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(next.waitForExistence(timeout: 10), "The tour appears on request")
         next.click()
         app.typeKey(.rightArrow, modifierFlags: [])
-        XCTAssertTrue(app.staticTexts["Order that stays put"].waitForExistence(timeout: 5), "Continue and → advance pages")
+        XCTAssertTrue(app.textNamed("Order that stays put").waitForExistence(timeout: 5), "Continue and → advance pages")
         app.typeKey(.escape, modifierFlags: [])
         XCTAssertTrue(waitForDisappearance(next, timeout: 5), "Escape dismisses the tour")
         XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "The list is usable afterwards")
@@ -1355,7 +1371,10 @@ final class TaskfoldMacUITests: XCTestCase {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let row = app.staticTexts["title-drag-fixture-1"]
         XCTAssertTrue(row.waitForExistence(timeout: 10))
-        app.menuButtons["actions-drag-fixture-1"].click()
+        // The row's actions menu only exists while the row is hovered or selected.
+        row.click()
+        let actions = app.descendants(matching: .any)["actions-drag-fixture-1"].firstMatch
+        XCTAssertTrue(actions.waitForExistence(timeout: 5)); actions.click()
         app.menuItems["Change Date…"].click()
         XCTAssertTrue(app.buttons["Tomorrow"].waitForExistence(timeout: 5))
         app.buttons["Tomorrow"].click()
@@ -1670,12 +1689,12 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor func testPulseWidgetPublicationAndCurrentProjectRoute() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--project-pulse-seed", "--widget-action-testing", "--pulse-widget-testing"]; app.launch()
-        XCTAssertTrue(app.staticTexts["pulseProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["pulseProjection"].label, "Pulse: 1/3 · 2 completion events · 1 reopen events")
-        app.buttons["pulseWidgetOpen"].click()
-        XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(app.staticTexts["pulseProgress"].label, "1 of 3 completed")
+        XCTAssertTrue(app.staticTexts["pulseProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["pulseProjection"].shownText, "Pulse: 1/3 · 2 completion events · 1 reopen events")
+        app.links["pulseWidgetOpen"].click()
+        XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(app.staticTexts["pulseProgress"].shownText, "1 of 3 completed")
         let counts = app.staticTexts["pulseActivityCounts"]
         for _ in 0..<8 where !counts.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -300) }
-        XCTAssertEqual(counts.label, "2 completion events · 1 reopen event")
+        XCTAssertEqual(counts.shownText, "2 completion events · 1 reopen event")
         app.buttons["closeProjectPulse"].click(); app.terminate()
     }
 }
@@ -1685,7 +1704,7 @@ extension TaskfoldMacUITests {
     @MainActor func testPendingReminderRouteEditorAndRejectedWorkspaceReentry() throws {
         let app=XCUIApplication(); app.launchArguments=["--uitesting","--reminder-route-testing","--widget-action-testing"]; app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["holdReminderRoute"].waitForExistence(timeout:10)); app.buttons["holdReminderRoute"].click(); app.buttons["renewReminderWorkspace"].click(); app.buttons["releaseReminderRoute"].click()
-        let ignored=XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","Ignored"),object:app.staticTexts["reminderRouteOutcome"])
+        let ignored=XCTNSPredicateExpectation(predicate:NSPredicate(format:"value == %@ OR label == %@","Ignored","Ignored"),object:app.staticTexts["reminderRouteOutcome"])
         XCTAssertEqual(XCTWaiter.wait(for:[ignored],timeout:5),.completed); XCTAssertFalse(app.descendants(matching:.any)["taskTitle"].exists)
         app.buttons["holdReminderRoute"].click(); app.buttons["releaseReminderRoute"].click()
         XCTAssertTrue(app.descendants(matching:.any)["taskTitle"].waitForExistence(timeout:5)); XCTAssertEqual(app.descendants(matching:.any)["taskTitle"].value as? String,"Reminder route check")
@@ -1707,15 +1726,15 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor func testEarlierReminderCannotOpenRecreatedTaskAndCurrentReminderStillWorks() throws {
         let app=XCUIApplication(); app.launchArguments=["--uitesting","--reminder-route-testing","--widget-action-testing"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["holdReminderRoute"].waitForExistence(timeout:10)); app.buttons["holdReminderRoute"].tap()
-        app.buttons["restoreReminderTask"].tap(); app.buttons["releaseReminderRoute"].tap()
-        let ignored=XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","Ignored"),object:app.staticTexts["reminderRouteOutcome"])
+        XCTAssertTrue(app.buttons["holdReminderRoute"].waitForExistence(timeout:10)); app.buttons["holdReminderRoute"].click()
+        app.buttons["restoreReminderTask"].click(); app.buttons["releaseReminderRoute"].click()
+        let ignored=XCTNSPredicateExpectation(predicate:NSPredicate(format:"value == %@ OR label == %@","Ignored","Ignored"),object:app.staticTexts["reminderRouteOutcome"])
         XCTAssertEqual(XCTWaiter.wait(for:[ignored],timeout:5),.completed)
         XCTAssertFalse(app.descendants(matching:.any)["taskTitle"].firstMatch.exists)
-        app.buttons["holdReminderRoute"].tap(); app.buttons["releaseReminderRoute"].tap()
+        app.buttons["holdReminderRoute"].click(); app.buttons["releaseReminderRoute"].click()
         let title=app.descendants(matching:.any)["taskTitle"].firstMatch
         XCTAssertTrue(title.waitForExistence(timeout:5)); XCTAssertEqual(title.value as? String,"Reminder route check")
-        app.buttons["Cancel"].firstMatch.tap(); app.buttons["endReminderRouteFixture"].tap()
+        app.buttons["endReminderRouteFixture"].click()  // the routed task opens in the inspector now, with no sheet to cancel
     }
 }
 
@@ -1747,14 +1766,14 @@ extension TaskfoldMacUITests {
         let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:+169 hours")
         XCTAssertFalse(app.buttons["saveSavedView"].isEnabled)
         app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:+1 minute"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
-        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let view = app.outlines["Sidebar"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch  // sidebar only: the selected filter's name is also the window title; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Window past"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Window boundary"].exists)
         app.buttons["calendarFixtureAdvanceWindow"].click()
         XCTAssertTrue(app.buttons["Complete Window boundary"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Window later"].exists)
-        XCTAssertEqual(app.staticTexts["calendarFixtureWindowStatus"].label, "Task plans unchanged")
+        XCTAssertEqual(app.staticTexts["calendarFixtureWindowStatus"].shownText, "Task plans unchanged")
         app.terminate(); app.launchArguments = ["--uitesting", "--clock-window-testing", "--clock-window-shifted"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
         XCTAssertTrue(app.buttons["Complete Window boundary"].waitForExistence(timeout: 5)); for title in ["Window later", "Window all day", "Window deadline only"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
-        view.rightClick(); app.menuItems["Edit filter"].click()
+        view.rightClick(); app.menuItems["Edit Filter…"].click()
         let value = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", "filterConditionValue-")).firstMatch
         XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "+1 minute"); app.buttons["Cancel"].click()
     }
@@ -2025,15 +2044,12 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor func testCompactCalendarCardsOwnKeyboardFocus() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
+        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES", "--window-width=1040"]
         app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["Week"].waitForExistence(timeout: 10)); app.buttons["Week"].click()
-        let window = app.windows.firstMatch
-        if window.frame.width > 1080 {
-            let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1)).withOffset(CGVector(dx: -3, dy: -3))
-            corner.press(forDuration: 0.2, thenDragTo: corner.withOffset(CGVector(dx: 1080 - window.frame.width, dy: 0)))
-        }
-        XCTAssertFalse(app.otherElements["calendarDayPanel"].exists)
+        // The window is sized at launch (--window-width): corner-drag resizing no longer works on macOS 27.
+        XCTAssertLessThanOrEqual(app.windows.firstMatch.frame.width, 1100)
+        XCTAssertFalse(app.descendants(matching: .any)["calendarDayPanel"].firstMatch.exists)
         let report = app.buttons["calendar-card-planner-report"]
         XCTAssertTrue(report.waitForExistence(timeout: 5)); report.click()
         XCTAssertEqual(report.value as? String, "Open")
@@ -2062,21 +2078,18 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor func testCompactMonthOpensSelectedDayTasks() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
+        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES", "--window-width=1040"]
         app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["Month"].waitForExistence(timeout: 10)); app.buttons["Month"].click()
-        let window = app.windows.firstMatch
-        if window.frame.width > 1080 {
-            let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1)).withOffset(CGVector(dx: -3, dy: -3))
-            corner.press(forDuration: 0.2, thenDragTo: corner.withOffset(CGVector(dx: 1080 - window.frame.width, dy: 0)))
-        }
-        XCTAssertFalse(app.otherElements["calendarDayPanel"].exists)
+        // The window is sized at launch (--window-width): corner-drag resizing no longer works on macOS 27.
+        XCTAssertLessThanOrEqual(app.windows.firstMatch.frame.width, 1100)
+        XCTAssertFalse(app.descendants(matching: .any)["calendarDayPanel"].firstMatch.exists)
         let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.dateFormat = "yyyy-MM-dd"
         let today = formatter.string(from: Date())
         let day = app.buttons["calendar-day-" + today]
         XCTAssertTrue(day.waitForExistence(timeout: 5)); day.click()
         XCTAssertTrue(app.buttons["Day"].isSelected)
-        XCTAssertTrue(app.otherElements["hourlyPlanner"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["hourlyPlanner"].firstMatch.waitForExistence(timeout: 5))
         app.buttons["plannerShowAllDay"].click()
         let task = app.buttons["Prepare report"]
         XCTAssertTrue(task.waitForExistence(timeout: 5)); task.click()
@@ -2096,9 +2109,9 @@ extension TaskfoldMacUITests {
         app.buttons["widgetQueueFixture"].click()
         app.buttons["widgetConsumeFixture"].click()
         let notice = app.staticTexts["widgetNoticeFixture"]
-        XCTAssertTrue(NSPredicate(format: "label CONTAINS %@", "Widget actions need attention:").evaluate(with: notice))
+        XCTAssertTrue(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Widget actions need attention:", "Widget actions need attention:").evaluate(with: notice))
         app.buttons["widgetRecoverFixture"].click()
-        let clear = NSPredicate(format: "label == %@", "No widget warning")
+        let clear = NSPredicate(format: "label == %@ OR value == %@", "No widget warning", "No widget warning")
         expectation(for: clear, evaluatedWith: notice)
         waitForExpectations(timeout: 10)
         XCTAssertTrue(NSPredicate(format: "value CONTAINS %@ OR label CONTAINS %@", "Original: completed", "Original: completed").evaluate(with: app.staticTexts["widgetRootState"]))
@@ -2117,7 +2130,7 @@ extension TaskfoldMacUITests {
             let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1)).withOffset(CGVector(dx: -3, dy: -3))
             corner.press(forDuration: 0.2, thenDragTo: corner.withOffset(CGVector(dx: 1380 - window.frame.width, dy: 0)))
         }
-        XCTAssertTrue(app.otherElements["calendarDayPanel"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["calendarDayPanel"].firstMatch.exists)
         let calendar = Calendar.current
         let start = try XCTUnwrap(calendar.dateInterval(of: .month, for: Date())?.start)
         let next = try XCTUnwrap(calendar.date(byAdding: .month, value: 1, to: start))
@@ -2135,7 +2148,7 @@ extension TaskfoldMacUITests {
         app.typeKey(.downArrow, modifierFlags: []); XCTAssertTrue(day(last).isSelected)
         app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(app.buttons["Day"].isSelected)
-        XCTAssertTrue(app.otherElements["hourlyPlanner"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["hourlyPlanner"].firstMatch.waitForExistence(timeout: 5))
         retainWindow(app, name: "Month date keyboard movement opens exact day")
     }
 }
@@ -2527,6 +2540,10 @@ extension TaskfoldMacUITests {
     }
 
     @MainActor func testPendingSignInCanOpenLocalWorkspaceAndRetainNewWork() throws {
+        let reserved = "com.dbakp.taskfold.mac.backupcanceltests"
+        guard [reserved + ".uitests", reserved + ".runner", reserved + ".runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") || [reserved + ".uitests", reserved + ".runner"].contains(Bundle(for: Self.self).bundleIdentifier ?? "") else {
+            throw XCTSkip("Requires the reserved backupcanceltests Mac host: its sign-in transport is held there; in the ordinary build this test would send a real sign-in request to the hosted backend")
+        }
         let app = XCUIApplication(); defer { app.terminate() }
         let defaults = ["-ApplePersistenceIgnoreState", "YES", "-onboardingSeen", "YES", "-dailyBackups.local", "NO"]
         app.launchArguments = ["--live-auth-ui-test", "--auth-response-wait-testing"] + defaults
@@ -2548,18 +2565,18 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 10))
         XCTAssertFalse(app.textFields["authEmail"].exists)
         let title = "Local connection recovery " + String(UUID().uuidString.prefix(6))
-        app.staticTexts["Inbox"].firstMatch.click()
+        app.textNamed("Inbox").firstMatch.click()
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText(title)
         app.buttons["Add Task"].click()
-        XCTAssertTrue(app.staticTexts[title].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed(title).firstMatch.waitForExistence(timeout: 5))
         let saved = try JSONSerialization.jsonObject(with: Data(contentsOf: path)) as! NSDictionary
         retainWindow(app, name:"Mac work saved after cancelling sign-in")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
         app.launchArguments = defaults; app.launch()
         XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 10))
-        app.staticTexts["Inbox"].firstMatch.click()
-        XCTAssertTrue(app.staticTexts[title].firstMatch.waitForExistence(timeout: 5))
+        app.textNamed("Inbox").firstMatch.click()
+        XCTAssertTrue(app.textNamed(title).firstMatch.waitForExistence(timeout: 5))
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: path)) as! NSDictionary, saved)
         XCTAssertFalse(app.textFields["authEmail"].exists)
         retainWindow(app, name:"Mac local work retained after normal relaunch")
@@ -2630,10 +2647,10 @@ extension TaskfoldMacUITests {
         password.click()
         password.typeText(f.account["password"]!)
         app.buttons["nativeSignIn"].click(); XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
-        app.staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 30))
+        app.textNamed("Inbox").firstMatch.click(); XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 30))
         _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["title"] as? String == f.originalTitle && ($0["pending"] as? [Any])?.isEmpty == true }
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
-        app.launchArguments = ["--continuity-offline"] + args; liveConflictLaunch(app); app.staticTexts["Inbox"].firstMatch.click()
+        app.launchArguments = ["--continuity-offline"] + args; liveConflictLaunch(app); app.textNamed("Inbox").firstMatch.click()
         liveConflictRow(app, f.taskID).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         let title = app.descendants(matching: .any)["taskTitle"].firstMatch
         if !title.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
@@ -2668,7 +2685,7 @@ extension TaskfoldMacUITests {
             let task = self.liveConflictTask(cache, f)
             return task?["title"] as? String == (keepLocal ? f.offlineTitle : f.remoteTitle) && task?["description"] as? String == f.remoteNotes && task?["priority"] as? Int == 1 && (cache["pending"] as? [Any])?.isEmpty == true
         }
-        app.staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); liveConflictRow(app, f.taskID).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        app.textNamed("Inbox").firstMatch.click(); XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); liveConflictRow(app, f.taskID).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, f.remoteNotes)
         retainWindow(app, name: "Mac synced phone title and notes retain later offline priority")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
@@ -2680,7 +2697,7 @@ extension TaskfoldMacUITests {
     @MainActor private func removeLiveConflict(keepLocal: Bool) throws {
         continueAfterFailure = false
         let f = try liveConflictFixture(keepLocal: keepLocal), app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app); app.staticTexts["Inbox"].firstMatch.click()
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app); app.textNamed("Inbox").firstMatch.click()
         let row = liveConflictRow(app, f.taskID); XCTAssertTrue(row.waitForExistence(timeout: 20)); row.click()
         app.typeKey(.delete, modifierFlags: .command)
         _ = try waitLiveConflict(f) { self.liveConflictTask($0, f) == nil && ($0["pending"] as? [Any])?.isEmpty == true }
@@ -2818,7 +2835,7 @@ extension TaskfoldMacUITests {
         // Acknowledge only the previous disposable Mac case's retained notice.
         if app.buttons["dismissAccessRecovery"].exists { app.buttons["dismissAccessRecovery"].click() }
         func inspect() {
-            app.staticTexts["All Tasks"].firstMatch.click()
+            app.textNamed("All Tasks").firstMatch.click()
             let row = liveConflictRow(app, f.taskID)
             XCTAssertTrue(row.waitForExistence(timeout: 15)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
             let title = app.textFields["taskTitle"]
@@ -2839,7 +2856,7 @@ extension TaskfoldMacUITests {
         _ = try waitLiveConflict(f) { c in
             self.liveConflictTask(c, f) == nil && !((c["tables"] as? NSDictionary)?["projects"] as? [NSDictionary] ?? []).contains { $0["id"] as? String == projectID } && (c["pending"] as? [Any])?.isEmpty == true
         }
-        app.staticTexts["All Tasks"].firstMatch.click(); XCTAssertFalse(liveConflictRow(app, f.taskID).exists)
+        app.textNamed("All Tasks").firstMatch.click(); XCTAssertFalse(liveConflictRow(app, f.taskID).exists)
         retainWindow(app, name: "Mac receives exact synthetic phone recovery cleanup")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
     }
@@ -2906,7 +2923,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(control.exists); XCTAssertTrue(control.isHittable); return control
     }
     @MainActor private func openLabelTask(_ app: XCUIApplication, _ f: LiveConflictFixture) {
-        app.staticTexts["Inbox"].firstMatch.click()
+        app.textNamed("Inbox").firstMatch.click()
         let row = liveConflictRow(app, f.taskID); XCTAssertTrue(row.waitForExistence(timeout: 30)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         if !app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
     }
@@ -2988,7 +3005,7 @@ extension TaskfoldMacUITests {
         password.click(); password.typeText(f.account["password"]!); app.buttons["nativeSignIn"].click()
         XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
         let before = try stableTables(settled())
-        app.staticTexts["All Tasks"].firstMatch.click()
+        app.textNamed("All Tasks").firstMatch.click()
         let id = try XCTUnwrap(expectedIDs.sorted().first), row = liveConflictRow(app, id)
         XCTAssertTrue(row.waitForExistence(timeout: 15)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         let title = app.descendants(matching: .any)["taskTitle"].firstMatch
@@ -3077,7 +3094,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 8))
         retainWindow(app, name: "Imported Account after open-Settings normal relaunch")
         app.windows["Account"].buttons["_XCUI:CloseWindow"].click()
-        app.staticTexts["All Tasks"].firstMatch.click()
+        app.textNamed("All Tasks").firstMatch.click()
         XCTAssertTrue(app.outlines.firstMatch.exists)
         XCTAssertEqual(try tables(settled()), before)
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
@@ -3189,7 +3206,7 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
         app.launchArguments = ["--uitesting", "-onboardingSeen", "YES"]; liveConflictLaunch(app)
         XCTAssertTrue(app.buttons["addTask"].waitForExistence(timeout: 20))
-        app.staticTexts["All Tasks"].firstMatch.click()
+        app.textNamed("All Tasks").firstMatch.click()
         XCTAssertTrue(row.waitForExistence(timeout: 10)); try waitCompleted(false)
         XCTAssertEqual(try cache(), before)
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
@@ -3213,7 +3230,7 @@ extension TaskfoldMacUITests {
     }
 
     @MainActor private func openCollectionTask(_ app: XCUIApplication, _ f: LiveConflictFixture) {
-        app.staticTexts["Inbox"].firstMatch.click()
+        app.textNamed("Inbox").firstMatch.click()
         let row = liveConflictRow(app, f.taskID); XCTAssertTrue(row.waitForExistence(timeout: 30)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         if !app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 3) { app.buttons["Inspector"].click() }
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 5))
@@ -3255,7 +3272,7 @@ extension TaskfoldMacUITests {
         openCollectionTask(app, f)
         XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].firstMatch.value as? String, title)
         _ = revealCollectionComments(app)
-        for text in expected { XCTAssertTrue(app.staticTexts[text].exists) }
+        for text in expected { XCTAssertTrue(app.textNamed(text).exists) }
         retainWindow(app, name: "Mac receives preserved reviewed comments")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8)); liveConflictLaunch(app)
         let restored = try waitLiveConflict(f) { self.collectionTexts($0, f) == expected && ($0["pending"] as? [Any])?.isEmpty == true }
@@ -3282,7 +3299,7 @@ extension TaskfoldMacUITests {
         for (host, id) in [("project", project), ("label", "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee02"), ("view", "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee03"), ("task", task)] {
             route(host, id, "other-workspace")
             XCTAssertTrue(app.sheets.buttons["OK"].firstMatch.waitForExistence(timeout: 10))
-            XCTAssertTrue(app.staticTexts["This widget belongs to another workspace or is unavailable. Open a task or list in your current workspace."].exists)
+            XCTAssertTrue(app.textNamed("This widget belongs to another workspace or is unavailable. Open a task or list in your current workspace.").exists)
             app.sheets.buttons["OK"].firstMatch.click(); XCTAssertEqual(try saved(), before)
             XCTAssertFalse(app.textFields["taskTitle"].exists)
         }
@@ -3409,8 +3426,8 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("- Capture Mac workflow idea\n- Review Mac workflow sketch tomorrow p1")
         app.buttons["reviewMultiLine"].click()
         XCTAssertTrue(app.buttons["saveMultiLine"].waitForExistence(timeout: 5)); app.buttons["saveMultiLine"].click()
-        app.staticTexts["Inbox"].firstMatch.click()
-        XCTAssertTrue(app.staticTexts["Capture Mac workflow idea"].waitForExistence(timeout: 8))
+        app.textNamed("Inbox").firstMatch.click()
+        XCTAssertTrue(app.textNamed("Capture Mac workflow idea").waitForExistence(timeout: 8))
         app.buttons["openTemplates"].click()
         let name = app.textFields["templateName"]
         XCTAssertTrue(name.waitForExistence(timeout: 5)); name.click(); name.typeText("Weekly Mac launch")
@@ -3425,13 +3442,13 @@ extension TaskfoldMacUITests {
         let archived = app.checkBoxes["projectArchived"]
         XCTAssertTrue(archived.waitForExistence(timeout: 5)); archived.click(); app.buttons["saveRecord"].click()
         app.buttons["openArchivedProjects"].click()
-        XCTAssertTrue(app.staticTexts["Design studio"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Design studio").waitForExistence(timeout: 5))
         app.buttons["restoreProject-f0742000-1111-4111-8111-000000000001"].click()
         app.buttons["Done"].firstMatch.click()
         app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
-        app.staticTexts["Inbox"].firstMatch.click()
-        XCTAssertTrue(app.staticTexts["Capture Mac workflow idea"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.staticTexts["Weekly Mac launch"].exists)
+        app.textNamed("Inbox").firstMatch.click()
+        XCTAssertTrue(app.textNamed("Capture Mac workflow idea").waitForExistence(timeout: 8))
+        XCTAssertTrue(app.textNamed("Weekly Mac launch").exists)
     }
 }
 
@@ -3646,9 +3663,9 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
     @MainActor func testRecordedSingleRefreshShowsCurrentObservation() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try launch(app, mode: "viewer", single: true, refresh: true)
         app.buttons["openMacCompletionRecovery"].click()
-        let initial = app.staticTexts["Initial synced instructions"]; XCTAssertTrue(initial.waitForExistence(timeout: 12), app.debugDescription)
+        let initial = app.textNamed("Initial synced instructions"); XCTAssertTrue(initial.waitForExistence(timeout: 12), app.debugDescription)
         let before = try saved(); app.buttons["refreshTeamCompletionReview"].click()
-        XCTAssertTrue(app.staticTexts["Updated synced instructions"].waitForExistence(timeout: 10)); XCTAssertFalse(initial.exists)
+        XCTAssertTrue(app.textNamed("Updated synced instructions").waitForExistence(timeout: 10)); XCTAssertFalse(initial.exists)
         XCTAssertEqual(canonical(try saved()), canonical(before))
         shot(app, "Mac completion refresh current observation")
         let confirm = app.buttons["continueTeamCompletionReview"]; XCTAssertTrue(confirm.isEnabled); confirm.click()
@@ -3686,12 +3703,12 @@ extension TeamCompletionRecoveryMacUITests {
         }
         XCTAssertNil(try cancellationLedger()[nonce])
         app.buttons["blockNativeRecoveryStorage"].click()
-        XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(app.textNamed("Storage blocked").waitForExistence(timeout: 8), app.debugDescription)
         let button = app.buttons[fault == "cache" ? "continueTeamBatchRecovery" : "cancelTeamBatchRecovery"]
         button.click()
         let error = app.descendants(matching: .any)["teamBatchRecoveryError"].firstMatch
         XCTAssertTrue(error.waitForExistence(timeout: 15), app.debugDescription)
-        XCTAssertTrue(app.staticTexts["Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again."].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(app.textNamed("Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again.").waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(button.isEnabled, "The exact review remains retryable after storage failure")
         XCTAssertNil(try cancellationLedger()[nonce], "No cancellation can precede the required durable safety copies")
         let durableURL = fault == "cache" ? cacheFile.appendingPathExtension("storage-proof-held") : cacheFile
@@ -3703,7 +3720,7 @@ extension TeamCompletionRecoveryMacUITests {
         }
         shot(app, "Storage failure keeps reviewed work " + fault)
         app.buttons["repairNativeRecoveryStorage"].click()
-        XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8))
         button.click()
         XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 20), app.debugDescription)
         let after = try saved()
@@ -3841,7 +3858,7 @@ extension TeamCompletionRecoveryMacUITests {
         }
         XCTAssertNil(try ledger()[nonce])
         app.buttons["blockNativeRecoveryStorage"].click()
-        XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(app.textNamed("Storage blocked").waitForExistence(timeout: 8), app.debugDescription)
         let button = app.buttons[recorded ? "continueTeamCompletionReview" : "cancelSavedTeamCompletion"]
         XCTAssertTrue(button.isEnabled); button.click()
         let message = "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again."
@@ -3858,7 +3875,7 @@ extension TeamCompletionRecoveryMacUITests {
         XCTAssertEqual(canonicalSingleStorage(failed), canonicalSingleStorage(before))
         let ok = app.windows.buttons["OK"].firstMatch; XCTAssertTrue(ok.waitForExistence(timeout: 5)); ok.click()
         app.buttons["repairNativeRecoveryStorage"].click()
-        XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8))
         var reopened: [String: Any]?
         if scenario == "cancel-cache" {
             app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
@@ -3930,7 +3947,7 @@ extension TeamCompletionRecoveryMacUITests {
         let later = app.buttons[single ? "Later" : "laterTeamBatchRecovery"]
         XCTAssertTrue(later.waitForExistence(timeout: 10)); later.click()
         let admission = app.buttons["checkRecordedDraftAdmission"]; XCTAssertTrue(admission.waitForExistence(timeout: 10)); admission.click()
-        XCTAssertTrue(app.staticTexts["Saved draft context protected"].waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(app.textNamed("Saved draft context protected").waitForExistence(timeout: 12), app.debugDescription)
         app.buttons["openMacCompletionRecovery"].click()
         let before = try saved(), bytes = try Data(contentsOf: cacheFile), queue = pending(before)
         XCTAssertEqual(queue.count, preferences ? 6 : 2); XCTAssertEqual(queue[0]["teamCompletion"] != nil, single)
@@ -3938,9 +3955,9 @@ extension TeamCompletionRecoveryMacUITests {
         XCTAssertTrue(keep.waitForExistence(timeout: 15), app.debugDescription)
 
         XCTAssertTrue(keep.isEnabled); shot(app, "Recorded draft review " + scenario)
-        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8))
+        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage blocked").waitForExistence(timeout: 8))
         if scenario == "single" || scenario == "group" {
-            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8))
         }
 
         keep.click()
@@ -3955,7 +3972,7 @@ extension TeamCompletionRecoveryMacUITests {
                 let cipher = try Data(contentsOf: XCTUnwrap(files.first)); XCTAssertFalse(String(decoding: cipher, as: UTF8.self).contains("Keep these later workshop instructions"))
             } else { XCTAssertFalse(fm.fileExists(atPath: archive.appendingPathComponent("unexpected.taskfoldrecovery").path)) }
             shot(app, "Recorded draft storage failure " + scenario)
-            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8))
             XCTAssertTrue(keep.waitForExistence(timeout: 15));
             XCTAssertTrue(keep.isEnabled); keep.click()
         }
@@ -4058,7 +4075,7 @@ extension TeamCompletionRecoveryMacUITests {
             let save = app.sheets.buttons["Save"].firstMatch.exists ? app.sheets.buttons["Save"].firstMatch : app.sheets.buttons["Export"].firstMatch
             XCTAssertTrue(save.waitForExistence(timeout: 8), app.debugDescription); XCTAssertTrue(save.isEnabled)
             shot(app, "Recorded draft native save picker"); save.click()
-            XCTAssertTrue(app.staticTexts["Details saved."].waitForExistence(timeout: 12), app.debugDescription)
+            XCTAssertTrue(app.textNamed("Details saved.").waitForExistence(timeout: 12), app.debugDescription)
             let delivery = try Data(contentsOf: destination); XCTAssertEqual(delivery, exported)
             let delivered = XCTAttachment(data: delivery, uniformTypeIdentifier: "public.json"); delivered.name = "Recorded draft local delivery"; delivered.lifetime = .keepAlways; add(delivered)
             export.click(); XCTAssertTrue(cancel.waitForExistence(timeout: 12), app.debugDescription)
@@ -4118,7 +4135,7 @@ extension TeamCompletionRecoveryMacUITests {
         let later = app.buttons[single ? "Later" : "laterTeamBatchRecovery"]
         XCTAssertTrue(later.waitForExistence(timeout: 10)); later.click()
         let admission = app.buttons["checkRecordedDraftAdmission"]; XCTAssertTrue(admission.waitForExistence(timeout: 10)); admission.click()
-        XCTAssertTrue(app.staticTexts["Saved draft context protected"].waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(app.textNamed("Saved draft context protected").waitForExistence(timeout: 12), app.debugDescription)
         app.buttons["openMacCompletionRecovery"].click()
         let before = try saved(), bytes = try Data(contentsOf: cacheFile), queue = pending(before)
         XCTAssertEqual(queue.count, preferences ? 6 : 2); XCTAssertEqual(queue[0]["teamCompletion"] != nil, single)
@@ -4126,9 +4143,9 @@ extension TeamCompletionRecoveryMacUITests {
         XCTAssertTrue(keep.waitForExistence(timeout: 15), app.debugDescription)
 
         XCTAssertTrue(keep.isEnabled); shot(app, "Cancelled draft review " + scenario)
-        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8))
+        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage blocked").waitForExistence(timeout: 8))
         if scenario == "success" || scenario == "race" {
-            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8))
         }
 
         keep.click()
@@ -4147,7 +4164,7 @@ extension TeamCompletionRecoveryMacUITests {
             XCTAssertEqual(attemptsBeforeRepair.filter { $0["request_id"] as? String == (queue[0]["id"] as! String).lowercased() }.count, scenario == "vault" ? 0 : 1, "Vault admission fails before cancellation; cache failure follows exactly one terminal response")
             shot(app, "Cancelled draft storage failure " + scenario)
             ok.click()
-            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8))
             XCTAssertTrue(keep.waitForExistence(timeout: 15));
             if scenario == "cache" {
                 app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }
@@ -4269,7 +4286,7 @@ extension TeamCompletionRecoveryMacUITests {
             let save = app.sheets.buttons["Save"].firstMatch.exists ? app.sheets.buttons["Save"].firstMatch : app.sheets.buttons["Export"].firstMatch
             XCTAssertTrue(save.waitForExistence(timeout: 8), app.debugDescription); XCTAssertTrue(save.isEnabled)
             shot(app, "Cancelled draft native save picker"); save.click()
-            XCTAssertTrue(app.staticTexts["Details saved."].waitForExistence(timeout: 12), app.debugDescription)
+            XCTAssertTrue(app.textNamed("Details saved.").waitForExistence(timeout: 12), app.debugDescription)
             let delivery = try Data(contentsOf: destination); XCTAssertEqual(delivery, exported)
             let delivered = XCTAttachment(data: delivery, uniformTypeIdentifier: "public.json"); delivered.name = "Cancelled draft local delivery"; delivered.lifetime = .keepAlways; add(delivered)
             export.click(); XCTAssertTrue(cancel.waitForExistence(timeout: 12), app.debugDescription)
@@ -4334,8 +4351,8 @@ extension TeamCompletionRecoveryMacUITests {
         let target = proposed["id"] as! String, generation = proposed["task_generation"] as! String
         let keep = app.buttons["parkConnectedTeamCompletionDraft"]
         XCTAssertTrue(keep.waitForExistence(timeout: 25), app.debugDescription); XCTAssertTrue(keep.isEnabled)
-        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8))
-        if scenario == "success" { app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8)) }
+        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage blocked").waitForExistence(timeout: 8))
+        if scenario == "success" { app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8)) }
         keep.click()
         if scenario != "success" {
             let ok = app.windows.buttons["OK"].firstMatch
@@ -4347,7 +4364,7 @@ extension TeamCompletionRecoveryMacUITests {
             XCTAssertEqual(files.count, 1, "The complete connected archive precedes the copy-vault write and retirement request")
             shot(app, "Connected provisional failure " + scenario)
             ok.click()
-            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.textNamed("Storage available").waitForExistence(timeout: 8))
             if scenario == "cache" {
                 app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }
                 try open(app); app.buttons["openMacCompletionRecovery"].click()
@@ -4638,7 +4655,7 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication(); defer { app.terminate() }
         app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--heading-progress-fixture", "--heading-planner-fixture", "--section=calendar", "--calendar-mode=day", "-localMode", "YES"]
         try launchHeadingWorkspace(app)
-        let calendar = app.buttons["Calendar"].firstMatch
+        let calendar = app.outlines["Sidebar"].staticTexts["Calendar"].firstMatch
         XCTAssertTrue(calendar.waitForExistence(timeout: 15)); calendar.click()
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func root() throws -> NSDictionary {
@@ -4686,7 +4703,7 @@ extension TaskfoldMacUITests {
             let ready=XCTNSPredicateExpectation(predicate:NSPredicate{_,_ in guard let row=try? root(), let children=row["subtasks"] as? [[String:Any]] else{return false}; return children.first?[key] as? AnyHashable == expected},object:nil)
             XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:8),.completed)
         }
-        let today=app.buttons["Today"].firstMatch;XCTAssertTrue(today.waitForExistence(timeout:15));today.click()
+        let today=app.outlines["Sidebar"].staticTexts["Today"].firstMatch;XCTAssertTrue(today.waitForExistence(timeout:15));today.click()
         let child="subtask:" + (try JSONEncoder().encode(["f1810000-0000-4000-8000-000000000001","f5810000-0000-4000-8000-000000000001"])).base64EncodedString()
         let title=app.staticTexts.matching(NSPredicate(format:"identifier == %@","title-" + child)).firstMatch
         XCTAssertTrue(title.waitForExistence(timeout:10));title.click()
@@ -4699,7 +4716,7 @@ extension TaskfoldMacUITests {
         waitChild("completed",true);XCTAssertEqual(try root()["completed"] as? Bool,false)
         app.typeKey("z",modifierFlags:.command);waitChild("completed",false);XCTAssertTrue(title.waitForExistence(timeout:8));let restored=try root()
         app.terminate();app.launchArguments=["--uitesting","--section=today","-localMode","YES"];try launchHeadingWorkspace(app)
-        XCTAssertTrue(title.waitForExistence(timeout:10));XCTAssertEqual(try root(),restored);app.buttons["Upcoming"].firstMatch.click();XCTAssertTrue(title.waitForExistence(timeout:8))
+        XCTAssertTrue(title.waitForExistence(timeout:10));XCTAssertEqual(try root(),restored);app.outlines["Sidebar"].staticTexts["Upcoming"].firstMatch.click();XCTAssertTrue(title.waitForExistence(timeout:8))
     }
 }
 
@@ -4714,7 +4731,7 @@ extension TaskfoldMacUITests {
         func root() throws -> NSDictionary {let data=try XCTUnwrap(try JSONSerialization.jsonObject(with:Data(contentsOf:cache)) as? [String:Any]);return try XCTUnwrap(((data["tables"] as? [String:Any])?["tasks"] as? [NSDictionary])?.first{$0["id"] as? String == "f1810000-0000-4000-8000-000000000001"})}
         let projection=app.staticTexts["inboxProjection"];XCTAssertTrue(projection.waitForExistence(timeout:15));XCTAssertEqual(renderedText(projection),"Inbox: 2");let original=try root()
         app.buttons["reviewInbox"].click();XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout:8));XCTAssertEqual(renderedText(app.staticTexts["inboxReviewTitle"]),"Draft the launch note")
-        func chooseProject(){app.buttons["inboxReviewMove"].click();let target=app.descendants(matching:.any).matching(identifier:"inboxReviewProject-f0742000-1111-4111-8111-000000000001").firstMatch;XCTAssertTrue(target.waitForExistence(timeout:5));target.click();XCTAssertTrue(app.staticTexts["inboxHeadingMoveSummary"].waitForExistence(timeout:5))}
+        func chooseProject(){app.menuButtons["inboxReviewMove"].click();let target=app.descendants(matching:.any).matching(identifier:"inboxReviewProject-f0742000-1111-4111-8111-000000000001").firstMatch;XCTAssertTrue(target.waitForExistence(timeout:5));target.click();XCTAssertTrue(app.staticTexts["inboxHeadingMoveSummary"].waitForExistence(timeout:5))}
         chooseProject();retainWindow(app,name:"Mac Inbox whole-heading move review");app.buttons["inboxHeadingMoveCancel"].click();XCTAssertEqual(try root(),original)
         chooseProject();app.buttons["inboxHeadingMoveConfirm"].click();XCTAssertTrue(app.staticTexts["inboxReviewSummary"].waitForExistence(timeout:8));XCTAssertEqual(try root()["project_id"] as? String,"f0742000-1111-4111-8111-000000000001")
         app.buttons["inboxReviewUndo"].click();XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout:8));XCTAssertEqual((try root())["subtasks"] as? NSArray,original["subtasks"] as? NSArray)
@@ -5213,7 +5230,7 @@ extension SharedHeadingNativeTests {
         XCTAssertEqual(try workflowPeer()["transitions"] as? Int, 0)
         let after = try workflowRows()
         for (table, rows) in first { for row in rows { XCTAssertEqual(after[table]?.first { $0["id"] as? String == row["id"] as? String } as NSDictionary?, row as NSDictionary) } }
-        let incoming = app.staticTexts["Later incoming work"]
+        let incoming = app.textNamed("Later incoming work")
         for _ in 0..<4 { if incoming.exists && incoming.isHittable { break }; app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
         XCTAssertTrue(incoming.waitForExistence(timeout: 5)); XCTAssertTrue(incoming.isHittable)
         let picture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); picture.name = "Refused workflow Undo preserves incoming work"; picture.lifetime = .keepAlways; add(picture)
@@ -5432,7 +5449,7 @@ extension SharedHeadingNativeTests {
         workflowWait { try self.workflowSettled(tasks: 3, attempts: 0) }
         XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["applyWorkflowTemplate"].exists, "The successful retry must close the creation sheet")
-        let visible = app.staticTexts["Design instructions"]
+        let visible = app.textNamed("Design instructions")
         for _ in 0..<5 { if visible.exists && visible.isHittable { break }; app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -300) }
         XCTAssertTrue(visible.exists && visible.isHittable, "The successful retry must refresh the actual task list")
     }
@@ -5475,7 +5492,7 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)], timeout: 12), .completed)
     }
     @MainActor private func noteProofOpen(_ app: XCUIApplication) {
-        let today = app.staticTexts["Today"].firstMatch
+        let today = app.textNamed("Today").firstMatch
         XCTAssertTrue(today.waitForExistence(timeout: 15)); today.click()
         let row = app.staticTexts["title-f1810000-0000-4000-8000-000000000001"]
         XCTAssertTrue(row.waitForExistence(timeout: 10), app.debugDescription); row.click(); app.typeKey(.return, modifierFlags: [])
@@ -5516,13 +5533,13 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(editor.value as? String, "**Keep the original notes.**")
         let preview = app.buttons["Preview"].exists ? app.buttons["Preview"] : app.radioButtons["Preview"]
         XCTAssertTrue(preview.exists); preview.click()
-        XCTAssertTrue(app.staticTexts["Keep the original notes."].waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(app.textNamed("Keep the original notes.").waitForExistence(timeout: 8), app.debugDescription)
         noteProofShot(app, "Mac formatted note preview")
         app.buttons["applyNoteFormatting"].click()
         XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
         noteProofWait { try self.noteProofTask()["description"] as? String == "**Keep the original notes.**" }
         try noteProofAssertOnlyDescription("**Keep the original notes.**", before: before)
-        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        app.textNamed("Today").firstMatch.click(); app.typeKey("z", modifierFlags: .command)
         noteProofWait { try self.noteProofTables() == before }
         app.typeKey("z", modifierFlags: [.command, .shift])
         noteProofWait { try self.noteProofTask()["description"] as? String == "**Keep the original notes.**" }
@@ -5601,7 +5618,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(title.label == "Today" || title.value as? String == "Today")
         app.buttons["closePrintReview"].click()
         XCTAssertTrue(title.waitForNonExistence(timeout: 8))
-        app.staticTexts["Inbox"].firstMatch.click()
+        app.textNamed("Inbox").firstMatch.click()
         app.typeKey("p", modifierFlags: .command)
         let inboxReady = title.waitForExistence(timeout: 10)
         if !inboxReady {
@@ -5624,7 +5641,7 @@ extension TaskfoldMacUITests {
         let before = try outputTables()
         app.buttons["closePrintReview"].click()
         XCTAssertTrue(app.staticTexts["printDocumentTitle"].waitForNonExistence(timeout: 8))
-        app.staticTexts["Calendar"].firstMatch.click()
+        app.textNamed("Calendar").firstMatch.click()
         app.menuBars.menuBarItems["File"].click()
         let command = app.menuItems["Print or Export…"].firstMatch
         XCTAssertTrue(command.waitForExistence(timeout: 5))
@@ -5687,7 +5704,7 @@ extension TaskfoldMacUITests {
         noteProofWait { try self.importedHeadingTask()["is_heading"] as? Bool == true }
         try importedHeadingAssert(before, title: "Plan tomorrow #work p1", heading: true, revision: 1)
         for key in tables.allKeys.compactMap({ $0 as? String }) where key != "tasks" { XCTAssertEqual(try outputTables()[key] as? NSObject, tables[key] as? NSObject, key) }
-        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        app.textNamed("Today").firstMatch.click(); app.typeKey("z", modifierFlags: .command)
         noteProofWait { try self.importedHeadingTask()["is_heading"] as? Bool == false }
         try importedHeadingAssert(before, title: "* Plan tomorrow #work p1", heading: false, revision: 2)
         app.typeKey("z", modifierFlags: [.command, .shift])
@@ -5701,7 +5718,7 @@ extension TaskfoldMacUITests {
         let completed = try importedHeadingTask()
         XCTAssertEqual(completed["completed"] as? Bool, false); XCTAssertEqual(completed["is_heading"] as? Bool, true)
         XCTAssertEqual((try outputTables()["tasks"] as? [Any])?.count, 1, "Completing a child does not complete or duplicate its heading")
-        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        app.textNamed("Today").firstMatch.click(); app.typeKey("z", modifierFlags: .command)
         noteProofWait { ((try self.importedHeadingTask()["subtasks"] as? [[String: Any]])?.first?["completed"] as? Bool) == false }
         try importedHeadingAssert(before, title: "Plan tomorrow #work p1", heading: true, revision: 3)
         let saved = try outputTables(); app.typeKey("q", modifierFlags: .command)
@@ -5870,7 +5887,7 @@ extension TaskfoldMacUITests {
         let scheduled = try XCTUnwrap(created.first { $0["title"] as? String == "Approve color contrast" })
         XCTAssertEqual(scheduled["priority"] as? Int, 1); XCTAssertFalse((scheduled["due_date"] as? String ?? "").isEmpty)
         XCTAssertTrue(created.allSatisfy { ($0["project_id"] as? String ?? "").isEmpty })
-        app.staticTexts["Inbox"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        app.textNamed("Inbox").firstMatch.click(); app.typeKey("z", modifierFlags: .command)
         voiceMacWait { try Set(self.voiceMacTasks().compactMap { $0["id"] as? String }) == originalIDs }
         XCTAssertEqual(try voiceMacBytes(voiceMacTasks()), try voiceMacBytes(originalTasks))
         app.typeKey("z", modifierFlags: [.command, .shift])
@@ -6021,7 +6038,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription)
         let cache = assignmentCache()
         app.launchArguments.removeAll { ["--workflow-fixture", "--assignment-tree-fixture", "--assignment-tree-unsupported"].contains($0) }
-        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
+        let today = app.textNamed("Today").firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
         let row = app.staticTexts["title-" + assignmentRootID].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 12), app.debugDescription); row.click(); app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(app.textFields["taskTitle"].waitForExistence(timeout: 8), app.debugDescription)
@@ -6053,7 +6070,7 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
         let before = try Data(contentsOf: cache)
         try launchHeadingWorkspace(app)
-        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
+        let today = app.textNamed("Today").firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
         XCTAssertTrue(app.staticTexts["title-" + assignmentRootID].waitForExistence(timeout: 12))
         try assignmentVerifySaved(cache); try assignmentEquivalent(Data(contentsOf: cache), before)
     }
@@ -6142,7 +6159,7 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
         let saved = try Data(contentsOf: cache)
         try launchHeadingWorkspace(app)
-        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
+        let today = app.textNamed("Today").firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
         XCTAssertTrue(app.staticTexts["title-" + assignmentRootID].waitForExistence(timeout: 12))
         try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: "ui-testing", app: app)
         try assignmentEquivalent(Data(contentsOf: cache), saved)
@@ -6189,7 +6206,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
         noteProofWait { try self.noteProofTask()["description"] as? String == expected }
         try noteProofAssertOnlyDescription(expected, before: before)
-        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        app.textNamed("Today").firstMatch.click(); app.typeKey("z", modifierFlags: .command)
         noteProofWait { try self.noteProofTables() == before }
         app.typeKey("z", modifierFlags: [.command, .shift])
         noteProofWait { try self.noteProofTask()["description"] as? String == expected }

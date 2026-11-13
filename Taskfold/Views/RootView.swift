@@ -41,7 +41,7 @@ struct RootView: View {
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; seed() }
         .onChange(of: store.childTaskFieldRecoveryScope) { _, _ in workspace.clearChildCompletion() }
-        .onChange(of: store.userID) { _, _ in workspace.clearNavigationMemory(); workspace.section = .today }
+        .onChange(of: store.userID) { _, _ in workspace.clearNavigationMemory(); workspace.section = workspace.launchSection ?? .today }
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
         .onChange(of: undoManager) { _, value in workspace.undoManager = value }
@@ -81,7 +81,7 @@ struct RootView: View {
         .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
         .onChange(of: store.workspaceGeneration) { _, _ in
-            workspace.clearNavigationMemory(); workspace.section = .today
+            workspace.clearNavigationMemory(); workspace.section = workspace.launchSection ?? .today
             inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; mentionsRequest = nil
         }
         .sheet(item: Binding(get: { workspace.teamTaskCreation }, set: { workspace.teamTaskCreation = $0 })) { opening in
@@ -215,7 +215,12 @@ struct RootView: View {
         let arguments = ProcessInfo.processInfo.arguments
         // Debug options use --key=value so AppKit never mistakes a bare value for a document to open.
         func option(_ key: String) -> String? { arguments.first { $0.hasPrefix("--\(key)=") }.map { String($0.dropFirst(key.count + 3)) } }
-        if let value = option("section") { workspace.section = SidebarItem(key: value) }
+        if let value = option("section") {
+            // The workspace finishes loading a moment after launch and resets navigation to Today; keep the requested section through that.
+            let item = SidebarItem(key: value)
+            workspace.section = item; workspace.launchSection = item
+            Task { try? await Task.sleep(for: .seconds(4)); workspace.launchSection = nil }
+        }
         // Preview launches state the accent explicitly so one capture cannot tint the next.
         if let value = option("accent") { UserDefaults.standard.set(value, forKey: "accent") }
         else if arguments.contains("--preview") { UserDefaults.standard.set("rose", forKey: "accent") }
@@ -224,8 +229,14 @@ struct RootView: View {
             workspace.settingsTab = tab
             Task {
                 try? await Task.sleep(for: .milliseconds(800))
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                openSettings()  // the legacy showSettingsWindow: action no longer opens Settings on macOS 27
             }
+        }
+        // UI tests size the window at launch (dragging a corner no longer resizes it under macOS 27 automation). macOS restores the last
+        // window size, so every UI-test launch states one: --window-width=N, or the default 1380.
+        if arguments.contains("--uitesting") {
+            let width = option("window-width").flatMap(Double.init) ?? 1380
+            Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: width, height: 840)) }
         }
         if arguments.contains("--preview") { Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: 1380, height: 840)) } }
         if arguments.contains("--remote-highlight-preview") {
