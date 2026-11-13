@@ -33,6 +33,9 @@ struct HourlyPlannerView: View {
     let complete: (Record) -> Void
     let save: (Record, [String: JSON]) -> Bool
     let undo: (EditHistoryRequest) -> Bool
+    /// Applies a "Fit my day" proposal as one undoable change; each app routes it through its own undo wiring.
+    var fitDay: ((DayPlanFit, [Record]) -> Bool)? = nil
+    @State private var fitProposal: DayPlanFit?
     @State private var request: PlannerScheduleRequest?
     @State private var feedback: String?
     @State private var feedbackRequest: EditHistoryRequest?
@@ -115,6 +118,10 @@ struct HourlyPlannerView: View {
             .frame(minWidth: 460, idealWidth: 520, minHeight: 430)
             #endif
         }
+        .confirmationDialog(fitTitle, isPresented: Binding(get: { fitProposal != nil }, set: { if !$0 { fitProposal = nil } }), titleVisibility: .visible, presenting: fitProposal) { fit in
+            Button("Fit my day") { applyFit(fit) }.accessibilityIdentifier("capacityRingFitConfirm")
+            Button("Cancel", role: .cancel) { fitProposal = nil }
+        } message: { fit in Text(fitMessage(fit)) }
         .alert("Could not schedule", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) { Button("OK") { error = nil } } message: { Text(error ?? "") }
     }
     private func summary(_ reading: PlannerDayReading) -> some View {
@@ -138,6 +145,7 @@ struct HourlyPlannerView: View {
                         .accessibilityLabel(usesAgenda ? "Show timeline":"Show readable list").accessibilityIdentifier("plannerLayoutToggle")
                 }
             }
+            capacityRing
             Text(workingSummary(reading.capacity)).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerWorkingCapacity")
             if work.incomplete {
                 Label("Some grouped tasks need review. Capacity includes readable estimates only.", systemImage: "exclamationmark.circle")
@@ -151,6 +159,33 @@ struct HourlyPlannerView: View {
         }.padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial)
+    }
+    private var fitTitle: String { "Fit my day?" }
+    private func fitMessage(_ fit: DayPlanFit) -> String {
+        let moved = fit.placements.count == 1 ? "1 task" : "\(fit.placements.count) tasks"
+        let left = fit.didntFit.filter { $0.reason != .noEstimate }.count
+        return "This gives \(moved) (\(DayPlan.duration(fit.placedMinutes))) a time in your free hours." + (left > 0 ? " \(left) will not fit." : "") + " You can undo it afterwards."
+    }
+    private var dayKey: String { TaskPlanner.dayKey(day, calendar: calendar) }
+    private var dayTasks: [Record] { DayPlan.todayTasks(tasks, day: dayKey, calendar: calendar) }
+    @ViewBuilder private var capacityRing: some View {
+        let ring = DayPlan.capacityRing(dayTasks, events: events, on: day, hours: hours, calendar: calendar)
+        CapacityRingView(ring: ring, fit: fitDay == nil ? nil : { proposeFit() })
+    }
+    private func proposeFit() {
+        let isToday = calendar.isDateInToday(day)
+        let fit = DayPlan.fit(tasks: dayTasks, events: events, on: day, hours: hours, eveningIDs: Set(store.planningState.evening), notBefore: isToday ? Date() : nil, calendar: calendar)
+        if fit.placements.isEmpty { feedback = "Nothing could be moved to fit your free time."; feedbackRequest = nil; return }
+        fitProposal = fit
+    }
+    private func applyFit(_ fit: DayPlanFit) {
+        guard let fitDay else { return }
+        let previousHistory = store.undoStack.last?.id
+        let saved = fitDay(fit, dayTasks)
+        fitProposal = nil
+        guard saved else { error = store.error ?? "Could not fit your day."; store.error = nil; return }
+        feedback = fit.placements.count == 1 ? "Placed 1 task" : "Placed \(fit.placements.count) tasks"
+        feedbackRequest = store.undoStack.last?.id != previousHistory ? store.captureHistoryRequest() : nil
     }
     private func estimateSummary(_ capacity: PlannerCapacity) -> some View {
         Text("\(capacity.estimatedMinutes) min estimated · \(capacity.unknownTasks) without estimates")

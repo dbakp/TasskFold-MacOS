@@ -317,6 +317,51 @@ struct DayPlanCapacityCard: View {
     }
 }
 
+// MARK: - Capacity ring
+
+/// The planner header's ring: planned time against free time, with "Fit my day" when the plan does not fit.
+/// The ring and its text are one VoiceOver element carrying the numbers; the action is its own 44pt target.
+struct CapacityRingView: View {
+    let ring: CapacityRing
+    var fit: (() -> Void)? = nil
+    @Environment(\.dynamicTypeSize) private var textSize
+    @ScaledMetric(relativeTo: .caption) private var diameter: CGFloat = 40
+    private var tint: Color { ring.isOver ? Color.dayPlanCaution : DS.Palette.accent }
+    var body: some View {
+        let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: DS.Space.s)) : AnyLayout(HStackLayout(spacing: DS.Space.m))
+        layout {
+            HStack(spacing: DS.Space.m) {
+                ZStack {
+                    Circle().stroke(DS.Palette.surfaceSunken, lineWidth: 6)
+                    Circle().trim(from: 0, to: max(ring.fraction, ring.plannedMinutes > 0 && ring.hasWorkingHours ? 0.02 : 0))
+                        .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: .round)).rotationEffect(.degrees(-90))
+                    if ring.isOver { Image(systemName: "exclamationmark").font(.caption2.weight(.bold)).foregroundStyle(tint) }
+                }
+                .frame(width: min(diameter, 72), height: min(diameter, 72))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(ring.label).font(.caption.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true)
+                    if ring.isOver {
+                        Text("\(DayPlan.duration(ring.overMinutes)) over your free time").font(.caption2).foregroundStyle(Color.dayPlanCaution).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(ring.accessibilityLabel)
+            .accessibilityIdentifier("capacityRing")
+            if ring.offersFit, let fit {
+                Button(action: fit) {
+                    Label("Fit my day", systemImage: "wand.and.stars").font(.caption.weight(.semibold)).frame(minWidth: 44, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityHint("Previews a schedule that fits your free time and asks before moving tasks")
+                .accessibilityIdentifier("capacityRingFit")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+    }
+}
+
 // MARK: - Step 2: Estimate
 
 struct DayPlanEstimateStep: View {

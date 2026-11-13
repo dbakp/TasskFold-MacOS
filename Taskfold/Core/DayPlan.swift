@@ -78,6 +78,44 @@ struct DayPlanTotals: Equatable, Sendable {
     var fraction: Double { freeMinutes > 0 ? min(1, Double(estimatedMinutes) / Double(freeMinutes)) : (estimatedMinutes > 0 ? 1 : 0) }
 }
 
+/// The capacity ring in the planner header: planned time against free time for one day.
+/// Planned is the sum of `duration_minutes` of the day's open tasks; free is working hours minus timed calendar
+/// events (see `DayPlan.totals`). Pure, so both apps and the tests read the same numbers.
+struct CapacityRing: Equatable, Sendable {
+    var plannedMinutes: Int
+    var freeMinutes: Int
+    var workingMinutes: Int
+    var overMinutes: Int
+    var unestimatedCount: Int
+    init(totals: DayPlanTotals) {
+        plannedMinutes = totals.estimatedMinutes; freeMinutes = totals.freeMinutes; workingMinutes = totals.workingMinutes
+        overMinutes = totals.overMinutes; unestimatedCount = totals.unestimatedCount
+    }
+    /// Without working hours (a day off, or hours this version cannot read) there is no free time to compare with.
+    var hasWorkingHours: Bool { workingMinutes > 0 }
+    var isOver: Bool { hasWorkingHours && overMinutes > 0 }
+    /// "Fit my day" is only offered when the plan does not fit.
+    var offersFit: Bool { isOver }
+    /// 0...1 of the ring; full when over or when work is planned with no free time.
+    var fraction: Double {
+        guard hasWorkingHours else { return 0 }
+        return freeMinutes > 0 ? min(1, Double(plannedMinutes) / Double(freeMinutes)) : (plannedMinutes > 0 ? 1 : 0)
+    }
+    /// "9h planned · 6h free"
+    var label: String {
+        hasWorkingHours ? "\(DayPlan.duration(plannedMinutes)) planned · \(DayPlan.duration(freeMinutes)) free"
+                        : "\(DayPlan.duration(plannedMinutes)) planned · no working hours"
+    }
+    /// "9 hours planned, 6 hours free, 3 hours over"
+    var accessibilityLabel: String {
+        var text = hasWorkingHours ? "Capacity: \(DayPlan.spoken(plannedMinutes)) planned, \(DayPlan.spoken(freeMinutes)) free"
+                                   : "Capacity: \(DayPlan.spoken(plannedMinutes)) planned, no working hours"
+        if isOver { text += ", \(DayPlan.spoken(overMinutes)) over" }
+        if unestimatedCount > 0 { text += unestimatedCount == 1 ? ", 1 task without an estimate" : ", \(unestimatedCount) tasks without estimates" }
+        return text
+    }
+}
+
 /// What the Today header offers for the current day.
 enum DayPlanPrompt: Equatable, Sendable { case plan, shutdown, planned, shutDown }
 
@@ -177,6 +215,11 @@ enum DayPlan {
         return DayPlanTotals(taskCount: work.count, estimatedMinutes: work.compactMap(\.durationMinutes).reduce(0, +),
                              unestimatedCount: work.filter { $0.durationMinutes == nil }.count,
                              workingMinutes: capacity.workingMinutes, busyMinutes: capacity.busyMinutes)
+    }
+
+    /// The header ring for `day`. All-day events never reduce free time (see `totals`).
+    static func capacityRing(_ tasks: [Record], events: [PlannerEvent], on day: Date, hours: WorkingHours?, calendar: Calendar = .current) -> CapacityRing {
+        CapacityRing(totals: totals(tasks, events: events, on: day, hours: hours, calendar: calendar))
     }
 
     /// The end of the latest timed, estimated task. Nil when nothing has both a time and an estimate.
