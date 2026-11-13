@@ -126,7 +126,7 @@ struct TaskRowView: View {
                              color: NSColor(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary),
                              linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold),
                              strikethrough: checked, lineLimit: 3,
-                             accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary(planning), preparedLinks: titleLinks)
+                             accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary(planning), preparedLinks: titleLinks, autoFetchTitles: store.mayAutoFetchLinkTitles(task))
                 }
                 if !notePreview.isEmpty && density != "compact" {
                     if previewLinks.matches.isEmpty {
@@ -137,7 +137,7 @@ struct TaskRowView: View {
                         LinkText(text: notePreview, font: .preferredFont(forTextStyle: .subheadline),
                                  color: NSColor(isSelected ? selectedForeground.opacity(0.9) : Color.secondary),
                                  linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold), lineLimit: dynamicTypeSize.isAccessibilitySize ? 0 : 1,
-                                 accessibilityIdentifier: "notes-\(task.id)", preparedLinks: previewLinks)
+                                 accessibilityIdentifier: "notes-\(task.id)", preparedLinks: previewLinks, autoFetchTitles: store.mayAutoFetchLinkTitles(task))
                     }
                 }
                 if let fullRequest, fullReading == nil, !fullRequest.source.text.isEmpty {

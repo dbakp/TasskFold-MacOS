@@ -59,18 +59,30 @@ final class LinkTitles {
     @ObservationIgnored private var inFlight = Set<String>()
     @ObservationIgnored private var failed = Set<String>()
     @ObservationIgnored private var waiters: [String: [(LPLinkMetadata?) -> Void]] = [:]
-    /// Returns the cached title, kicking off a fetch the first time a URL is seen.
-    func title(for url: URL) -> String? {
+    /// Returns the cached title. The page is fetched on its own only when `autoFetch` is true
+    /// (the current user's own task in a non-shared project); otherwise a fetch waits for an explicit request.
+    func title(for url: URL, autoFetch: Bool) -> String? {
         let key = url.absoluteString
         if let title = titles[key] { return title }
-        if !inFlight.contains(key) && !failed.contains(key) { fetch(url) }
+        if autoFetch && !inFlight.contains(key) && !failed.contains(key) { fetch(url) }
         return nil
     }
-    /// Calls back with rich metadata for a preview, fetching if needed.
-    func metadata(for url: URL, completion: @escaping (LPLinkMetadata?) -> Void) {
+    /// What a link reads as: the real host is always shown, next to the page title once one is known.
+    func label(for url: URL, autoFetch: Bool) -> String {
+        ClientHardening.linkLabel(host: Linkify.host(url), title: title(for: url, autoFetch: autoFetch), fallback: Linkify.shortLabel(url))
+    }
+    /// An explicit user action (the link's context menu): fetch the title now.
+    func requestTitle(for url: URL) {
+        let key = url.absoluteString
+        guard titles[key] == nil, !inFlight.contains(key) else { return }
+        failed.remove(key)
+        fetch(url)
+    }
+    /// Calls back with rich metadata for a preview. Without `autoFetch` only already-loaded metadata is shown.
+    func metadata(for url: URL, autoFetch: Bool, completion: @escaping (LPLinkMetadata?) -> Void) {
         let key = url.absoluteString
         if let cached = metadata[key] { completion(cached); return }
-        if failed.contains(key) { completion(nil); return }
+        if failed.contains(key) || !autoFetch { completion(nil); return }
         waiters[key, default: []].append(completion)
         if !inFlight.contains(key) { fetch(url) }
     }
@@ -99,7 +111,13 @@ final class LinkTitles {
 /// Opens links in the default browser. Fixture launches record the link instead so tests never leave the app.
 @MainActor
 enum LinkOpener {
-    static var testing: Bool { ProcessInfo.processInfo.arguments.contains("--uitesting") }
+    static var testing: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("--uitesting")
+        #else
+        false
+        #endif
+    }
     static func open(_ url: URL, workspace: Workspace?, via: String = "click") {
         if testing { workspace?.confirm("Would open \(Linkify.host(url)) via \(via)", undoable: false); return }
         NSWorkspace.shared.open(url)
@@ -124,6 +142,8 @@ struct LinkText: NSViewRepresentable {
     var accessibilityIdentifier: String? = nil
     var accessibilityLabel: String? = nil
     var preparedLinks: Linkify.Reading? = nil
+    /// True only for the current user's own tasks in non-shared projects; see `ClientHardening.mayAutoFetchLinkTitle`.
+    var autoFetchTitles = false
     @Environment(Workspace.self) private var workspace
 
     func makeNSView(context: Context) -> LinkAwareTextView {
@@ -142,6 +162,7 @@ struct LinkText: NSViewRepresentable {
     }
     func updateNSView(_ view: LinkAwareTextView, context: Context) {
         view.workspace = workspace
+        view.autoFetchTitles = autoFetchTitles
         view.textContainer?.maximumNumberOfLines = lineLimit
         view.textContainer?.lineBreakMode = lineLimit == 0 ? .byWordWrapping : .byTruncatingTail
         view.linkTextAttributes = [.foregroundColor: linkColor, .cursor: NSCursor.pointingHand]
@@ -175,7 +196,7 @@ struct LinkText: NSViewRepresentable {
             attributes[.link] = match.url
             attributes[.foregroundColor] = linkColor
             attributes[.toolTip] = match.url.absoluteString
-            result.append(NSAttributedString(string: LinkTitles.shared.title(for: match.url) ?? Linkify.shortLabel(match.url), attributes: attributes))
+            result.append(NSAttributedString(string: LinkTitles.shared.label(for: match.url, autoFetch: autoFetchTitles), attributes: attributes))
             cursor = match.range.upperBound
         }
         if cursor < text.endIndex { result.append(NSAttributedString(string: String(text[cursor...]), attributes: base)) }
@@ -187,6 +208,7 @@ struct LinkText: NSViewRepresentable {
 /// hover, and offers Open, Copy Link, and Share from the context menu.
 final class LinkAwareTextView: NSTextView, NSTextViewDelegate {
     weak var workspace: Workspace?
+    var autoFetchTitles = false
     private var renderedContent: NSAttributedString?
     private var pendingContent: NSAttributedString?
     private var contentUpdateScheduled = false
@@ -286,9 +308,14 @@ final class LinkAwareTextView: NSTextView, NSTextViewDelegate {
         let copy = NSMenuItem(title: "Copy Link", action: #selector(copyLink(_:)), keyEquivalent: ""); copy.representedObject = url; copy.target = self
         let share = NSMenuItem(title: "Share…", action: #selector(shareLink(_:)), keyEquivalent: ""); share.representedObject = url; share.target = self
         menu.items = [open, copy, NSMenuItem.separator(), share]
+        if !autoFetchTitles {
+            let load = NSMenuItem(title: "Load Page Title", action: #selector(loadTitle(_:)), keyEquivalent: ""); load.representedObject = url; load.target = self
+            menu.items.insert(contentsOf: [load], at: 2)
+        }
         NSMenu.popUpContextMenu(menu, with: event, for: self)
     }
     @objc private func openLink(_ sender: NSMenuItem) { if let url = sender.representedObject as? URL { LinkOpener.open(url, workspace: workspace) } }
+    @objc private func loadTitle(_ sender: NSMenuItem) { if let url = sender.representedObject as? URL { LinkTitles.shared.requestTitle(for: url) } }
     @objc private func copyLink(_ sender: NSMenuItem) { if let url = sender.representedObject as? URL { LinkOpener.copy(url); workspace?.confirm("Copied link", undoable: false) } }
     @objc private func shareLink(_ sender: NSMenuItem) {
         guard let url = sender.representedObject as? URL else { return }
@@ -325,7 +352,7 @@ final class LinkAwareTextView: NSTextView, NSTextViewDelegate {
     }
     private func showPreview(for url: URL) {
         guard hoveredLink == url, window != nil, !LinkOpener.testing else { return }
-        LinkTitles.shared.metadata(for: url) { [weak self] metadata in
+        LinkTitles.shared.metadata(for: url, autoFetch: autoFetchTitles) { [weak self] metadata in
             guard let self, let metadata, self.hoveredLink == url, self.popover == nil else { return }
             let linkView = LPLinkView(metadata: metadata)
             linkView.frame = NSRect(x: 0, y: 0, width: 320, height: 200)
@@ -343,4 +370,13 @@ final class LinkAwareTextView: NSTextView, NSTextViewDelegate {
     }
     override func resetCursorRects() {}
     override var acceptsFirstResponder: Bool { false }
+}
+
+extension Store {
+    /// Page titles are fetched without a click only for tasks the current user created in projects that are not shared.
+    func mayAutoFetchLinkTitles(_ task: Record) -> Bool {
+        let project = task.string("project_id")
+        let shared = hasSharedTaskSelection([task.id]) || ClientHardening.projectIsShared(projectID: project, projectRecordExists: record("projects", id: project) != nil, inTeamCache: nativeConversationTeamCache?.knownTeams[project] != nil)
+        return ClientHardening.mayAutoFetchLinkTitle(taskOwner: task.string("user_id"), currentUser: userID, shared: shared)
+    }
 }
