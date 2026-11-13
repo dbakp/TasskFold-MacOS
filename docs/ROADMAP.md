@@ -163,6 +163,13 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 - ~~A TickTick-style habit tracker and a Pomodoro timer that reuses Focus sessions.~~ Done: [Mac #131](https://github.com/dbakp/TasskFold-MacOS/pull/131), [iOS #132](https://github.com/dbakp/TaskFold-iOS/pull/132). Habits read history from completed occurrences; the Pomodoro cycle stays on the device.
 - ~~On-device Apple Intelligence: capture a voice note as several tasks, or get a smart reschedule of overdue work.~~ Done: [Mac #133](https://github.com/dbakp/TasskFold-MacOS/pull/133), [iOS #134](https://github.com/dbakp/TaskFold-iOS/pull/134). Brain dump (model splits text only; Quick Add parses) and smart reschedule (deterministic plan, optional model notes). The real model path is untested: the model isn't downloaded on the build Mac.
 
+### Hardening, Watch and UI tests (12–13 November 2026)
+- **Edge functions:** `supabase/config.toml` now pins `verify_jwt` for all 15 repo functions, and the TLS test certificate is fixed; 451 Deno tests pass ([Mac #145](https://github.com/dbakp/TasskFold-MacOS/pull/145), [iOS #147](https://github.com/dbakp/TaskFold-iOS/pull/147)).
+- **Siri and Shortcuts:** the five intents that read or change tasks now require an unlocked device ([Mac #146](https://github.com/dbakp/TasskFold-MacOS/pull/146), [iOS #149](https://github.com/dbakp/TaskFold-iOS/pull/149)).
+- **Apple Watch:** glance, complication, habits, Focus and smarter Quick Add; 119 Watch tests pass ([iOS #148](https://github.com/dbakp/TaskFold-iOS/pull/148)). The Watch app is not yet embedded in the iPhone app; that comes with distribution.
+- **UI suites:** a webhook test fixture had taken over every UI-test launch once webhooks shipped; fixed in both apps ([Mac #147](https://github.com/dbakp/TasskFold-MacOS/pull/147), [iOS #150](https://github.com/dbakp/TaskFold-iOS/pull/150)). Team and email UI tests now skip outside their isolated hosts. Unattended Mac UI automation works.
+- **Still open:** 90 iOS and 47 Mac UI tests fail deterministically. Most look like stale element lookups (sidebar rows are no longer buttons) or tests that need a reserved fixture host. Core tests are green (iOS 4,663, Mac 4,692).
+
 ## Phase 0 outcome (10 November 2026)
 - **Baseline.**
   - Mac: Core tests 4,376 run, 0 failed, 46 skipped; Debug build succeeds in about 2 minutes.
@@ -193,3 +200,8 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 2. **Apple Developer Program:** free account; distribution deferred to Phase 5 (decided 10 November 2026).
 3. **CI:** add GitHub Actions (uses macOS runner minutes), or merge after local checks only?
 4. **Start point:** Phase 0, then Phase 1 in order?
+5. **Security before launch (security review, 13 November 2026):**
+   - Turn on email confirmation with your own SMTP. Auto-confirm lets someone sign up with another person's address and accept invitations sent to it.
+   - The two hosted invitation-email functions have no source in either repo and send unverified body content; bring them into the repo or replace them.
+   - Drop the public listing policy on profile pictures.
+   - Confirm the due-task check secret is at least 32 characters.
