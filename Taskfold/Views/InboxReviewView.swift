@@ -135,6 +135,7 @@ struct InboxReviewView: View {
                     Button(project.name) { move(task, to: project.id) }.accessibilityIdentifier("inboxReviewProject-" + project.id)
                 }
             } label: { actionLabel("Move to project", "folder", primary: true) }
+                .menuStyle(.borderlessButton).menuIndicator(.hidden)
                 .accessibilityIdentifier("inboxReviewMove").disabled(store.projects.isEmpty)
             if store.projects.isEmpty { Text("No projects yet. You can edit, finish, or keep this task here.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
             Button { openEditor(task) } label: { actionLabel("Edit details", "pencil") }.accessibilityIdentifier("inboxReviewEdit")

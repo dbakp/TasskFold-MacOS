@@ -453,14 +453,14 @@ final class TaskfoldMacUITests: XCTestCase {
         let plan = app.staticTexts["inboxFixturePlan"].shownText
         app.buttons["reviewInbox"].click(); XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox launch notes")
-        app.menuButtons["inboxReviewMove"].click(); sleep(1); app.typeKey(.downArrow, modifierFlags: []); app.typeKey(.return, modifierFlags: [])  // the popup's items are not exposed to accessibility on macOS 27 (only the menu bar's are); "Studio" is its only project
+        app.menuButtons["inboxReviewMove"].click(); sleep(1); let studio = app.menuItems.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inboxReviewProject-")).firstMatch; XCTAssertTrue(studio.waitForExistence(timeout: 5)); XCTAssertEqual(studio.title, "Studio"); studio.click()
         sleep(1); XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox studio sketch"); app.buttons["inboxReviewKeep"].click()
         XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
         XCTAssertTrue(app.staticTexts["inboxReviewSummary"].waitForExistence(timeout: 5)); app.buttons["inboxReviewUndo"].click()
         XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
         XCTAssertEqual(app.staticTexts["inboxReviewRemaining"].shownText, "1 open task remains in Inbox."); app.buttons["inboxReviewClose"].click()
         XCTAssertEqual(app.staticTexts["inboxProjection"].shownText, "Inbox: 1"); XCTAssertEqual(app.staticTexts["inboxFixturePlan"].shownText, plan)
-        app.terminate(); app.launchArguments.removeAll { $0 == "--inbox-review-seed" }; app.launch()
+        app.terminate(); app.launchArguments.removeAll { $0 == "--inbox-review-seed" }; app.launchArguments.append("--section=inbox"); app.launch()
         XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].shownText, "Inbox: 1")
         app.buttons["reviewInbox"].click(); XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["inboxReviewTitle"].shownText, "Inbox studio sketch"); app.buttons["inboxReviewClose"].click(); app.terminate()
@@ -555,7 +555,8 @@ final class TaskfoldMacUITests: XCTestCase {
         app.buttons["Add Task"].click()
         app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click()
         XCTAssertTrue(app.textNamed(title).waitForExistence(timeout: 5))
-        XCTAssertTrue(app.textNamed("Next steps").exists)
+        // macOS 27 folds the section header's title and count into its collapse button ("Next steps, 1"), so it is no longer a separate static text.
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label BEGINSWITH %@", "section-collapse-", "Next steps")).firstMatch.exists)
         app.terminate(); app.launchArguments = ["--uitesting", "--section=project:qe-work"]; app.launch()
         XCTAssertTrue(app.textNamed(title).waitForExistence(timeout: 5))
     }
