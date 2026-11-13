@@ -1411,7 +1411,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("f", modifierFlags: [.command, .shift])
         app.typeText("Navigation task 003")
         app.typeKey("f", modifierFlags: .command)
-        let finder = app.textFields["finderSearch"]
+        let finder = app.textFields["commandBarField"]
         XCTAssertTrue(finder.waitForExistence(timeout: 5))
         finder.typeText("Archived navigation target")
         app.typeKey(.return, modifierFlags: [])
@@ -1429,9 +1429,9 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(input.waitForExistence(timeout: 10)); input.click(); input.typeText("Draft")
         app.typeKey(.escape, modifierFlags: [])
         app.typeKey("f", modifierFlags: .command)
-        XCTAssertTrue(app.textFields["finderSearch"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["commandBarField"].waitForExistence(timeout: 5))
         app.typeKey(.escape, modifierFlags: [])
-        XCTAssertTrue(waitForDisappearance(app.textFields["finderSearch"], timeout: 5))
+        XCTAssertTrue(waitForDisappearance(app.textFields["commandBarField"], timeout: 5))
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(input.waitForExistence(timeout: 5))
         input.click(); app.typeKey(.rightArrow, modifierFlags: [])
@@ -1439,7 +1439,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertEqual(input.value as? String, "Draft continued")
         app.typeKey(.escape, modifierFlags: [])
         app.typeKey("f", modifierFlags: .command)
-        let finder = app.textFields["finderSearch"]
+        let finder = app.textFields["commandBarField"]
         XCTAssertTrue(finder.waitForExistence(timeout: 5)); finder.typeText("Navigation Studio")
         app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(waitForDisappearance(finder, timeout: 5))
@@ -1485,7 +1485,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
         XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
         app.typeKey("f", modifierFlags: .command)
-        let finder = app.textFields["finderSearch"]
+        let finder = app.textFields["commandBarField"]
         XCTAssertTrue(finder.waitForExistence(timeout: 5)); finder.typeText("Navigation task 00")
         app.typeKey(.downArrow, modifierFlags: [])
         app.typeKey(.return, modifierFlags: [])

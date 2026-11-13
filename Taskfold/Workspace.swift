@@ -166,6 +166,10 @@ final class Workspace {
         }
     }
     var pendingFinderCommand: String?
+    /// Asks the main window to open the Focus sheet, optionally with a task chosen. Used by the menu bar and the command bar.
+    struct FocusLaunch: Equatable { var id = UUID(); var taskID: String? }
+    var focusLaunch: FocusLaunch?
+    func requestFocus(taskID: String?) { focusLaunch = FocusLaunch(taskID: taskID) }
     var finderTaskID: String?
     var recentDestinations: [SidebarItem] = []
     @ObservationIgnored var scrollBookmarks: [String: ListScrollBookmark] = [:]
@@ -276,6 +280,8 @@ final class Workspace {
             switch command {
             case "new": quickAddFocusRequest += 1
             case "project": newProjectRequest += 1
+            case "plan": planning = .day
+            case "focus": requestFocus(taskID: nil)
             default: searchPresented = true
             }
         } else if finderOpenedTask {

@@ -53,6 +53,7 @@ struct MenuBarContent: View {
         VStack(alignment: .leading, spacing: 0) {
             header(count: all.filter { !workspace.isLingering($0.id) }.count)
             if store.signedIn || store.localMode {
+                nowNextCard
                 addField
                 Divider().padding(.horizontal, DS.Space.l)
                 if shown.isEmpty { emptyState } else { list(shown, remaining: remaining) }
@@ -86,6 +87,67 @@ struct MenuBarContent: View {
             }
         }
         .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.l).padding(.bottom, DS.Space.m)
+    }
+
+    // MARK: Now / next
+
+    /// The running Focus session or, failing that, the next timed block or task due today, with quick actions.
+    /// Every action is the same store/workspace call the task list uses, so undo and confirmations behave identically.
+    @ViewBuilder private var nowNextCard: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let item = NowNext.resolve(focus: store.focusSession, tasks: store.activeTasks, now: context.date)
+            if let id = NowNext.taskID(item), let task = store.record("tasks", id: id) {
+                VStack(alignment: .leading, spacing: DS.Space.s) {
+                    HStack(spacing: DS.Space.xs) {
+                        Image(systemName: nowSymbol(item)).font(DS.Font.chip).foregroundStyle(Color.taskfold).accessibilityHidden(true)
+                        Text(nowLabel(item)).font(DS.Font.taskMeta.weight(.semibold)).foregroundStyle(DS.Palette.textSecondary).textCase(.uppercase)
+                        Spacer(minLength: DS.Space.s)
+                        if case .focus(let focus) = item {
+                            Text(NowNext.remainingText(focus.remaining) + (focus.paused ? " · paused" : ""))
+                                .font(DS.Font.taskTitle.monospacedDigit()).foregroundStyle(Color.taskfold).accessibilityIdentifier("menuBarNowRemaining")
+                        } else if case .next(let next) = item, let time = next.time {
+                            Text(TaskDetailFormat.clock(time)).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+                        }
+                    }
+                    Button { open(task) } label: {
+                        Text(task.title.isEmpty ? "Untitled task" : task.title).font(DS.Font.taskTitle).lineLimit(2)
+                            .frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect)
+                    }
+                    .buttonStyle(.plain).pointerStyle(.link).accessibilityHint("Opens in Taskfold").accessibilityIdentifier("menuBarNowTitle")
+                    HStack(spacing: DS.Space.s) {
+                        Button { workspace.complete(task) } label: { Label("Complete", systemImage: "checkmark") }
+                            .accessibilityLabel("Complete \(task.title)").accessibilityIdentifier("menuBarNowComplete")
+                        if case .focus = item {
+                            Button { workspace.requestFocus(taskID: task.id); GlobalQuickAddController.openMainWindow() } label: { Label("Open Focus", systemImage: "timer") }
+                                .accessibilityIdentifier("menuBarNowFocus")
+                        } else {
+                            Button { workspace.requestFocus(taskID: task.id); GlobalQuickAddController.openMainWindow() } label: { Label("Focus", systemImage: "timer") }
+                                .accessibilityLabel("Start focus on \(task.title)").accessibilityIdentifier("menuBarNowFocus")
+                            Button { snoozeToTomorrow(task) } label: { Label("Tomorrow", systemImage: "sunrise") }
+                                .accessibilityLabel("Snooze \(task.title) to tomorrow").accessibilityIdentifier("menuBarNowSnooze")
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .buttonStyle(.bordered).controlSize(.small).labelStyle(.titleAndIcon)
+                }
+                .padding(DS.Space.m)
+                .background(DS.Palette.surfaceSunken, in: .rect(cornerRadius: DS.Radius.m, style: .continuous))
+                .padding(.horizontal, DS.Space.l).padding(.bottom, DS.Space.m)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(NowNext.summary(item))
+                .accessibilityIdentifier("menuBarNowNext")
+            }
+        }
+    }
+    private func nowLabel(_ item: NowNext.Item) -> String {
+        switch item { case .focus: "Focus"; case .next(let next): next.inProgress ? "Now" : "Next"; case .clear: "" }
+    }
+    private func nowSymbol(_ item: NowNext.Item) -> String {
+        switch item { case .focus: "timer"; case .next(let next): next.time == nil ? "arrow.right.circle" : "clock"; case .clear: "circle" }
+    }
+    private func snoozeToTomorrow(_ task: Record) {
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date().addingTimeInterval(86_400)
+        workspace.reschedule([task.id], to: Dates.day(tomorrow), label: "tomorrow")
     }
 
     // MARK: Add
@@ -190,6 +252,26 @@ struct MenuBarContent: View {
     private func openToday() {
         workspace.section = .today
         GlobalQuickAddController.openMainWindow()
+    }
+}
+
+/// The menu bar item itself: the icon, plus (when "Show current task in menu bar" is on) a compact title such as
+/// "▸ Write report · 18m". Off by default, so the bar stays as quiet as before.
+struct MenuBarLabel: View {
+    @Environment(Store.self) private var store
+    @AppStorage(GlobalQuickAddSettings.menuBarTitleKey) private var showTitle = false
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: showTitle ? 15 : 3600)) { context in
+            let title = showTitle && (store.signedIn || store.localMode)
+                ? NowNext.compactTitle(NowNext.resolve(focus: store.focusSession, tasks: store.activeTasks, now: context.date)) : nil
+            HStack(spacing: 4) {
+                // A template symbol, so the system tints it for light, dark and tinted menu bars.
+                Image(systemName: "checkmark.circle")
+                if let title { Text(title).lineLimit(1).accessibilityIdentifier("menuBarTitle") }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(title.map { "Taskfold, " + $0 } ?? "Taskfold")
+        }
     }
 }
 

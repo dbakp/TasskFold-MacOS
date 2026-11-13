@@ -100,8 +100,7 @@ struct TaskfoldMacApp: App {
         MenuBarExtra(isInserted: menuBarInserted) {
             MenuBarContent().environment(store).environment(workspace)
         } label: {
-            // A template symbol, so the system tints it for light, dark and tinted menu bars.
-            Image(systemName: "checkmark.circle")
+            MenuBarLabel().environment(store)
         }
         .menuBarExtraStyle(.window)
 

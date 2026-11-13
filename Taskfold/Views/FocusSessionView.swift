@@ -6,6 +6,8 @@ import UserNotifications
 struct FocusSessionRequest: Identifiable {
     var id = UUID()
     var workspace: WorkspaceBinding
+    /// A task to preselect, from the menu bar or the command bar.
+    var taskID: String?
 }
 private struct FocusSessionActionKey: EnvironmentKey { static let defaultValue: () -> Void = {} }
 extension EnvironmentValues {
@@ -75,7 +77,9 @@ struct FocusSessionView: View {
             }
             .onAppear {
                 pomodoro.load(account: store.userID)
-                if let session = store.focusSession, let task = choices.first(where: { $0.id == session.taskID }) {
+                if let id = request.taskID?.lowercased(), let task = choices.first(where: { $0.id == id }) {
+                    selectedTask = task; if let session = store.focusSession { minutes = session.durationSeconds / 60 }
+                } else if let session = store.focusSession, let task = choices.first(where: { $0.id == session.taskID }) {
                     selectedTask = task; minutes = session.durationSeconds / 60
                 }
             }
