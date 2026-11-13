@@ -5,7 +5,9 @@ import ServiceManagement
 /// Settings > General: the global shortcut recorder, "Show in menu bar" and "Open at login".
 struct GlobalQuickAddSettings: View {
     static let menuBarKey = "showInMenuBar"
+    static let menuBarTitleKey = "showMenuBarTitle"
     @AppStorage(GlobalQuickAddSettings.menuBarKey) private var showInMenuBar = true
+    @AppStorage(GlobalQuickAddSettings.menuBarTitleKey) private var showMenuBarTitle = false
     private let controller = GlobalQuickAddController.shared
     @State private var login = LaunchAtLogin()
 
@@ -30,6 +32,10 @@ struct GlobalQuickAddSettings: View {
                 }
             }
             Toggle("Show in menu bar", isOn: $showInMenuBar).accessibilityIdentifier("showInMenuBar")
+            Toggle("Show current task in menu bar", isOn: $showMenuBarTitle).disabled(!showInMenuBar)
+                .accessibilityIdentifier("showMenuBarTitle")
+            Text("Adds a short title next to the icon, such as “▸ Write report · 18m” during Focus, or your next timed task.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             Toggle("Open at login", isOn: Binding(get: { login.isOn }, set: { login.set($0) })).accessibilityIdentifier("openAtLogin")
             if let line = login.statusLine {
                 HStack {

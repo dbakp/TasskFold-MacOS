@@ -71,6 +71,12 @@ struct RootView: View {
             pulseRequest = nil; workspace.openExternalTask(current.id)
         } }
         .sheet(item: $focusRequest) { FocusSessionView(request: $0) }
+        .onChange(of: workspace.focusLaunch, initial: true) { _, launch in
+            guard let launch else { return }
+            workspace.focusLaunch = nil
+            guard store.signedIn || store.localMode, store.focusAvailable else { return }
+            focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: launch.taskID)
+        }
         .safeAreaInset(edge: .top) {
             if store.focusSyncConflict != nil {
                 Button { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) } label: {
