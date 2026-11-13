@@ -55,8 +55,11 @@ struct TaskBreakdownView: View {
                     if let goalProblem {
                         Text(goalProblem).foregroundStyle(.red).accessibilityIdentifier("breakdownGoalWarning")
                     }
-                    Text("Suggestions run on this device using Apple Intelligence. Only the text above is used. Review and edit the steps before adding them to this task.")
-                        .font(.callout).foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: DS.Space.s) {
+                        OnDeviceBadge()
+                        Text("Suggestions run on this device using Apple Intelligence. Only the text above is used. Review and edit the steps before adding them to this task.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
                     if let unavailable {
                         Text(unavailable).foregroundStyle(.secondary).accessibilityIdentifier("breakdownUnavailable")
                         Button("Check availability") { self.unavailable = TaskBreakdownEngine.unavailableReason }

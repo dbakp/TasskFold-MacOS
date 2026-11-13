@@ -64,8 +64,11 @@ struct FilterAssistanceView: View {
                         Section("Describe what to show") {
                             TextField("For example, unfinished priority 1 tasks planned today", text: $description, axis: .vertical)
                                 .lineLimit(2...6).focused($focusedField, equals: .description).disabled(busy != nil).accessibilityIdentifier("filterAssistanceDescription")
-                            Text("Common descriptions are prepared on this device. Apple Intelligence can help with other wording. Your tasks, saved query and project directory aren’t sent to the model.")
-                                .font(.callout).foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: DS.Space.s) {
+                                OnDeviceBadge()
+                                Text("Common descriptions are prepared on this device. Apple Intelligence can help with other wording. Your tasks, saved query and project directory aren’t sent to the model.")
+                                    .font(.callout).foregroundStyle(.secondary)
+                            }
                             if let descriptionIssue { Text(descriptionIssue).foregroundStyle(.red) }
                             if let unavailable {
                                 Text("Apple Intelligence: " + unavailable + " Common descriptions can still be prepared here.").foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceUnavailable")
