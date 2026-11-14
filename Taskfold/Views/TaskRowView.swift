@@ -374,9 +374,7 @@ struct TaskRowView: View {
         return parts.joined(separator: ", ")
     }
     static func timeText(_ value: String) -> String {
-        let parts = value.split(separator: ":").compactMap { Int($0) }
-        guard parts.count >= 2, let date = Calendar.current.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: Date()) else { return value }
-        return date.formatted(date: .omitted, time: .shortened)
+        ClockFormat.string(clock: value) ?? value
     }
 }
 

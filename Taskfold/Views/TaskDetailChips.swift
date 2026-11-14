@@ -68,9 +68,7 @@ enum TaskDetailFormat {
         }
     }
     static func clock(_ value: String) -> String {
-        let parts = value.split(separator: ":").compactMap { Int($0) }
-        guard parts.count >= 2, let date = Calendar.current.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: Date()) else { return value }
-        return date.formatted(date: .omitted, time: .shortened)
+        ClockFormat.string(clock: value) ?? value
     }
     static func estimate(_ minutes: Int) -> String {
         guard minutes >= 60 else { return "\(minutes) min" }

@@ -72,8 +72,8 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
     private(set) var showTitles = false
     private(set) var calendars: [PlannerCalendar] = []
     private(set) var events: [PlannerEvent] = []
-    private(set) var status = "Calendar busy time is not connected."
-    private(set) var deviceStatus = "Calendar busy time is not connected."
+    private(set) var status = "Connect Calendar to count meetings"
+    private(set) var deviceStatus = "Connect Calendar to count meetings"
     private(set) var ready = false
     private(set) var revision = 0
     init(provider: any PlannerCalendarProviding, defaults: UserDefaults = .standard, links:CalendarLinksStore?=nil) {
@@ -86,7 +86,7 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
         generation = UUID(); accountGeneration = UUID(); self.account = account; events = []; calendars = []; ready = false
         connected = !account.isEmpty && defaults.bool(forKey: key + ".connected")
         selected = Set(defaults.stringArray(forKey: key + ".selected") ?? []); showTitles = defaults.bool(forKey: key + ".titles")
-        status = connected ? "Loading selected calendars…" : "Calendar busy time is not connected."
+        status = connected ? "Loading selected calendars…" : "Connect Calendar to count meetings"
         deviceStatus=status
         links?.bind(owner:account)
     }
@@ -109,7 +109,7 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
     func disconnect() {
         generation = UUID(); accountGeneration = UUID(); connected = false; ready = false; events = []; calendars = []; selected = []; if links?.active != true { showTitles = false }
         for suffix in (links?.active == true ? [".connected", ".selected"] : [".connected", ".selected", ".titles"]) { defaults.removeObject(forKey: key + suffix) }
-        status = "Calendar busy time is not connected."; deviceStatus=status;revision += 1
+        status = "Connect Calendar to count meetings"; deviceStatus=status;revision += 1
     }
     func select(_ ids: Set<String>) { generation = UUID(); selected = ids; defaults.set(ids.sorted(), forKey: key + ".selected"); events = []; ready = false; revision += 1 }
     func setTitles(_ value: Bool) { generation = UUID(); showTitles = value; defaults.set(value, forKey: key + ".titles"); events = []; ready = false; revision += 1 }

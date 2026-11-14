@@ -62,7 +62,7 @@ final class CalendarEventsTests: XCTestCase {
         while await provider.reads == 0 { await Task.yield() }
         store.bind(account: "other"); await provider.release(); await read.value
         XCTAssertTrue(store.events.isEmpty); XCTAssertTrue(store.calendars.isEmpty); XCTAssertFalse(store.ready)
-        XCTAssertEqual(store.status, "Calendar busy time is not connected.")
+        XCTAssertEqual(store.status, "Connect Calendar to count meetings")
     }
 
     @MainActor func testCapacityReadDoesNotAskPermissionExposeTitlesOrReplaceVisibleDay() async throws {

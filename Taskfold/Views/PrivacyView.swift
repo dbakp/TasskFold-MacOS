@@ -13,7 +13,7 @@ struct PrivacySettings: View {
                 if store.signedIn, !store.localMode { control(PrivacyFacts.control("local")) }
                 if store.signedIn, !store.localMode { control(PrivacyFacts.control("delete")) }
                 if !store.signedIn || store.localMode {
-                    Text("You’re using Taskfold on this Mac without a cloud account. Nothing syncs.").font(.callout).foregroundStyle(.secondary)
+                    Text("You’re using TaskFold on this Mac without a cloud account. Nothing syncs.").font(.callout).foregroundStyle(.secondary)
                 }
             }
             Section { Text(PrivacyFacts.footer).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
@@ -41,10 +41,14 @@ struct PrivacyItemView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(item.title).font(.headline)
-            Label(item.location.label, systemImage: item.location.symbol)
-                .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(.quaternary, in: Capsule())
+            HStack(spacing: 6) {
+                Image(systemName: item.location.symbol).accessibilityHidden(true)
+                Text(item.location.label)
+            }
+            .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(.quaternary, in: Capsule())
+            .fixedSize()
             Text(item.summary).font(.body)
             ForEach(Array(item.points.enumerated()), id: \.offset) { _, point in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {

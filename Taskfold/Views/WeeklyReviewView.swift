@@ -193,7 +193,7 @@ struct WeeklyReviewView: View {
                 ForEach(WeeklyReviewStep.allCases, id: \.self) { step in
                     let detail = introDetail(step)
                     HStack(spacing: DS.Space.m) {
-                        Image(systemName: detail.needed ? step.symbol : "checkmark.circle").frame(width: 28).foregroundStyle(detail.needed ? DS.Palette.accent : DS.Palette.textSecondary).accessibilityHidden(true)
+                        Image(systemName: step.symbol).symbolVariant(.none).fontWeight(.regular).font(.system(size: 20)).frame(width: 28).foregroundStyle(detail.needed ? DS.Palette.accent : DS.Palette.textSecondary).accessibilityHidden(true)
                         Text(step.title).fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: DS.Space.s)
                         Text(detail.text).font(.callout).foregroundStyle(DS.Palette.textSecondary).multilineTextAlignment(.trailing)
@@ -209,19 +209,21 @@ struct WeeklyReviewView: View {
         }
     }
     private func introDetail(_ step: WeeklyReviewStep) -> (needed: Bool, text: String) {
-        func count(_ n: Int, _ unit: String) -> (Bool, String) { n == 0 ? (false, "Nothing to do") : (true, "\(n) \(unit)") }
+        func count(_ n: Int, _ unit: String) -> (Bool, String) { n == 0 ? (false, "Empty") : (true, "\(n) \(unit)") }
         switch step {
         case .inbox: return count(inboxCount, inboxCount == 1 ? "task" : "tasks")
         case .slipped: return count(slipped.count, slipped.count == 1 ? "task" : "tasks")
-        case .estimates: return accuracy == nil ? (false, "Not enough data yet") : (true, "Ready")
+        case .estimates: return accuracy == nil ? (false, "After a week of estimates") : (true, "Ready")
         case .projects: return count(projectsWithout.count, projectsWithout.count == 1 ? "project" : "projects")
         case .someday: return count(staleIdeas.count, staleIdeas.count == 1 ? "idea" : "ideas")
-        case .nextWeek: return (true, "A quick glance")
+        case .nextWeek:
+            let planned = store.weeklyLoad(events: events).taskCount
+            return (planned > 0, planned == 0 ? "Empty" : planned == 1 ? "1 task" : "\(planned) tasks")
         }
     }
     private var reminderSection: some View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
-            Toggle("Remind me weekly", isOn: $reminderOn).frame(minHeight: target).accessibilityIdentifier("weeklyReviewReminderToggle")
+            Toggle("Remind me weekly", isOn: $reminderOn).tint(DS.Palette.accent).frame(minHeight: target).accessibilityIdentifier("weeklyReviewReminderToggle")
             if reminderOn {
                 Picker("Day", selection: $reminderWeekday) {
                     ForEach(1...7, id: \.self) { Text(Calendar.current.weekdaySymbols[$0 - 1]).tag($0) }
@@ -233,13 +235,14 @@ struct WeeklyReviewView: View {
             }
             if let reminderNote { Text(reminderNote).font(.footnote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true) }
         }
-        .padding(DS.Space.l).background(DS.Palette.accent.opacity(0.06), in: .rect(cornerRadius: DS.Radius.l, style: .continuous))
+        .padding(.top, DS.Space.s)
+        .overlay(alignment: .top) { Divider() }
     }
     private func updateReminder() {
         let on = reminderOn, day = reminderWeekday, minutes = reminderMinutes
         Task {
             let scheduled = await WeeklyReviewReminder.apply(enabled: on, weekday: day, minutes: minutes)
-            if on && !scheduled { reminderOn = false; reminderNote = "Notifications are off for Taskfold. Turn them on in Settings to get a reminder." }
+            if on && !scheduled { reminderOn = false; reminderNote = "Notifications are off for TaskFold. Turn them on in Settings to get a reminder." }
             else { reminderNote = nil }
         }
     }

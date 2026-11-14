@@ -132,8 +132,8 @@ struct SomedayView: View {
 
     private var empty: some View {
         ContentUnavailableView {
-            Label { Text("Nothing here yet") } icon: { Image(systemName: "moon.zzz").foregroundStyle(DS.Palette.accentSecondary.opacity(0.75)) }
-        } description: { Text("Ideas you don’t want to schedule live here, out of the way, until you do.") }
+            Label { Text("Someday is empty") } icon: { Image(systemName: "moon.zzz").foregroundStyle(DS.Palette.accentSecondary.opacity(0.75)) }
+        } description: { Text("Park ideas here until they’re ready.") }
         .modifier(EmptyStateAppear()).frame(maxWidth: .infinity, maxHeight: .infinity).accessibilityIdentifier("emptyState")
     }
 

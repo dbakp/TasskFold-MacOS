@@ -102,7 +102,7 @@ final class WeeklyReviewTests: XCTestCase {
         let empty = WeeklyReview.load(tasks: [], events: [], hours: WorkingHours(), now: at(today), calendar: calendar)
         XCTAssertEqual(empty.message(), "Nothing is planned for the next 7 days yet.")
         let light = WeeklyReview.load(tasks: [task("t", date: "2026-11-12", minutes: 60)], events: [], hours: WorkingHours(), now: at(today), calendar: calendar)
-        XCTAssertEqual(light.message(), "The week looks comfortable: 1h planned of 40h free.")
+        XCTAssertEqual(light.message(), "The week looks comfortable: 1h planned, 40h free.")
         let full = WeeklyReview.load(tasks: [task("t", date: "2026-11-12", minutes: 420)], events: [], hours: WorkingHours(), now: at(today), calendar: calendar)
         XCTAssertTrue(full.message().hasSuffix("is your fullest day. The rest of the week has room."), full.message())
     }
@@ -131,7 +131,7 @@ final class WeeklyReviewTests: XCTestCase {
         XCTAssertFalse(WeeklyReview.isDue(lastReviewed: last, now: at("2026-11-10"), calendar: calendar))
         XCTAssertTrue(WeeklyReview.isDue(lastReviewed: last, now: at("2026-11-11"), calendar: calendar))
         XCTAssertTrue(WeeklyReview.isDue(lastReviewed: nil, now: at(today), calendar: calendar))
-        XCTAssertEqual(WeeklyReview.statusText(lastReviewed: nil, now: at(today), calendar: calendar), "Not reviewed yet")
+        XCTAssertEqual(WeeklyReview.statusText(lastReviewed: nil, now: at(today), calendar: calendar), "Last review: never")
         XCTAssertEqual(WeeklyReview.statusText(lastReviewed: at(today, "07:00"), now: at(today, "20:00"), calendar: calendar), "Reviewed today")
         XCTAssertEqual(WeeklyReview.statusText(lastReviewed: at("2026-11-10"), now: at(today), calendar: calendar), "Reviewed yesterday")
         XCTAssertEqual(WeeklyReview.statusText(lastReviewed: last, now: at(today), calendar: calendar), "Reviewed 7 days ago")

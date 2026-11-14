@@ -77,7 +77,7 @@ struct WeeklyLoad: Equatable, Sendable {
             return "\(over.count) days look full, most of all \(name(over.max { $0.totals.overMinutes < $1.totals.overMinutes } ?? first)). Spread some work out if you can."
         }
         if let busiest, busiest.state == .full { return "\(name(busiest)) is your fullest day. The rest of the week has room." }
-        return "The week looks comfortable: \(DayPlan.duration(plannedMinutes)) planned of \(DayPlan.duration(freeMinutes)) free."
+        return "The week looks comfortable: \(DayPlan.duration(plannedMinutes)) planned, \(DayPlan.duration(freeMinutes)) free."
     }
 }
 
@@ -152,9 +152,9 @@ enum WeeklyReview {
         guard let days = daysSince(lastReviewed, now: now, calendar: calendar) else { return true }
         return days >= intervalDays
     }
-    /// "Not reviewed yet", "Reviewed today", "Reviewed yesterday", "Reviewed 3 days ago".
+    /// "Last review: never", "Reviewed today", "Reviewed yesterday", "Reviewed 3 days ago".
     static func statusText(lastReviewed: Date?, now: Date, calendar: Calendar = .current) -> String {
-        guard let days = daysSince(lastReviewed, now: now, calendar: calendar) else { return "Not reviewed yet" }
+        guard let days = daysSince(lastReviewed, now: now, calendar: calendar) else { return "Last review: never" }
         switch days { case 0: return "Reviewed today"; case 1: return "Reviewed yesterday"; default: return "Reviewed \(days) days ago" }
     }
 

@@ -1170,8 +1170,7 @@ struct QuickEntry {
         }
         func enabled(_ group: String) -> Bool { !disabled.contains(group) }
         func timeLabel(_ hour: Int, _ minute: Int) -> String {
-            let date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: now) ?? now
-            return date.formatted(date: .omitted, time: .shortened)
+            ClockFormat.string(hour: hour, minute: minute, on: now, calendar: calendar)
         }
         func dayLabel(_ date: Date) -> String {
             if calendar.isDate(date, inSameDayAs: now) { return "Today" }
@@ -1258,7 +1257,7 @@ struct QuickEntry {
                 if let date = calendar.date(byAdding: component, value: count, to: now) {
                     updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar))
                     if component == .hour || component == .minute { updates["due_time"] = .string(String(format: "%02d:%02d", calendar.component(.hour, from: date), calendar.component(.minute, from: date))) }
-                    take("due_date", m[0], component == .hour || component == .minute ? dayLabel(date) + " " + date.formatted(date: .omitted, time: .shortened) : dayLabel(date))
+                    take("due_date", m[0], component == .hour || component == .minute ? dayLabel(date) + " " + ClockFormat.string(date, calendar: calendar) : dayLabel(date))
                 }
             } else if let m = match(#"\b(?:next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b"#), let day = weekdays.firstIndex(of: m[1].lowercased()) {
                 let delta = (day - (calendar.component(.weekday, from: now) - 1) + 7) % 7
@@ -3191,5 +3190,48 @@ final class DurableSnapshotReadCache {
             }
         }
         return data
+    }
+}
+import Foundation
+
+/// The one way TaskFold writes a time of day. It follows the locale's hour cycle (24-hour or 12-hour with
+/// am/pm) and always separates hours and minutes with a colon, so "10:00" reads the same in lists, details,
+/// Quick Add and the planners even where the locale's own pattern uses a full stop (for example "10.00").
+enum ClockFormat {
+    /// A date's time of day in the locale's hour cycle, e.g. "10:00", "9:41 AM".
+    static func string(_ date: Date, locale: Locale = .current, calendar: Calendar = .current) -> String {
+        var style = Date.FormatStyle(date: .omitted, time: .shortened, locale: locale, calendar: calendar, timeZone: calendar.timeZone)
+        style.locale = locale
+        return normalized(date.formatted(style))
+    }
+    /// A stored "HH:mm" time on a given day.
+    static func string(clock: String, on day: Date = Date(), locale: Locale = .current, calendar: Calendar = .current) -> String? {
+        let parts = clock.split(separator: ":").compactMap { Int($0) }
+        guard parts.count >= 2, (0..<24).contains(parts[0]), (0..<60).contains(parts[1]),
+              let date = calendar.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: day) else { return nil }
+        return string(date, locale: locale, calendar: calendar)
+    }
+    /// Hour and minute as written for the hour and minute alone.
+    static func string(hour: Int, minute: Int, on day: Date = Date(), locale: Locale = .current, calendar: Calendar = .current) -> String {
+        let date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) ?? day
+        return string(date, locale: locale, calendar: calendar)
+    }
+    /// True when the locale writes times on a 12-hour clock.
+    static func usesTwelveHourClock(locale: Locale = .current) -> Bool {
+        var pattern = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: locale) ?? ""
+        // Quoted literal text (German "HH 'Uhr'") is not a pattern letter.
+        while let open = pattern.firstIndex(of: "'"), let close = pattern[pattern.index(after: open)...].firstIndex(of: "'") { pattern.removeSubrange(open...close) }
+        return pattern.contains("a") || pattern.contains("h") || pattern.contains("K")
+    }
+    /// Swaps a full-stop separator between digits for a colon.
+    static func normalized(_ text: String) -> String {
+        var out = ""; var previous: Character?
+        let chars = Array(text)
+        for (index, character) in chars.enumerated() {
+            if character == ".", let previous, previous.isNumber, index + 1 < chars.count, chars[index + 1].isNumber { out.append(":") }
+            else { out.append(character) }
+            previous = character
+        }
+        return out
     }
 }

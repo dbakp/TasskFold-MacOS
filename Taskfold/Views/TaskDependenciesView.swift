@@ -45,7 +45,7 @@ struct TaskDependenciesSection: View {
             } header: {
                 Text("Blocked by")
             } footer: {
-                Text((count == 0 ? "" : "\(count) of \(TaskDependencies.maximumBlockers). ") + "Hidden from Today and Upcoming until every blocker is completed or deleted.")
+                Text((count == 0 ? "" : "\(count) of \(TaskDependencies.maximumBlockers). ") + "Hidden from Today and Upcoming until every blocker is completed or deleted.").font(.footnote).foregroundStyle(.secondary)
             }
         }
     }

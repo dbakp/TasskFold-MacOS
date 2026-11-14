@@ -44,7 +44,7 @@ struct SmartRescheduleView: View {
     private var calendar: Calendar { .current }
 
     var body: some View {
-        OnDeviceSheetShell(title: "Reschedule smartly", cancelIdentifier: "smartRescheduleCancel", primaryTitle: "Apply", primaryIdentifier: "smartRescheduleApply",
+        OnDeviceSheetShell(title: "Find a time", cancelIdentifier: "smartRescheduleCancel", primaryTitle: "Apply", primaryIdentifier: "smartRescheduleApply",
                            primaryEnabled: !(applied || (plan?.includedCount ?? 0) == 0),
                            primaryValue: plan.map { "\($0.includedCount) \($0.includedCount == 1 ? "task" : "tasks")" } ?? "",
                            primaryHint: "Moves the tasks to the days shown. You can undo it.",
