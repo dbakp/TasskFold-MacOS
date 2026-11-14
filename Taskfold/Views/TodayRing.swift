@@ -56,8 +56,9 @@ struct TodayHeader: View {
                     // "Saturday 14 Nov": sentence case, no comma, never an eyebrow.
                     Text(date.formatted(.dateTime.weekday(.wide)) + " " + date.formatted(.dateTime.day().month(.abbreviated)))
                         .font(DS.Font.dateLine).foregroundStyle(DS.Palette.textSecondary)
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Text(ring.figure).foregroundStyle(DS.Palette.textPrimary)
+                    // At accessibility sizes the figure and its capacity stack instead of splitting mid-figure.
+                    (stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 5))) {
+                        Text(ring.figure).foregroundStyle(DS.Palette.textPrimary).fixedSize(horizontal: stacked, vertical: false)
                         Text(ring.capacity ?? "planned").fontWeight(.medium).foregroundStyle(DS.Palette.textSecondary)
                     }
                     .font(DS.Font.ringFigure).lineLimit(stacked ? nil : 1).minimumScaleFactor(0.6)
