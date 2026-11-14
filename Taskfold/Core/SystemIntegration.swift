@@ -240,6 +240,8 @@ extension Store {
             current.fingerprints = SpotlightIndexPlan(upserts: batch.upserts, removals: batch.removals).applying(to: current.fingerprints)
             persist(current)
         }
+        // Refresh the task names Siri and Spotlight can put into App Shortcut phrases.
+        TaskfoldShortcuts.updateAppShortcutParameters()
         if debugBuild, arguments.contains(SpotlightIndexPolicy.fixtureFlag) { await writeDebugReport() }
     }
 

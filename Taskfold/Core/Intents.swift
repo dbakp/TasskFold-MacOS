@@ -1,6 +1,9 @@
 import AppIntents
 import CoreSpotlight
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// Siri, Shortcuts and Focus support. Intents run in-process against `Store.shared`, and every
 /// change goes through the normal Store mutation path so undo, sync and reminders stay correct.
@@ -34,15 +37,28 @@ struct TaskEntity: AppEntity, IndexedEntity, Identifiable {
 }
 
 struct TaskEntityQuery: EntityStringQuery {
+    /// Titles are described to the system only for a signed-in person on an unlocked device. The
+    /// intents that use these entities also require the passcode; this covers the lookups that
+    /// can run before that check. Shared and team tasks follow exactly what the app shows.
+    @MainActor private static var visible: Bool {
+        #if canImport(UIKit) && !os(watchOS)
+        let unlocked = UIApplication.shared.isProtectedDataAvailable
+        #else
+        let unlocked = true
+        #endif
+        return IntentEntityAccess.allowed(signedIn: Store.shared.signedIn, protectedDataAvailable: unlocked)
+    }
     @MainActor func entities(for identifiers: [String]) async throws -> [TaskEntity] {
-        identifiers.compactMap { Store.shared.record("tasks", id: $0) }.map(TaskEntity.init)
+        guard Self.visible else { return [] }
+        return identifiers.compactMap { Store.shared.record("tasks", id: $0) }.filter(TaskKind.mayComplete).map(TaskEntity.init)
     }
     @MainActor func entities(matching string: String) async throws -> [TaskEntity] {
-        IntentTaskSelection.search(Store.shared.tasks, text: string).map(TaskEntity.init)
+        guard Self.visible else { return [] }
+        return IntentTaskSelection.match(Store.shared.activeTasks, text: string).map(TaskEntity.init)
     }
     @MainActor func suggestedEntities() async throws -> [TaskEntity] {
-        let today = Dates.day(Date())
-        return Store.shared.tasks.filter { !$0.completed && !$0.string("due_date").isEmpty && $0.string("due_date") <= today }.prefix(10).map(TaskEntity.init)
+        guard Self.visible else { return [] }
+        return IntentTaskSelection.suggested(Store.shared.activeTasks, today: Dates.day(Date())).map(TaskEntity.init)
     }
 }
 
@@ -196,9 +212,12 @@ struct CompleteTaskIntent: AppIntent {
     static var parameterSummary: some ParameterSummary { Summary("Complete \(\.$task)") }
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
         let store = Store.shared
+        guard store.signedIn else { return .result(dialog: "Open Taskfold and sign in first.") }
         guard let record = store.record("tasks", id: task.id) else { return .result(dialog: "That task is gone.") }
+        guard TaskKind.mayComplete(record) else { return .result(dialog: "Headings stay open. Open Taskfold to edit it.") }
         if record.completed { return .result(dialog: "“\(record.title)” is already done.") }
-        store.toggle(record)
+        // The same admission as a tap in the app: undo and sync follow, and shared tasks keep their own checks.
+        guard store.toggleNativeTask(record) else { return .result(dialog: "Taskfold could not complete “\(record.title)”. Open Taskfold to review it.") }
         return .result(dialog: "Completed “\(record.title)”.")
     }
 }
@@ -290,18 +309,70 @@ struct RescheduleTaskIntent: AppIntent {
     }
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
         let store = Store.shared
-        guard store.signedIn else { return .result(dialog: "Open Taskfold and sign in first.") }
-        guard let record = store.record("tasks", id: task.id) else { return .result(dialog: "That task is gone.") }
-        guard TaskKind.mayComplete(record) else { return .result(dialog: "Headings don’t have a date. Open Taskfold to edit it.") }
-        guard !store.hasSharedTaskSelection([record.id]) else { return .result(dialog: "“\(record.title)” is shared. Open Taskfold to review its date change.") }
         guard let day = IntentDate.day(phrase: phrase, date: date, preferences: store.datePhrasePreferences ?? DatePhrasePreferences()) else {
             return .result(dialog: "I couldn’t read that as a date. Try tomorrow, next Friday or Dec 3.")
         }
-        let fields = TaskPlanner.dayFields(task: record, day: day)
+        return .result(dialog: "\(IntentTaskMover.move(taskID: task.id, to: day, store: store))")
+    }
+}
+
+/// Moves one task to a day through the same store path as the app, so undo and sync stay correct.
+/// Shared and team tasks are left for review in the app, as Reschedule has always done.
+enum IntentTaskMover {
+    @MainActor static func move(taskID: String, to day: String, store: Store) -> String {
+        guard store.signedIn else { return "Open Taskfold and sign in first." }
+        guard let record = store.record("tasks", id: taskID) else { return "That task is gone." }
         let label = (Dates.parse(day) ?? Date()).formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
-        if fields.isEmpty { return .result(dialog: "“\(record.title)” is already set for \(label).") }
-        store.update([record.id], fields: fields)
-        return .result(dialog: "Moved “\(record.title)” to \(label).")
+        switch IntentMovePlan.resolve(task: record, day: day, shared: store.hasSharedTaskSelection([record.id])) {
+        case .heading: return "Headings don’t have a date. Open Taskfold to edit it."
+        case .shared: return "“\(record.title)” is shared. Open Taskfold to review its date change."
+        case .alreadySet: return "“\(record.title)” is already set for \(label)."
+        case .move(let fields):
+            store.update([record.id], fields: fields)
+            return "Moved “\(record.title)” to \(label)."
+        }
+    }
+}
+
+struct MoveTaskToTomorrowIntent: AppIntent {
+    static let title: LocalizedStringResource = "Move Task to Tomorrow"
+    static let description = IntentDescription("Moves a task to tomorrow.")
+    static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    @Parameter(title: "Task") var task: TaskEntity
+    static var parameterSummary: some ParameterSummary { Summary("Move \(\.$task) to tomorrow") }
+    @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
+        .result(dialog: "\(IntentTaskMover.move(taskID: task.id, to: IntentDate.tomorrow(), store: Store.shared))")
+    }
+}
+
+struct MoveTaskToDateIntent: AppIntent {
+    static let title: LocalizedStringResource = "Move Task to Date"
+    static let description = IntentDescription("Moves a task to a day you choose.")
+    static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    @Parameter(title: "Task") var task: TaskEntity
+    @Parameter(title: "Date", requestValueDialog: "Which day?") var date: Date
+    static var parameterSummary: some ParameterSummary { Summary("Move \(\.$task) to \(\.$date)") }
+    @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
+        .result(dialog: "\(IntentTaskMover.move(taskID: task.id, to: Dates.day(date), store: Store.shared))")
+    }
+}
+
+struct OpenTaskIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Task"
+    static let description = IntentDescription("Opens a task in Taskfold.")
+    static let openAppWhenRun = true
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    @Parameter(title: "Task") var task: TaskEntity
+    static var parameterSummary: some ParameterSummary { Summary("Open \(\.$task)") }
+    @MainActor func perform() async throws -> some IntentResult & OpensIntent {
+        let store = Store.shared
+        let url = store.signedIn && store.record("tasks", id: task.id) != nil ? SpotlightRoute.task(task.id).url(account: store.userID) : nil
+        return .result(opensIntent: OpenURLIntent(url ?? SystemControlRoute.today))
     }
 }
 
@@ -309,6 +380,8 @@ struct StartFocusSessionIntent: AppIntent {
     static let title: LocalizedStringResource = "Start Focus Session"
     static let description = IntentDescription("Starts a Focus timer on one task.")
     static let openAppWhenRun = false
+    /// Task titles and changes stay behind the device passcode (Siri, Shortcuts, lock screen).
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     @Parameter(title: "Task") var task: TaskEntity
     @Parameter(title: "Minutes", default: 25, inclusiveRange: (1, 180)) var minutes: Int
     static var parameterSummary: some ParameterSummary { Summary("Start a \(\.$minutes) minute focus session on \(\.$task)") }
@@ -353,13 +426,15 @@ struct TaskfoldFocusFilter: SetFocusFilterIntent {
     }
 }
 
+/// The system allows at most 10 App Shortcuts per app, and this provider holds exactly 10. Reschedule and
+/// Move to Date stay available as Shortcuts actions without a spoken phrase. Add one here only after removing one.
 struct TaskfoldShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: AddTaskIntent(), phrases: ["Add a task to \(.applicationName)", "New \(.applicationName) task"],
                     shortTitle: "Add Task", systemImageName: "plus.circle.fill")
         AppShortcut(intent: TodayTasksIntent(), phrases: ["What’s due today in \(.applicationName)", "Show my \(.applicationName) tasks"],
                     shortTitle: "Due Today", systemImageName: "sun.max.fill")
-        AppShortcut(intent: CompleteTaskIntent(), phrases: ["Complete a task in \(.applicationName)"],
+        AppShortcut(intent: CompleteTaskIntent(), phrases: ["Complete \(\.$task) in \(.applicationName)", "Complete a task in \(.applicationName)"],
                     shortTitle: "Complete Task", systemImageName: "checkmark.circle.fill")
         AppShortcut(intent: SearchTasksIntent(), phrases: ["Search \(.applicationName) tasks", "Find a task in \(.applicationName)"],
                     shortTitle: "Search Tasks", systemImageName: "magnifyingglass")
@@ -369,9 +444,11 @@ struct TaskfoldShortcuts: AppShortcutsProvider {
                     shortTitle: "Open Project", systemImageName: "folder.fill")
         AppShortcut(intent: ShowListIntent(), phrases: ["Show \(\.$list) in \(.applicationName)"],
                     shortTitle: "Show List", systemImageName: "tray.fill")
-        AppShortcut(intent: RescheduleTaskIntent(), phrases: ["Reschedule a task in \(.applicationName)"],
-                    shortTitle: "Reschedule Task", systemImageName: "calendar.badge.clock")
-        AppShortcut(intent: StartFocusSessionIntent(), phrases: ["Start a focus session in \(.applicationName)"],
+        AppShortcut(intent: MoveTaskToTomorrowIntent(), phrases: ["Move \(\.$task) to tomorrow in \(.applicationName)", "Push \(\.$task) to tomorrow in \(.applicationName)"],
+                    shortTitle: "Move to Tomorrow", systemImageName: "calendar.badge.clock")
+        AppShortcut(intent: StartFocusSessionIntent(), phrases: ["Focus on \(\.$task) in \(.applicationName)", "Start a focus session in \(.applicationName)"],
                     shortTitle: "Start Focus", systemImageName: "timer")
+        AppShortcut(intent: OpenTaskIntent(), phrases: ["Open \(\.$task) in \(.applicationName)"],
+                    shortTitle: "Open Task", systemImageName: "arrow.up.forward.app")
     }
 }
