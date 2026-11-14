@@ -352,7 +352,7 @@ struct CalendarView: View {
     }
     private func calendarCardContent(_ task: Record) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Button { workspace.complete(task) } label: { CheckMark(checked: task.completed || workspace.completing.contains(task.id), color: Color.priority(task.priority), emphasized: task.priority < 4, size: 16) }
+            Button { workspace.complete(task) } label: { CheckMark(checked: task.completed || workspace.completing.contains(task.id), color: Color.priority(task.priority), emphasized: task.priority < 4, size: 16, priority: task.priority) }
                 .buttonStyle(GlyphStyle()).pointerStyle(.link)
                 .accessibilityLabel(task.completed ? "Reopen \(task.title)" : "Complete \(task.title)")
             VStack(alignment: .leading, spacing: 2) {

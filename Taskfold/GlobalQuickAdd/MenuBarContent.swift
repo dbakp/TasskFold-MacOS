@@ -296,7 +296,7 @@ private struct MenuBarTaskRow: View {
         HStack(spacing: DS.Space.s) {
             Button(action: complete) {
                 CheckMark(checked: lingering, color: DS.Palette.priority(task.priority), emphasized: task.priority < 4, size: DS.Size.checkbox,
-                          stroke: task.priority < 4 ? nil : DS.Palette.textTertiary, restFill: task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !lingering)
+                          stroke: task.priority < 4 ? nil : DS.Palette.textTertiary, restFill: task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !lingering, priority: task.priority)
                     .frame(width: DS.Space.xxxl - DS.Space.xs, height: DS.Space.xxxl - DS.Space.xs).contentShape(.rect)
             }
             .buttonStyle(.plain).onHover { checkHover = $0 }.pointerStyle(.link)

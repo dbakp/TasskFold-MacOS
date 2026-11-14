@@ -527,13 +527,13 @@ private func adaptiveWidgetTint(_ light: (Double, Double, Double), _ dark: (Doub
     })
     #endif
 }
-private let brand = adaptiveWidgetTint((0.88, 0.12, 0.30), (1, 0.43, 0.60))
+/// The app's crimson ("act / today"), from Core/Brand.swift.
+private let brand = Color(brand: Brand.crimson)
 private let plum = adaptiveWidgetTint((0.39, 0.28, 0.65), (0.73, 0.63, 0.98))
 private let mint = adaptiveWidgetTint((0.16, 0.48, 0.39), (0.43, 0.80, 0.66))
-private func widgetColor(_ hex: String) -> Color {
-    let value = hex.replacingOccurrences(of: "#", with: "")
-    guard value.count == 6, let number = UInt64(value, radix: 16) else { return brand }
-    return Color(red: Double((number >> 16) & 255) / 255, green: Double((number >> 8) & 255) / 255, blue: Double(number & 255) / 255)
+/// A stored project colour drawn as its nearest identity-palette hue, as in the app.
+private func widgetColor(_ hex: String, projectID: String = "") -> Color {
+    ProjectPalette.hue(stored: hex, projectID: projectID).color
 }
 
 struct WidgetSurface: View {
@@ -666,7 +666,7 @@ struct TodayWidgetView: View {
                 ForEach(tasks.prefix(limit)) { task in
                     Link(destination: task.url(account: entry.snapshot.account)) {
                         HStack(spacing: 8) {
-                            RoundedRectangle(cornerRadius: 2).fill(widgetColor(task.color)).frame(width: 3, height: 22)
+                            RoundedRectangle(cornerRadius: 2).fill(widgetColor(task.color, projectID: task.projectID ?? "")).frame(width: 3, height: 22)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(task.title).font(.caption.weight(.medium)).lineLimit(1)
                                 Text([task.parent ?? "", task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : task.time.isEmpty ? "P\(task.priority)" : task.time].filter { !$0.isEmpty }.joined(separator: " · ")).font(.system(size: 9)).foregroundStyle(task.due < WidgetSnapshot.day(entry.date) ? brand : .secondary).lineLimit(1)
@@ -1163,8 +1163,10 @@ struct ListWidgetView: View {
                         if let token = task.completionToken, !entry.snapshot.account.isEmpty {
                             let pending = entry.snapshot.pendingTaskIDs.contains(task.id)
                             Button(intent: CompleteWidgetTaskIntent(account: entry.snapshot.account, taskID: task.id, token: token)) {
-                                Image(systemName: pending ? "hourglass" : "circle")
-                                    .font(.system(size: 21, weight: .regular)).foregroundStyle(task.priority <= 2 ? tint : .secondary)
+                                Group {
+                                    if pending { Image(systemName: "hourglass").font(.system(size: 21, weight: .regular)).foregroundStyle(.secondary) }
+                                    else { PriorityCheck(priority: task.priority, size: 20) } // priority as check strength, as in the app
+                                }
                                     .frame(width: 44, height: 44).contentShape(Rectangle())
                             }.buttonStyle(.plain).disabled(pending)
                                 .accessibilityLabel(pending ? "Waiting to complete" : entry.hideTitles ? "Complete private task" : "Complete \(task.title)")

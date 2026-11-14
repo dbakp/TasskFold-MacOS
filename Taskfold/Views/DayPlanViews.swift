@@ -17,7 +17,7 @@ private extension Color {
         #endif
     }
     /// A calm caution colour, never red: being over capacity is information, not an error.
-    static var dayPlanCaution: Color { DS.Palette.dateTomorrow }
+    static var dayPlanCaution: Color { DS.Palette.caution }
 }
 
 @MainActor private enum DayPlanHaptic {
