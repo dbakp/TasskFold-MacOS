@@ -198,7 +198,7 @@ struct HourlyPlannerView: View {
             Text("\(capacity.estimatedMinutes) min estimated · \(capacity.unknownTasks) without estimates").accessibilityIdentifier("plannerCapacity")
             Text(workingSummary(capacity)).accessibilityIdentifier("plannerWorkingCapacity")
         }
-        .font(.caption2).frame(width: 1, height: 1, alignment: .topLeading).clipped().opacity(0)
+        .font(.caption2).foregroundStyle(Color.clear).frame(width: 1, height: 1, alignment: .topLeading).clipped() // clear ink, not opacity 0: a fully transparent view drops out of the accessibility tree
     }
     private func workingSummary(_ capacity: PlannerCapacity) -> String {
         if capacity.incomplete { return "Review grouped tasks before relying on remaining capacity." }
