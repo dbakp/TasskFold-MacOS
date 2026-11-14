@@ -266,6 +266,19 @@ struct TaskListView: View {
         if dated { return dayGroups.map { (day: $0.0 == "Overdue" ? overdueKey : $0.0, ids: $0.1.map(\.id)) } }
         return [(day: overdueKey, ids: overdueTasks.map(\.id))] + groups.map { (day: $0.key, ids: $0.tasks.map(\.id)) }
     }
+    /// The ring for each Upcoming day (round 6): the same `DayPlan.ring(for:)` as Today, tasks sorted into days in one pass.
+    /// Calendar events are loaded for today only, so other days show working hours less nothing.
+    private var upcomingRings: [String: TodayRing] {
+        guard scope == .upcoming else { return [:] }
+        let calendar = Calendar.current
+        let days = dayGroups.compactMap { Dates.parse($0.0, calendar: calendar) }
+        return DayPlan.rings(for: days, tasks: store.tasks, events: ringBusy.events, hours: store.workingHours, calendar: calendar)
+    }
+    /// This project's estimated work due this week, above its list. Nil hides the block.
+    private var projectWeek: ProjectWeekRing? {
+        guard case .project(let id) = scope, workspace.search.isEmpty else { return nil }
+        return DayPlan.projectWeekRing(store.tasks, project: id, on: Date(), calendar: store.habitCalendar)
+    }
     private var remaining: Int { filtered.filter { TaskKind.mayComplete($0) && !$0.completed && !workspace.completing.contains($0.id) }.count }
 
     var body: some View {
@@ -282,6 +295,12 @@ struct TaskListView: View {
                     .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
                     .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
                     .sheet(isPresented: $hoursSettings) { PlannerSettingsView(busy: ringBusy) }
+            }
+            if let week = projectWeek, !boardLayout, !calendarLayout {
+                // Round 6: under the project's title, a ring of its work due this week.
+                ProjectWeekHeader(week: week, hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) })
+                    .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
+                    .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             }
             HStack(spacing: DS.Space.s) {
                 if scope == .today { DayPlanTodayPrompt(offersPlanElsewhere: true, plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
@@ -335,10 +354,11 @@ struct TaskListView: View {
                 if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, DS.Space.m).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
                 if filtered.isEmpty && !dated || datedEmpty { emptyState }
                 if dated {
+                    let rings = upcomingRings
                     ForEach(datedEmpty ? [] : dayGroups, id: \.0) { group in
                         if group.0 == "Overdue" { if !group.1.isEmpty { overdueSection(group.1) } }
                         else if group.0 == Workspace.Placement.evening { if !group.1.isEmpty || workspace.drag.active { eveningSection(group.1) } }
-                        else { daySection(group.0, group.1) }
+                        else { daySection(group.0, group.1, ring: rings[group.0]) }
                     }
                 } else {
                     if !overdueTasks.isEmpty { overdueSection(overdueTasks) }
@@ -599,7 +619,7 @@ struct TaskListView: View {
             .modifier(DayHeaderDrop(day: key))
         }
     }
-    private func daySection(_ day: String, _ tasks: [Record]) -> some View {
+    private func daySection(_ day: String, _ tasks: [Record], ring: TodayRing? = nil) -> some View {
         let today = Dates.day(Date())
         let tomorrow = Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!)
         let date = Dates.parse(day)
@@ -612,11 +632,21 @@ struct TaskListView: View {
                 .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: day, tasks: tasks).insert(at: $0, providers: $1) }
             DayEndRow(day: day, isEmpty: tasks.isEmpty).selectionDisabled().listRowSeparator(.hidden)
         } header: {
-            HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
-                Text(name).font(DS.Font.sectionHeader).foregroundStyle(day == today ? DS.Palette.accent : DS.Palette.textPrimary)
-                if !(scope == .today && day == today) { Text(detail).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary) }
-                Spacer()
-                if open > 0 { Text("\(open)").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).contentTransition(.numericText()) }
+            SwiftUI.Group {
+                if scope == .upcoming, let ring {
+                    // Round 6: a 20pt ring before the day name and "4h 10m of 6h" in place of the count.
+                    DayRingHeader(name: name, detail: detail, nameColor: day == today ? DS.Palette.accent : DS.Palette.textPrimary, ring: ring, dayOff: DayPlan.isDayOff(ring, hours: store.workingHours),
+                                  figure: DayPlan.dayFigure(ring, hours: store.workingHours),
+                                  spoken: DayPlan.dayRingLabel(ring, name: name + " " + detail, hours: store.workingHours),
+                                  hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) })
+                } else {
+                    HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
+                        Text(name).font(DS.Font.sectionHeader).foregroundStyle(day == today ? DS.Palette.accent : DS.Palette.textPrimary)
+                        if !(scope == .today && day == today) { Text(detail).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary) }
+                        Spacer()
+                        if open > 0 { Text("\(open)").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).contentTransition(.numericText()) }
+                    }
+                }
             }
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("day-\(day)")

@@ -20,12 +20,18 @@ struct TodayRingView: View {
     var badge: Int? = nil
     /// Reports where the ring is on screen, so a folding row can fly to its segment.
     var flight: FoldFlight? = nil
+    /// An overbooked day (Upcoming, Weekly review): the ring is closed and a thin crimson arc outside it is as long as the overflow.
+    var showsOverflow = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Stroke widths scale with the ring, so a 28pt Calendar ring keeps the same proportions as the 72pt one.
     private var scale: CGFloat { size / CGFloat(Brand.Ring.size) }
     private var doneWidth: CGFloat { max(3, CGFloat(Brand.Ring.doneWidth) * scale) }
     private var openWidth: CGFloat { max(2, CGFloat(Brand.Ring.openWidth) * scale) }
+    private var overflow: Double { showsOverflow ? ring.overflowFraction : 0 }
+    private var overflowWidth: CGFloat { max(1, size * 3 / 68) }
+    /// The ring shrinks a little to leave room for the outer arc, as in the mockup.
+    private var overflowScale: CGFloat { overflow > 0 ? 1 - 2 * (overflowWidth + max(0.5, overflowWidth / 2)) / size : 1 }
 
     var body: some View {
         let diameter = size - doneWidth
@@ -58,6 +64,13 @@ struct TodayRingView: View {
         }
         .frame(width: diameter, height: diameter)
         .frame(width: size, height: size)
+        .scaleEffect(overflowScale)
+        .overlay {
+            if overflow > 0 {
+                Circle().inset(by: overflowWidth / 2).trim(from: 0, to: overflow).rotation(.degrees(-90))
+                    .stroke(DS.Palette.dateOverdue, style: StrokeStyle(lineWidth: overflowWidth, lineCap: .round))
+            }
+        }
         .overlay(alignment: .topTrailing) {
             if let badge, badge > 0 {
                 Text("\(badge)").font(.system(size: max(9, 11 * scale), weight: .semibold).monospacedDigit())
@@ -147,6 +160,152 @@ private struct RingSummaryAccessibility: ViewModifier {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(date.formatted(.dateTime.weekday(.wide).day().month(.wide)) + ". " + ring.accessibilityLabel)
             .accessibilityIdentifier("todayRing")
+    }
+}
+
+// MARK: - The ring on every list (design review round 6)
+
+/// "4h 10m of 6h": a bold lead and a secondary rest. An overbooked day leads in crimson: "1h 30m over · 7h 30m of 6h".
+struct DayFigureText: View {
+    var figure: DayFigure
+    var body: some View {
+        Text(figure.lead).fontWeight(.semibold).foregroundStyle(figure.leadIsAlert ? DS.Palette.dateOverdue : DS.Palette.textPrimary)
+            + Text(figure.rest).foregroundStyle(DS.Palette.textSecondary)
+    }
+}
+
+/// An Upcoming day header: a 20pt ring, the day name and date, and the figure on the right. When the figure no longer
+/// fits beside the name (large text, a long overbooked line) it wraps below the name instead of truncating.
+struct DayRingHeader: View {
+    var name: String
+    var detail: String
+    var nameColor: Color = DS.Palette.textPrimary
+    var ring: TodayRing
+    /// A day off draws only the dashed outline.
+    var dayOff = false
+    var figure: DayFigure
+    var spoken: String
+    var hue: (String) -> ProjectHue
+    @Environment(\.dynamicTypeSize) private var textSize
+    @ScaledMetric(relativeTo: .subheadline) private var ringSize = 20
+
+    private var ringView: some View { TodayRingView(ring: dayOff ? ring.outline : ring, hue: hue, size: ringSize, showsOverflow: true) }
+    private var title: some View {
+        HStack(alignment: .center, spacing: DS.Space.s) {
+            ringView
+            Text(name).font(DS.Font.sectionHeader).foregroundStyle(nameColor).lineLimit(1)
+            if !detail.isEmpty { Text(detail).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).lineLimit(1) }
+        }
+    }
+    private var hasFigure: Bool { !figure.text.isEmpty }
+    private var figureText: some View { DayFigureText(figure: figure).font(.footnote.monospacedDigit()) }
+    var body: some View {
+        Group {
+            if !hasFigure {
+                title
+            } else if textSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: DS.Space.xs) { title; figureText.fixedSize(horizontal: false, vertical: true) }
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .center, spacing: DS.Space.s) { title; Spacer(minLength: DS.Space.s); figureText.lineLimit(1) }
+                    VStack(alignment: .leading, spacing: DS.Space.xs) { title; figureText.fixedSize(horizontal: false, vertical: true) }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spoken)
+    }
+}
+
+/// Under a project's large title: a 28pt ring of its estimated work due this week, "1h 30m of 5h 45m this week", and one
+/// plain sentence about its share of the planned week. The ring and both lines are one VoiceOver element.
+struct ProjectWeekHeader: View {
+    var week: ProjectWeekRing
+    var hue: (String) -> ProjectHue
+    @Environment(\.dynamicTypeSize) private var textSize
+    @ScaledMetric(relativeTo: .headline) private var ringSize = 28
+    private var figure: Text {
+        Text(week.figure).foregroundStyle(DS.Palette.textPrimary) + Text(" " + week.rest).fontWeight(.medium).foregroundStyle(DS.Palette.textSecondary)
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if textSize.isAccessibilitySize {
+                TodayRingView(ring: week.ring, hue: hue, size: ringSize)
+                figure.font(.headline.width(.expanded).monospacedDigit()).fixedSize(horizontal: false, vertical: true)
+            } else {
+                HStack(alignment: .center, spacing: 10) {
+                    TodayRingView(ring: week.ring, hue: hue, size: ringSize)
+                    figure.font(.headline.width(.expanded).monospacedDigit()).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if let line = week.shareLine { Text(line).font(.footnote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(week.accessibilityLabel)
+        .accessibilityIdentifier("projectWeekRing")
+    }
+}
+
+/// The Weekly review intro: seven 38pt day rings (the day letter under each, today's crimson and bold, a dashed ring for a
+/// day off), then "19h 40m done of 28h planned · 9–15 Nov" and one sentence. Each ring is one VoiceOver element.
+struct WeekRingsCard: View {
+    var summary: WeekSummary
+    var hue: (String) -> ProjectHue
+    @Environment(\.dynamicTypeSize) private var textSize
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // The date range lives here, nowrap, so the figure line below never wraps awkwardly.
+            Text(captionText).font(.footnote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4).padding(.bottom, 10)
+            HStack(alignment: .top, spacing: 2) {
+                ForEach(summary.days) { day in
+                    VStack(spacing: 5) {
+                        TodayRingView(ring: day.isDayOff ? day.ring.outline : day.ring, hue: hue, size: 38, showsOverflow: true)
+                        Text(day.letter).font(.caption.weight(day.isToday ? .bold : .semibold)).foregroundStyle(day.isToday ? DS.Palette.dateOverdue : DS.Palette.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(day.accessibilityLabel)
+                    .accessibilityIdentifier("weekRing-" + day.key)
+                }
+            }
+            if summary.isEmpty {
+                Text(summary.emptyLine).font(.callout).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 12).padding(.horizontal, 4)
+            } else {
+                Group {
+                    if textSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 2) { figure; rest }
+                    } else {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) { figure; rest }
+                    }
+                }
+                .padding(.top, 12).padding(.horizontal, 4)
+                if let sentence = summary.sentence {
+                    Text(sentence).font(.footnote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 3).padding(.horizontal, 4)
+                }
+            }
+        }
+        .padding(.top, 14).padding(.bottom, 12).padding(.horizontal, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DS.Palette.surfaceRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(DS.Palette.textPrimary.opacity(0.08), lineWidth: 0.5))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("weekRings")
+    }
+    private var figure: some View {
+        Text(summary.figure).font(.title3.weight(.semibold).width(.expanded).monospacedDigit()).foregroundStyle(DS.Palette.textPrimary).lineLimit(1).fixedSize()
+    }
+    private var rest: some View {
+        Text(summary.rest).font(.subheadline).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+    }
+    /// "This week · 9–15 Nov", with non-breaking spaces and word joiners so the range never splits.
+    private var captionText: String {
+        let range = summary.rangeLabel.replacingOccurrences(of: " ", with: "\u{00A0}").replacingOccurrences(of: "–", with: "\u{2060}–\u{2060}")
+        return "This week · " + range
     }
 }
 

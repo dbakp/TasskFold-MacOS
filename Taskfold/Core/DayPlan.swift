@@ -513,10 +513,20 @@ struct TodayRing: Equatable, Sendable {
     func midpoint(of id: String) -> Double? {
         segments.first { $0.id == id }.map { $0.start + $0.length / 2 }
     }
+    /// Minutes planned beyond the free time. Zero without working hours, where there is nothing to be over.
+    var overMinutes: Int { hasWorkingHours ? max(0, plannedMinutes - freeMinutes) : 0 }
+    /// The overflow as a fraction of the free time, 0...1: the length of the thin outer arc on an overbooked day
+    /// (7h 30m of 6h is a quarter of the circle).
+    var overflowFraction: Double { hasWorkingHours && freeMinutes > 0 ? min(1, Double(overMinutes) / Double(freeMinutes)) : (overMinutes > 0 ? 1 : 0) }
+    /// The same ring without its segments: a day off draws only the dashed outline, whatever is planned on it.
+    var outline: TodayRing { var copy = self; copy.segments = []; return copy }
     /// One VoiceOver label carrying every figure the ring shows.
-    var accessibilityLabel: String {
-        var text = "Today: \(DayPlan.spoken(plannedMinutes)) planned"
+    var accessibilityLabel: String { accessibilityLabel(for: "Today") }
+    /// The same label for another day or period, for example "Monday" or "This week".
+    func accessibilityLabel(for name: String, reportsOver: Bool = false) -> String {
+        var text = "\(name): \(DayPlan.spoken(plannedMinutes)) planned"
         text += hasWorkingHours ? " of \(DayPlan.spoken(freeMinutes)) free" : ". Working hours not set"
+        if reportsOver && overMinutes > 0 { text += ", \(DayPlan.spoken(overMinutes)) over" }
         if doneMinutes > 0 { text += ", \(DayPlan.spoken(doneMinutes)) done" }
         if taskCount > 0 { text += ". \(doneCount) of \(taskCount) " + (taskCount == 1 ? "task" : "tasks") + " done" }
         if unestimatedCount > 0 { text += unestimatedCount == 1 ? ", 1 without an estimate" : ", \(unestimatedCount) without estimates" }
@@ -530,6 +540,11 @@ extension DayPlan {
     /// grey track left over is free capacity and an over-full day fills the ring. Without working hours the segments
     /// share the whole circle and the caller draws a dashed track.
     static func todayRing(_ tasks: [Record], events: [PlannerEvent], on day: Date, hours: WorkingHours?, calendar: Calendar = .current) -> TodayRing {
+        ring(for: day, tasks: tasks, events: events, hours: hours, calendar: calendar)
+    }
+    /// The ring for any date: Today's header, an Upcoming day header and a Weekly review day all read this one function.
+    /// Events outside `day` never reduce its free time, so callers may pass whatever they have loaded.
+    static func ring(for day: Date, tasks: [Record], events: [PlannerEvent], hours: WorkingHours?, calendar: Calendar = .current) -> TodayRing {
         let key = TaskPlanner.dayKey(day, calendar: calendar)
         let capacity = capacityRing(tasks, events: events, on: day, hours: hours, calendar: calendar)
         let todays = tasks.enumerated().filter { _, task in
@@ -561,5 +576,131 @@ extension DayPlan {
         return TodayRing(segments: segments, plannedMinutes: planned, doneMinutes: done, freeMinutes: capacity.freeMinutes,
                          hasWorkingHours: capacity.hasWorkingHours, taskCount: ordered.count, doneCount: ordered.filter(\.completed).count,
                          unestimatedCount: ordered.filter { $0.durationMinutes == nil }.count)
+    }
+}
+
+// MARK: - The ring on every list (design review round 6)
+
+/// What an Upcoming day header says beside its ring: a bold lead and a secondary rest, "4h 10m" + " of 6h".
+struct DayFigure: Equatable, Sendable {
+    var lead: String
+    /// The lead is crimson: the day is overbooked ("1h 30m over").
+    var leadIsAlert = false
+    var rest: String
+    var text: String { lead + rest }
+}
+
+/// One project's estimated work due this week: a ring that is the whole circle (no free-time remainder) with the done
+/// part lit, beside "1h 30m of 5h 45m this week" and one plain sentence about its share of the planned week.
+struct ProjectWeekRing: Equatable, Sendable {
+    var ring: TodayRing
+    var plannedMinutes: Int
+    var doneMinutes: Int
+    /// Estimated minutes due this week across every project, open and done.
+    var weekPlannedMinutes: Int
+    /// "1h 30m", the done part.
+    var figure: String { DayPlan.duration(doneMinutes) }
+    /// "of 5h 45m this week"
+    var rest: String { "of \(DayPlan.duration(plannedMinutes)) this week" }
+    var share: Double { weekPlannedMinutes > 0 ? Double(plannedMinutes) / Double(weekPlannedMinutes) : 0 }
+    /// "About a third of your planned week". Nil when the week has no planned time.
+    var shareLine: String? {
+        guard weekPlannedMinutes > 0, plannedMinutes > 0 else { return nil }
+        let s = share
+        let phrase: String
+        switch s {
+        case ..<0.08: phrase = "A small part of"
+        case ..<0.15: phrase = "About a tenth of"
+        case ..<0.225: phrase = "About a fifth of"
+        case ..<0.29: phrase = "About a quarter of"
+        case ..<0.4: phrase = "About a third of"
+        case ..<0.57: phrase = "About half of"
+        case ..<0.71: phrase = "About two thirds of"
+        case ..<0.8: phrase = "About three quarters of"
+        case ..<0.95: phrase = "Most of"
+        case ..<1: phrase = "Nearly all of"
+        default: phrase = "All of"
+        }
+        return phrase + " your planned week"
+    }
+    var accessibilityLabel: String { "This week: \(DayPlan.spoken(doneMinutes)) done of \(DayPlan.spoken(plannedMinutes))" + (shareLine.map { ". " + $0 } ?? "") }
+}
+
+extension DayPlan {
+    /// "4h 10m of 6h", "1h 30m over · 7h 30m of 6h", "Day off · 1 task", or empty when nothing is planned. `hours` tells a day off (hours set, this day not
+    /// in them) from hours never set, which says "4h 10m planned" and leaves the ring dashed.
+    static func dayFigure(_ ring: TodayRing, hours: WorkingHours?) -> DayFigure {
+        // Nothing planned on a working day: no figure at all, the empty ring track and the list already say so.
+        if ring.plannedMinutes == 0 && (ring.hasWorkingHours || hours == nil) { return DayFigure(lead: "", rest: "") }
+        if ring.hasWorkingHours {
+            if ring.overMinutes > 0 {
+                return DayFigure(lead: duration(ring.overMinutes) + " over", leadIsAlert: true, rest: " · \(duration(ring.plannedMinutes)) of \(duration(ring.freeMinutes))")
+            }
+            return DayFigure(lead: ring.figure, rest: " " + (ring.capacity ?? ""))
+        }
+        if hours == nil { return DayFigure(lead: ring.figure, rest: " planned") }
+        return DayFigure(lead: "", rest: ring.taskCount == 0 ? "Day off" : "Day off · " + (ring.taskCount == 1 ? "1 task" : "\(ring.taskCount) tasks"))
+    }
+    /// Hours are set and this day is not one of them.
+    static func isDayOff(_ ring: TodayRing, hours: WorkingHours?) -> Bool { hours != nil && !ring.hasWorkingHours }
+    /// VoiceOver for a day header ring, for example "Monday 16 Nov: 7 hours 30 minutes planned of 6 hours free, 1 hour 30 minutes over".
+    static func dayRingLabel(_ ring: TodayRing, name: String, hours: WorkingHours?) -> String {
+        if !ring.hasWorkingHours && hours != nil {
+            return name + ": day off" + (ring.taskCount == 0 ? "" : ", " + (ring.taskCount == 1 ? "1 task" : "\(ring.taskCount) tasks"))
+        }
+        return ring.accessibilityLabel(for: name, reportsOver: true)
+    }
+
+    /// `ring(for:)` for several days at once, keyed by day key. Tasks are sorted into their days in one pass, so a list of
+    /// two weeks costs one scan of the tasks rather than fourteen.
+    static func rings(for days: [Date], tasks: [Record], events: [PlannerEvent], hours: WorkingHours?, calendar: Calendar = .current) -> [String: TodayRing] {
+        let keys = Set(days.map { TaskPlanner.dayKey($0, calendar: calendar) })
+        var buckets: [String: [Record]] = [:]
+        for task in tasks {
+            let key = TaskPlanner.plannedDay(task, calendar: calendar)
+            if keys.contains(key) { buckets[key, default: []].append(task) }
+        }
+        var result: [String: TodayRing] = [:]
+        for day in days {
+            let key = TaskPlanner.dayKey(day, calendar: calendar)
+            result[key] = ring(for: day, tasks: buckets[key] ?? [], events: events, hours: hours, calendar: calendar)
+        }
+        return result
+    }
+
+    /// The seven days of the week that contains `day`, first weekday per the calendar.
+    static func weekDays(containing day: Date, calendar: Calendar = .current) -> [Date] {
+        guard let start = calendar.dateInterval(of: .weekOfYear, for: day)?.start else { return [] }
+        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
+    }
+    /// Estimated, ordinary, top-level tasks due on any of `days`, open or done, in day order then the given order.
+    private static func estimatedTasks(_ tasks: [Record], days: [Date], calendar: Calendar) -> [Record] {
+        let keys = days.map { TaskPlanner.dayKey($0, calendar: calendar) }
+        let index = Dictionary(keys.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+        return tasks.enumerated().compactMap { offset, task -> (Int, Int, Record)? in
+            guard !task.id.isEmpty, task.durationMinutes != nil, TaskKind.mayComplete(task), SubtaskTree.referencePath(task.id) == nil,
+                  let day = index[TaskPlanner.plannedDay(task, calendar: calendar)] else { return nil }
+            return (day, offset, task)
+        }.sorted { ($0.0, $0.1) < ($1.0, $1.1) }.map { $0.2 }
+    }
+    /// One project's estimated work due in the week that contains `day`. Nil when the project has nothing estimated that
+    /// week, so the page hides the block. Done work comes first around the circle so the lit part reads as progress.
+    static func projectWeekRing(_ tasks: [Record], project: String, on day: Date, calendar: Calendar = .current) -> ProjectWeekRing? {
+        guard !project.isEmpty else { return nil }
+        let week = estimatedTasks(tasks, days: weekDays(containing: day, calendar: calendar), calendar: calendar)
+        let mine = week.filter { $0.string("project_id") == project }
+        let planned = mine.reduce(0) { $0 + ($1.durationMinutes ?? 0) }
+        guard planned > 0 else { return nil }
+        let ordered = mine.filter(\.completed) + mine.filter { !$0.completed }
+        var cursor = 0.0
+        let segments = ordered.map { task -> RingSegment in
+            let minutes = task.durationMinutes ?? 0, length = Double(minutes) / Double(planned)
+            defer { cursor += length }
+            return RingSegment(id: task.id, projectID: project, minutes: minutes, done: task.completed, start: cursor, length: length)
+        }
+        let done = mine.filter(\.completed).reduce(0) { $0 + ($1.durationMinutes ?? 0) }
+        let ring = TodayRing(segments: segments, plannedMinutes: planned, doneMinutes: done, freeMinutes: planned, hasWorkingHours: true,
+                             taskCount: mine.count, doneCount: mine.filter(\.completed).count, unestimatedCount: 0)
+        return ProjectWeekRing(ring: ring, plannedMinutes: planned, doneMinutes: done, weekPlannedMinutes: week.reduce(0) { $0 + ($1.durationMinutes ?? 0) })
     }
 }

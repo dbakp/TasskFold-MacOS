@@ -186,9 +186,13 @@ struct WeeklyReviewView: View {
             VStack(alignment: .leading, spacing: DS.Space.xs) {
                 Text("A quiet look at your week").font(.system(.title2, design: .rounded).weight(.semibold)).fixedSize(horizontal: false, vertical: true)
                 Text("About five minutes. Skip anything that doesn’t need you.").foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                Text(WeeklyReview.statusText(lastReviewed: store.weeklyLastReviewed, now: Date(), calendar: store.habitCalendar))
-                    .font(.footnote).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("weeklyReviewLastReviewed")
             }
+            // This week in rings (round 6): what was planned and what got done, before the six steps.
+            WeekRingsCard(summary: weekSummary, hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) })
+                .task { await loadEvents() }
+            Text(WeeklyReview.statusText(lastReviewed: store.weeklyLastReviewed, now: Date(), calendar: store.habitCalendar))
+                .font(.footnote).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("weeklyReviewLastReviewed")
+                .padding(.top, -DS.Space.s)
             VStack(alignment: .leading, spacing: DS.Space.s) {
                 ForEach(WeeklyReviewStep.allCases, id: \.self) { step in
                     let detail = introDetail(step)
@@ -207,6 +211,9 @@ struct WeeklyReviewView: View {
             }.buttonStyle(.borderedProminent).tint(DS.Palette.accentFill).disabled(!available).accessibilityIdentifier("weeklyReviewStart")
             reminderSection
         }
+    }
+    private var weekSummary: WeekSummary {
+        WeeklyReview.weekSummary(tasks: store.tasks, events: events, hours: store.workingHours, now: Date(), calendar: store.habitCalendar, locale: .autoupdatingCurrent)
     }
     private func introDetail(_ step: WeeklyReviewStep) -> (needed: Bool, text: String) {
         func count(_ n: Int, _ unit: String) -> (Bool, String) { n == 0 ? (false, "Empty") : (true, "\(n) \(unit)") }
