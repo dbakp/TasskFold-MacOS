@@ -169,4 +169,93 @@ final class WeeklyReviewTests: XCTestCase {
         XCTAssertEqual(Planning.review([old, fresh], now: now, lastReviewed: nil, calendar: calendar)?.staleIDs, ["old"])
         XCTAssertNil(Planning.review([old, fresh], now: now, lastReviewed: now.addingTimeInterval(-86_400), calendar: calendar))
     }
+
+    // MARK: This week in rings (round 6)
+
+    var monday: Calendar { var c = calendar; c.firstWeekday = 2; c.locale = Locale(identifier: "en_US_POSIX"); return c }
+    let sevenDays = WorkingHours(start: 9 * 60, end: 15 * 60, weekdays: [2, 3, 4, 5, 6, 7]) // Sunday is the day off
+    func planned(_ id: String, _ date: String, _ minutes: Int, done: Bool = false) -> Record {
+        var row = task(id, date: date, minutes: minutes)
+        if done { row["completed"] = .bool(true) }
+        return row
+    }
+    func summary(_ tasks: [Record], now: String = "2026-11-13", hours: WorkingHours? = nil, calendar custom: Calendar? = nil) -> WeekSummary {
+        WeeklyReview.weekSummary(tasks: tasks, events: [], hours: hours ?? sevenDays, now: at(now, "12:00"), calendar: custom ?? monday)
+    }
+    /// Friday 13 Nov. Tuesday is the fullest day; Wednesday (3h open) and Monday (2h open) slipped; Sunday is a day off with a task.
+    var fullWeek: [Record] {
+        [planned("m1", "2026-11-09", 60, done: true), planned("m2", "2026-11-09", 120),
+         planned("t1", "2026-11-10", 360, done: true),
+         planned("w1", "2026-11-11", 60, done: true), planned("w2", "2026-11-11", 180),
+         planned("th", "2026-11-12", 120, done: true),
+         planned("f", "2026-11-13", 60), planned("s", "2026-11-14", 30), planned("su", "2026-11-15", 25)]
+    }
+
+    func testWeekHasSevenDaysFromTheFirstWeekdayAndMarksToday() {
+        let s = summary(fullWeek)
+        XCTAssertEqual(s.days.map(\.key), (9...15).map { "2026-11-\(String(format: "%02d", $0))" })
+        XCTAssertEqual(s.days.map(\.letter), ["M", "T", "W", "T", "F", "S", "S"])
+        XCTAssertEqual(s.days.filter(\.isToday).map(\.name), ["Friday"])
+        var sundayFirst = monday; sundayFirst.firstWeekday = 1
+        let other = summary(fullWeek, calendar: sundayFirst)
+        XCTAssertEqual(other.days.first?.key, "2026-11-08"); XCTAssertEqual(other.days.map(\.letter).first, "S"); XCTAssertEqual(other.rangeLabel, "8–14 Nov")
+    }
+    func testWeekTotalsAndRangeLabel() {
+        let s = summary(fullWeek)
+        XCTAssertEqual(s.plannedMinutes, 1015); XCTAssertEqual(s.doneMinutes, 600)
+        XCTAssertEqual(s.figure, "10h"); XCTAssertEqual(s.rest, "done of 16h 55m planned · 9–15 Nov")
+        XCTAssertFalse(s.isEmpty)
+        XCTAssertEqual(summary([], now: "2026-12-02").rangeLabel, "30 Nov – 6 Dec", "a week across two months names both")
+    }
+    func testFullestDayAndSlippedDaysMakeOnePlainSentence() {
+        let s = summary(fullWeek)
+        XCTAssertEqual(s.fullestDay?.name, "Tuesday")
+        XCTAssertEqual(s.slippedDays.map(\.name), ["Monday", "Wednesday"])
+        XCTAssertEqual(s.days.map(\.slippedMinutes), [120, 0, 180, 0, 0, 0, 0], "only days that have passed can slip; today and later never do")
+        XCTAssertEqual(s.sentence, "Tuesday was your fullest day. Monday and Wednesday slipped the most.")
+    }
+    func testSecondSlippedDayNeedsAtLeastHalfTheFirst() {
+        let s = summary([planned("a", "2026-11-09", 300, done: true), planned("b", "2026-11-10", 400), planned("c", "2026-11-11", 100)])
+        XCTAssertEqual(s.slippedDays.map(\.name), ["Tuesday"], "100m is under half of 400m")
+        XCTAssertEqual(s.sentence, "Tuesday was your fullest day and slipped the most.")
+    }
+    func testSentenceLeavesOutPartsThatDoNotApply() {
+        let noSlip = summary([planned("a", "2026-11-09", 60, done: true), planned("b", "2026-11-10", 120, done: true)])
+        XCTAssertEqual(noSlip.sentence, "Tuesday was your fullest day.")
+        let oneDay = summary([planned("a", "2026-11-09", 60)])
+        XCTAssertNil(oneDay.fullestDay, "one planned day is not a fullest day")
+        XCTAssertEqual(oneDay.sentence, "Monday slipped the most.")
+        XCTAssertNil(summary([planned("a", "2026-11-14", 60)]).sentence, "nothing passed, one day planned")
+    }
+    func testFullestDayTieGoesToTheEarlierDay() {
+        let s = summary([planned("a", "2026-11-10", 120, done: true), planned("b", "2026-11-12", 120, done: true)])
+        XCTAssertEqual(s.fullestDay?.name, "Tuesday")
+    }
+    func testNothingPlannedAllWeek() {
+        let s = summary([task("noEstimate", date: "2026-11-10")])
+        XCTAssertTrue(s.isEmpty); XCTAssertEqual(s.emptyLine, "Nothing planned this week yet."); XCTAssertNil(s.sentence)
+        XCTAssertEqual(s.days.count, 7, "the strip still shows")
+        XCTAssertEqual(s.accessibilityLabel, "Nothing planned this week yet.")
+    }
+    func testEachDaySpeaksItsOwnRing() {
+        let s = summary(fullWeek)
+        XCTAssertEqual(s.days[1].accessibilityLabel, "Tuesday 10 Nov: 6h, all done")
+        XCTAssertEqual(s.days[0].accessibilityLabel, "Monday 9 Nov: 1h done of 3h")
+        XCTAssertEqual(s.days[2].accessibilityLabel, "Wednesday 11 Nov: 1h done of 4h")
+        XCTAssertEqual(summary([planned("a", "2026-11-11", 110, done: true), planned("b", "2026-11-11", 150)]).days[2].accessibilityLabel, "Wednesday 11 Nov: 1h 50m done of 4h 20m")
+        XCTAssertEqual(s.days[3].accessibilityLabel, "Thursday 12 Nov: 2h, all done")
+        XCTAssertEqual(summary([]).days[0].accessibilityLabel, "Monday 9 Nov: nothing planned")
+    }
+    func testDayOffIsHoursSetButNotThisDay() {
+        let s = summary(fullWeek)
+        XCTAssertTrue(s.days[6].isDayOff); XCTAssertFalse(s.days[5].isDayOff)
+        XCTAssertFalse(s.days[6].ring.hasWorkingHours)
+        XCTAssertEqual(summary([]).days[6].accessibilityLabel, "Sunday 15 Nov: day off")
+        XCTAssertEqual(s.days[6].accessibilityLabel, "Sunday 15 Nov: day off, 25m planned")
+    }
+    func testDayRingsAreTheSameRingsTodayAndUpcomingUse() {
+        let s = summary(fullWeek)
+        let direct = DayPlan.ring(for: at("2026-11-10"), tasks: fullWeek, events: [], hours: sevenDays, calendar: monday)
+        XCTAssertEqual(s.days[1].ring, direct)
+    }
 }

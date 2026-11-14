@@ -228,3 +228,109 @@ enum WeeklyReview {
         return WeeklyLoad(days: days)
     }
 }
+
+// MARK: - This week in rings (design review round 6)
+
+/// One day of the current week on the Weekly review intro: its ring and the words that go with it.
+struct WeekDayRing: Equatable, Identifiable, Sendable {
+    var date: Date
+    var key: String
+    /// "M", "T", "W": the very short weekday.
+    var letter: String
+    /// "Tuesday"
+    var name: String
+    /// "Tuesday 10 Nov"
+    var title: String
+    var ring: TodayRing
+    var isToday: Bool
+    /// Working hours are set and this day is not one of them.
+    var isDayOff: Bool
+    /// Estimated minutes still open on a day that has passed.
+    var slippedMinutes: Int
+    var id: String { key }
+    /// "Tuesday 10 Nov: 6h, all done", "…: 1h 50m done of 4h 20m", "…: day off".
+    var accessibilityLabel: String {
+        let planned = ring.plannedMinutes, done = ring.doneMinutes
+        if planned == 0 { return title + (isDayOff ? ": day off" : ": nothing planned") }
+        let prefix = isDayOff ? "\(title): day off, \(DayPlan.duration(planned)) planned" : nil
+        if let prefix { return prefix }
+        return done >= planned ? "\(title): \(DayPlan.duration(planned)), all done" : "\(title): \(DayPlan.duration(done)) done of \(DayPlan.duration(planned))"
+    }
+}
+
+/// The current week (first weekday per the calendar) as seven rings plus one honest summary line and one sentence.
+struct WeekSummary: Equatable, Sendable {
+    var days: [WeekDayRing]
+    var plannedMinutes: Int
+    var doneMinutes: Int
+    /// "9–15 Nov", or "30 Nov – 6 Dec" across months.
+    var rangeLabel: String
+    /// Nothing is planned all week: the strip shows one line, `emptyLine`.
+    var isEmpty: Bool { plannedMinutes == 0 }
+    var emptyLine: String { "Nothing planned this week yet." }
+    /// "19h 40m", the bold figure.
+    var figure: String { DayPlan.duration(doneMinutes) }
+    /// "done of 28h planned · " and then `rangeLabel`, so a view can keep the range on one line.
+    var restLead: String { "done of \(DayPlan.duration(plannedMinutes)) planned · " }
+    /// "done of 28h planned · 9–15 Nov"
+    var rest: String { restLead + rangeLabel }
+    /// The day with the most planned time (first on a tie), when at least two days have planned work.
+    var fullestDay: WeekDayRing? {
+        guard days.filter({ $0.ring.plannedMinutes > 0 }).count >= 2 else { return nil }
+        return days.max { $0.ring.plannedMinutes == $1.ring.plannedMinutes ? $0.date > $1.date : $0.ring.plannedMinutes < $1.ring.plannedMinutes }
+    }
+    /// Up to two past days that left the most work open: the second only when it slipped at least half as much as the first.
+    var slippedDays: [WeekDayRing] {
+        let ranked = days.filter { $0.slippedMinutes > 0 }.sorted { $0.slippedMinutes == $1.slippedMinutes ? $0.date < $1.date : $0.slippedMinutes > $1.slippedMinutes }
+        guard let top = ranked.first else { return [] }
+        return Array(ranked.prefix(2).filter { $0.slippedMinutes * 2 >= top.slippedMinutes }).sorted { $0.date < $1.date }
+    }
+    /// "Tuesday was your fullest day. Wednesday and Friday slipped the most." Parts that do not apply are left out.
+    var sentence: String? {
+        let fullest = fullestDay, slipped = slippedDays
+        var parts: [String] = []
+        if let fullest, slipped.count == 1, slipped[0].id == fullest.id {
+            parts.append("\(fullest.name) was your fullest day and slipped the most.")
+        } else {
+            if let fullest { parts.append("\(fullest.name) was your fullest day.") }
+            if !slipped.isEmpty { parts.append(slipped.map(\.name).joined(separator: " and ") + " slipped the most.") }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+    var accessibilityLabel: String {
+        isEmpty ? emptyLine : "\(DayPlan.spoken(doneMinutes)) done of \(DayPlan.spoken(plannedMinutes)) planned, \(rangeLabel)." + (sentence.map { " " + $0 } ?? "")
+    }
+}
+
+extension WeeklyReview {
+    /// The week that contains `now`. Each day's ring is `DayPlan.ring(for:)`, so a day here agrees with Today and Upcoming.
+    /// A day "slipped" when it has passed and estimated work due on it is still open.
+    static func weekSummary(tasks: [Record], events: [PlannerEvent], hours: WorkingHours?, now: Date, calendar: Calendar = .current, locale: Locale? = nil) -> WeekSummary {
+        // Names use `locale` when given (the app passes the user's), else the calendar's own, else the user's.
+        var calendar = calendar
+        calendar.locale = locale ?? calendar.locale ?? Locale.autoupdatingCurrent
+        let todayKey = TaskPlanner.dayKey(now, calendar: calendar)
+        let dates = DayPlan.weekDays(containing: now, calendar: calendar)
+        // Date.FormatStyle reads the same locale data as the Today header's "Saturday 14 Nov".
+        let style = Date.FormatStyle(locale: calendar.locale ?? .autoupdatingCurrent, calendar: calendar, timeZone: calendar.timeZone)
+        func weekdayName(_ date: Date) -> String { date.formatted(style.weekday(.wide)) }
+        func weekdayLetter(_ date: Date) -> String { date.formatted(style.weekday(.narrow)) }
+        func monthName(_ date: Date) -> String { date.formatted(style.month(.abbreviated)) }
+        let rings = DayPlan.rings(for: dates, tasks: tasks, events: events, hours: hours, calendar: calendar)
+        let days = dates.map { date -> WeekDayRing in
+            let key = TaskPlanner.dayKey(date, calendar: calendar)
+            let ring = rings[key] ?? DayPlan.ring(for: date, tasks: [], events: events, hours: hours, calendar: calendar)
+            let name = weekdayName(date)
+            return WeekDayRing(date: date, key: key, letter: weekdayLetter(date), name: name,
+                               title: "\(name) \(calendar.component(.day, from: date)) \(monthName(date))", ring: ring, isToday: key == todayKey,
+                               isDayOff: hours != nil && !ring.hasWorkingHours, slippedMinutes: key < todayKey ? max(0, ring.plannedMinutes - ring.doneMinutes) : 0)
+        }
+        var range = ""
+        if let first = dates.first, let last = dates.last {
+            let a = calendar.component(.day, from: first), b = calendar.component(.day, from: last)
+            range = calendar.component(.month, from: first) == calendar.component(.month, from: last)
+                ? "\(a)–\(b) \(monthName(last))" : "\(a) \(monthName(first)) – \(b) \(monthName(last))"
+        }
+        return WeekSummary(days: days, plannedMinutes: days.reduce(0) { $0 + $1.ring.plannedMinutes }, doneMinutes: days.reduce(0) { $0 + $1.ring.doneMinutes }, rangeLabel: range)
+    }
+}
