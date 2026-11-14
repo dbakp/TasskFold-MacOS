@@ -115,7 +115,7 @@ struct WeeklyReviewView: View {
             }
             #else
             .sheet(item: $addingTask) { template in
-                QuickAddView(task: template, onExpand: { _, _ in }, onAdded: { added in nextActionAdded(projectID: added.string("project_id")) })
+                QuickAddView(task: template, onExpand: { _, _ in }, allowsExpand: false, onAdded: { added in nextActionAdded(projectID: added.string("project_id")) })
             }
             #endif
             .confirmationDialog(deleting.map { "Delete “\($0.title)”?" } ?? "Delete task?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible, presenting: deleting) { task in
