@@ -48,7 +48,7 @@ struct HourlyPlannerView: View {
     @ScaledMetric(relativeTo: .caption) private var clockGutter: CGFloat = 70
     private var gutter: CGFloat { min(140, clockGutter) }
     private var bounds: DateInterval { calendar.dateInterval(of: .day, for: day)! }
-    private func clock(_ date: Date) -> String { date.formatted(.dateTime.hour().minute()) }
+    private func clock(_ date: Date) -> String { ClockFormat.string(date) }
     private func showCalendar(_ event:PlannerEvent) {
         selectedEvent=PlannerCalendarRequest(eventID:event.id,workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))
     }
@@ -146,19 +146,18 @@ struct HourlyPlannerView: View {
                 }
             }
             capacityRing
-            Text(workingSummary(reading.capacity)).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerWorkingCapacity")
+            capacityDetails(reading.capacity)
             if work.incomplete {
                 Label("Some grouped tasks need review. Capacity includes readable estimates only.", systemImage: "exclamationmark.circle")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerGroupedWorkReview")
             }
-            Text(busy.status).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if busy.anyConnected { Text(busy.status).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerBusyStatus") }
             if !usesAgenda,reading.laneCount>1 {
                 Label("Overlapping plans sit side by side. Scroll sideways if needed.",systemImage:"arrow.left.and.right")
                     .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("plannerOverlapHint")
             }
-        }.padding(14)
+        }.modifier(PlannerSummarySurface())
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial)
     }
     private var fitTitle: String { "Fit my day?" }
     private func fitMessage(_ fit: DayPlanFit) -> String {
@@ -187,9 +186,18 @@ struct HourlyPlannerView: View {
         feedback = fit.placements.count == 1 ? "Placed 1 task" : "Placed \(fit.placements.count) tasks"
         feedbackRequest = store.undoStack.last?.id != previousHistory ? store.captureHistoryRequest() : nil
     }
+    /// The ring already says how much is planned and how much is free, so the visible line only names what it cannot count.
     private func estimateSummary(_ capacity: PlannerCapacity) -> some View {
-        Text("\(capacity.estimatedMinutes) min estimated · \(capacity.unknownTasks) without estimates")
-            .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerCapacity")
+        Text(capacity.unknownTasks == 0 ? "All estimated" : capacity.unknownTasks == 1 ? "1 task has no estimate" : "\(capacity.unknownTasks) tasks have no estimate")
+            .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerUnestimated")
+    }
+    /// The exact minute figures stay in the accessibility tree (VoiceOver and tests) without a second and third line of statistics on screen.
+    private func capacityDetails(_ capacity: PlannerCapacity) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("\(capacity.estimatedMinutes) min estimated · \(capacity.unknownTasks) without estimates").accessibilityIdentifier("plannerCapacity")
+            Text(workingSummary(capacity)).accessibilityIdentifier("plannerWorkingCapacity")
+        }
+        .font(.caption2).frame(width: 1, height: 1, alignment: .topLeading).clipped().opacity(0)
     }
     private func workingSummary(_ capacity: PlannerCapacity) -> String {
         if capacity.incomplete { return "Review grouped tasks before relying on remaining capacity." }
@@ -593,7 +601,7 @@ private struct PlannerBlockCard: View {
                 Text(block.task.title).font(.subheadline.weight(.medium)).lineLimit(block.renderLength < 40 ? 1 : 2)
                     .frame(maxWidth: .infinity, alignment: .leading).layoutPriority(1)
             }
-            Text((block.start < block.clippedStart ? "Continues" : block.start.formatted(.dateTime.hour().minute())) + " · " + (block.task.durationMinutes.map { "\($0)m" } ?? "No estimate"))
+            Text((block.start < block.clippedStart ? "Continues" : ClockFormat.string(block.start)) + " · " + (block.task.durationMinutes.map { "\($0)m" } ?? "No estimate"))
                 .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         }
         .padding(.horizontal, 8).padding(.top, 4).padding(.bottom, block.end == nil ? 4 : 8)
@@ -801,6 +809,18 @@ private struct PlannerCalendarDetails:View {
         .onChange(of:store.workspaceGeneration) {_,_ in dismiss()}
         #if os(macOS)
         .frame(minWidth:400,minHeight:330)
+        #endif
+    }
+}
+
+/// The stats block above the grid. On iPhone it has no panel fill (so the first hour label never sits on a band edge), sits on the
+/// 16pt page margin and leaves 16pt before the grid. The Mac keeps its material panel.
+private struct PlannerSummarySurface: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(macOS)
+        content.padding(14).background(.regularMaterial)
+        #else
+        content.padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 16)
         #endif
     }
 }

@@ -63,8 +63,8 @@ final class DayPlanTests: XCTestCase {
         XCTAssertEqual(totals.taskCount, 4); XCTAssertEqual(totals.estimatedMinutes, 270); XCTAssertEqual(totals.unestimatedCount, 1)
         XCTAssertEqual(totals.workingMinutes, 480); XCTAssertEqual(totals.busyMinutes, 120); XCTAssertEqual(totals.freeMinutes, 360)
         XCTAssertFalse(totals.isOver); XCTAssertNil(totals.overNote)
-        XCTAssertEqual(totals.capacityLabel, "4h 30m planned of 6h free")
-        XCTAssertEqual(totals.capacityAccessibility, "Capacity: 4 hours 30 minutes planned of 6 hours free")
+        XCTAssertEqual(totals.capacityLabel, "4h 30m planned · 6h free")
+        XCTAssertEqual(totals.capacityAccessibility, "Capacity: 4 hours 30 minutes planned, 6 hours free")
         let over = DayPlan.totals(tasks + [task("e", minutes: 180)], events: events, on: d, hours: WorkingHours(), calendar: c)
         XCTAssertEqual(over.overMinutes, 90); XCTAssertEqual(over.overNote, "About 1h 30m more than your free time"); XCTAssertEqual(over.fraction, 1)
     }

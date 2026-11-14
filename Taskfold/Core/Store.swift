@@ -2947,14 +2947,14 @@ final class Store {
         let samples: [(String, String, Int)] = [
             ("Press Space to complete this task", "Or click the circle. Undo with ⌘Z or the confirmation strip.", 1),
             ("Drag me onto Tomorrow in Upcoming", "Drops land inside the task's priority group; an indicator shows where.", 2),
-            ("Press ⌘N and type “Call mom tomorrow at 20.51 p1”", "Dates, times, priorities, and #labels are picked out of the text as chips.", 3),
+            ("Press ⌘N and type “Call Mum tomorrow 9am p1”", "Dates, times, priorities, and #labels are picked out of the text as chips.", 3),
             ("Open Calendar and switch to Week", "Select a day to see its tasks beside the grid; ⌘T jumps back to today.", 4),
         ]
         #else
         let samples: [(String, String, Int)] = [
             ("Swipe right to complete this task", "Or tap the circle. An Undo pill appears for a few seconds.", 1),
             ("Press and hold, then drag me to tomorrow", "Rows lift under your finger and a gap opens where they will land.", 2),
-            ("Tap + and type “Call mom tomorrow at 20.51 p1”", "Dates, times, priorities, and #labels are picked out of the text as chips.", 3),
+            ("Tap + and type “Call Mum tomorrow 9am p1”", "Dates, times, priorities, and #labels are picked out of the text as chips.", 3),
             ("Open the Calendar tab and drag it upward", "The calendar collapses into a week strip so the day gets the screen.", 4),
         ]
         #endif

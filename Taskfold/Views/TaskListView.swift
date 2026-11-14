@@ -544,7 +544,7 @@ struct TaskListView: View {
             .accessibilityValue(overdueCollapsed ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("overdueToggle")
             if tasks.contains(where: { Planning.eligible($0) && store.smartRescheduleIsEditable($0) }) {
-                Button { workspace.openSmartReschedule() } label: { Label("Reschedule smartly…", systemImage: "sparkles").font(DS.Font.chip) }
+                Button { workspace.openSmartReschedule() } label: { Label("Find a time", systemImage: "sparkles").font(DS.Font.chip) }
                         .buttonStyle(.borderless).foregroundStyle(DS.Palette.accent).help("Spread overdue tasks over your next working days")
                         .accessibilityIdentifier("rescheduleSmartly")
                 }

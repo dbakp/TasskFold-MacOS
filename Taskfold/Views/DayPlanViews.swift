@@ -43,7 +43,7 @@ private extension Font {
     static var dayPlanHero: Font { .title2.weight(.semibold) }
 }
 
-private func dayPlanClock(_ date: Date) -> String { date.formatted(.dateTime.hour().minute()) }
+private func dayPlanClock(_ date: Date) -> String { ClockFormat.string(date) }
 
 // MARK: - Model
 
@@ -349,6 +349,7 @@ struct CapacityRingView: View {
                         .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: .round)).rotationEffect(.degrees(-90))
                     if ring.isOver { Image(systemName: "exclamationmark").font(.caption2.weight(.bold)).foregroundStyle(tint) }
                 }
+                .padding(3) // the stroke is centred on the path: keep its outer edge on the frame
                 .frame(width: min(diameter, 72), height: min(diameter, 72))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(ring.label).font(.caption.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true)
@@ -485,11 +486,19 @@ struct DayPlanTimeBlockStep: View {
         let items = PlannerTimelineItem.layout(blocks: blocks, events: model.events, on: model.day, calendar: model.calendar)
         let allDay = model.events.filter(\.allDay)
         VStack(alignment: .leading, spacing: DS.Space.m) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Lay it into your day").font(.dayPlanHeading).accessibilityAddTraits(.isHeader)
-                Spacer(minLength: DS.Space.s)
-                Text(model.totals.capacityLabel).font(DS.Font.taskMeta).monospacedDigit().foregroundStyle(DS.Palette.textSecondary)
-                    .accessibilityLabel(model.totals.capacityAccessibility)
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Fit it in").font(.dayPlanHeading).accessibilityAddTraits(.isHeader)
+                    Spacer(minLength: DS.Space.s)
+                    Text(model.totals.capacityLabel).font(DS.Font.taskMeta).monospacedDigit().foregroundStyle(DS.Palette.textSecondary)
+                        .lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                        .accessibilityLabel(model.totals.capacityAccessibility)
+                }
+                VStack(alignment: .leading, spacing: DS.Space.xxs) {
+                    Text("Fit it in").font(.dayPlanHeading).accessibilityAddTraits(.isHeader)
+                    Text(model.totals.capacityLabel).font(DS.Font.taskMeta).monospacedDigit().foregroundStyle(DS.Palette.textSecondary)
+                        .accessibilityLabel(model.totals.capacityAccessibility)
+                }
             }
             controls(preview: preview)
             if let hint = model.historyHint {
@@ -546,11 +555,10 @@ struct DayPlanTimeBlockStep: View {
 
     private func previewBanner(_ fit: DayPlanFit) -> some View {
         let skipped = fit.didntFit.filter { $0.reason != .noEstimate }.count
-        let title = fit.placements.isEmpty ? "Nothing fits right now" : "Preview: \(fit.placements.count) placed · \(DayPlan.duration(fit.placedMinutes))"
+        let title = fit.placements.isEmpty ? "Nothing fits right now" : "\(fit.placements.count) fit, \(DayPlan.duration(fit.placedMinutes))" + (skipped > 0 ? " · \(skipped) don't" : "")
         return HStack(alignment: .top, spacing: DS.Space.s) {
             VStack(alignment: .leading, spacing: DS.Space.xxs) {
                 Label(title, systemImage: "wand.and.stars").font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.accent).accessibilityIdentifier("dayPlanPreview")
-                if skipped > 0 { Text(skipped == 1 ? "1 didn't fit" : "\(skipped) didn't fit").font(DS.Font.taskMeta).foregroundStyle(Color.dayPlanCaution) }
             }
             Spacer(minLength: 0)
             Button("Cancel") { model.cancelFit() }.buttonStyle(.borderless).accessibilityIdentifier("dayPlanFitCancel")
@@ -646,6 +654,8 @@ struct DayPlanTimeline: View {
     @ScaledMetric(relativeTo: .caption) private var hourHeight: CGFloat = 40
     @State private var targeted = false
     private let gutter: CGFloat = 46
+    /// The smallest a tile is drawn, so a 15 minute item can still be read and tapped. Longer items are exactly duration x scale.
+    private let compactTileHeight: CGFloat = 20
 
     private var dayStart: Date { Calendar.current.dateInterval(of: .day, for: day)?.start ?? day }
     private func minute(_ date: Date) -> Double { date.timeIntervalSince(dayStart) / 60 }
@@ -676,7 +686,7 @@ struct DayPlanTimeline: View {
                 }
                 ForEach(items) { item in
                     let laneWidth = width / CGFloat(max(1, item.laneCount))
-                    block(item).frame(width: max(20, laneWidth - 3), height: max(24, CGFloat(item.length) * ppm - 2), alignment: .topLeading)
+                    block(item).frame(width: max(20, laneWidth - 3), height: max(compactTileHeight, CGFloat(item.length) * ppm - 2), alignment: .topLeading)
                         .offset(x: gutter + laneWidth * CGFloat(item.lane), y: CGFloat(item.minute - r.start) * ppm + 1)
                 }
             }
@@ -698,13 +708,13 @@ struct DayPlanTimeline: View {
     @ViewBuilder private func block(_ item: PlannerTimelineItem) -> some View {
         switch item.content {
         case .event(let event):
-            tile(title: event.title, time: dayPlanClock(event.start) + "–" + dayPlanClock(event.end), symbol: "calendar", tint: DS.Palette.textSecondary, fill: DS.Palette.textSecondary.opacity(0.16), dashed: false, compact: item.length < 40)
+            tile(title: event.title, time: dayPlanClock(event.start) + "–" + dayPlanClock(event.end), symbol: "calendar", tint: DS.Palette.textSecondary, fill: DS.Palette.textSecondary.opacity(0.16), dashed: false, compact: item.length < 60)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Calendar: \(event.title), \(dayPlanClock(event.start)) to \(dayPlanClock(event.end))")
         case .task(let block):
             let preview = previewIDs.contains(block.task.id)
             let end = block.end.map { "–" + dayPlanClock($0) } ?? ""
-            tile(title: block.task.title, time: dayPlanClock(block.start) + end, symbol: preview ? "wand.and.stars" : "checkmark.circle", tint: DS.Palette.accent, fill: DS.Palette.accent.opacity(preview ? 0.10 : 0.20), dashed: preview, compact: item.length < 40)
+            tile(title: block.task.title, time: dayPlanClock(block.start) + end, symbol: preview ? "wand.and.stars" : "checkmark.circle", tint: DS.Palette.accent, fill: DS.Palette.accent.opacity(preview ? 0.10 : 0.20), dashed: preview, compact: item.length < 60)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel((preview ? "Proposed: " : "Scheduled: ") + block.task.title + ", " + dayPlanClock(block.start) + (block.end.map { " to " + dayPlanClock($0) } ?? ""))
         }
@@ -712,13 +722,19 @@ struct DayPlanTimeline: View {
     private func tile(title: String, time: String, symbol: String, tint: Color, fill: Color, dashed: Bool, compact: Bool) -> some View {
         HStack(alignment: .top, spacing: DS.Space.xs) {
             Image(systemName: symbol).font(DS.Font.chip).foregroundStyle(tint).accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 0) {
-                Text(title).font(DS.Font.chip).lineLimit(compact ? 1 : 2)
-                if !compact { Text(time).font(DS.Font.badge).foregroundStyle(DS.Palette.textSecondary) }
+            if compact {
+                // One line: the title, then the time, so a short or open-ended block still says when it is.
+                (Text(title).font(DS.Font.chip) + Text("  " + time).font(DS.Font.badge).foregroundColor(DS.Palette.textSecondary)).lineLimit(1)
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(title).font(DS.Font.chip).lineLimit(2)
+                    Text(time).font(DS.Font.badge).foregroundStyle(DS.Palette.textSecondary)
+                }
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xs)
+        .padding(.horizontal, DS.Space.s).padding(.vertical, compact ? 2 : DS.Space.xs)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(fill, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(tint.opacity(dashed ? 0.9 : 0.35), style: StrokeStyle(lineWidth: 1, dash: dashed ? [4, 3] : [])))
     }

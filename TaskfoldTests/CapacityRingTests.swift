@@ -61,8 +61,8 @@ final class CapacityRingTests: XCTestCase {
     func testDayWithoutWorkingHoursNeverOffersFit() {
         let off = ring([task("a", minutes: 120, date: "2026-11-14")], day: "2026-11-14")
         XCTAssertFalse(off.hasWorkingHours); XCTAssertFalse(off.offersFit); XCTAssertEqual(off.fraction, 0)
-        XCTAssertEqual(off.label, "2h planned · no working hours")
-        XCTAssertEqual(off.accessibilityLabel, "Capacity: 2 hours planned, no working hours")
+        XCTAssertEqual(off.label, "2h planned. Set working hours to see what fits.")
+        XCTAssertEqual(off.accessibilityLabel, "Capacity: 2 hours planned. Set working hours to see what fits.")
         XCTAssertFalse(ring([task("a", minutes: 120)], hours: nil).offersFit)
     }
 

@@ -72,8 +72,8 @@ struct DayPlanTotals: Equatable, Sendable {
     }
     var isOver: Bool { overMinutes > 0 }
     var overNote: String? { isOver ? "About \(DayPlan.duration(overMinutes)) more than your free time" : nil }
-    var capacityLabel: String { "\(DayPlan.duration(estimatedMinutes)) planned of \(DayPlan.duration(freeMinutes)) free" }
-    var capacityAccessibility: String { "Capacity: \(DayPlan.spoken(estimatedMinutes)) planned of \(DayPlan.spoken(freeMinutes)) free" }
+    var capacityLabel: String { "\(DayPlan.duration(estimatedMinutes)) planned · \(DayPlan.duration(freeMinutes)) free" }
+    var capacityAccessibility: String { "Capacity: \(DayPlan.spoken(estimatedMinutes)) planned, \(DayPlan.spoken(freeMinutes)) free" }
     /// 0...1 for a meter; full when over.
     var fraction: Double { freeMinutes > 0 ? min(1, Double(estimatedMinutes) / Double(freeMinutes)) : (estimatedMinutes > 0 ? 1 : 0) }
 }
@@ -101,15 +101,15 @@ struct CapacityRing: Equatable, Sendable {
         guard hasWorkingHours else { return 0 }
         return freeMinutes > 0 ? min(1, Double(plannedMinutes) / Double(freeMinutes)) : (plannedMinutes > 0 ? 1 : 0)
     }
-    /// "9h planned · 6h free"
+    /// "9h planned · 6h free", or "9h planned. Set working hours to see what fits."
     var label: String {
         hasWorkingHours ? "\(DayPlan.duration(plannedMinutes)) planned · \(DayPlan.duration(freeMinutes)) free"
-                        : "\(DayPlan.duration(plannedMinutes)) planned · no working hours"
+                        : "\(DayPlan.duration(plannedMinutes)) planned. Set working hours to see what fits."
     }
     /// "9 hours planned, 6 hours free, 3 hours over"
     var accessibilityLabel: String {
         var text = hasWorkingHours ? "Capacity: \(DayPlan.spoken(plannedMinutes)) planned, \(DayPlan.spoken(freeMinutes)) free"
-                                   : "Capacity: \(DayPlan.spoken(plannedMinutes)) planned, no working hours"
+                                   : "Capacity: \(DayPlan.spoken(plannedMinutes)) planned. Set working hours to see what fits."
         if isOver { text += ", \(DayPlan.spoken(overMinutes)) over" }
         if unestimatedCount > 0 { text += unestimatedCount == 1 ? ", 1 task without an estimate" : ", \(unestimatedCount) tasks without estimates" }
         return text
