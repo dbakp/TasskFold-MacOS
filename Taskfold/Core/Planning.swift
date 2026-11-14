@@ -254,9 +254,13 @@ enum Planning {
     /// this device) is a week or more old. `createdAt` is the age proxy; no notification is ever scheduled.
     static func review(_ someday: [Record], now: Date, lastReviewed: Date?, calendar: Calendar = .current) -> Review? {
         if let lastReviewed, let next = calendar.date(byAdding: .day, value: reviewIntervalDays, to: lastReviewed), now < next { return nil }
-        guard let cutoff = calendar.date(byAdding: .day, value: -reviewStaleDays, to: now) else { return nil }
-        let stale = someday.filter { task in TaskPlanning.instant(task.string("created_at")).map { $0 < cutoff } ?? false }.map(\.id)
+        let stale = staleIDs(someday, now: now, calendar: calendar)
         return stale.isEmpty ? nil : Review(staleIDs: stale)
+    }
+    /// Someday ideas that have waited more than `reviewStaleDays`, in the order given. The Weekly review reads this directly.
+    static func staleIDs(_ someday: [Record], now: Date, calendar: Calendar = .current) -> [String] {
+        guard let cutoff = calendar.date(byAdding: .day, value: -reviewStaleDays, to: now) else { return [] }
+        return someday.filter { task in TaskPlanning.instant(task.string("created_at")).map { $0 < cutoff } ?? false }.map(\.id)
     }
 
     // MARK: Quick Add
