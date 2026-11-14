@@ -150,6 +150,8 @@ struct RootView: View {
         .onContinueUserActivity(CSSearchableItemActionType) { activity in
             if let url = store.spotlightURL(for: activity) { handleExternalURL(url) }
         }
+        .onContinueUserActivity(HandoffActivity.activityType) { continueHandoff($0) }
+        .modifier(HandoffAdvertising())
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         #if DEBUG
         .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel() } }
@@ -162,6 +164,22 @@ struct RootView: View {
         .onChange(of: phase) { _, value in if value == .active { store.reloadFocusFilter(); Task { await store.reschedule(); await store.sync() } } }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
+    }
+
+    /// Continues what the person was viewing on another device. The payload is ids only; they are looked up in this
+    /// workspace, and anything missing or from another account becomes a message rather than a navigation.
+    private func continueHandoff(_ activity: NSUserActivity) {
+        switch HandoffActivity.resolve(activity.userInfo, account: store.userID, signedIn: store.signedIn,
+                                       hasTask: { store.record("tasks", id: $0) != nil }, hasProject: { store.record("projects", id: $0) != nil }) {
+        case .failure(let failure): store.error = failure.message
+        case .success(let destination):
+            switch destination {
+            case .today: workspace.section = .today
+            case .calendar: workspace.section = .calendar
+            case .project(let id): workspace.section = .project(id)
+            case .task(let id): if let url = SpotlightRoute.task(id).url(account: store.userID) { handleExternalURL(url) }
+            }
+        }
     }
 
     private func handleExternalURL(_ url: URL) {
@@ -880,3 +898,23 @@ enum DebugCapture {
     }
 }
 #endif
+
+/// Advertises what the window shows (one selected task, otherwise Today, Calendar or a project) as the single
+/// Handoff activity. Nothing is advertised while signed out or in a local-only account.
+struct HandoffAdvertising: ViewModifier {
+    @Environment(Store.self) private var store
+    @Environment(Workspace.self) private var workspace
+    private var destination: HandoffActivity.Destination? {
+        if workspace.selection.count == 1, let id = workspace.selection.first, store.record("tasks", id: id) != nil { return .task(id) }
+        switch workspace.section {
+        case .today: return .today
+        case .calendar: return .calendar
+        case .project(let id): return .project(id)
+        default: return nil
+        }
+    }
+    func body(content: Content) -> some View {
+        let activity = store.signedIn && !store.localMode ? destination.flatMap { HandoffActivity.make($0, account: store.userID) } : nil
+        content.userActivity(HandoffActivity.activityType, isActive: activity != nil) { activity?.apply(to: $0) }
+    }
+}
