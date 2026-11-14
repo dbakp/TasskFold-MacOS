@@ -57,6 +57,12 @@ final class PrivacyFactsTests: XCTestCase {
     func testCalendarLocationVoiceAndLinksStatements() throws {
         XCTAssertTrue(try XCTUnwrap(PrivacyFacts.item("calendar")).points.joined().contains("EventKit"))
         XCTAssertTrue(try XCTUnwrap(PrivacyFacts.item("calendar")).points.joined().contains("read-only"))
+        let calendar = try XCTUnwrap(PrivacyFacts.item("calendar"))
+        let text = ([calendar.summary] + calendar.points).joined(separator: " ")
+        XCTAssertFalse(text.contains("does not change your calendars"))
+        for phrase in ["Show time blocks in Calendar", "off until you switch it on", "full calendar access", "calendar named Taskfold", "task title", "Task notes are never copied", "only events it created", "Turning it off"] {
+            XCTAssertTrue(text.contains(phrase), phrase)
+        }
         XCTAssertTrue(try XCTUnwrap(PrivacyFacts.item("location")).points.joined().contains("Exception"))
         XCTAssertTrue(try XCTUnwrap(PrivacyFacts.item("voice")).points.joined().contains("on-device speech recognition"))
         let links = try XCTUnwrap(PrivacyFacts.item("links"))

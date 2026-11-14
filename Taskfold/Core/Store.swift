@@ -3158,6 +3158,7 @@ final class Store {
         #endif
         try widgetActionDisk().removeAccount(account)
         try sharedCaptureDisk().removeAccount(account)
+        await CalendarBlocksController.shared.eraseAccount(account)
         try await CalendarBusyStore.shared.eraseAccount(account)
         try await Task.detached(priority: .utility) { try vault.removeAll(); try BackupVault.removeDeviceKey(account: account) }.value
         for key in ["dailyBackups." + account, ReminderPreferences.timeSensitiveKey(account), FocusFinish.preferenceKey(account)] { UserDefaults.standard.removeObject(forKey: key) }

@@ -164,6 +164,7 @@ struct RootView: View {
         .modifier(CalendarContextFixtureControls())
         #endif
         .modifier(WidgetCapacityRefresh())
+        .modifier(CalendarBlocksSync())
         .onChange(of: phase) { _, value in if value == .active { store.reloadFocusFilter(); Task { await store.reschedule(); await store.sync() } } }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }

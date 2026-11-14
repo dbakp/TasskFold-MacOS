@@ -11,7 +11,7 @@ protocol PlannerCalendarProviding: Sendable {
     func calendars() async -> [PlannerCalendar]
     func events(ids: Set<String>, window: DateInterval, titles: Bool) async -> [PlannerEvent]
 }
-/// EventKit stays on one actor. The app reads selected events and never writes to calendars.
+/// EventKit stays on one actor. This type only reads selected events; writing time blocks is `SystemCalendarBlockStore`.
 actor SystemPlannerCalendarProvider: PlannerCalendarProviding {
     private let store = EKEventStore()
     func authorized() -> Bool { EKEventStore.authorizationStatus(for: .event) == .fullAccess }
@@ -32,7 +32,8 @@ actor SystemPlannerCalendarProvider: PlannerCalendarProviding {
         // EventKit interprets nil as all calendars. An empty selection must read nothing.
         guard !calendars.isEmpty else { return [] }
         let predicate = store.predicateForEvents(withStart: window.start, end: window.end, calendars: calendars)
-        let events = store.events(matching: predicate).filter { event in
+        // Taskfold's own time blocks are the planner's tasks already; counting them again would double busy time.
+        let events = CalendarBlocks.withoutBlocks(store.events(matching: predicate), marker: { (url: $0.url, notes: $0.notes) }).filter { event in
             event.availability != .free && event.status != .canceled && event.endDate > event.startDate
                 && !(event.attendees ?? []).contains { $0.isCurrentUser && $0.participantStatus == .declined }
         }.map { event in
