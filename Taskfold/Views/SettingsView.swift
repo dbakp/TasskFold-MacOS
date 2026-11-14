@@ -18,6 +18,7 @@ struct SettingsView: View {
                 MacSwipeSettings().tabItem { Label("Swipes", systemImage: "hand.draw") }.tag(SettingsTab.swipes)
                 AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag(SettingsTab.appearance)
                 AccountSettings().tabItem { Label("Account", systemImage: "person.crop.circle") }.tag(SettingsTab.account)
+                PrivacySettings().tabItem { Label("Privacy", systemImage: "hand.raised") }.tag(SettingsTab.privacy)
                 ImportSettings().tabItem { Label("Import", systemImage: "square.and.arrow.down") }.tag(SettingsTab.imports)
                 AccountToolsSettings().tabItem { Label("Invitations", systemImage: "person.2") }.tag(SettingsTab.invitations)
             }

@@ -5,16 +5,17 @@ import SwiftUI
 /// the ordinary Quick Add parser, and nothing is saved until "Add N tasks", which is one undo group.
 /// All rules live in Core/BrainDump.swift.
 
-/// A small badge that says nothing leaves the device.
+/// A small badge that says nothing leaves the device. Shown wherever an AI-assisted action appears (Brain dump,
+/// Suggest steps, Smart reschedule, Suggest a filter); its words come from PrivacyFacts so every screen matches.
 struct OnDeviceBadge: View {
     var body: some View {
-        Label("On-device", systemImage: "lock.fill")
+        Label(PrivacyFacts.badgeLabel, systemImage: "lock.fill")
             .font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary)
             .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xs)
             .background(DS.Palette.surfaceSunken, in: Capsule())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("On-device. Nothing leaves this device.")
-            .accessibilityIdentifier("onDeviceBadge")
+            .accessibilityLabel(PrivacyFacts.badgeAccessibilityLabel)
+            .accessibilityIdentifier(PrivacyFacts.badgeIdentifier)
     }
 }
 
