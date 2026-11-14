@@ -22,6 +22,8 @@ struct TaskListView: View {
     @Environment(Store.self) private var store
     @State private var ringBusy = CalendarBusyStore.shared
     @State private var hoursSettings = false
+    /// Today's folding rows fly to their own ring segment (round 3).
+    @State private var flight = FoldFlight()
     @Environment(\.openPinnedNotes) private var openPinnedNotes
     @Environment(\.openFocusSession) private var openFocusSession
     @Environment(\.openProjectPulse) private var openProjectPulse
@@ -274,7 +276,8 @@ struct TaskListView: View {
                 // ring is dashed and the button sets them.
                 TodayHeader(ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), date: Date(),
                             hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) },
-                            filling: Set(workspace.lingering.keys),
+                            // Segments wait for their folding row to land (round 3); with Reduce Motion they fill at once.
+                            pending: reduceMotion ? [] : Set(workspace.lingering.keys).subtracting(flight.landed), flight: flight,
                             plan: { workspace.planning = .day }, setHours: { hoursSettings = true })
                     .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
                     .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
@@ -381,7 +384,8 @@ struct TaskListView: View {
             .animation(layout, value: filtered.map(\.id))
             }
         }
-        .background(Color(nsColor: .textBackgroundColor))
+        .background(DS.Palette.surface)
+        .modifier(TodayFoldFlight(enabled: scope == .today, flight: flight))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation) } }
         .animation(Transitions.Ease.smoothOut, value: workspace.confirmation)
         .task(id: MomentumModel.trigger(store)) { if scope == .today { momentum.refresh(store: store) } }
@@ -625,7 +629,8 @@ struct TaskListView: View {
         return MacSwipeRow(controller: rowSwipe, completed: task.completed, canComplete: TaskKind.mayComplete(task), selected: workspace.selection.contains(task.id), prepare: {
             guard let intent else { return nil }
             return { command in performRowGesture(command, intent: intent) }
-        }) { TaskRowView(task: task, compactDate: dated).modifier(SomedayMute(task: task)).modifier(FoldAway(active: workspace.lingering[task.id] != nil, towardRing: scope == .today)) }
+        }) { TaskRowView(task: task, compactDate: dated).modifier(SomedayMute(task: task)).modifier(FoldAway(active: workspace.lingering[task.id] != nil, towardRing: scope == .today, id: task.id,
+                                                                                                                       hue: DS.Palette.project(store.record("projects", id: task.string("project_id"))))) }
         .remoteChangeHighlight(task.id)
         .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
         .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }
@@ -1038,5 +1043,16 @@ private struct QuickReferenceOptionRow: View {
     }
     private var symbol: String {
         switch option.group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; case "due_date": return "calendar"; case "due_time": return "clock"; case "recurrence": return "repeat"; case "reminder_specs": return "bell"; default: return "tag" }
+    }
+}
+
+/// Today's fold flight (round 3): the strips draw above the list and rows find their ring segment through the environment.
+private struct TodayFoldFlight: ViewModifier {
+    var enabled: Bool
+    var flight: FoldFlight
+    func body(content: Content) -> some View {
+        content
+            .overlay { if enabled { FoldFlightLayer(model: flight) } }
+            .environment(\.foldFlight, enabled ? flight : nil)
     }
 }

@@ -124,7 +124,7 @@ struct ChildTaskStructureView: View {
                         .disabled(pending || model?.busy == true).accessibilityIdentifier("childStructureAdd")
                 }
                 Section {
-                    Button("Suggest steps for this task", systemImage: "wand.and.stars") { stepOpening = .init(root: rootID) }
+                    Button("Suggest steps for this task", systemImage: "sparkles") { stepOpening = .init(root: rootID) }
                         .disabled(pending || model?.busy == true || !store.online || read.context.root.completed || !TaskKind.mayComplete(read.context.root) || read.records.nodes.count >= 1000).accessibilityIdentifier("reviewSavedTaskSteps")
                 }
                 if read.records.orderedNodes.isEmpty { ContentUnavailableView("Room for your next step", systemImage: "list.bullet", description: Text("Add a subtask to start shaping this task.")) }
@@ -144,7 +144,7 @@ struct ChildTaskStructureView: View {
                                 .accessibilityIdentifier("removeChildStructure-" + node.key)
                         }.font(.callout).buttonStyle(.borderless)
                             .disabled(pending || model?.busy == true)
-                        Button("Suggest steps", systemImage: "wand.and.stars") { stepOpening = .init(root: rootID, parent: node.key) }
+                        Button("Suggest steps", systemImage: "sparkles") { stepOpening = .init(root: rootID, parent: node.key) }
                             .accessibilityLabel("Suggest steps for " + (node.fields["title"]?.text ?? "subtask"))
                             .font(.callout).buttonStyle(.borderless).disabled(pending || model?.busy == true || !store.online || node.fields["completed"] == .bool(true) || node.fields["is_heading"] == .bool(true) || node.path.count >= 24 || read.records.nodes.count >= 1000)
                             .accessibilityIdentifier("reviewSavedChildSteps-" + node.key)

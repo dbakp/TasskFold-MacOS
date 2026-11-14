@@ -79,7 +79,7 @@ struct ReviewedTaskStepsView: View {
                             ProgressView("Suggesting steps…")
                             Button("Stop", action: stopGeneration).accessibilityIdentifier("reviewedStepsStopGeneration")
                         } else {
-                            Button(steps.isEmpty ? "Suggest steps" : "Try different steps", systemImage: "wand.and.stars", action: generate)
+                            Button(steps.isEmpty ? "Suggest steps" : "Try different steps", systemImage: "sparkles", action: generate)
                                 .disabled(!store.online || model?.busy == true || TaskBreakdownEngine.unavailableReason != nil || (try? TaskBreakdownRequest.goal(goal)) == nil)
                                 .accessibilityIdentifier("reviewedStepsGenerate")
                         }
@@ -291,7 +291,7 @@ struct SavedReviewedTaskStepsLink: View {
         Group {
         if scope != nil, store.childTaskStructureEditingEnabled || hasHistory || historyUnavailable {
             Section {
-                Button("Saved step additions", systemImage: "wand.and.stars") { showing = true }
+                Button("Saved step additions", systemImage: "sparkles") { showing = true }
                     .sheet(isPresented: $showing) {
                         NavigationStack {
                             List {

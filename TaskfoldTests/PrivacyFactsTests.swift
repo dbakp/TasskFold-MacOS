@@ -35,10 +35,14 @@ final class PrivacyFactsTests: XCTestCase {
     func testAIClaimsNoCloudPath() throws {
         let ai = try XCTUnwrap(PrivacyFacts.item("ai"))
         let text = ([ai.summary] + ai.points).joined(separator: " ")
-        XCTAssertTrue(text.contains("on this device"))
+        XCTAssertTrue(text.contains("on " + PrivacyFacts.deviceNoun))
         XCTAssertTrue(text.contains("never leaves"))
         XCTAssertFalse(text.contains("code path"))
-        for feature in ["Brain dump", "Suggest steps", "Smart reschedule", "Suggest a filter"] { XCTAssertTrue(text.contains(feature), feature) }
+        // Round 3 copy: what happens, in plain words, not a list of feature names.
+        XCTAssertTrue(ai.summary.hasPrefix("Suggestions use Apple Intelligence on "), ai.summary)
+        XCTAssertTrue(ai.summary.contains("without sending your words anywhere"), ai.summary)
+        XCTAssertTrue(ai.points.contains("Without Apple Intelligence, simpler rules run instead."))
+        XCTAssertFalse(ai.summary.contains("Suggest a filter"), "no feature-name list")
     }
 
     func testAnalyticsSaysOnlyWhatTheCodeShows() throws {

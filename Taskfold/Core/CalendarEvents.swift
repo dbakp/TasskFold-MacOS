@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import EventKit
+import CoreGraphics
 
 struct PlannerCalendar: Identifiable, Equatable, Sendable {
     var id: String, title: String, source: String
@@ -26,6 +27,13 @@ actor SystemPlannerCalendarProvider: PlannerCalendarProviding {
         guard authorized() else { return [] }
         return store.calendars(for: .event).map { PlannerCalendar(id: $0.calendarIdentifier, title: $0.title, source: $0.source.title) }.sorted { ($0.source, $0.title, $0.id) < ($1.source, $1.title, $1.id) }
     }
+    /// "#RRGGBB" for a calendar colour, read in sRGB. Nil when it has no colour or cannot be converted.
+    static func hex(_ colour: CGColor?) -> String? {
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB), let converted = colour?.converted(to: space, intent: .defaultIntent, options: nil),
+              let parts = converted.components, parts.count >= 3 else { return nil }
+        let byte = { (value: CGFloat) in Int((min(1, max(0, value)) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", byte(parts[0]), byte(parts[1]), byte(parts[2]))
+    }
     func events(ids: Set<String>, window: DateInterval, titles: Bool) -> [PlannerEvent] {
         guard authorized() else { return [] }
         let calendars = store.calendars(for: .event).filter { ids.contains($0.calendarIdentifier) }
@@ -39,7 +47,7 @@ actor SystemPlannerCalendarProvider: PlannerCalendarProviding {
         }.map { event in
             PlannerEvent(id: event.calendar.calendarIdentifier + ":" + (event.eventIdentifier ?? event.calendarItemIdentifier) + ":" + String(event.startDate.timeIntervalSinceReferenceDate),
                 calendarID: event.calendar.calendarIdentifier, title: titles ? (event.title ?? "Busy") : "Busy", source: event.calendar.title,
-                start: event.startDate, end: event.endDate, allDay: event.isAllDay)
+                start: event.startDate, end: event.endDate, allDay: event.isAllDay, color: Self.hex(event.calendar.cgColor))
         }
         return Array(Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }).values).sorted { $0.start == $1.start ? $0.id < $1.id : $0.start < $1.start }
     }

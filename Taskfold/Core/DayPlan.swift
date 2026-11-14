@@ -503,6 +503,16 @@ struct TodayRing: Equatable, Sendable {
     /// "of 6h", or nil without working hours.
     var capacity: String? { hasWorkingHours ? "of " + DayPlan.duration(freeMinutes) : nil }
     var isOver: Bool { hasWorkingHours && plannedMinutes > freeMinutes }
+    /// Round 3: the part of the circle no task covers (free time not yet planned), as a start and length in fractions of
+    /// the circle. Only this part shows a track, as a dashed hairline; planned work has no grey under it.
+    var remainder: (start: Double, length: Double) {
+        let end = min(1, segments.last.map { $0.start + $0.length } ?? 0)
+        return (end, max(0, 1 - end))
+    }
+    /// Where a task's segment is centred, as a fraction of the circle clockwise from 12 o'clock: the fold flies there.
+    func midpoint(of id: String) -> Double? {
+        segments.first { $0.id == id }.map { $0.start + $0.length / 2 }
+    }
     /// One VoiceOver label carrying every figure the ring shows.
     var accessibilityLabel: String {
         var text = "Today: \(DayPlan.spoken(plannedMinutes)) planned"

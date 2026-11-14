@@ -67,7 +67,7 @@ struct TaskBreakdownView: View {
                         ProgressView("Suggesting steps…").accessibilityIdentifier("breakdownProgress")
                         Button("Stop") { stop() }.accessibilityIdentifier("breakdownStop")
                     } else {
-                        Button(steps.isEmpty ? "Suggest steps" : "Try different steps", systemImage: "wand.and.stars") { generate() }
+                        Button(steps.isEmpty ? "Suggest steps" : "Try different steps", systemImage: "sparkles") { generate() }
                             .disabled(!isCurrent || generation.closed || goalProblem != nil)
                             .accessibilityIdentifier("breakdownGenerate")
                     }

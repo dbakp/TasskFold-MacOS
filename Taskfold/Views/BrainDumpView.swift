@@ -43,7 +43,7 @@ struct OnDeviceSheetShell<Content: View>: View {
                 Button("Cancel", action: cancel).keyboardShortcut(.cancelAction).accessibilityIdentifier(cancelIdentifier)
                 Spacer()
                 if let primaryTitle {
-                    Button(primaryTitle, action: primary).keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
+                    Button(primaryTitle, action: primary).keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).tint(DS.Palette.accentFill)
                         .disabled(!primaryEnabled).accessibilityValue(primaryValue).accessibilityHint(primaryHint).accessibilityIdentifier(primaryIdentifier)
                 }
             }.padding(.horizontal, DS.Space.xxl).padding(.vertical, DS.Space.m)
@@ -57,7 +57,7 @@ struct OnDeviceSheetShell<Content: View>: View {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: cancel).accessibilityIdentifier(cancelIdentifier) }
                     ToolbarItem(placement: .confirmationAction) {
                         if let primaryTitle {
-                            Button(primaryTitle, action: primary).disabled(!primaryEnabled).accessibilityValue(primaryValue).accessibilityHint(primaryHint).accessibilityIdentifier(primaryIdentifier)
+                            Button(primaryTitle, action: primary).tint(DS.Palette.accentFill).disabled(!primaryEnabled).accessibilityValue(primaryValue).accessibilityHint(primaryHint).accessibilityIdentifier(primaryIdentifier)
                         }
                     }
                 }

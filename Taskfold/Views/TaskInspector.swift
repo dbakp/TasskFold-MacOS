@@ -406,7 +406,7 @@ struct TaskInspectorForm: View {
                 Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
             }
             if canBreakDown {
-                Button("Suggest steps", systemImage: "wand.and.stars") {
+                Button("Suggest steps", systemImage: "sparkles") {
                     saveTask?.cancel()
                     guard saveNow() else { return }
                     do { breakdown = try TaskBreakdownRequest(workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, source: draft, depth: workspace.taskDepth(taskID)) }
