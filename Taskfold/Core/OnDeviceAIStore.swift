@@ -12,9 +12,9 @@ extension Store {
     }
 
     /// The deterministic plan for the overdue tasks on screen. `events` are busy times from the connected calendar.
-    func smartReschedulePlan(events: [PlannerEvent], workingDays: Int = SmartReschedule.defaultWorkingDays, now: Date = Date(), hours: WorkingHours? = nil) -> SmartReschedule.Plan {
+    func smartReschedulePlan(events: [PlannerEvent], workingDays: Int = SmartReschedule.defaultWorkingDays, now: Date = Date(), hours: WorkingHours? = nil, only: Set<String>? = nil) -> SmartReschedule.Plan {
         SmartReschedule.plan(tasks: activeTasks, events: events, hours: hours ?? workingHours, workingDays: workingDays, now: now,
-                             held: Set(planningState.evening), isEditable: { smartRescheduleIsEditable($0) })
+                             held: Set(planningState.evening), only: only, isEditable: { smartRescheduleIsEditable($0) })
     }
     /// How many overdue tasks Smart reschedule could move. Cheap enough for a header: one pass over due-date strings.
     func smartRescheduleCandidateCount(now: Date = Date()) -> Int {

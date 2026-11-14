@@ -437,7 +437,7 @@ extension WorkspaceBackup {
                     row["query_ast"] = restoredRule.document
                     for (old, new) in zip(originalRule.querySectionKeys, restoredRule.querySectionKeys) { queryOrderKeys["scope:view:" + original.id + ":group:" + old] = new }
                 }
-                if table == "view_orders", !ActualTime.isActualKey(row.id) { row["ids"] = .array(try original["ids"].list.map { .string(try mapped("tasks", $0.text)) }) }
+                if table == "view_orders", !ActualTime.isActualKey(row.id), !WeeklyReview.isKey(row.id) { row["ids"] = .array(try original["ids"].list.map { .string(try mapped("tasks", $0.text)) }) }
                 row.fields.removeValue(forKey: "updated_at")
                 let existing = currentRows[table]?[canonical(row.id)]
                 if let existing {

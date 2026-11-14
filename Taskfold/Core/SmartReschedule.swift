@@ -144,14 +144,15 @@ enum SmartReschedule {
     /// - Parameters:
     ///   - tasks: every active task. Overdue ones are candidates; the rest only fill days.
     ///   - held: ids that sit in another planning list (This Evening) and are never candidates.
+    ///   - only: when set, only these ids are candidates (the Weekly review's slipped tasks); other overdue tasks are left alone.
     ///   - isEditable: whether the person may change a task; read-only shared work is never touched.
     static func plan(tasks: [Record], events: [PlannerEvent], hours: WorkingHours?, workingDays: Int = defaultWorkingDays,
-                     now: Date = Date(), held: Set<String> = [], calendar: Calendar = .current,
+                     now: Date = Date(), held: Set<String> = [], only: Set<String>? = nil, calendar: Calendar = .current,
                      isEditable: (Record) -> Bool = { _ in true }) -> Plan {
         let count = max(1, min(workingDays, 30))
         let today = TaskPlanner.dayKey(now, calendar: calendar)
         let hours = hours ?? WorkingHours()
-        var overdue = tasks.filter { isOverdue($0, today: today, calendar: calendar) && !held.contains($0.id) }
+        var overdue = tasks.filter { isOverdue($0, today: today, calendar: calendar) && !held.contains($0.id) && only?.contains($0.id) != false }
         let readOnly = overdue.filter { !isEditable($0) }.count
         overdue = overdue.filter(isEditable)
         if overdue.count > maximumTasks { overdue = Array(prioritised(overdue, calendar: calendar).prefix(maximumTasks)) }

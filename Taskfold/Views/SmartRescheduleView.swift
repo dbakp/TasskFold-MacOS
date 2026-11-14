@@ -6,6 +6,8 @@ import SwiftUI
 struct SmartRescheduleRequest: Identifiable {
     let id = UUID()
     let workspace: WorkspaceBinding
+    /// When set, only these tasks are planned (the Weekly review's slipped tasks); other overdue work is left alone.
+    var only: Set<String>? = nil
 }
 
 struct SmartRescheduleView: View {
@@ -249,10 +251,10 @@ struct SmartRescheduleView: View {
         invalidateNotes()
         var next: SmartReschedule.Plan
         #if DEBUG
-        if AIFixture.enabled { next = store.smartReschedulePlan(events: events, workingDays: workingDays, now: AIFixture.now(), hours: AIFixture.hours) }
-        else { next = store.smartReschedulePlan(events: events, workingDays: workingDays) }
+        if AIFixture.enabled { next = store.smartReschedulePlan(events: events, workingDays: workingDays, now: AIFixture.now(), hours: AIFixture.hours, only: request.only) }
+        else { next = store.smartReschedulePlan(events: events, workingDays: workingDays, only: request.only) }
         #else
-        next = store.smartReschedulePlan(events: events, workingDays: workingDays)
+        next = store.smartReschedulePlan(events: events, workingDays: workingDays, only: request.only)
         #endif
         let planned = Set(next.placements.map(\.taskID) + next.unplaced.map(\.taskID))
         tasks = Dictionary(store.activeTasks.filter { planned.contains($0.id) }.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
