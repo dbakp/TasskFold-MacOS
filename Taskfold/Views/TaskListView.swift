@@ -274,7 +274,7 @@ struct TaskListView: View {
                 // ring is dashed and the button sets them.
                 TodayHeader(ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), date: Date(),
                             hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) },
-                            filling: Set(workspace.completing),
+                            filling: Set(workspace.lingering.keys),
                             plan: { workspace.planning = .day }, setHours: { hoursSettings = true })
                     .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
                     .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
@@ -625,7 +625,7 @@ struct TaskListView: View {
         return MacSwipeRow(controller: rowSwipe, completed: task.completed, canComplete: TaskKind.mayComplete(task), selected: workspace.selection.contains(task.id), prepare: {
             guard let intent else { return nil }
             return { command in performRowGesture(command, intent: intent) }
-        }) { TaskRowView(task: task, compactDate: dated).modifier(SomedayMute(task: task)) }
+        }) { TaskRowView(task: task, compactDate: dated).modifier(SomedayMute(task: task)).modifier(FoldAway(active: workspace.lingering[task.id] != nil, towardRing: scope == .today)) }
         .remoteChangeHighlight(task.id)
         .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
         .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }

@@ -82,3 +82,76 @@ struct TodayHeader: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+// MARK: - Fold to complete (the signature)
+
+enum FoldMotion {
+    /// DEBUG `--slow-fold` stretches the fold twelve times so a frame can be captured mid-crease.
+    static var slowFactor: Double {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("--slow-fold") ? 12 : 1
+        #else
+        1
+        #endif
+    }
+    /// About 450 ms, the same as the completed row's linger.
+    static var duration: Double { 0.45 * slowFactor }
+}
+
+/// Ticking a task folds its row: it creases along its middle, the two halves fold flat (rotation3DEffect), and the
+/// folded strip shrinks toward the ring (`towardRing`) while its segment fills. Reduce Motion: the row fades.
+/// The animated copies are hidden from accessibility and hit testing; the real row stays in place, transparent.
+struct FoldAway: ViewModifier {
+    var active: Bool
+    var towardRing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// 0...1: the crease closing, then the folded strip travelling. Animated by the native effects that read them.
+    @State private var fold: Double = 0
+    @State private var travel: Double = 0
+    func body(content: Content) -> some View {
+        if reduceMotion {
+            content.opacity(active ? 0 : 1).animation(.easeOut(duration: FoldMotion.duration * 0.6), value: active)
+        } else {
+            content
+                .opacity(active ? 0 : 1)
+                .overlay {
+                    if active {
+                        content.modifier(FoldHalves(fold: fold, travel: travel, towardRing: towardRing))
+                            .allowsHitTesting(false).accessibilityHidden(true)
+                    }
+                }
+                // A lingering row can be a fresh view that is already active, so start the fold one frame after it appears.
+                .task(id: active) {
+                    fold = 0; travel = 0
+                    guard active else { return }
+                    try? await Task.sleep(for: .milliseconds(16))
+                    let d = FoldMotion.duration
+                    withAnimation(.spring(duration: d * 0.55, bounce: 0.1)) { fold = 1 }
+                    withAnimation(.spring(duration: d * 0.65, bounce: 0.05).delay(d * 0.35)) { travel = 1 }
+                }
+        }
+    }
+}
+
+/// The two halves of a folding row: each half turns about the crease, then the folded strip shrinks and travels.
+struct FoldHalves: ViewModifier {
+    var fold: Double
+    var travel: Double
+    var towardRing: Bool
+    func body(content: Content) -> some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            VStack(spacing: 0) {
+                content.frame(width: w, height: h, alignment: .top).frame(width: w, height: h / 2, alignment: .top).clipped()
+                    .overlay(Color.black.opacity(0.06 * fold))
+                    .rotation3DEffect(.degrees(-80 * fold), axis: (x: 1, y: 0, z: 0), anchor: .bottom, perspective: 0.55)
+                content.frame(width: w, height: h, alignment: .bottom).frame(width: w, height: h / 2, alignment: .bottom).clipped()
+                    .overlay(Color.black.opacity(0.14 * fold))
+                    .rotation3DEffect(.degrees(80 * fold), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.55)
+            }
+            .scaleEffect(1 - 0.7 * travel, anchor: .leading)
+            .offset(x: towardRing ? -8 * travel : 0, y: (towardRing ? -110 : -12) * travel)
+            .opacity(1 - 0.9 * travel)
+        }
+    }
+}
