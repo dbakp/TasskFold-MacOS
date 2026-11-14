@@ -38,9 +38,7 @@ struct SubtaskOrganizerButton: View {
     var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
     var body: some View {
         Group {
-        // Reordering needs at least two subtasks; with fewer there is nothing to organise, so the row stays out of the way.
-        if children.list.count >= 2 {
-        Button("Reorder", systemImage: "list.bullet.indent") {
+        Button("Edit subtasks", systemImage: "list.bullet.indent") {
             let workspace=admittedWorkspace ?? WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration)
             let root=custodyRoot ?? store.record("tasks",id:sourceRootID ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
             var record=sourceRecord ?? root.flatMap{TaskEditorSourceContext.projection($0,reference:taskID)} ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID)])
@@ -50,8 +48,7 @@ struct SubtaskOrganizerButton: View {
             if let present { present(request) } else { opening = request }
         }
             .accessibilityIdentifier("organizeSubtasks")
-            .accessibilityLabel("Reorder subtasks")
-        }
+            .accessibilityLabel("Edit subtasks")
         ChildTaskFieldEditorLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID, reference: SubtaskTree.referencePath(taskID) == nil ? nil : taskID)
         ChildTaskStructureLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID, show: presentHierarchy)
         }
