@@ -28,6 +28,10 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.dbakp.taskfold.continue</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
