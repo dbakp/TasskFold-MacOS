@@ -32,7 +32,7 @@ struct PlannerSettingsView: View {
                 .disabled(!editable)
                 Section("Device calendars") {
                     Text(busy.deviceStatus).foregroundStyle(.secondary)
-                    Text("Taskfold only reads the calendars you select here. Calendar choices apply immediately and stay on this device; connect calendars separately on your other devices.").font(.caption).foregroundStyle(.secondary)
+                    Text("Taskfold only reads the calendars you select here, for busy time. Calendar choices apply immediately and stay on this device; connect calendars separately on your other devices.").font(.caption).foregroundStyle(.secondary)
                     if busy.connected {
                         ForEach(busy.calendars) { calendar in
                             Toggle(isOn: Binding(get: { busy.selected.contains(calendar.id) }, set: { value in var ids = busy.selected; if value { ids.insert(calendar.id) } else { ids.remove(calendar.id) }; busy.select(ids) })) {
@@ -66,6 +66,7 @@ struct PlannerSettingsView: View {
                     .accessibilityHint("Manage calendar access under Privacy and Security, Calendars")
                     #endif
                 }
+                CalendarBlocksSettingsSection()
                 if let links=busy.links,!links.configured.isEmpty || links.active {
                     LinkedCalendarSettingsSection(links:links)
                 }
@@ -73,7 +74,7 @@ struct PlannerSettingsView: View {
                     Section("Event privacy") {
                         Toggle("Show event titles",isOn:Binding(get:{busy.showTitles},set:{busy.setTitles($0)}))
                             .accessibilityIdentifier("plannerShowEventTitles")
-                        Text("Titles are hidden as “Busy” by default. Private events stay private. Calendar events are read only and are never copied into tasks. Select each calendar once across your connections.")
+                        Text("Titles are hidden as “Busy” by default. Private events stay private. Calendar events you read are never copied into tasks. Select each calendar once across your connections.")
                             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                     }
                 }
