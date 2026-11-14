@@ -268,6 +268,30 @@ struct MomentumCard: View {
     }
 }
 
+/// How the person's estimates compare with the time tasks took (ActualTime.swift). Personal and calm: one sentence
+/// and its basis, no score, no streak. Drawn only once there are enough finished tasks to say something honest.
+struct EstimateInsightCard: View {
+    let accuracy: EstimateAccuracy
+    var body: some View {
+        if let message = accuracy.message {
+            VStack(alignment: .leading, spacing: DS.Space.s) {
+                Text("Estimates").font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.textSecondary).accessibilityAddTraits(.isHeader)
+                Text(message).font(.system(.title3, design: .rounded).weight(.semibold)).fixedSize(horizontal: false, vertical: true)
+                if let detail = accuracy.detail {
+                    Text(detail).font(.footnote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(DS.Space.xl)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(DS.Palette.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.xl + DS.Space.xs, style: .continuous))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Estimates")
+            .accessibilityValue(message + ". " + (accuracy.detail ?? ""))
+            .accessibilityIdentifier("estimateInsightCard")
+        }
+    }
+}
+
 /// A thin capsule track with a rounded fill.
 private struct ProgressCapsule: View {
     let progress: Double

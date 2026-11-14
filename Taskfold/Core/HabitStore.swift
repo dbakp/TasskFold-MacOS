@@ -79,6 +79,8 @@ final class PomodoroModel {
     private(set) var tally = PomodoroTally()
     private var account = ""
     private var defaults: UserDefaults
+    /// The last ended session whose time was recorded, so the per-second reconcile does not look it up again.
+    @ObservationIgnored private var settledFocusKey = ""
 
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
@@ -111,6 +113,10 @@ final class PomodoroModel {
     /// launch and after a sync. Also starts the next work round when auto-start is on.
     func reconcile(_ store: Store, workspace: WorkspaceBinding, now: Date = Date()) {
         load(account: store.userID)
+        if let session = store.focusSession, session.status == .stopped || session.finished(at: now) {
+            let key = "\(account)|\(session.id)|\(session.changedAt)"
+            if settledFocusKey != key { settledFocusKey = key; store.recordFocusTime(session, at: now) }
+        }
         guard cycle != nil else { return }
         let outcome = PomodoroCycle.reconcile(cycle, session: store.focusSession, settings: settings, now: now)
         var changed = outcome.cycle != cycle

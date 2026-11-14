@@ -2060,8 +2060,39 @@ final class Store {
                 error = "Choose an open task to start or resume Focus."; return false
             }
         }
-        do { return commit([try FocusSessionChange.make(session, current: focusRecord, account: userID)], remember: false) }
-        catch { self.error = error.localizedDescription; return false }
+        let previous = focusSession
+        do {
+            guard commit([try FocusSessionChange.make(session, current: focusRecord, account: userID)], remember: false) else { return false }
+            // Actual time (ActualTime.swift): the session being left, and the new one when it is paused or stopped.
+            let now = Date()
+            if let previous, previous.id != session?.id { recordFocusTime(settledFocus(previous, at: now), at: now) }
+            if let session, session.status != .running { recordFocusTime(session, at: now) }
+            return true
+        } catch { self.error = error.localizedDescription; return false }
+    }
+    // MARK: Actual time (see ActualTime.swift)
+
+    /// Seconds of Focus time recorded for one task.
+    func actualSeconds(_ taskID: String) -> Int {
+        ActualTime.seconds(ActualTime.entries(record(ActualTime.table, id: ActualTime.key(taskID)), account: userID))
+    }
+    /// How the estimates of tasks finished in the last 30 days compare with the time they took.
+    var estimateAccuracy: EstimateAccuracy? {
+        EstimateAccuracy.reading(tasks: tasks, totals: ActualTime.totals(rows: rows(ActualTime.table), account: userID), now: Date(), calendar: habitCalendar)
+    }
+    /// Records a Focus session's time against its task. Idempotent: the same session never counts twice, and a
+    /// running session is recorded only once its time has run out. Quiet: a refusal never interrupts Focus.
+    @discardableResult
+    func recordFocusTime(_ session: FocusSession?, at now: Date = Date()) -> Bool {
+        guard let session, workspaceCacheReadable, signedIn || localMode, !userID.isEmpty else { return false }
+        guard let change = try? ActualTime.recording(session, at: now, rows: rows(ActualTime.table), account: userID) else { return false }
+        let shown = error
+        guard commit([change], remember: false) else { error = shown; return false }
+        return true
+    }
+    /// The session as it stands once it is replaced or left: a session still running is counted up to now.
+    func settledFocus(_ session: FocusSession, at now: Date) -> FocusSession {
+        session.status == .stopped ? session : ((try? session.stopped(at: now)) ?? session)
     }
     @discardableResult func resolveFocusConflict(id: UUID, keepLocal: Bool) -> Bool {
         guard let conflict = focusSyncConflict, conflict.id == id,

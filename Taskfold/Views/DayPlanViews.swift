@@ -98,6 +98,13 @@ final class DayPlanModel {
     }
 
     var calendar: Calendar { .current }
+    /// "Based on your history, today may take ~7h": a caption only. It never changes the scheduling or Fit my day.
+    /// Nil until the estimate-versus-actual reading is reliable (ActualTime.swift).
+    var historyHint: (text: String, spoken: String)? {
+        guard let accuracy = store?.estimateAccuracy, let text = accuracy.dayHint(plannedMinutes: totals.estimatedMinutes),
+              let spoken = accuracy.dayHintSpoken(plannedMinutes: totals.estimatedMinutes) else { return nil }
+        return (text, spoken)
+    }
     var dayStart: Date { calendar.dateInterval(of: .day, for: day)?.start ?? day }
     var events: [PlannerEvent] {
         #if DEBUG
@@ -287,6 +294,7 @@ struct DayPlanStepIndicator: View {
 
 struct DayPlanCapacityCard: View {
     let totals: DayPlanTotals
+    var hint: (text: String, spoken: String)? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
             VStack(alignment: .leading, spacing: DS.Space.xxs) {
@@ -306,13 +314,17 @@ struct DayPlanCapacityCard: View {
                 Text(totals.unestimatedCount == 1 ? "1 task has no estimate yet." : "\(totals.unestimatedCount) tasks have no estimate yet.")
                     .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
             }
+            if let hint {
+                Text(hint.text).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("dayPlanHistoryHint")
+            }
         }
         .padding(DS.Space.l)
         .frame(maxWidth: .infinity, alignment: .leading)
         .modifier(CardSurface(radius: DS.Radius.l))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(totals.capacityAccessibility)
-        .accessibilityValue(totals.overNote ?? "Fits your free time")
+        .accessibilityValue((totals.overNote ?? "Fits your free time") + (hint.map { ". " + $0.spoken } ?? ""))
         .accessibilityIdentifier("dayPlanCapacity")
     }
 }
@@ -373,7 +385,7 @@ struct DayPlanEstimateStep: View {
         let estimated = tasks.filter { $0.durationMinutes != nil }
         VStack(alignment: .leading, spacing: DS.Space.l) {
             Text("How long will each one take?").font(.dayPlanHeading).accessibilityAddTraits(.isHeader)
-            DayPlanCapacityCard(totals: model.totals)
+            DayPlanCapacityCard(totals: model.totals, hint: model.historyHint)
             if tasks.isEmpty {
                 Text("Nothing is planned for today yet.").font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary)
             } else if pending.isEmpty {
@@ -480,6 +492,10 @@ struct DayPlanTimeBlockStep: View {
                     .accessibilityLabel(model.totals.capacityAccessibility)
             }
             controls(preview: preview)
+            if let hint = model.historyHint {
+                Text(hint.text).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true).accessibilityLabel(hint.spoken).accessibilityIdentifier("dayPlanTimeBlockHistoryHint")
+            }
             if let preview { previewBanner(preview) }
             else if let message = model.feedback { feedbackBanner(message) }
             if !allDay.isEmpty {
