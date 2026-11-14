@@ -20,6 +20,8 @@ final class RowOrderMemory { var ids: [String] = [] }
 
 struct TaskListView: View {
     @Environment(Store.self) private var store
+    @State private var ringBusy = CalendarBusyStore.shared
+    @State private var hoursSettings = false
     @Environment(\.openPinnedNotes) private var openPinnedNotes
     @Environment(\.openFocusSession) private var openFocusSession
     @Environment(\.openProjectPulse) private var openProjectPulse
@@ -267,8 +269,19 @@ struct TaskListView: View {
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
+            if scope == .today && workspace.search.isEmpty {
+                // The ring leads Today (design review round 2). Plan opens the day planner; without working hours the
+                // ring is dashed and the button sets them.
+                TodayHeader(ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), date: Date(),
+                            hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) },
+                            filling: Set(workspace.completing),
+                            plan: { workspace.planning = .day }, setHours: { hoursSettings = true })
+                    .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
+                    .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+                    .sheet(isPresented: $hoursSettings) { PlannerSettingsView(busy: ringBusy) }
+            }
             HStack(spacing: DS.Space.s) {
-                if scope == .today { DayPlanTodayPrompt(plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
+                if scope == .today { DayPlanTodayPrompt(offersPlanElsewhere: true, plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
                 if scope == .today, let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
                 if scope == .today, let habits = store.habitTodaySummary { HabitsChip(summary: habits) { workspace.section = .habits } }
                 Spacer(minLength: 0)

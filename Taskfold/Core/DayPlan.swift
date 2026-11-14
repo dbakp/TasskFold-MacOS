@@ -470,3 +470,86 @@ enum DayPlan {
         return "\(summary.dailyStreak.length)-day streak"
     }
 }
+
+// MARK: - Today ring (design review, redesign round 2)
+
+/// One task's share of the Today header ring: its project colour, sized by its estimate.
+struct RingSegment: Equatable, Identifiable, Sendable {
+    var id: String
+    var projectID: String
+    var minutes: Int
+    var done: Bool
+    /// Where the segment starts and how long it is, as fractions of the full circle (0...1).
+    var start: Double
+    var length: Double
+}
+
+/// Today's header: a ring whose segments are today's estimated tasks (done ones at full colour, open ones as a tint)
+/// on a track that stands for free capacity, beside "4h 10m of 6h". Free time and working hours come from
+/// `DayPlan.capacityRing`, so the header and the planner always agree.
+struct TodayRing: Equatable, Sendable {
+    var segments: [RingSegment]
+    /// Estimated minutes of today's tasks, open and done.
+    var plannedMinutes: Int
+    var doneMinutes: Int
+    var freeMinutes: Int
+    var hasWorkingHours: Bool
+    var taskCount: Int
+    var doneCount: Int
+    var unestimatedCount: Int
+
+    /// "4h 10m"
+    var figure: String { DayPlan.duration(plannedMinutes) }
+    /// "of 6h", or nil without working hours.
+    var capacity: String? { hasWorkingHours ? "of " + DayPlan.duration(freeMinutes) : nil }
+    var isOver: Bool { hasWorkingHours && plannedMinutes > freeMinutes }
+    /// One VoiceOver label carrying every figure the ring shows.
+    var accessibilityLabel: String {
+        var text = "Today: \(DayPlan.spoken(plannedMinutes)) planned"
+        text += hasWorkingHours ? " of \(DayPlan.spoken(freeMinutes)) free" : ". Working hours not set"
+        if doneMinutes > 0 { text += ", \(DayPlan.spoken(doneMinutes)) done" }
+        if taskCount > 0 { text += ". \(doneCount) of \(taskCount) " + (taskCount == 1 ? "task" : "tasks") + " done" }
+        if unestimatedCount > 0 { text += unestimatedCount == 1 ? ", 1 without an estimate" : ", \(unestimatedCount) without estimates" }
+        return text
+    }
+}
+
+extension DayPlan {
+    /// The ring for `day`. Segments are today's ordinary top-level tasks with an estimate, open or done, timed tasks
+    /// first by start, then the given order. The ring's full circle is the larger of free time and planned time, so the
+    /// grey track left over is free capacity and an over-full day fills the ring. Without working hours the segments
+    /// share the whole circle and the caller draws a dashed track.
+    static func todayRing(_ tasks: [Record], events: [PlannerEvent], on day: Date, hours: WorkingHours?, calendar: Calendar = .current) -> TodayRing {
+        let key = TaskPlanner.dayKey(day, calendar: calendar)
+        let capacity = capacityRing(tasks, events: events, on: day, hours: hours, calendar: calendar)
+        let todays = tasks.enumerated().filter { _, task in
+            !task.id.isEmpty && TaskKind.mayComplete(task) && SubtaskTree.referencePath(task.id) == nil && TaskPlanner.plannedDay(task, calendar: calendar) == key
+        }
+        let ordered = todays.sorted { a, b in
+            let sa = TaskPlanning.start(a.element, calendar: calendar), sb = TaskPlanning.start(b.element, calendar: calendar)
+            switch (sa, sb) {
+            case let (x?, y?): return x == y ? a.offset < b.offset : x < y
+            case (.some, nil): return true
+            case (nil, .some): return false
+            case (nil, nil): return a.offset < b.offset
+            }
+        }.map(\.element)
+        let estimated = ordered.filter { $0.durationMinutes != nil }
+        let planned = estimated.reduce(0) { $0 + ($1.durationMinutes ?? 0) }
+        let done = estimated.filter(\.completed).reduce(0) { $0 + ($1.durationMinutes ?? 0) }
+        let whole = capacity.hasWorkingHours ? max(capacity.freeMinutes, planned) : planned
+        var cursor = 0.0
+        var segments: [RingSegment] = []
+        if whole > 0 {
+            for task in estimated {
+                let minutes = task.durationMinutes ?? 0
+                let length = Double(minutes) / Double(whole)
+                segments.append(RingSegment(id: task.id, projectID: task.string("project_id"), minutes: minutes, done: task.completed, start: cursor, length: length))
+                cursor += length
+            }
+        }
+        return TodayRing(segments: segments, plannedMinutes: planned, doneMinutes: done, freeMinutes: capacity.freeMinutes,
+                         hasWorkingHours: capacity.hasWorkingHours, taskCount: ordered.count, doneCount: ordered.filter(\.completed).count,
+                         unestimatedCount: ordered.filter { $0.durationMinutes == nil }.count)
+    }
+}
