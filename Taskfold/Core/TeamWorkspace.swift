@@ -344,6 +344,8 @@ struct WorkspaceRefreshPreparation: Sendable {
 
 @MainActor extension Backend {
     static let workspaceTables=["projects","sections","labels","tasks","profiles","project_collaborators","saved_views","favorites","view_preferences","view_orders",WorkflowTemplate.table,ReminderSnooze.table,FocusSessionChange.table,TaskActivity.epochTable,TaskActivity.table]
+    /// Read after the required tables and never fatal: a missing table or failed read keeps what is held.
+    static let optionalWorkspaceTables=[TaskDependencies.table]
     func workspaceBoundary(account:String) async throws -> TeamWorkspaceBoundary {
         guard session?.user.id==account else {throw CancellationError()}
         let origin=try accountRemovalOrigin
@@ -380,6 +382,7 @@ struct WorkspaceRefreshPreparation: Sendable {
                     return TeamWorkspaceRead(tables:try TeamWorkspaceCache(boundary:before,previous:nil,pending:[]).filtering(remote),boundary:before,raw:remote,plan:plan)
                 }
                 for table in Self.workspaceTables where plan.tables.contains(table) {remote[table]=try await rows(table,expectedAccount:account,maximumRows:100000)}
+                if plan.tables.contains(TaskDependencies.table),let links=await dependencyRows() {remote[TaskDependencies.table]=links}
                 if plan.activity {
                     let epoch=try await rows(TaskActivity.epochTable,expectedAccount:account,maximumRows:100000)
                     if let held=base.tables[TaskActivity.table],base.tables[TaskActivity.epochTable]==epoch,let floor=ActivityIncrement.floor(held) {
@@ -394,6 +397,7 @@ struct WorkspaceRefreshPreparation: Sendable {
                 }
             } else {
                 for table in Self.workspaceTables {remote[table]=try await rows(table,expectedAccount:account,maximumRows:100000)}
+                if let links=await dependencyRows() {remote[TaskDependencies.table]=links}
                 remote[TaskAssignmentProvenance.table]=await assignmentProvenanceRows()
                 if let history = await nodeActivityHistory(expectedAccount: account) { remote.merge(history.tables) { _, new in new } }
             }

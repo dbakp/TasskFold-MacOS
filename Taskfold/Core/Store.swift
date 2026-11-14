@@ -249,6 +249,8 @@ final class Store {
         }
     }
     @ObservationIgnored private let taskCache = TaskCache()
+    /// Blocked-task index for the current snapshot and access epoch; rebuilt only when either changes.
+    @ObservationIgnored private var dependencyIndexCache: (key: String, index: TaskDependencies.Index)?
     @ObservationIgnored private let dayGroupsReadCache = TaskDayGroupsReadCache()
     private(set) var taskRevision = 0 { didSet { datedReadRevision = UUID() } }
     private(set) var calendarContext = TaskCalendarContext()
@@ -2132,7 +2134,9 @@ final class Store {
         let archived = projectCatalog.archivedIDs
         // Someday work is undated and filed away: it stays out of Inbox (it remains in projects, All and search).
         let someday = query.scope == .inbox ? Planning.listedSomeday(rows: rows(Planning.table), account: userID) : []
-        return matches.filter { !archived.contains($0.string("project_id")) && (someday.isEmpty || !Planning.hides($0, listed: someday)) }
+        // Today and Upcoming leave out work that waits on an open task, unless the viewer chose to show it.
+        let blocked = (query.scope == .today || query.scope == .upcoming) && !query.showBlocked ? dependencyIndex.blocked : []
+        return matches.filter { !archived.contains($0.string("project_id")) && (someday.isEmpty || !Planning.hides($0, listed: someday)) && (blocked.isEmpty || !blocked.contains(TaskDependencies.normalized($0.id))) }
     }
     /// A synchronous presentation read. Observing the live snapshot even on
     /// hits keeps date/completion/archive/access edits visible to SwiftUI. All
@@ -8592,3 +8596,71 @@ extension Store {
     }
 }
 #endif
+
+// MARK: - Dependencies lite
+/// "Blocked by" links and the "Waiting on" note. Pure rules live in `TaskDependencies`; this is the store seam.
+extension Store {
+    /// Index of the readable tasks and links for the current snapshot. Reading `snapshot` first keeps SwiftUI observing it.
+    var dependencyIndex: TaskDependencies.Index {
+        _ = snapshot
+        let links = rows(TaskDependencies.table)
+        if links.isEmpty { return .empty }
+        let key = snapshotRevision.uuidString + "|" + presentationAccessEpoch.uuidString
+        if let cached = dependencyIndexCache, cached.key == key { return cached.index }
+        let index = TaskDependencies.Index(tasks: rows("tasks"), dependencies: links)
+        dependencyIndexCache = (key, index)
+        return index
+    }
+    /// Blockers of one task, with titles only for tasks this account can read.
+    func blockerLines(for taskID: String) -> [TaskDependencies.BlockerLine] { dependencyIndex.lines(for: taskID) }
+    /// The subtle row marker (and its VoiceOver label) for a blocked and/or waiting task.
+    func dependencyIndicator(for task: Record) -> TaskDependencies.Indicator? {
+        let note = task.string("waiting_on")
+        let lines = dependencyIndex.lines(for: task.id)
+        if lines.isEmpty && note.isEmpty { return nil }
+        return TaskDependencies.indicator(openBlockers: lines, waitingOn: note)
+    }
+    /// Team workspace tasks are outside this feature: the server refuses their links, so none are queued.
+    private func dependencyEligible(_ taskID: String) -> Bool {
+        guard let task = record("tasks", id: taskID), TaskKind.mayComplete(task) else { return false }
+        let teams = (activeTeamMask ?? snapshot.teamWorkspace)?.knownTeams ?? [:]
+        let project = task.string("project_id")
+        if !project.isEmpty && teams[project] != nil { return false }
+        if (activeTeamMask ?? snapshot.teamWorkspace)?.knownTasks.contains(task.id) == true { return false }
+        return true
+    }
+    /// Whether the editor may offer "Blocked by" for this saved task.
+    func supportsDependencies(taskID: String) -> Bool { (signedIn || localMode) && workspaceCacheReadable && dependencyEligible(taskID) }
+    /// Open, eligible tasks the picker can offer, found with the shared task search.
+    func dependencyCandidates(for taskID: String, search: String) -> [Record] {
+        let eligible = tasks.filter { dependencyEligible($0.id) }
+        return TaskDependencies.candidates(for: taskID, search: search, tasks: eligible, dependencies: rows(TaskDependencies.table))
+    }
+    /// Adds one link. Loops, self-blocking, duplicates and the cap are refused here and again by the database.
+    @discardableResult func addDependency(task taskID: String, blockedBy blockerID: String) -> Bool {
+        guard supportsDependencies(taskID: taskID), dependencyEligible(blockerID) else {
+            error = TaskDependencies.Rejection.unavailable.localizedDescription; return false
+        }
+        if let rejection = TaskDependencies.rejection(adding: blockerID, to: taskID, edges: TaskDependencies.edges(rows(TaskDependencies.table))) {
+            error = rejection.localizedDescription; return false
+        }
+        let row = Mutation(table: TaskDependencies.table, recordID: TaskDependencies.id(task: taskID, blocker: blockerID), method: "POST", fields: [
+            "id": .string(TaskDependencies.id(task: taskID, blocker: blockerID)), "user_id": .string(userID),
+            "task_id": .string(record("tasks", id: taskID)?.id ?? taskID), "blocked_by_task_id": .string(record("tasks", id: blockerID)?.id ?? blockerID),
+            "created_at": .string(Dates.timestamp())], insertOnly: true)
+        return commit([row])
+    }
+    @discardableResult func removeDependency(id: String) -> Bool {
+        guard record(TaskDependencies.table, id: id) != nil else { return true }
+        return commit([Mutation(table: TaskDependencies.table, recordID: id, method: "DELETE", fields: [:])])
+    }
+    /// The "Waiting on" note, validated and trimmed; nil clears it.
+    @discardableResult func setWaitingOn(taskID: String, note: String?) -> Bool {
+        guard var task = record("tasks", id: taskID) else { return false }
+        let normalized = note.flatMap(TaskDependencies.normalizedWaitingOn)
+        guard task.string("waiting_on") != (normalized ?? "") else { return true }
+        let baseline = task
+        task["waiting_on"] = normalized.map { .string($0) } ?? .null
+        return save("tasks", task, baseline: baseline)
+    }
+}

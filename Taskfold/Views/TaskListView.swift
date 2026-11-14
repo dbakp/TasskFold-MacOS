@@ -33,6 +33,12 @@ struct TaskListView: View {
     private var priorityFilter: Int { get { store.viewValue(scope, field: "priority_filter", fallback: .number(0)).integer } nonmutating set { store.setViewValue(scope, field: "priority_filter", value: .number(Double(newValue))) } }
     private var sortBy: String { get { store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text } nonmutating set { store.setViewValue(scope, field: "sort_by", value: .string(newValue)) } }
     @AppStorage("defaultView") private var defaultView = "today"
+    /// Device-local, so the shared view-preference rows keep their schema.
+    @AppStorage("showBlockedTasks.today") private var showBlockedToday = false
+    @AppStorage("showBlockedTasks.upcoming") private var showBlockedUpcoming = false
+    private var showBlockedBinding: Binding<Bool>? {
+        switch scope { case .today: return $showBlockedToday; case .upcoming: return $showBlockedUpcoming; default: return nil }
+    }
     private var overdueCollapsed: Bool { get { store.viewValue(scope, field: "overdue_collapsed", fallback: .bool(false)).flag } nonmutating set { store.setViewValue(scope, field: "overdue_collapsed", value: .bool(newValue)) } }
     private var quickAdd: String {
         get { workspace.quickAdd }
@@ -132,7 +138,7 @@ struct TaskListView: View {
         return store.matching(taskQuery)
     }
     private var taskQuery: TaskQuery {
-        TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: manualOrder ? "manual" : sortBy, labelName: title)
+        TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: manualOrder ? "manual" : sortBy, labelName: title, showBlocked: showBlockedBinding?.wrappedValue ?? false)
     }
     private func ordered(_ tasks: [Record], day: String) -> [Record] { manualOrder ? workspace.arranged(tasks, key: day) : tasks }
     /// Non-dated lists rank inside device-local groups: one per project section, one per scope.
@@ -730,6 +736,7 @@ struct TaskListView: View {
                 Button(defaultView == preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = preferenceKey }
                 Menu("Filter") {
                 Toggle("Show Completed", isOn: Binding(get: { showCompleted }, set: { showCompleted = $0 }))
+                if let showBlocked = showBlockedBinding { Toggle("Show Blocked Tasks", isOn: showBlocked).accessibilityIdentifier("viewShowBlocked") }
                 Picker("Priority", selection: Binding(get: { priorityFilter }, set: { priorityFilter = $0 })) { Text("All Priorities").tag(0); ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
                 }
                 Picker("Sort", selection: Binding(get: { manualOrder ? "manual" : sortBy }, set: { sortBy = $0 })) { Text("Default Order").tag("manual"); Text("Due Date").tag("date"); Text("Title").tag("title"); Text("Deadline").tag("deadline"); Text("Estimate").tag("duration") }

@@ -271,6 +271,7 @@ struct TaskInspectorForm: View {
                     if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(DS.Palette.danger).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure").id("taskProjectMoveFailure") }
                     linksSection
                     subtasksSection
+                    dependenciesSection
                     attachmentsSection
                     commentsSection
                     footer
@@ -709,6 +710,17 @@ struct TaskInspectorForm: View {
                 draft["subtasks"] = changed
             } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
         }.disabled(row.request == nil)
+    }
+
+    /// Blocked-by links and the "Waiting on" note. Only saved, non-team, top-level tasks offer them.
+    @ViewBuilder private var dependenciesSection: some View {
+        if !isCreating, !isTeamTask, Workspace.subtaskPath(taskID) == nil, store.supportsDependencies(taskID: taskID) {
+            block("dependencies", "Blocked by", summary: store.blockerLines(for: taskID).isEmpty ? nil : "\(store.blockerLines(for: taskID).count)") {
+                TaskDependencyRows(taskID: taskID)
+                TaskWaitingOnField(task: draft)
+                Text("Hidden from Today and Upcoming until every blocker is completed or deleted.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+            }
+        }
     }
 
     private var attachmentsSection: some View {

@@ -138,7 +138,7 @@ final class IncrementalWorkspaceReadTests: XCTestCase {
         XCTAssertEqual(project.tables, ["projects", "sections", "project_collaborators"], "a project delete cascades to its children")
     }
     func testOrdinaryAndDerivedTablesCoverEveryWorkspaceTable() {
-        XCTAssertEqual(WorkspaceReadPlanner.ordinaryTables.union([TaskActivity.table, TaskActivity.epochTable]), Set(Backend.workspaceTables),
+        XCTAssertEqual(WorkspaceReadPlanner.ordinaryTables.union([TaskActivity.table, TaskActivity.epochTable]), Set(Backend.workspaceTables).union(Backend.optionalWorkspaceTables),
                        "a table added to the full read must also be classified for incremental reads")
     }
 

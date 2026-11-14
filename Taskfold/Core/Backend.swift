@@ -1562,6 +1562,14 @@ final class Backend: NSObject {
         guard let result = try? await rows(TaskAssignmentProvenance.table), generation == sessionGeneration, session?.user.id == account else { return nil }
         return result
     }
+    /// Dependencies are optional like assignment history: before the migration is deployed, or if the read fails,
+    /// the table is unknown. That never stops core task sync and keeps whatever rows are already held.
+    func dependencyRows() async -> [Record]? {
+        let generation = sessionGeneration, account = session?.user.id
+        guard account != nil else { return nil }
+        guard let result = try? await rows(TaskDependencies.table, maximumRows: 100000), generation == sessionGeneration, session?.user.id == account else { return nil }
+        return result
+    }
     /// Missing/denied/partial/future history is unavailable, never an empty
     /// certified feed. A start/end epoch and session fence cover the full read.
     func nodeActivityHistory(expectedAccount: String? = nil, held: TaskNodeActivity.Feed? = nil) async -> TaskNodeActivity.Feed? {
@@ -1866,7 +1874,7 @@ extension Backend {
         let socket = URLSession.shared.webSocketTask(with: components.url!)
         socket.resume()
         defer { socket.cancel(with: .goingAway, reason: nil); changeLedger.noteDisconnected() }
-        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", SharedComment.table, SharedMention.table].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
+        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", SharedComment.table, SharedMention.table, TaskDependencies.table].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
         let join: [String: JSON] = ["topic": .string("realtime:taskfold-ios"), "event": .string("phx_join"), "ref": .string("1"), "join_ref": .string("1"), "payload": .object(["access_token": .string(session.access_token), "config": .object(["postgres_changes": .array(subscriptions)])])]
         try await socket.send(.string(String(decoding: TaskfoldJSONEncoder().encode(join), as: UTF8.self)))
         let heartbeat = Task { @MainActor in
