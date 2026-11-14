@@ -342,7 +342,7 @@ struct CapacityRingView: View {
     @ScaledMetric(relativeTo: .caption) private var diameter: CGFloat = 40
     private var tint: Color { ring.isOver ? Color.dayPlanCaution : DS.Palette.accent }
     var body: some View {
-        let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: DS.Space.s)) : AnyLayout(HStackLayout(spacing: DS.Space.m))
+        let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: DS.Space.s)) : AnyLayout(HStackLayout(alignment: .center, spacing: DS.Space.m))
         layout {
             HStack(spacing: DS.Space.m) {
                 if showsRing {
@@ -367,9 +367,9 @@ struct CapacityRingView: View {
             .accessibilityIdentifier("capacityRing")
             if ring.offersFit, let fit {
                 Button(action: fit) {
-                    Label("Fit my day", systemImage: "sparkles").font(.caption.weight(.semibold)).frame(minWidth: 44, minHeight: 44)
+                    Label("Fit my day", systemImage: "sparkles").font(.caption.weight(.semibold)).lineLimit(1).fixedSize().frame(minWidth: 44, minHeight: 24)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.bordered).controlSize(.small).fixedSize()
                 .accessibilityHint("Previews a schedule that fits your free time and asks before moving tasks")
                 .accessibilityIdentifier("capacityRingFit")
             }

@@ -239,7 +239,7 @@ struct HourlyPlannerView: View {
                             HStack(spacing: 12) { completeButton(task); estimate(task); Spacer(minLength: 8); taskScheduleButton(task) }
                         }
                     } else {
-                        HStack(spacing: 10) { completeButton(task); taskTitle(task); estimate(task); taskScheduleButton(task) }
+                        HStack(spacing: 10) { completeButton(task); taskTitle(task); estimate(task); taskScheduleButton(task, labelled: true) }
                     }
                 }.padding(10).background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 12))
             }
@@ -260,11 +260,14 @@ struct HourlyPlannerView: View {
             } else { Image(systemName: "text.alignleft").foregroundStyle(.secondary).frame(width: 44, height: 44).accessibilityLabel("Heading") }
         }
     }
-    private func taskScheduleButton(_ task: Record) -> some View {
-        Button { choose(task) } label: { Image(systemName: "clock").font(.system(size: 20)).frame(width: 44, height: 44) }.accessibilityLabel("Schedule " + task.title).accessibilityIdentifier("plannerAllDay-" + task.id).id("all-day-action-" + task.id)
+    private func taskScheduleButton(_ task: Record, labelled: Bool = false) -> some View {
+        Button { choose(task) } label: {
+            if labelled { Text("Schedule").font(.caption.weight(.semibold)).padding(.horizontal, 8).frame(minHeight: 44) }
+            else { Image(systemName: "clock").font(.system(size: 20)).frame(width: 44, height: 44) }
+        }.accessibilityLabel("Schedule " + task.title).accessibilityIdentifier("plannerAllDay-" + task.id).id("all-day-action-" + task.id)
     }
     private func estimate(_ task: Record) -> some View {
-        Text(TaskKind(task) == .heading ? "Heading" : task.durationMinutes.map { "\($0)m" } ?? "No estimate").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        Text(TaskKind(task) == .heading ? "Heading" : task.durationMinutes.map { DayPlan.duration($0) } ?? "No estimate").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
     }
     /// Fixed-height blocks cannot contain full accessibility-size text. Keep the same plans and
     /// mutations in a readable agenda, with the graphical timeline available as a view choice.

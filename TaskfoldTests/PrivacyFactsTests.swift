@@ -36,7 +36,11 @@ final class PrivacyFactsTests: XCTestCase {
         let ai = try XCTUnwrap(PrivacyFacts.item("ai"))
         let text = ([ai.summary] + ai.points).joined(separator: " ")
         XCTAssertTrue(text.contains("on " + PrivacyFacts.deviceNoun))
-        XCTAssertTrue(text.contains("never leaves"))
+        // The lead says it once; no bullet repeats it.
+        XCTAssertFalse(text.contains("never leaves"))
+        XCTAssertFalse(ai.points.contains { $0.contains("without sending") || $0.contains("for AI") })
+        XCTAssertTrue(ai.points.contains("Tasks you accept are saved like any other, and sync only if you sign in."))
+        XCTAssertEqual(ai.points.count, 2)
         XCTAssertFalse(text.contains("code path"))
         // Round 3 copy: what happens, in plain words, not a list of feature names.
         XCTAssertTrue(ai.summary.hasPrefix("Suggestions use Apple Intelligence on "), ai.summary)
