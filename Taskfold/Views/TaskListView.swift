@@ -20,6 +20,8 @@ final class RowOrderMemory { var ids: [String] = [] }
 
 struct TaskListView: View {
     @Environment(Store.self) private var store
+    @State private var ringBusy = CalendarBusyStore.shared
+    @State private var hoursSettings = false
     @Environment(\.openPinnedNotes) private var openPinnedNotes
     @Environment(\.openFocusSession) private var openFocusSession
     @Environment(\.openProjectPulse) private var openProjectPulse
@@ -267,8 +269,19 @@ struct TaskListView: View {
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
+            if scope == .today && workspace.search.isEmpty {
+                // The ring leads Today (design review round 2). Plan opens the day planner; without working hours the
+                // ring is dashed and the button sets them.
+                TodayHeader(ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), date: Date(),
+                            hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) },
+                            filling: Set(workspace.lingering.keys),
+                            plan: { workspace.planning = .day }, setHours: { hoursSettings = true })
+                    .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
+                    .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+                    .sheet(isPresented: $hoursSettings) { PlannerSettingsView(busy: ringBusy) }
+            }
             HStack(spacing: DS.Space.s) {
-                if scope == .today { DayPlanTodayPrompt(plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
+                if scope == .today { DayPlanTodayPrompt(offersPlanElsewhere: true, plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
                 if scope == .today, let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
                 if scope == .today, let habits = store.habitTodaySummary { HabitsChip(summary: habits) { workspace.section = .habits } }
                 Spacer(minLength: 0)
@@ -612,7 +625,7 @@ struct TaskListView: View {
         return MacSwipeRow(controller: rowSwipe, completed: task.completed, canComplete: TaskKind.mayComplete(task), selected: workspace.selection.contains(task.id), prepare: {
             guard let intent else { return nil }
             return { command in performRowGesture(command, intent: intent) }
-        }) { TaskRowView(task: task, compactDate: dated).modifier(SomedayMute(task: task)) }
+        }) { TaskRowView(task: task, compactDate: dated).modifier(SomedayMute(task: task)).modifier(FoldAway(active: workspace.lingering[task.id] != nil, towardRing: scope == .today)) }
         .remoteChangeHighlight(task.id)
         .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
         .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }

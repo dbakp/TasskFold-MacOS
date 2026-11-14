@@ -343,7 +343,7 @@ struct TaskInspectorForm: View {
                     } else if let current { workspace.complete(current) }
                 } label: {
                     CheckMark(checked: draft.completed, color: DS.Palette.priority(draft.priority), emphasized: draft.priority < 4,
-                              size: DS.Size.checkbox, stroke: draft.priority < 4 ? nil : DS.Palette.textTertiary, restFill: draft.priority < 4 ? 0.1 : 0)
+                              size: DS.Size.checkbox, stroke: draft.priority < 4 ? nil : DS.Palette.textTertiary, restFill: draft.priority < 4 ? 0.1 : 0, priority: draft.priority)
                         .frame(width: DS.Space.xxl + DS.Space.xs, height: DS.Space.xxl + DS.Space.xs).contentShape(.rect)
                 }
                 .buttonStyle(.plain).pointerStyle(.link).disabled(isTeamTask)

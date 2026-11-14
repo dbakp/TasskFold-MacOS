@@ -108,7 +108,11 @@ struct HoverHighlight: ViewModifier {
 
 extension Color {
     /// The accent chosen in Settings ▸ Appearance (a local preference using iOS-compatible values). Read live so a change repaints.
-    static var taskfold: Color { adaptiveAccent(UserDefaults.standard.string(forKey: "accent") ?? "rose") }
+    static var taskfold: Color {
+        let key = UserDefaults.standard.string(forKey: "accent") ?? "rose"
+        // "rose" keeps its stored key; it is now the brand crimson (#C8102E light, #FF4F6B dark), which already reads at 4.5:1.
+        return key == "rose" ? Color(brand: Brand.crimson) : adaptiveAccent(key)
+    }
     static func accentValue(_ value: String) -> Color {
         let hex = value.replacingOccurrences(of: "custom:", with: "").replacingOccurrences(of: "#", with: "")
         if hex.count == 6, let n = UInt64(hex, radix: 16) { return Color(red: Double((n >> 16) & 255)/255, green: Double((n >> 8) & 255)/255, blue: Double(n & 255)/255) }
@@ -146,7 +150,7 @@ extension Color {
         })
     }
     static let accents: [(key: String, name: String, color: Color)] = [
-        ("rose", "Rose", Color(red: 0.88, green: 0.12, blue: 0.30)),
+        ("rose", "Crimson", Color(red: 0.784, green: 0.063, blue: 0.180)),
         ("coral", "Coral", Color(red: 0.96, green: 0.36, blue: 0.30)),
         ("amber", "Amber", Color(red: 0.95, green: 0.60, blue: 0.10)),
         ("moss", "Moss", Color(red: 0.24, green: 0.62, blue: 0.40)),
@@ -155,13 +159,19 @@ extension Color {
         ("indigo", "Indigo", Color(red: 0.36, green: 0.36, blue: 0.86)),
         ("plum", "Plum", Color(red: 0.62, green: 0.30, blue: 0.72)),
     ]
-    static func priority(_ value: Int) -> Color { [1: .red, 2: .orange, 3: .blue, 4: .secondary][value] ?? .secondary }
+    /// Priority as a colour, for flags and pickers. In task rows priority is the strength of the check (`CheckStrength`).
+    static func priority(_ value: Int) -> Color {
+        switch value {
+        case 1: Color(brand: Brand.crimson)
+        case 2: Color(brand: Brand.crimson, opacity: 0.6, darkOpacity: 0.6)
+        case 3: Color(brand: Brand.ink, opacity: 0.55, darkOpacity: 0.6)
+        default: Color(brand: Brand.secondary)
+        }
+    }
+    /// A stored project colour drawn as its nearest identity-palette hue. Stored values are never rewritten.
+    /// Prefer `DS.Palette.project(record)`, which also gives colourless projects a stable hue from their id.
     static func project(_ value: String) -> Color {
-        let names: [String: Color] = ["red": .red, "orange": .orange, "yellow": .yellow, "green": .green, "blue": .blue, "purple": .purple, "pink": .pink, "gray": .gray, "teal": .teal, "berry_red": .taskfold, "charcoal": .gray]
-        if let color = names[value] { return color }
-        let hex = value.replacingOccurrences(of: "#", with: "")
-        if let number = UInt64(hex, radix: 16), hex.count == 6 { return Color(red: Double((number >> 16) & 255) / 255, green: Double((number >> 8) & 255) / 255, blue: Double(number & 255) / 255) }
-        return .taskfold
+        ProjectPalette.rgb(stored: value).map { ProjectPalette.nearest($0).color } ?? ProjectPalette.inbox.color
     }
 }
 
@@ -179,14 +189,24 @@ struct CheckMark: View {
     var restFill: Double = 0
     /// Faint tick shown while hovering the control.
     var previewCheck = false
+    /// When set, the open ring is drawn as the priority's check strength (P1 2.5pt crimson with a 15% fill down to a
+    /// P4 hairline) and the done fill is `doneColor` (the project colour). `color`/`emphasized` then only tint the glyphs.
+    var priority: Int? = nil
+    var doneColor: Color? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var fill: Color { doneColor ?? (emphasized ? color : Color.taskfold) }
     var body: some View {
         ZStack {
+            if let priority {
+                PriorityCheck(priority: priority, checked: false, size: size).opacity(checked ? 0 : 1)
+                    .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: checked)
+            } else {
             Circle().fill((stroke ?? color).opacity(checked ? 0 : restFill))
             Circle().strokeBorder((stroke ?? color).opacity(stroke != nil || emphasized ? 0.9 : 0.55), lineWidth: emphasized ? 1.6 : 1.3)
                 .opacity(checked ? 0 : 1)
                 .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: checked)
-            Circle().fill(checked ? (emphasized ? color : Color.taskfold) : .clear)
+            }
+            Circle().fill(checked ? fill : .clear)
                 .scaleEffect(checked ? 1 : 0.6)
                 .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: checked)
             DrawnCheck()
@@ -195,7 +215,7 @@ struct CheckMark: View {
                 .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: previewCheck)
             DrawnCheck()
                 .trim(from: 0, to: checked ? 1 : 0)
-                .stroke(Color.contrastingForeground(on: emphasized ? color : .taskfold), style: StrokeStyle(lineWidth: max(1.6, size * 0.11), lineCap: .round, lineJoin: .round))
+                .stroke(doneColor != nil ? Color.white : Color.contrastingForeground(on: emphasized ? color : .taskfold), style: StrokeStyle(lineWidth: max(1.6, size * 0.11), lineCap: .round, lineJoin: .round))
                 .rotationEffect(.degrees(checked || reduceMotion ? 0 : 80))
                 .blur(radius: checked || reduceMotion ? 0 : Transitions.Blur.large * 0.4)
                 .opacity(checked ? 1 : 0)

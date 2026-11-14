@@ -25,38 +25,47 @@ enum DS {
         static let xl: CGFloat = 20
     }
 
-    /// Dynamic Type text styles by role (Mac column).
+    /// Dynamic Type text styles by role (Mac column). Display text is SF Pro Expanded semibold; every time and count is tabular.
     enum Font {
-        static let screenTitle = SwiftUI.Font.title2.weight(.semibold)
+        static let screenTitle = SwiftUI.Font.title2.weight(.semibold).width(.expanded)
         static let sectionHeader = SwiftUI.Font.subheadline.weight(.semibold)
         static let taskTitle = SwiftUI.Font.body
         /// Pair with `Palette.textSecondary`.
         static let taskNote = SwiftUI.Font.subheadline
-        static let taskMeta = SwiftUI.Font.footnote
+        static let taskMeta = SwiftUI.Font.footnote.monospacedDigit()
         static let chip = SwiftUI.Font.caption.weight(.medium)
         static let badge = SwiftUI.Font.caption2.weight(.semibold).monospacedDigit()
         static let inspectorLabel = SwiftUI.Font.subheadline
+        /// The ring figure, "4h 10m of 6h".
+        static let ringFigure = SwiftUI.Font.title3.weight(.semibold).width(.expanded).monospacedDigit()
+        /// A date line under a title, sentence case, never an ALL-CAPS eyebrow.
+        static let dateLine = SwiftUI.Font.subheadline
+        /// Times on time-grid blocks.
+        static let blockTime = SwiftUI.Font.caption.weight(.semibold).width(.expanded).monospacedDigit()
     }
 
-    /// Semantic colour. Priority and accent pass through to the existing palette tables in Motion.swift.
+    /// Semantic colour, from Core/Brand.swift. Crimson owns "act / today" only; dates are ink except overdue.
     enum Palette {
-        static var textPrimary: Color { Color(nsColor: .labelColor) }
-        static var textSecondary: Color { Color(nsColor: .secondaryLabelColor) }
-        static var textTertiary: Color { Color(nsColor: .tertiaryLabelColor) }
+        static var textPrimary: Color { Color(brand: Brand.ink) }
+        static var textSecondary: Color { Color(brand: Brand.secondary) }
+        static var textTertiary: Color { Color(brand: Brand.ink, opacity: 0.4, darkOpacity: 0.45) }
         static var separator: Color { Color(nsColor: .separatorColor) }
         static var surface: Color { Color(nsColor: .windowBackgroundColor) }
         static var surfaceRaised: Color { Color(nsColor: .controlBackgroundColor) }
-        static var surfaceSunken: Color { Color(nsColor: .tertiarySystemFill) }
+        static var surfaceSunken: Color { Color(brand: Brand.ink, opacity: Brand.trackOpacity.light, darkOpacity: Brand.trackOpacity.dark) }
         static var danger: Color { .red }
         static var success: Color { .green }
-        static var dateOverdue: Color { priority(1) }
-        static var dateToday: Color { .green }
-        static var dateTomorrow: Color { .orange }
-        static var dateThisWeek: Color { .purple }
-        static var dateLater: Color { textSecondary }
-        /// Quick Add highlight roles: `#project` and `/section`, and `@label`.
-        static var accentSecondary: Color { .teal }
-        static var label: Color { .purple }
+        static var dateOverdue: Color { Color(brand: Brand.crimson) }
+        /// Dates are ink: colour is kept for overdue.
+        static var dateToday: Color { textPrimary }
+        static var dateTomorrow: Color { textPrimary }
+        static var dateThisWeek: Color { textPrimary }
+        static var dateLater: Color { textPrimary }
+        /// Quick Add highlight roles: `#project` and `/section`, and `@label` read as quiet ink tokens.
+        static var accentSecondary: Color { textPrimary }
+        static var label: Color { textSecondary }
+        /// A calm caution colour for "over capacity": information, not an error.
+        static var caution: Color { textSecondary }
         static func priority(_ value: Int) -> Color { Color.priority(value) }
         static var accent: Color { Color.taskfold }
         /// Accent at 0.14 (light) / 0.22 (dark). A selected row keeps `textPrimary`, never white on light grey.
@@ -66,6 +75,12 @@ enum DS {
                 let dark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
                 return accent.withAlphaComponent(dark ? 0.22 : 0.14)
             })
+        }
+        /// A project's identity hue: its stored colour mapped to the nearest palette pair (stored data is never
+        /// rewritten), or a stable hue from its id when it has none. Inbox work is ink.
+        static func project(_ record: Record?) -> ProjectHue {
+            guard let record else { return ProjectPalette.inbox }
+            return ProjectPalette.hue(stored: record.string("color"), projectID: record.id)
         }
     }
 

@@ -92,7 +92,8 @@ struct TaskRowView: View {
                 // Selection keeps the priority colour: the selected fill is a soft tint, not a solid highlight.
                 CheckMark(checked: checked, color: DS.Palette.priority(task.priority), emphasized: task.priority < 4,
                           size: DS.Size.checkbox, stroke: task.priority < 4 ? nil : DS.Palette.textTertiary,
-                          restFill: task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !checked)
+                          restFill: task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !checked,
+                          priority: task.priority, doneColor: DS.Palette.project(store.record("projects", id: task.string("project_id"))).color)
                     .frame(width: DS.Space.xxxl, height: DS.Space.xxxl) // 32 pt hit area
                     .contentShape(.rect)
             }
@@ -209,9 +210,9 @@ struct TaskRowView: View {
     private var trailing: some View {
         ZStack(alignment: .trailing) {
             if let project = trailingProject {
-                HStack(spacing: DS.Space.xs) {
+                HStack(spacing: 5) {
+                    ProjectPebble(hue: DS.Palette.project(project), size: 8) // pebble before the name
                     Text(project.name).lineLimit(1)
-                    Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6) // dot geometry
                 }
                 .font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
                 .opacity(hovering || isSelected ? 0 : 1)
@@ -304,7 +305,9 @@ struct TaskRowView: View {
     @ViewBuilder private func metadata(wrapping: Bool, planning: TaskRowPlanningRead) -> some View {
         if let text = dateText(planning) {
             Button { choosingDate = true } label: {
-                Label(text, systemImage: "calendar")
+                // Ink, except overdue (crimson). Times are semibold and tabular.
+                Text(text).monospacedDigit()
+                    .fontWeight(dateRole(planning) == .overdue || !planning.clock.isEmpty ? .semibold : .regular)
                     .accessibilityIdentifier("plannedDate-" + task.id)
                     .foregroundStyle(isSelected ? selectedForeground : dateColor(planning))
             }
@@ -314,7 +317,7 @@ struct TaskRowView: View {
         }
         if let project = cardProject {
             HStack(spacing: DS.Space.xs) {
-                Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6) // dot geometry
+                ProjectPebble(hue: DS.Palette.project(project), size: 8)
                 Text(project.name).lineLimit(1)
             }.accessibilityHidden(true)
         }
@@ -383,7 +386,7 @@ struct DragPreview: View {
     let tasks: [Record]
     var body: some View {
         HStack(spacing: DS.Space.s) {
-            CheckMark(checked: false, color: DS.Palette.priority(tasks.first?.priority ?? 4), emphasized: (tasks.first?.priority ?? 4) < 4)
+            CheckMark(checked: false, color: DS.Palette.priority(tasks.first?.priority ?? 4), emphasized: (tasks.first?.priority ?? 4) < 4, priority: tasks.first?.priority ?? 4)
             Text(tasks.first?.title ?? "").lineLimit(1)
             if tasks.count > 1 {
                 Text("\(tasks.count)").font(DS.Font.badge).foregroundStyle(Color.onAccent)

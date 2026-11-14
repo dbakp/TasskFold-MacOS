@@ -398,7 +398,7 @@ final class Workspace {
         completing.insert(before.id)
         let id = before.id
         lingerTimers[id] = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(self?.reduceMotion == true ? Self.lingerReducedDuration : Self.lingerDuration))
+            try? await Task.sleep(for: .seconds((self?.reduceMotion == true ? Self.lingerReducedDuration : Self.lingerDuration) * FoldMotion.slowFactor))
             guard !Task.isCancelled, let self else { return }
             self.endLinger(id, animated: true)
         }

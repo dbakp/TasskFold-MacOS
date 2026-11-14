@@ -25,12 +25,13 @@ struct ChipLabel: View {
             if let text { Text(text).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading) }
             if let trailingIcon { Image(systemName: trailingIcon).font(DS.Font.badge).accessibilityHidden(true) }
         }
-        .font(DS.Font.chip)
-        .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.s + trailingInset).padding(.vertical, DS.Space.xs + DS.Space.xxs)
+        // One chip style with iOS (design review round 2): a filled capsule, semibold and tabular; unset is a dashed outline.
+        .font(DS.Font.chip.weight(.semibold)).monospacedDigit()
+        .padding(.leading, 10).padding(.trailing, 10 + trailingInset).frame(minHeight: 26)
         .foregroundStyle(tint ?? DS.Palette.textSecondary)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill((tint ?? .clear).opacity(0.12)))
-        .overlay { if tint == nil { RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(DS.Palette.separator, lineWidth: 1) } }
-        .contentShape(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous))
+        .background(Capsule().fill((tint ?? .clear).opacity(0.1)))
+        .overlay { if tint == nil { Capsule().strokeBorder(DS.Palette.textTertiary, style: StrokeStyle(lineWidth: 1, dash: [4, 3])) } }
+        .contentShape(Capsule())
     }
 }
 

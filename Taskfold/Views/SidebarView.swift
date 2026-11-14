@@ -70,7 +70,7 @@ struct SidebarView: View {
                                 Spacer()
                                 count(navigationCounts.project(project.id), incomplete: reading.incompleteProjects.contains(project.id.lowercased()))
                             }
-                        } icon: { Image(systemName: "folder.fill").foregroundStyle(Color.project(project.string("color"))) }
+                        } icon: { ProjectPebble(hue: DS.Palette.project(project)) }
                     }
                     .padding(.leading, CGFloat(item.depth) * 12)
                     .tag(SidebarItem.project(project.id))
