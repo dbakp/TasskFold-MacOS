@@ -251,8 +251,8 @@ private struct FoldStrip: View {
     }
 }
 
-/// Position, size and colour of a strip at `progress` along a quadratic curve: up from the row, then across to the
-/// segment. Animatable, so the spring drives the path itself.
+/// Position, size and colour of a strip at `progress` along a quadratic curve: across from the row to the ring's
+/// column, then up to the segment. Animatable, so the spring drives the path itself.
 private struct FoldStripPath: ViewModifier, Animatable {
     var progress: Double
     var from: CGRect
@@ -262,7 +262,8 @@ private struct FoldStripPath: ViewModifier, Animatable {
     func body(content: Content) -> some View {
         let t = CGFloat(min(1.1, max(0, progress)))
         let start = CGPoint(x: from.minX + min(from.width, 220) / 2 + 16, y: from.midY)
-        let control = CGPoint(x: start.x, y: to.y)
+        // Slide along the row's own line to the ring's column, then rise into the segment, so the strip never crosses the date text beside the ring.
+        let control = CGPoint(x: to.x, y: start.y)
         let u = 1 - t
         let point = CGPoint(x: u * u * start.x + 2 * u * t * control.x + t * t * to.x, y: u * u * start.y + 2 * u * t * control.y + t * t * to.y)
         let width = max(CGFloat(Brand.Ring.doneWidth), (1 - t) * min(from.width, 220) + t * CGFloat(Brand.Ring.doneWidth))

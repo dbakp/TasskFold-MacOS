@@ -65,9 +65,8 @@ enum PrivacyFacts {
         Item(id: "ai", title: "AI suggestions", location: .onDevice,
              summary: "Suggestions use Apple Intelligence on \(deviceNoun). Brain dump, step suggestions and rescheduling work without sending your words anywhere.",
              points: [
-                "Your text never leaves \(deviceNoun) for AI.",
                 "Without Apple Intelligence, simpler rules run instead.",
-                "Suggestions are drafts. Tasks you accept are saved like any task you type, so in a cloud workspace they sync as described below.",
+                "Tasks you accept are saved like any other, and sync only if you sign in.",
              ]),
         Item(id: "sync", title: "Your cloud workspace", location: .syncs,
              summary: "When you sign in, your workspace is stored on TaskFold’s server (hosted on Supabase) so it can sync across your devices.",

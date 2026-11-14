@@ -88,6 +88,9 @@ enum Brand {
     static let ground = BrandPair(0xFBFAF9, 0x141113)
     /// Cards, sheets and glass panels: one step lifted from the ground.
     static let surface = BrandPair(0xFFFFFF, 0x2C2629)
+    /// Grouped-list cells (Settings): white in light mode; in dark mode a warm #1F1B1C one small step above the
+    /// ground, instead of the system's grey #2C2C2E. Ink on it is 14.9:1 and secondary text 6.4:1.
+    static let cell = BrandPair(0xFFFFFF, 0x1F1B1C)
     /// Text that sits on crimson.
     static let onCrimson = BrandPair(0xFFFFFF, 0x141113)
     /// Filled crimson buttons (Apply, Start review, Add an idea) with white text. Dark mode deepens the fill to
