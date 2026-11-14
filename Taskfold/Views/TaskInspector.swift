@@ -477,6 +477,7 @@ struct TaskInspectorForm: View {
             labelChips
             if !isSubtask { remindersChip }
             if let minutes = draft.durationMinutes { estimateChip(minutes) }
+            spentChip
             assigneeChip
             addPropertyChip
         }
@@ -526,6 +527,14 @@ struct TaskInspectorForm: View {
                     HStack { Spacer(); Button("Done") { openChip = nil }.keyboardShortcut(.defaultAction) }.padding(DS.Space.m)
                 }.frame(width: 520, height: 600)
             }
+    }
+    /// Focus and Pomodoro time recorded for this task (ActualTime.swift), shown beside the estimate.
+    @ViewBuilder private var spentChip: some View {
+        if case let seconds = store.actualSeconds(draft.id), let spent = ActualTime.spentText(seconds: seconds) {
+            ChipLabel(icon: "clock.arrow.circlepath", text: spent, tint: DS.Palette.textSecondary)
+                .accessibilityElement(children: .ignore).accessibilityLabel(ActualTime.spentSpoken(seconds: seconds) ?? spent)
+                .accessibilityIdentifier("taskSpentChip")
+        }
     }
     private func estimateChip(_ minutes: Int) -> some View {
         PropertyChip(icon: "hourglass", text: TaskDetailFormat.estimate(minutes), tint: DS.Palette.textSecondary, accessibility: "Estimate, \(TaskDetailFormat.estimate(minutes))", identifier: "taskDuration") { openChip = .estimate }

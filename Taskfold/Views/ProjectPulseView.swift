@@ -350,6 +350,7 @@ struct InsightsView:View {
                 } }
                 Text("My recorded completions · Week starts \(weekday(goals.weekStart)) · \(goals.timeZone)").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("insightsCalendarContext")
             }
+            if let accuracy = store.estimateAccuracy, accuracy.isReliable { EstimateInsightCard(accuracy: accuracy) }
             if store.pendingCount>0 { Label("Saved task changes appear in Insights after sync. Your goal choice can be saved while offline.",systemImage:"icloud.and.arrow.up").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("insightsPending") }
             if !shown.hasHistory {
                 ContentUnavailableView("No recorded history yet",systemImage:"chart.bar.xaxis",description:Text(store.localMode ? "Complete a task to start recording progress on this device." : "Sync your workspace to load its recorded activity."))
