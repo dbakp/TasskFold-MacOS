@@ -197,10 +197,13 @@ struct DayRingHeader: View {
             if !detail.isEmpty { Text(detail).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).lineLimit(1) }
         }
     }
+    private var hasFigure: Bool { !figure.text.isEmpty }
     private var figureText: some View { DayFigureText(figure: figure).font(.footnote.monospacedDigit()) }
     var body: some View {
         Group {
-            if textSize.isAccessibilitySize {
+            if !hasFigure {
+                title
+            } else if textSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: DS.Space.xs) { title; figureText.fixedSize(horizontal: false, vertical: true) }
             } else {
                 ViewThatFits(in: .horizontal) {
@@ -253,6 +256,9 @@ struct WeekRingsCard: View {
     @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // The date range lives here, nowrap, so the figure line below never wraps awkwardly.
+            Text(captionText).font(.footnote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4).padding(.bottom, 10)
             HStack(alignment: .top, spacing: 2) {
                 ForEach(summary.days) { day in
                     VStack(spacing: 5) {
@@ -294,9 +300,12 @@ struct WeekRingsCard: View {
         Text(summary.figure).font(.title3.weight(.semibold).width(.expanded).monospacedDigit()).foregroundStyle(DS.Palette.textPrimary).lineLimit(1).fixedSize()
     }
     private var rest: some View {
-        // The date range never breaks across lines: non-breaking spaces and word joiners around the dash.
+        Text(summary.rest).font(.subheadline).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+    }
+    /// "This week · 9–15 Nov", with non-breaking spaces and word joiners so the range never splits.
+    private var captionText: String {
         let range = summary.rangeLabel.replacingOccurrences(of: " ", with: "\u{00A0}").replacingOccurrences(of: "–", with: "\u{2060}–\u{2060}")
-        return Text(summary.restLead + range).font(.subheadline).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
+        return "This week · " + range
     }
 }
 

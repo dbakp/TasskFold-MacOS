@@ -163,6 +163,19 @@ final class TodayRingTests: XCTestCase {
         XCTAssertTrue(busy.outline.segments.isEmpty, "a day off draws only the dashed outline")
         XCTAssertEqual(busy.outline.remainder.length, 1, accuracy: 1e-9)
     }
+    func testEmptyWorkingDayHasNoFigure() {
+        let c = cal()
+        let empty = DayPlan.ring(for: date("2026-11-12", c), tasks: [], events: [], hours: allDays, calendar: c)
+        XCTAssertEqual(DayPlan.dayFigure(empty, hours: allDays), DayFigure(lead: "", leadIsAlert: false, rest: ""))
+        XCTAssertEqual(DayPlan.dayFigure(empty, hours: allDays).text, "")
+        XCTAssertEqual(empty.remainder.length, 1, accuracy: 1e-9, "the empty track stays")
+        let unestimated = DayPlan.ring(for: date("2026-11-12", c), tasks: [task("a", date: "2026-11-12")], events: [], hours: allDays, calendar: c)
+        XCTAssertEqual(DayPlan.dayFigure(unestimated, hours: allDays).text, "", "nothing estimated is nothing planned")
+        XCTAssertEqual(DayPlan.dayFigure(DayPlan.ring(for: date("2026-11-12", c), tasks: [], events: [], hours: nil, calendar: c), hours: nil).text, "")
+        // Day off and overbooked days keep their figures.
+        let off = DayPlan.ring(for: date("2026-11-14", c), tasks: [], events: [], hours: WorkingHours(), calendar: c)
+        XCTAssertEqual(DayPlan.dayFigure(off, hours: WorkingHours()).text, "Day off")
+    }
     func testHoursNeverSetSaysPlannedInsteadOfDayOff() {
         let c = cal()
         let r = DayPlan.ring(for: date("2026-11-14", c), tasks: [task("a", minutes: 90, date: "2026-11-14")], events: [], hours: nil, calendar: c)

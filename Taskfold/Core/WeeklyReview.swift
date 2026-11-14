@@ -270,10 +270,10 @@ struct WeekSummary: Equatable, Sendable {
     var emptyLine: String { "Nothing planned this week yet." }
     /// "19h 40m", the bold figure.
     var figure: String { DayPlan.duration(doneMinutes) }
-    /// "done of 28h planned · " and then `rangeLabel`, so a view can keep the range on one line.
-    var restLead: String { "done of \(DayPlan.duration(plannedMinutes)) planned · " }
-    /// "done of 28h planned · 9–15 Nov"
-    var rest: String { restLead + rangeLabel }
+    /// "done of 28h 25m planned", beside the figure.
+    var rest: String { "done of \(DayPlan.duration(plannedMinutes)) planned" }
+    /// The caption above the rings: "This week · 9–15 Nov".
+    var caption: String { "This week · " + rangeLabel }
     /// The day with the most planned time (first on a tie), when at least two days have planned work.
     var fullestDay: WeekDayRing? {
         guard days.filter({ $0.ring.plannedMinutes > 0 }).count >= 2 else { return nil }

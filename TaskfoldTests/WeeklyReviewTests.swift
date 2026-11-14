@@ -203,9 +203,10 @@ final class WeeklyReviewTests: XCTestCase {
     func testWeekTotalsAndRangeLabel() {
         let s = summary(fullWeek)
         XCTAssertEqual(s.plannedMinutes, 1015); XCTAssertEqual(s.doneMinutes, 600)
-        XCTAssertEqual(s.figure, "10h"); XCTAssertEqual(s.rest, "done of 16h 55m planned · 9–15 Nov")
+        XCTAssertEqual(s.figure, "10h"); XCTAssertEqual(s.rest, "done of 16h 55m planned"); XCTAssertEqual(s.caption, "This week · 9–15 Nov")
         XCTAssertFalse(s.isEmpty)
         XCTAssertEqual(summary([], now: "2026-12-02").rangeLabel, "30 Nov – 6 Dec", "a week across two months names both")
+        XCTAssertEqual(summary([], now: "2026-12-02").caption, "This week · 30 Nov – 6 Dec")
     }
     func testFullestDayAndSlippedDaysMakeOnePlainSentence() {
         let s = summary(fullWeek)

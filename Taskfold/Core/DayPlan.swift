@@ -627,9 +627,11 @@ struct ProjectWeekRing: Equatable, Sendable {
 }
 
 extension DayPlan {
-    /// "4h 10m of 6h", "1h 30m over · 7h 30m of 6h", "Day off · 1 task". `hours` tells a day off (hours set, this day not
+    /// "4h 10m of 6h", "1h 30m over · 7h 30m of 6h", "Day off · 1 task", or empty when nothing is planned. `hours` tells a day off (hours set, this day not
     /// in them) from hours never set, which says "4h 10m planned" and leaves the ring dashed.
     static func dayFigure(_ ring: TodayRing, hours: WorkingHours?) -> DayFigure {
+        // Nothing planned on a working day: no figure at all, the empty ring track and the list already say so.
+        if ring.plannedMinutes == 0 && (ring.hasWorkingHours || hours == nil) { return DayFigure(lead: "", rest: "") }
         if ring.hasWorkingHours {
             if ring.overMinutes > 0 {
                 return DayFigure(lead: duration(ring.overMinutes) + " over", leadIsAlert: true, rest: " · \(duration(ring.plannedMinutes)) of \(duration(ring.freeMinutes))")
