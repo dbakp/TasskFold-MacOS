@@ -63,10 +63,10 @@ enum PrivacyFacts {
 
     static let items: [Item] = [
         Item(id: "ai", title: "AI suggestions", location: .onDevice,
-             summary: "Brain dump, Suggest steps, Smart reschedule, day notes and Suggest a filter use the language model built into your device’s operating system (Apple Intelligence).",
+             summary: "Suggestions use Apple Intelligence on \(deviceNoun). Brain dump, step suggestions and rescheduling work without sending your words anywhere.",
              points: [
                 "Your text never leaves \(deviceNoun) for AI.",
-                "When Apple Intelligence isn’t available, Brain dump, Smart reschedule and filter suggestions fall back to simple rules on this device, and Suggest steps tells you it is unavailable.",
+                "Without Apple Intelligence, simpler rules run instead.",
                 "Suggestions are drafts. Tasks you accept are saved like any task you type, so in a cloud workspace they sync as described below.",
              ]),
         Item(id: "sync", title: "Your cloud workspace", location: .syncs,

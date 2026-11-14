@@ -74,7 +74,7 @@ struct FilterAssistanceView: View {
                                 Text("Apple Intelligence: " + unavailable + " Common descriptions can still be prepared here.").foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceUnavailable")
                                 Button("Check availability") { self.unavailable = OnDeviceAssistance.unavailableReason }
                             }
-                            Button("Suggest expression", systemImage: "wand.and.stars", action: generate)
+                            Button("Suggest expression", systemImage: "sparkles", action: generate)
                                 .disabled(busy != nil || run.closed || descriptionIssue != nil || description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (unavailable != nil && !localDescriptionAvailable))
                                 .accessibilityIdentifier("filterAssistanceGenerate")
                         }
@@ -99,7 +99,7 @@ struct FilterAssistanceView: View {
                                 Text(previewCount == 1 ? "1 matching task" : "\(previewCount) matching tasks").font(.headline).accessibilityIdentifier("filterAssistanceCount").id("filterAssistanceCountAnchor")
                                 if let suggestionOrigin {
                                     Label(suggestionOrigin == .localDescription ? "From your description" : "Apple Intelligence suggestion",
-                                          systemImage: suggestionOrigin == .localDescription ? "text.magnifyingglass" : "wand.and.stars")
+                                          systemImage: suggestionOrigin == .localDescription ? "text.magnifyingglass" : "sparkles")
                                         .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterAssistanceSource")
                                 }
 

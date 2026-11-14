@@ -27,8 +27,8 @@ struct HourlyPlannerView: View {
     @State private var selectedEvent:PlannerCalendarRequest?
     private var usesAgenda: Bool { preferList || (textSize.isAccessibilitySize && !largeTextTimeline) }
     private func changeLayout() {if usesAgenda {preferList=false;largeTextTimeline=textSize.isAccessibilitySize} else {preferList=true;largeTextTimeline=false}}
-    private var events: [PlannerEvent] { busy.events }
-    private var hours: WorkingHours? { store.workingHours }
+    private var events: [PlannerEvent] { PlannerFixtureSource.events(on: day, live: busy.events) }
+    private var hours: WorkingHours? { PlannerFixtureSource.hours(live: store.workingHours) }
     let open: (Record) -> Void
     let complete: (Record) -> Void
     let save: (Record, [String: JSON]) -> Bool
@@ -371,7 +371,7 @@ struct HourlyPlannerView: View {
             Button {showCalendar(event)} label: {
                 // Neutral glass, exactly start and duration (TimeGrid).
                 let height=min(CGFloat(minutes-item.minute)*scale,CGFloat(item.renderLength)*scale)
-                TimeGridBlock(title:event.title,time:clock(event.start)+"–"+clock(event.end),detail:item.length>=50 ? event.source:nil,kind:.event,height:height)
+                TimeGridBlock(title:event.title,time:clock(event.start)+"–"+clock(event.end),detail:item.length>=50 ? event.source:nil,kind:.event(event.calendarColour),height:height)
                     .frame(width:width,height:height,alignment:.topLeading)
             }.buttonStyle(.plain).foregroundStyle(.primary)
                 .accessibilityLabel("Calendar: \(event.title), \(event.source), \(clock(event.start)) to \(clock(event.end))")
@@ -816,5 +816,22 @@ private struct PlannerSummarySurface: ViewModifier {
         #else
         content.padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 16)
         #endif
+    }
+}
+
+/// DEBUG `--dayplan-fixture` puts the fixture's events and working hours on the calendar day too, so the time grid can
+/// be captured with events (round 3). Release builds always read the live calendar and settings.
+enum PlannerFixtureSource {
+    @MainActor static func events(on day: Date, live: [PlannerEvent]) -> [PlannerEvent] {
+        #if DEBUG
+        if DayPlanFixture.enabled { return DayPlanFixture.events(on: day) + DayPlanFixture.allDayEvents(on: day) }
+        #endif
+        return live
+    }
+    @MainActor static func hours(live: WorkingHours?) -> WorkingHours? {
+        #if DEBUG
+        if DayPlanFixture.enabled { return DayPlanFixture.hours }
+        #endif
+        return live
     }
 }

@@ -69,4 +69,18 @@ final class TodayRingTests: XCTestCase {
         let r = ring([])
         XCTAssertTrue(r.segments.isEmpty); XCTAssertEqual(r.figure, "0m"); XCTAssertEqual(r.capacity, "of 8h")
     }
+
+    func testRemainderIsOnlyTheUnplannedPartOfTheCircle() {
+        let r = ring([task("a", minutes: 120), task("b", minutes: 120)])
+        XCTAssertEqual(r.remainder.start, 0.5, accuracy: 1e-9); XCTAssertEqual(r.remainder.length, 0.5, accuracy: 1e-9)
+        XCTAssertEqual(ring([task("a", minutes: 600)]).remainder.length, 0, accuracy: 1e-9, "an over-full day has no track at all")
+        XCTAssertEqual(ring([]).remainder.length, 1, accuracy: 1e-9, "an empty day is all remainder")
+    }
+
+    func testMidpointIsWhereTheFoldLands() {
+        let r = ring([task("a", minutes: 120), task("b", minutes: 240)])
+        XCTAssertEqual(r.midpoint(of: "a") ?? -1, 60.0 / 480, accuracy: 1e-9)
+        XCTAssertEqual(r.midpoint(of: "b") ?? -1, 240.0 / 480, accuracy: 1e-9)
+        XCTAssertNil(r.midpoint(of: "missing"))
+    }
 }

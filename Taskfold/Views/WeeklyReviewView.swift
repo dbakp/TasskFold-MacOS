@@ -193,7 +193,7 @@ struct WeeklyReviewView: View {
                 ForEach(WeeklyReviewStep.allCases, id: \.self) { step in
                     let detail = introDetail(step)
                     HStack(spacing: DS.Space.m) {
-                        Image(systemName: step.symbol).symbolVariant(.none).fontWeight(.regular).font(.system(size: 20)).frame(width: 28).foregroundStyle(detail.needed ? DS.Palette.accent : DS.Palette.textSecondary).accessibilityHidden(true)
+                        Image(systemName: step.symbol).symbolVariant(.none).fontWeight(.regular).font(.system(size: 20)).frame(width: 28).foregroundStyle(DS.Palette.textSecondary).accessibilityHidden(true) // one ink for all six (round 3); crimson is for act / today
                         Text(step.title).fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: DS.Space.s)
                         Text(detail.text).font(.callout).foregroundStyle(DS.Palette.textSecondary).multilineTextAlignment(.trailing)
@@ -204,7 +204,7 @@ struct WeeklyReviewView: View {
             }
             Button(action: begin) {
                 Label("Start review", systemImage: "play.fill").frame(maxWidth: .infinity, minHeight: target)
-            }.buttonStyle(.borderedProminent).disabled(!available).accessibilityIdentifier("weeklyReviewStart")
+            }.buttonStyle(.borderedProminent).tint(DS.Palette.accentFill).disabled(!available).accessibilityIdentifier("weeklyReviewStart")
             reminderSection
         }
     }

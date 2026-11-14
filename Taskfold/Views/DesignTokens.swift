@@ -50,7 +50,8 @@ enum DS {
         static var textSecondary: Color { Color(brand: Brand.secondary) }
         static var textTertiary: Color { Color(brand: Brand.ink, opacity: 0.4, darkOpacity: 0.45) }
         static var separator: Color { Color(nsColor: .separatorColor) }
-        static var surface: Color { Color(nsColor: .windowBackgroundColor) }
+        /// Round 3: one warm ground, light and dark (#FBFAF9 / #141113), like the iPhone.
+        static var surface: Color { Color(brand: Brand.ground) }
         static var surfaceRaised: Color { Color(nsColor: .controlBackgroundColor) }
         static var surfaceSunken: Color { Color(brand: Brand.ink, opacity: Brand.trackOpacity.light, darkOpacity: Brand.trackOpacity.dark) }
         static var danger: Color { .red }
@@ -68,6 +69,9 @@ enum DS {
         static var caution: Color { textSecondary }
         static func priority(_ value: Int) -> Color { Color.priority(value) }
         static var accent: Color { Color.taskfold }
+        /// The fill of a prominent button: the crimson fill for the brand accent (white text reaches 4.5:1 in dark mode
+        /// too, where #FF4F6B would be 3.19:1), otherwise the chosen accent.
+        static var accentFill: Color { (UserDefaults.standard.string(forKey: "accent") ?? "rose") == "rose" ? Color(brand: Brand.crimsonFill) : Color.taskfold }
         /// Accent at 0.14 (light) / 0.22 (dark). A selected row keeps `textPrimary`, never white on light grey.
         static var selectionFill: Color {
             let accent = NSColor(Color.taskfold)

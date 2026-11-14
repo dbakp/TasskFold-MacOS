@@ -90,12 +90,30 @@ enum Brand {
     static let surface = BrandPair(0xFFFFFF, 0x2C2629)
     /// Text that sits on crimson.
     static let onCrimson = BrandPair(0xFFFFFF, 0x141113)
+    /// Filled crimson buttons (Apply, Start review, Add an idea) with white text. Dark mode deepens the fill to
+    /// #E0284A because white on #FF4F6B is only 3.19:1; white on #E0284A is 4.59:1, on #C8102E 5.88:1.
+    static let crimsonFill = BrandPair(0xC8102E, 0xE0284A)
+    static let onCrimsonFill = BrandPair(0xFFFFFF, 0xFFFFFF)
     /// The ring track and quiet fills are ink at this opacity.
     static let trackOpacity = (light: 0.08, dark: 0.10)
-    /// Open ring segments are their project colour at this opacity; done segments are full colour.
-    static let openSegmentOpacity = 0.35
-    /// Time-grid suggestions (dashed) are drawn at this opacity of a placed block.
-    static let suggestionOpacity = 0.5
+    /// Time-grid suggestions (Fit my day previews) are their hue at this opacity with a dashed border in the hue.
+    static let suggestionOpacity = 0.25
+    /// Calendar events in the time grid: ink at this opacity, light and dark, with a bar in the calendar's colour.
+    static let eventOpacity = (light: 0.05, dark: 0.08)
+
+    /// The day ring (design review round 3): a 72pt object. Open segments sit inside the 10pt track at 6pt in full
+    /// project colour; done segments widen to the full 10pt and are lit. 2pt gaps, rounded caps. Only the unplanned
+    /// remainder shows a track, as a dashed hairline.
+    enum Ring {
+        static let size = 72.0
+        static let doneWidth = 10.0
+        static let openWidth = 6.0
+        static let gap = 2.0
+        static let remainderWidth = 1.0
+    }
+
+    /// Text on a suggestion block (hue at `suggestionOpacity` over the ground): ink, which clears 4.5:1 on every tint.
+    static let onSuggestion = ink
 
     /// White or ink, whichever reads better on `fill`.
     static func textOn(_ fill: BrandRGB, dark isDark: Bool) -> BrandRGB {
@@ -140,15 +158,18 @@ struct ProjectHue: Equatable, Hashable, Identifiable, Sendable {
 }
 
 enum ProjectPalette {
-    /// The eight identity hues. Distinct in lightness as well as hue; none is crimson.
+    /// The eight identity hues. Distinct in lightness as well as hue; none is crimson or in the red family, and white
+    /// or ink text on each solid fill reaches 4.5:1 (teal and sky were deepened in round 3 for white text).
     static let hues: [ProjectHue] = [
         ProjectHue(id: "work", name: "Blue", pair: BrandPair(0x2F5BD3, 0x6F93FF)),
-        ProjectHue(id: "home", name: "Teal", pair: BrandPair(0x0F8C83, 0x3FC2B6)),
+        ProjectHue(id: "home", name: "Teal", pair: BrandPair(0x0B7B73, 0x3FC2B6)),
         ProjectHue(id: "personal", name: "Amber", pair: BrandPair(0xC77B12, 0xF0A43A)),
         ProjectHue(id: "focus", name: "Violet", pair: BrandPair(0x7A3E9D, 0xB07BD6)),
         ProjectHue(id: "garden", name: "Moss", pair: BrandPair(0x4F7A2A, 0x8BBE5A)),
-        ProjectHue(id: "studio", name: "Rust", pair: BrandPair(0xB5482B, 0xF07A5A)),
-        ProjectHue(id: "travel", name: "Sky", pair: BrandPair(0x1F7FB8, 0x5DB6EC)),
+        // Round 3: the rust hue read as "more red" next to crimson. Indigo is the deepest hue in the set, so it also
+        // differs from its neighbours in lightness.
+        ProjectHue(id: "studio", name: "Indigo", pair: BrandPair(0x4338A8, 0xB3A8F7)),
+        ProjectHue(id: "travel", name: "Sky", pair: BrandPair(0x1A6FA3, 0x5DB6EC)),
         ProjectHue(id: "admin", name: "Slate", pair: BrandPair(0x4A5568, 0xA0AEC0)),
     ]
     /// Inbox and tasks without a project.

@@ -38,6 +38,8 @@ struct PlannerEvent: Identifiable, Equatable, Sendable {
     var id: String, calendarID: String, title = "Busy", source = "Calendar"
     var start: Date, end: Date
     var allDay = false
+    /// The calendar's colour as "#RRGGBB", for the 3pt bar on its time-grid block. Nil draws a neutral bar.
+    var color: String? = nil
     var interval: DateInterval { DateInterval(start: start, end: max(start, end)) }
 }
 

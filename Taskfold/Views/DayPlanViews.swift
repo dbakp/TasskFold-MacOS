@@ -336,6 +336,8 @@ struct DayPlanCapacityCard: View {
 struct CapacityRingView: View {
     let ring: CapacityRing
     var fit: (() -> Void)? = nil
+    /// False in Calendar, whose header already draws the day ring: only the overrun line and Fit my day show.
+    var showsRing = true
     @Environment(\.dynamicTypeSize) private var textSize
     @ScaledMetric(relativeTo: .caption) private var diameter: CGFloat = 40
     private var tint: Color { ring.isOver ? Color.dayPlanCaution : DS.Palette.accent }
@@ -343,6 +345,7 @@ struct CapacityRingView: View {
         let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: DS.Space.s)) : AnyLayout(HStackLayout(spacing: DS.Space.m))
         layout {
             HStack(spacing: DS.Space.m) {
+                if showsRing {
                 ZStack {
                     Circle().stroke(DS.Palette.surfaceSunken, lineWidth: 6)
                     Circle().trim(from: 0, to: max(ring.fraction, ring.plannedMinutes > 0 && ring.hasWorkingHours ? 0.02 : 0))
@@ -351,8 +354,9 @@ struct CapacityRingView: View {
                 }
                 .padding(3) // the stroke is centred on the path: keep its outer edge on the frame
                 .frame(width: min(diameter, 72), height: min(diameter, 72))
+                }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(ring.label).font(.caption.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true)
+                    if showsRing || !ring.isOver { Text(ring.label).font(.caption.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true) }
                     if ring.isOver {
                         Text("\(DayPlan.duration(ring.overMinutes)) over your free time").font(.caption2).foregroundStyle(Color.dayPlanCaution).fixedSize(horizontal: false, vertical: true)
                     }
@@ -363,7 +367,7 @@ struct CapacityRingView: View {
             .accessibilityIdentifier("capacityRing")
             if ring.offersFit, let fit {
                 Button(action: fit) {
-                    Label("Fit my day", systemImage: "wand.and.stars").font(.caption.weight(.semibold)).frame(minWidth: 44, minHeight: 44)
+                    Label("Fit my day", systemImage: "sparkles").font(.caption.weight(.semibold)).frame(minWidth: 44, minHeight: 44)
                 }
                 .buttonStyle(.bordered)
                 .accessibilityHint("Previews a schedule that fits your free time and asks before moving tasks")
@@ -532,9 +536,11 @@ struct DayPlanTimeBlockStep: View {
     private func controls(preview: DayPlanFit?) -> some View {
         let hasEvening = !model.eveningIDs.isEmpty && model.tasks.contains { model.eveningIDs.contains($0.id) }
         return VStack(alignment: .leading, spacing: DS.Space.s) {
+            // Once a preview exists its banner is the one control for this action (round 3), so the pill hides.
+            if preview == nil {
             HStack(spacing: DS.Space.s) {
                 Button { model.showFit() } label: {
-                    Label("Fit my day", systemImage: "wand.and.stars").font(DS.Font.chip)
+                    Label("Fit my day", systemImage: "sparkles").font(DS.Font.chip)
                     #if os(macOS)
                     Text("F").font(DS.Font.badge).opacity(0.6)
                     #endif
@@ -544,6 +550,7 @@ struct DayPlanTimeBlockStep: View {
                 .accessibilityIdentifier("dayPlanFit")
                 .accessibilityHint("Places unscheduled, estimated tasks into your free time. Shows a preview first.")
                 Spacer(minLength: 0)
+            }
             }
             if hasEvening {
                 Toggle("Also place This Evening tasks after work", isOn: $model.includeEvening).font(DS.Font.taskMeta)
@@ -558,7 +565,7 @@ struct DayPlanTimeBlockStep: View {
         let title = fit.placements.isEmpty ? "Nothing fits right now" : "\(fit.placements.count) fit, \(DayPlan.duration(fit.placedMinutes))" + (skipped > 0 ? " · \(skipped) don't" : "")
         return HStack(alignment: .top, spacing: DS.Space.s) {
             VStack(alignment: .leading, spacing: DS.Space.xxs) {
-                Label(title, systemImage: "wand.and.stars").font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.accent).accessibilityIdentifier("dayPlanPreview")
+                Label(title, systemImage: "sparkles").font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.accent).accessibilityIdentifier("dayPlanPreview")
             }
             Spacer(minLength: 0)
             Button("Cancel") { model.cancelFit() }.buttonStyle(.borderless).accessibilityIdentifier("dayPlanFitCancel")
@@ -712,7 +719,7 @@ struct DayPlanTimeline: View {
     @ViewBuilder private func block(_ item: PlannerTimelineItem, height: CGFloat) -> some View {
         switch item.content {
         case .event(let event):
-            TimeGridBlock(title: event.title, time: dayPlanClock(event.start) + "–" + dayPlanClock(event.end), kind: .event, height: height)
+            TimeGridBlock(title: event.title, time: dayPlanClock(event.start) + "–" + dayPlanClock(event.end), kind: .event(event.calendarColour), height: height)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Calendar: \(event.title), \(dayPlanClock(event.start)) to \(dayPlanClock(event.end))")
         case .task(let block):
@@ -720,7 +727,7 @@ struct DayPlanTimeline: View {
             let end = block.end.map { "–" + dayPlanClock($0) } ?? ""
             let project = store.record("projects", id: block.task.string("project_id"))
             let hue = DS.Palette.project(project)
-            TimeGridBlock(title: block.task.title, time: dayPlanClock(block.start) + (preview ? "" : end), detail: preview ? "suggested" : project?.name,
+            TimeGridBlock(title: block.task.title, time: dayPlanClock(block.start) + (preview ? "" : end), detail: preview ? nil : project?.name,
                           kind: preview ? .suggestion(hue) : .task(hue), height: height)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel((preview ? "Proposed: " : "Scheduled: ") + block.task.title + ", " + dayPlanClock(block.start) + (block.end.map { " to " + dayPlanClock($0) } ?? ""))
@@ -1100,10 +1107,22 @@ enum DayPlanFixture {
     static func events(on day: Date, calendar: Calendar = .current) -> [PlannerEvent] {
         let start = calendar.dateInterval(of: .day, for: day)?.start ?? day
         func at(_ hour: Int, _ minute: Int) -> Date { start.addingTimeInterval(Double(hour * 60 + minute) * 60) }
-        return [PlannerEvent(id: "fx-standup", calendarID: "work", title: "Team standup", source: "Work", start: at(9, 30), end: at(10, 0)),
-                PlannerEvent(id: "fx-review", calendarID: "work", title: "Design review", source: "Work", start: at(11, 0), end: at(12, 30)),
-                PlannerEvent(id: "fx-lunch", calendarID: "personal", title: "Lunch with Sam", source: "Personal", start: at(12, 30), end: at(13, 15)),
-                PlannerEvent(id: "fx-oneonone", calendarID: "work", title: "1:1 with Alex", source: "Work", start: at(15, 30), end: at(16, 0))]
+        return [PlannerEvent(id: "fx-standup", calendarID: "work", title: "Team standup", source: "Work", start: at(9, 30), end: at(10, 0), color: "#1BADF8"),
+                PlannerEvent(id: "fx-review", calendarID: "work", title: "Design review", source: "Work", start: at(11, 0), end: at(12, 30), color: "#1BADF8"),
+                PlannerEvent(id: "fx-lunch", calendarID: "personal", title: "Lunch with Sam", source: "Personal", start: at(12, 30), end: at(13, 15), color: "#63DA38"),
+                PlannerEvent(id: "fx-oneonone", calendarID: "work", title: "1:1 with Alex", source: "Work", start: at(15, 30), end: at(16, 0), color: "#1BADF8")]
+    }
+    /// An all-day event for the Calendar's all-day strip (round 3 re-shoot). Not counted as busy time.
+    static func allDayEvents(on day: Date, calendar: Calendar = .current) -> [PlannerEvent] {
+        let start = calendar.dateInterval(of: .day, for: day)?.start ?? day
+        return [PlannerEvent(id: "fx-birthday", calendarID: "personal", title: "Mum’s birthday", source: "Personal", start: start,
+                             end: start.addingTimeInterval(86_400), allDay: true, color: "#63DA38")]
+    }
+    /// Three projects, so placed blocks show their colours (round 3: the grid was all grey with project-less tasks).
+    static func projects(user: String) -> [Record] {
+        [("dayplan-work", "Work", "#2F5BD3"), ("dayplan-studio", "Studio", "#4338A8"), ("dayplan-home", "Home", "#0B7B73")].enumerated().map { index, row in
+            Record(["id": .string(row.0), "name": .string(row.1), "user_id": .string(user), "color": .string(row.2), "order_index": .number(Double(index + 10))])
+        }
     }
     /// `shutdown` also finishes the first three, so the review has six done and six open. Completions are seconds old, so they count
     /// as today at any hour.
@@ -1116,6 +1135,7 @@ enum DayPlanFixture {
             var task = Record.task(user: user, date: now)
             task["id"] = .string("dayplan-\(index)"); task["title"] = .string(row.0); task["priority"] = .number(Double(row.1))
             if let minutes = row.2 { task["duration_minutes"] = .number(Double(minutes)) }
+            task["project_id"] = .string(["dayplan-work", "dayplan-studio", "dayplan-work", "dayplan-studio", "dayplan-work", "dayplan-home", "dayplan-home", "dayplan-home", "dayplan-work"][index])
             if shutdown && index < 3 { task["completed"] = .bool(true); task["completed_at"] = .string(ISO8601DateFormatter().string(from: now.addingTimeInterval(-Double(index + 4) * 20))) }
             return task
         }

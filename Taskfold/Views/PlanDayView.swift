@@ -149,7 +149,7 @@ struct PlanDayView: View {
             Spacer()
             if step != .done {
                 Button(plan.preview != nil ? "Apply" : (DayPlan.next(after: step, eligible: eligible) == .done ? "Finish" : "Next")) { goNext() }
-                    .keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).controlSize(.large)
+                    .keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent).tint(DS.Palette.accentFill).controlSize(.large)
                     .accessibilityIdentifier(plan.preview != nil ? "dayPlanApply" : "dayPlanNext")
                     .accessibilityHint(plan.preview != nil ? "Places the proposed tasks on your day. You can undo it." : "Shortcut Return")
             }

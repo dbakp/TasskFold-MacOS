@@ -104,7 +104,7 @@ struct SavedViewEditor: View {
                         .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                 }
                 Section {
-                    Button("Suggest a filter", systemImage: "wand.and.stars", action: openAssistance)
+                    Button("Suggest a filter", systemImage: "sparkles", action: openAssistance)
                         .disabled(!loaded || loadFailure != nil || !workspaceCurrent).accessibilityIdentifier("suggestSavedFilter")
                     TextField("Filter name", text: text("name")).focused($focusedField, equals: "name").accessibilityIdentifier("savedViewName")
                     if let nameFailure { Label(nameFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterNameValidationError") }

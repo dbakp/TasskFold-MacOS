@@ -749,7 +749,10 @@ struct RootView: View {
                 if parts.count > 1, parts.first != "picker" { store.setViewValue(scope, field: "layout", value: .string(parts[1])) }
             }
             // Daily planning captures: --dayplan-fixture replaces the samples with nine tasks due today (six estimated, over the free time).
-            if DayPlanFixture.enabled { store.snapshot.tables["tasks"] = DayPlanFixture.tasks(user: store.userID, shutdown: DayPlanFixture.step == "shutdown") }
+            if DayPlanFixture.enabled {
+                store.snapshot.tables["tasks"] = DayPlanFixture.tasks(user: store.userID, shutdown: DayPlanFixture.step == "shutdown")
+                store.snapshot.tables["projects"] = (store.snapshot.tables["projects"] ?? []).filter { !$0.id.hasPrefix("dayplan-") } + DayPlanFixture.projects(user: store.userID)
+            }
             // On-device AI captures: --ai-fixture seeds seven overdue tasks and two for today, keyed to today's date.
             if AIFixture.enabled { store.snapshot.tables["tasks"] = AIFixture.tasks(user: store.userID, today: store.calendarContext.today) }
             // Momentum captures: --momentum-fixture=streak|vacation|milestone adds a recorded history and goals.

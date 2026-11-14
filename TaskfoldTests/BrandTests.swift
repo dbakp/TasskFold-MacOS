@@ -24,6 +24,31 @@ final class BrandTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(Brand.crimsonOnTint.value(dark: dark).contrast(with: tint), 4.5)
             // The send button's glyph.
             XCTAssertGreaterThanOrEqual(Brand.onCrimson.value(dark: dark).contrast(with: Brand.crimson.value(dark: dark)), 4.5)
+            // Filled crimson buttons (Apply, Start review, Add an idea): white on #C8102E / #E0284A, not on #FF4F6B (3.19:1).
+            let fill = Brand.crimsonFill.value(dark: dark)
+            XCTAssertGreaterThanOrEqual(Brand.onCrimsonFill.value(dark: dark).contrast(with: fill), 4.5, "button text on \(fill.hex)")
+        }
+        XCTAssertEqual(Brand.crimsonFill.dark.hex, "#E0284A")
+        XCTAssertLessThan(BrandRGB(0xFFFFFF).contrast(with: Brand.crimson.dark), 4.5, "the reason filled buttons do not use #FF4F6B")
+    }
+
+    /// Round 3: text on every time-grid block clears 4.5:1 in both themes. Placed tasks are solid hue with white or ink;
+    /// suggestions are the hue at 25% over the ground with ink; events are ink at 5% / 8% with ink and secondary text.
+    func testTextOnEveryBlockIsAtLeastFourPointFive() {
+        for dark in [false, true] {
+            let ground = Brand.ground.value(dark: dark)
+            for hue in ProjectPalette.hues + [ProjectPalette.inbox] {
+                let fill = hue.pair.value(dark: dark)
+                let placed = Brand.textOn(fill, dark: dark).contrast(with: fill)
+                XCTAssertGreaterThanOrEqual(placed, 4.5, "placed \(hue.name) dark=\(dark): \(placed)")
+                let tint = fill.over(ground, opacity: Brand.suggestionOpacity)
+                let suggested = Brand.onSuggestion.value(dark: dark).contrast(with: tint)
+                XCTAssertGreaterThanOrEqual(suggested, 4.5, "suggested \(hue.name) dark=\(dark): \(suggested)")
+            }
+            let event = Brand.ink.value(dark: dark).over(ground, opacity: dark ? Brand.eventOpacity.dark : Brand.eventOpacity.light)
+            for role in [Brand.ink, Brand.secondary] {
+                XCTAssertGreaterThanOrEqual(role.value(dark: dark).contrast(with: event), 4.5, "event text dark=\(dark)")
+            }
         }
     }
 
@@ -48,7 +73,18 @@ final class BrandTests: XCTestCase {
     func testPaletteHasEightDistinctHuesAndNoCrimson() {
         XCTAssertEqual(ProjectPalette.hues.count, 8)
         XCTAssertEqual(Set(ProjectPalette.hues.map(\.pair.light)).count, 8)
+        XCTAssertEqual(ProjectPalette.hues.first { $0.id == "studio" }?.pair.light.hex, "#4338A8", "rust is replaced by indigo")
+        for a in ProjectPalette.hues.indices { for b in ProjectPalette.hues.indices where b > a {
+            let x = ProjectPalette.hues[a].pair, y = ProjectPalette.hues[b].pair
+            XCTAssertGreaterThan(x.light.distance(to: y.light), 0.05, "\(ProjectPalette.hues[a].name) / \(ProjectPalette.hues[b].name) light")
+            XCTAssertGreaterThan(x.dark.distance(to: y.dark), 0.05, "\(ProjectPalette.hues[a].name) / \(ProjectPalette.hues[b].name) dark")
+        } }
         for hue in ProjectPalette.hues {
+            // No red-family hue anywhere: nothing between magenta-red and orange-red competes with crimson.
+            for value in [hue.pair.light, hue.pair.dark] where value.oklch.c >= 0.04 {
+                let angle = value.oklch.h
+                XCTAssertFalse(angle >= 345 || angle <= 50, "\(hue.name) \(value.hex) is red-family at \(Int(angle))°")
+            }
             XCTAssertGreaterThan(hue.pair.light.distance(to: Brand.crimson.light), 0.05, hue.name)
             // Pebbles and ring segments are non-text marks: 3:1 against the ground.
             XCTAssertGreaterThanOrEqual(hue.pair.light.contrast(with: Brand.ground.light), 3, hue.name)
@@ -61,9 +97,12 @@ final class BrandTests: XCTestCase {
         XCTAssertEqual(ProjectPalette.hue(stored: "blue", projectID: "p").id, "work")
         XCTAssertEqual(ProjectPalette.hue(stored: "#14b8a6", projectID: "p").id, "home")
         XCTAssertEqual(ProjectPalette.hue(stored: "orange", projectID: "p").id, "personal")
-        XCTAssertEqual(ProjectPalette.hue(stored: "grape", projectID: "p").id, "focus")
+        XCTAssertEqual(ProjectPalette.hue(stored: "violet", projectID: "p").id, "focus")
+        XCTAssertEqual(ProjectPalette.hue(stored: "grape", projectID: "p").id, "studio", "a blue-purple lands on indigo")
         XCTAssertEqual(ProjectPalette.hue(stored: "#22c55e", projectID: "p").id, "garden")
-        XCTAssertEqual(ProjectPalette.hue(stored: "red", projectID: "p").id, "studio")
+        // A stored red no longer lands on a red-family hue: it maps to the warm amber.
+        XCTAssertEqual(ProjectPalette.hue(stored: "red", projectID: "p").id, "personal")
+        XCTAssertEqual(ProjectPalette.hue(stored: "#4338a8", projectID: "p").id, "studio")
         XCTAssertEqual(ProjectPalette.hue(stored: "sky_blue", projectID: "p").id, "travel")
         XCTAssertEqual(ProjectPalette.hue(stored: "charcoal", projectID: "p").id, "admin")
         XCTAssertEqual(ProjectPalette.hue(stored: "#6b7280", projectID: "p").id, "admin")
@@ -86,8 +125,8 @@ final class BrandTests: XCTestCase {
                 let fill = hue.pair.value(dark: dark), text = Brand.textOn(fill, dark: dark)
                 let other = text == BrandRGB(0xFFFFFF) ? Brand.ink.light : BrandRGB(0xFFFFFF)
                 XCTAssertGreaterThanOrEqual(text.contrast(with: fill), other.contrast(with: fill))
-                // Measured floor: teal and sky in light mode reach about 4.2 and 4.4 (noted in the PR); everything else 4.5+.
-                XCTAssertGreaterThanOrEqual(text.contrast(with: fill), 4.2, "\(hue.name) \(dark)")
+                // Round 3: teal and sky were deepened, so every hue now clears 4.5 (was 4.2 floor).
+                XCTAssertGreaterThanOrEqual(text.contrast(with: fill), 4.5, "\(hue.name) \(dark)")
             }
         }
     }

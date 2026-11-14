@@ -220,7 +220,7 @@ final class Workspace {
     struct Lingering: Equatable { var before: Record; var after: Record; var scopeKey: String }
     var lingering: [String: Lingering] = [:]
     @ObservationIgnored private var lingerTimers: [String: Task<Void, Never>] = [:]
-    static let lingerDuration = 0.45
+    static let lingerDuration = 0.5 // crease plus flight to the ring segment (round 3)
     static let lingerReducedDuration = 0.15
     var calendarDay = Calendar.current.startOfDay(for: Date())
     var calendarMode: CalendarMode { didSet { UserDefaults.standard.set(calendarMode.rawValue, forKey: "calendarMode") } }
