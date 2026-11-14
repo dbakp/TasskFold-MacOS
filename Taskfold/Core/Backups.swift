@@ -27,6 +27,8 @@ struct WorkspaceBackup: Codable, Sendable {
         var tables = snapshot.tables
         // A portable file cannot certify server-recorded actors in another workspace.
         tables.removeValue(forKey: TaskAssignmentProvenance.table)
+        // Dependency rows are not portable yet (their task IDs are remapped on restore); the "waiting_on" note is.
+        tables.removeValue(forKey: TaskDependencies.table)
         tables[FocusSessionChange.table] = tables[FocusSessionChange.table]?.map { row in
             var row = row
             if let session = FocusSessionChange.session(in: row, account: account), let checkpoint = try? session.checkpoint(at: now) { row["state"] = checkpoint.document }
@@ -83,7 +85,7 @@ struct WorkspaceBackup: Codable, Sendable {
         "labels": ["id","user_id","name","color","created_at"],
         WorkflowTemplate.table: ["id","user_id","name","document","created_at","updated_at"],
         "sections": ["id","user_id","project_id","name","created_at","order_index"],
-        "tasks": ["is_heading","id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
+        "tasks": ["is_heading","id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at","waiting_on"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
         "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences",ProductivityGoals.field],

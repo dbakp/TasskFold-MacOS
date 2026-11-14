@@ -805,6 +805,11 @@ struct Snapshot: Codable, Equatable, Sendable {
                 }
             }
             rows.removeAll { $0.id == change.recordID }
+            if change.table == "tasks", let links = tables[TaskDependencies.table], !links.isEmpty {
+                // The server cascades these rows; drop them from the local view at once.
+                let gone = TaskDependencies.normalized(change.recordID)
+                tables[TaskDependencies.table] = links.filter { TaskDependencies.normalized($0.string("task_id")) != gone && TaskDependencies.normalized($0.string("blocked_by_task_id")) != gone }
+            }
         }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
@@ -1714,6 +1719,8 @@ struct TaskQuery: Hashable {
     var timeZone = TimeZone.current.identifier
     /// A Focus filter's view-only project scope. Part of the cache key, never of a saved filter.
     var focusProjects: Set<String>?
+    /// Today and Upcoming drop blocked tasks unless the viewer asked to see them. Part of the cache key.
+    var showBlocked = false
 }
 
 /// Shared by tabs. Results survive navigation and invalidate only when task data changes.

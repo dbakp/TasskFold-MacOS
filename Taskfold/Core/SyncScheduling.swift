@@ -318,7 +318,7 @@ struct WorkspaceReadBase: Sendable {
 enum WorkspaceReadPlanner {
     /// History and the rows derived from task edits. Everything else is read whole when it changes.
     static let derivedTables: Set<String> = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable, TaskAssignmentProvenance.table]
-    static let ordinaryTables: Set<String> = ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, FocusSessionChange.table]
+    static let ordinaryTables: Set<String> = ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, FocusSessionChange.table, TaskDependencies.table]
     /// A project change may also move or remove its sections and members.
     static let related: [String: Set<String>] = ["projects": ["sections", "project_collaborators"]]
 

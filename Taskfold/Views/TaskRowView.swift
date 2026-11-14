@@ -263,7 +263,7 @@ struct TaskRowView: View {
     private var labelNames: [String] { task["labels"].list.map(\.text).filter { !$0.isEmpty }.map { store.record("labels", id: $0)?.name ?? $0 } }
     private func hasMetadata(_ planning: TaskRowPlanningRead) -> Bool {
         cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty
-            || !labelNames.isEmpty || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil)
+            || !labelNames.isEmpty || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || store.dependencyIndicator(for: task) != nil
     }
     private enum DateRole { case overdue, today, tomorrow, thisWeek, later }
     private func dateRole(_ planning: TaskRowPlanningRead) -> DateRole {
@@ -327,6 +327,9 @@ struct TaskRowView: View {
         if task["is_recurring"].flag {
             Image(systemName: "repeat").accessibilityLabel("Repeats")
         }
+        if let marker = store.dependencyIndicator(for: task) {
+            Image(systemName: marker.symbol).accessibilityLabel(marker.label).help(marker.label).accessibilityIdentifier("dependency-" + task.id)
+        }
         if !task["subtasks"].list.isEmpty {
             let progress = store.subtaskProgress(task)
             if progress.total > 0 {
@@ -361,6 +364,7 @@ struct TaskRowView: View {
         if task.priority < 4 { parts.append("priority \(task.priority)") }
         if let due = planning.day { parts.append(planning.overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))" + (planning.clock.isEmpty ? "" : " at " + Self.timeText(planning.clock))) }
         if let project = store.record("projects", id: task.string("project_id")) { parts.append("in \(project.name)") }
+        if let marker = store.dependencyIndicator(for: task) { parts.append(marker.label) }
         let labels = labelNames
         if !labels.isEmpty { parts.append("labels " + labels.joined(separator: ", ")) }
         let progress = store.subtaskProgress(task)
