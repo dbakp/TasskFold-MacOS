@@ -44,7 +44,8 @@ struct HourlyPlannerView: View {
     @State private var timelineRequest: Int?
     @State private var agendaRequest: String?
     private var calendar: Calendar { .current }
-    private let scale: CGFloat = 1.5
+    /// One scale with Plan your day (TimeGrid): 64pt per hour.
+    private let scale: CGFloat = TimeGrid.pointsPerMinute
     @ScaledMetric(relativeTo: .caption) private var clockGutter: CGFloat = 70
     private var gutter: CGFloat { min(140, clockGutter) }
     private var bounds: DateInterval { calendar.dateInterval(of: .day, for: day)! }
@@ -368,13 +369,10 @@ struct HourlyPlannerView: View {
                 removeTime:{_ = apply(block.task,fields:["due_time":.null,"time_zone":.null,"scheduled_at":.null,"due_date":.string(TaskPlanner.dayKey(day))],message:"Moved to all day")})
         case .event(let event):
             Button {showCalendar(event)} label: {
-                VStack(alignment:.leading,spacing:2) {
-                    Label(event.title,systemImage:"calendar").font(.caption.weight(.medium)).lineLimit(item.renderLength<40 ? 1:2)
-                    Text(clock(event.start)+"–"+clock(event.end)).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                    if item.length>=50 {Text(event.source).font(.caption2).foregroundStyle(.secondary).lineLimit(1)}
-                }.padding(6).frame(width:width,height:max(44,min(CGFloat(minutes-item.minute)*scale,CGFloat(item.renderLength)*scale)),alignment:.topLeading)
-                    .background(Color.secondary.opacity(0.10),in:RoundedRectangle(cornerRadius:9))
-                    .overlay{RoundedRectangle(cornerRadius:9).strokeBorder(Color.secondary.opacity(0.4),lineWidth:1)}
+                // Neutral glass, exactly start and duration (TimeGrid).
+                let height=min(CGFloat(minutes-item.minute)*scale,CGFloat(item.renderLength)*scale)
+                TimeGridBlock(title:event.title,time:clock(event.start)+"–"+clock(event.end),detail:item.length>=50 ? event.source:nil,kind:.event,height:height)
+                    .frame(width:width,height:height,alignment:.topLeading)
             }.buttonStyle(.plain).foregroundStyle(.primary)
                 .accessibilityLabel("Calendar: \(event.title), \(event.source), \(clock(event.start)) to \(clock(event.end))")
                 .accessibilityHint("View this calendar event")
@@ -582,6 +580,7 @@ struct PlannerSchedulingSheet: View {
 }
 
 private struct PlannerBlockCard: View {
+    @Environment(Store.self) private var store
     let block: PlannerBlock
     let width: CGFloat, scale: CGFloat
     let maxLength: Double
@@ -593,21 +592,14 @@ private struct PlannerBlockCard: View {
         DragGesture(minimumDistance: 8, coordinateSpace: .named("planner-timeline")).onChanged { movement = $0.translation.height }.onEnded { value in movement = 0; move(Int((value.translation.height / scale / 15).rounded()) * 15) }
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(alignment: .top, spacing: 6) {
-                if TaskKind.mayComplete(block.task) {
-                    Button(action: complete) { Image(systemName: "circle").font(.caption) }.buttonStyle(.plain).accessibilityLabel("Complete " + block.task.title)
-                } else { Image(systemName: "text.alignleft").font(.caption).foregroundStyle(.secondary).accessibilityLabel("Heading") }
-                Text(block.task.title).font(.subheadline.weight(.medium)).lineLimit(block.renderLength < 40 ? 1 : 2)
-                    .frame(maxWidth: .infinity, alignment: .leading).layoutPriority(1)
-            }
-            Text((block.start < block.clippedStart ? "Continues" : ClockFormat.string(block.start)) + " · " + (block.task.durationMinutes.map { "\($0)m" } ?? "No estimate"))
-                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-        }
-        .padding(.horizontal, 8).padding(.top, 4).padding(.bottom, block.end == nil ? 4 : 8)
-        .frame(width: width, height: max(36, min(CGFloat(maxLength) * scale, CGFloat(block.renderLength) * scale + resizing)), alignment: .topLeading)
-        .background(Color.taskfold.opacity(block.end == nil ? 0.06 : 0.14), in: RoundedRectangle(cornerRadius: 9))
-        .overlay { RoundedRectangle(cornerRadius: 9).strokeBorder(Color.taskfold.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: block.end == nil ? [4, 3] : [])) }
+        // The shared time-grid block: solid project colour, exactly start and duration; an open-ended task is dashed.
+        let height = min(CGFloat(maxLength) * scale, CGFloat(block.renderLength) * scale + resizing)
+        let project = store.record("projects", id: block.task.string("project_id"))
+        let hue = DS.Palette.project(project)
+        let time = block.start < block.clippedStart ? "Continues" : ClockFormat.string(block.start) + (block.end.map { "–" + ClockFormat.string($0) } ?? "")
+        TimeGridBlock(title: block.task.title, time: time, detail: block.end == nil ? "no estimate" : project?.name,
+                      kind: block.end == nil ? .suggestion(hue) : .task(hue), height: height)
+        .frame(width: width, height: max(1, height), alignment: .topLeading)
         .contentShape(.rect).onTapGesture(perform: open)
         #if os(iOS)
         .gesture(LongPressGesture(minimumDuration: 0.35).sequenced(before: DragGesture(minimumDistance: 8, coordinateSpace: .named("planner-timeline"))).onChanged { value in if case .second(true, let drag?) = value { movement = drag.translation.height } }.onEnded { value in movement = 0; if case .second(true, let drag?) = value { move(Int((drag.translation.height / scale / 15).rounded()) * 15) } })
@@ -616,7 +608,7 @@ private struct PlannerBlockCard: View {
         #endif
         .overlay(alignment: .bottom) {
             if block.end != nil {
-                Capsule().fill(Color.taskfold.opacity(0.65)).frame(width: min(30, width / 2), height: 3)
+                Capsule().fill(Color.white.opacity(0.7)).frame(width: min(30, width / 2), height: 3)
                     .frame(maxWidth: .infinity, minHeight: 16, alignment: .bottom).padding(.bottom, 2).contentShape(.rect)
                     .gesture(DragGesture(minimumDistance: 4, coordinateSpace: .named("planner-timeline")).onChanged { resizing = $0.translation.height }.onEnded { value in resizing = 0; resize(Int((value.translation.height / scale / 15).rounded()) * 15) })
                     .accessibilityLabel("Resize estimate for " + block.task.title)
@@ -631,7 +623,9 @@ private struct PlannerBlockCard: View {
         .accessibilityAction(named: "Schedule") { schedule() }
         .accessibilityAction(named: "15 minutes earlier") { move(-15) }
         .accessibilityAction(named: "15 minutes later") { move(15) }
+        .accessibilityAction(named: "Complete") { if TaskKind.mayComplete(block.task) { complete() } }
         .contextMenu {
+            if TaskKind.mayComplete(block.task) { Button("Complete", systemImage: "checkmark.circle", action: complete) }
             Button("Open task", action: open)
             Button("Schedule…", action: schedule)
             Button("15 minutes earlier") { move(-15) }

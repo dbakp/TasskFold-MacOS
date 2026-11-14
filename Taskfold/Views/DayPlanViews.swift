@@ -651,7 +651,9 @@ struct DayPlanTimeline: View {
     let previewIDs: Set<String>
     let window: DateInterval?
     var onDrop: ((String, Date) -> Bool)? = nil
-    @ScaledMetric(relativeTo: .caption) private var hourHeight: CGFloat = 40
+    @Environment(Store.self) private var store
+    /// One scale with Calendar Day (TimeGrid): 64pt per hour.
+    private let hourHeight: CGFloat = TimeGrid.hourHeight
     @State private var targeted = false
     private let gutter: CGFloat = 46
     /// The smallest a tile is drawn, so a 15 minute item can still be read and tapped. Longer items are exactly duration x scale.
@@ -686,8 +688,8 @@ struct DayPlanTimeline: View {
                 }
                 ForEach(items) { item in
                     let laneWidth = width / CGFloat(max(1, item.laneCount))
-                    block(item).frame(width: max(20, laneWidth - 3), height: max(compactTileHeight, CGFloat(item.length) * ppm - 2), alignment: .topLeading)
-                        .offset(x: gutter + laneWidth * CGFloat(item.lane), y: CGFloat(item.minute - r.start) * ppm + 1)
+                    block(item, height: CGFloat(item.length) * ppm).frame(width: max(20, laneWidth - 3), height: CGFloat(item.length) * ppm, alignment: .topLeading)
+                        .offset(x: gutter + laneWidth * CGFloat(item.lane), y: CGFloat(item.minute - r.start) * ppm)
                 }
             }
             #if os(macOS)
@@ -705,38 +707,24 @@ struct DayPlanTimeline: View {
         .accessibilityIdentifier("dayPlanTimeline")
     }
 
-    @ViewBuilder private func block(_ item: PlannerTimelineItem) -> some View {
+    /// The shared time-grid block: exactly start and duration, events neutral, tasks solid in their project colour,
+    /// Fit my day suggestions dashed.
+    @ViewBuilder private func block(_ item: PlannerTimelineItem, height: CGFloat) -> some View {
         switch item.content {
         case .event(let event):
-            tile(title: event.title, time: dayPlanClock(event.start) + "–" + dayPlanClock(event.end), symbol: "calendar", tint: DS.Palette.textSecondary, fill: DS.Palette.textSecondary.opacity(0.16), dashed: false, compact: item.length < 60)
+            TimeGridBlock(title: event.title, time: dayPlanClock(event.start) + "–" + dayPlanClock(event.end), kind: .event, height: height)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Calendar: \(event.title), \(dayPlanClock(event.start)) to \(dayPlanClock(event.end))")
         case .task(let block):
             let preview = previewIDs.contains(block.task.id)
             let end = block.end.map { "–" + dayPlanClock($0) } ?? ""
-            tile(title: block.task.title, time: dayPlanClock(block.start) + end, symbol: preview ? "wand.and.stars" : "checkmark.circle", tint: DS.Palette.accent, fill: DS.Palette.accent.opacity(preview ? 0.10 : 0.20), dashed: preview, compact: item.length < 60)
+            let project = store.record("projects", id: block.task.string("project_id"))
+            let hue = DS.Palette.project(project)
+            TimeGridBlock(title: block.task.title, time: dayPlanClock(block.start) + (preview ? "" : end), detail: preview ? "suggested" : project?.name,
+                          kind: preview ? .suggestion(hue) : .task(hue), height: height)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel((preview ? "Proposed: " : "Scheduled: ") + block.task.title + ", " + dayPlanClock(block.start) + (block.end.map { " to " + dayPlanClock($0) } ?? ""))
         }
-    }
-    private func tile(title: String, time: String, symbol: String, tint: Color, fill: Color, dashed: Bool, compact: Bool) -> some View {
-        HStack(alignment: .top, spacing: DS.Space.xs) {
-            Image(systemName: symbol).font(DS.Font.chip).foregroundStyle(tint).accessibilityHidden(true)
-            if compact {
-                // One line: the title, then the time, so a short or open-ended block still says when it is.
-                (Text(title).font(DS.Font.chip) + Text("  " + time).font(DS.Font.badge).foregroundColor(DS.Palette.textSecondary)).lineLimit(1)
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(title).font(DS.Font.chip).lineLimit(2)
-                    Text(time).font(DS.Font.badge).foregroundStyle(DS.Palette.textSecondary)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, DS.Space.s).padding(.vertical, compact ? 2 : DS.Space.xs)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(fill, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(tint.opacity(dashed ? 0.9 : 0.35), style: StrokeStyle(lineWidth: 1, dash: dashed ? [4, 3] : [])))
     }
 }
 

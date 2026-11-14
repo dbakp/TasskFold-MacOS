@@ -60,9 +60,9 @@ struct TodayHeader: View {
                         Text(ring.figure).foregroundStyle(DS.Palette.textPrimary)
                         Text(ring.capacity ?? "planned").fontWeight(.medium).foregroundStyle(DS.Palette.textSecondary)
                     }
-                    .font(DS.Font.ringFigure).lineLimit(stacked ? nil : 1).minimumScaleFactor(0.8)
+                    .font(DS.Font.ringFigure).lineLimit(stacked ? nil : 1).minimumScaleFactor(0.6)
                 }
-                .fixedSize(horizontal: false, vertical: true)
+                .fixedSize(horizontal: false, vertical: true).layoutPriority(1)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(date.formatted(.dateTime.weekday(.wide).day().month(.wide)) + ". " + ring.accessibilityLabel)
