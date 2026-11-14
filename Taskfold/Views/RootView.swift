@@ -12,6 +12,7 @@ struct RootView: View {
     @State private var pulseRequest: ProjectPulseRequest?
     @State private var mentionsRequest: MentionsRequest?
     @State private var insightsRequest:InsightsRequest?
+    @State private var weeklyReviewRequest: WeeklyReviewRequest?
     @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
     @Environment(\.openSettings) private var openSettings
@@ -59,6 +60,8 @@ struct RootView: View {
             WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
         }
         .sheet(item:$insightsRequest) { InsightsView(request:$0) }
+        .environment(\.openWeeklyReview, { weeklyReviewRequest = WeeklyReviewRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .sheet(item: $weeklyReviewRequest) { WeeklyReviewView(request: $0) }
         .environment(\.openMentions, { mentionsRequest = MentionsRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .sheet(item: $mentionsRequest) { request in MentionsInboxView(request: request) { task in
             guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), let current = store.record("tasks", id: task.id), current.string("task_generation") == task.string("task_generation"), current.string("project_id") == task.string("project_id") else { return }
@@ -88,7 +91,7 @@ struct RootView: View {
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
         .onChange(of: store.workspaceGeneration) { _, _ in
             workspace.workspaceChanged(account: store.userID, generation: store.workspaceGeneration)
-            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; mentionsRequest = nil
+            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; weeklyReviewRequest = nil; mentionsRequest = nil
         }
         .sheet(item: Binding(get: { workspace.teamTaskCreation }, set: { workspace.teamTaskCreation = $0 })) { opening in
             TaskInspectorForm(taskID: opening.task.id, admission: opening.admission)

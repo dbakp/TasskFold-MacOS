@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct SidebarView: View {
     @Environment(\.openMentions) private var openMentions
     @Environment(\.openInsights) private var openInsights
+    @Environment(\.openWeeklyReview) private var openWeeklyReview
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @State private var projectEditor: Record?
@@ -112,6 +113,7 @@ struct SidebarView: View {
             } header: { Text("Labels") }
             Section("Tools") {
                 Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
+                Button("Weekly Review", systemImage: "checklist") { openWeeklyReview() }.accessibilityIdentifier("openWeeklyReview")
                 Button("Insights",systemImage:"chart.xyaxis.line") { openInsights() }.accessibilityIdentifier("openInsights")
                 Button { sharedDraftsPresented = true } label: { HStack { Label("Shared drafts", systemImage: "square.and.arrow.down"); Spacer(); if store.sharedCaptureDraftCount > 0 { Text("\(store.sharedCaptureDraftCount)").monospacedDigit().foregroundStyle(.secondary) } } }.accessibilityIdentifier("openSharedDrafts")
                 Button("Templates", systemImage: "square.stack.3d.up") { templatesPresented = true }.accessibilityIdentifier("openTemplates")
