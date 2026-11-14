@@ -131,4 +131,55 @@ final class IntentLogicTests: XCTestCase {
         XCTAssertFalse(newer.isFresh(at: newer.issuedAt.addingTimeInterval(-120)), "A clock far in the past is not trusted")
         disk.clear(); XCTAssertNil(disk.read())
     }
+
+    // MARK: Task entity matching, suggestions, tomorrow and moves
+
+    func testMatchRanksExactThenPrefixThenWordStartThenAnywhere() {
+        let rows = [task("1", "Pay rent late fee", priority: 1), task("2", "rent", priority: 4), task("3", "Rental car forms"),
+                    task("4", "Parent meeting", due: today), task("5", "Rent the flat", priority: 3)]
+        XCTAssertEqual(IntentTaskSelection.match(rows, text: "Rent").map(\.id), ["2", "5", "3", "1", "4"],
+                       "Exact, starts with, a word starts with, then anywhere. Ties keep priority order")
+        XCTAssertEqual(IntentTaskSelection.match(rows, text: "  RENT  ").first?.id, "2")
+    }
+
+    func testMatchUsesTitlesOnlyIgnoresAccentsCompletedAndHeadings() {
+        let rows = [task("1", "Café order", notes: "call the bank"), task("2", "Bank forms"), task("3", "Bank done", done: true),
+                    Record(["id": .string("4"), "title": .string("Bank heading"), "is_heading": .bool(true)])]
+        XCTAssertEqual(IntentTaskSelection.match(rows, text: "bank").map(\.id), ["2"], "Notes, completed tasks and headings never match")
+        XCTAssertEqual(IntentTaskSelection.match(rows, text: "cafe").map(\.id), ["1"])
+        XCTAssertTrue(IntentTaskSelection.match(rows, text: "").isEmpty)
+        XCTAssertTrue(IntentTaskSelection.match(rows, text: "zebra").isEmpty)
+        XCTAssertEqual(IntentTaskSelection.match(fixture, text: "the", limit: 1).count, 1)
+        XCTAssertTrue(IntentTaskSelection.match(fixture, text: "the", limit: 0).isEmpty)
+    }
+
+    func testSuggestedPutsDueAndOverdueFirstThenLaterThenUndatedWithinTheLimit() {
+        XCTAssertEqual(IntentTaskSelection.suggested(fixture, today: today).map(\.id), [a, b, c, "g", "f", "d"])
+        XCTAssertEqual(IntentTaskSelection.suggested(fixture, today: today, limit: 2).map(\.id), [a, b])
+        XCTAssertTrue(IntentTaskSelection.suggested([], today: today).isEmpty)
+    }
+
+    func testTomorrowIsTheNextCalendarDayAcrossMonthsAndYears() {
+        XCTAssertEqual(IntentDate.tomorrow(now: now, calendar: calendar), "2026-11-13")
+        let endOfYear = calendar.date(from: DateComponents(year: 2026, month: 12, day: 31, hour: 23, minute: 30))!
+        XCTAssertEqual(IntentDate.tomorrow(now: endOfYear, calendar: calendar), "2027-01-01")
+        let leap = calendar.date(from: DateComponents(year: 2028, month: 2, day: 28, hour: 9))!
+        XCTAssertEqual(IntentDate.tomorrow(now: leap, calendar: calendar), "2028-02-29")
+    }
+
+    func testMovePlanMovesSkipsSameDayHeadingsAndSharedTasks() {
+        let open = task("1", "Plan", due: today)
+        XCTAssertEqual(IntentMovePlan.resolve(task: open, day: "2026-11-13", shared: false, calendar: calendar), .move(["due_date": .string("2026-11-13")]))
+        XCTAssertEqual(IntentMovePlan.resolve(task: open, day: today, shared: false, calendar: calendar), .alreadySet)
+        XCTAssertEqual(IntentMovePlan.resolve(task: open, day: "2026-11-13", shared: true, calendar: calendar), .shared)
+        let heading = Record(["id": .string("h"), "title": .string("Heading"), "is_heading": .bool(true)])
+        XCTAssertEqual(IntentMovePlan.resolve(task: heading, day: "2026-11-13", shared: false, calendar: calendar), .heading)
+        XCTAssertEqual(IntentMovePlan.resolve(task: heading, day: "2026-11-13", shared: true, calendar: calendar), .heading)
+    }
+
+    func testEntityAccessNeedsSignInAndAnUnlockedDevice() {
+        XCTAssertTrue(IntentEntityAccess.allowed(signedIn: true, protectedDataAvailable: true))
+        XCTAssertFalse(IntentEntityAccess.allowed(signedIn: true, protectedDataAvailable: false))
+        XCTAssertFalse(IntentEntityAccess.allowed(signedIn: false, protectedDataAvailable: true))
+    }
 }

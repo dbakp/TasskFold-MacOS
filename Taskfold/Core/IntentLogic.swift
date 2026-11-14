@@ -32,6 +32,41 @@ enum IntentTaskSelection {
         return Array(ordered(hits).prefix(max(0, limit)))
     }
 
+    /// Resolves a spoken or typed task name to open tasks. Only titles count (a name refers to a
+    /// title, not to notes). Better matches come first: exact, then starts with the words, then a word
+    /// starts with them, then the words appear anywhere in order-free fashion. Ties keep the usual
+    /// priority, due date and title order. Case, accents and punctuation are ignored.
+    static func match(_ tasks: [Record], text: String, limit: Int = 20) -> [Record] {
+        let query = key(text)
+        let words = query.split(whereSeparator: \.isWhitespace).map(String.init)
+        guard !words.isEmpty else { return [] }
+        var tiers: [(rank: Int, task: Record)] = []
+        for task in ordered(open(tasks)) {
+            let title = key(task.title)
+            let titleWords = title.split(whereSeparator: \.isWhitespace).map(String.init)
+            let rank: Int
+            if title == query { rank = 0 }
+            else if title.hasPrefix(query) { rank = 1 }
+            else if words.allSatisfy({ word in titleWords.contains { $0.hasPrefix(word) } }) { rank = 2 }
+            else if words.allSatisfy({ title.contains($0) }) { rank = 3 }
+            else { continue }
+            tiers.append((rank, task))
+        }
+        // `sorted` is not stable, so the index keeps the incoming order inside a tier.
+        let sorted = tiers.enumerated().sorted { ($0.element.rank, $0.offset) < ($1.element.rank, $1.offset) }
+        return Array(sorted.prefix(max(0, limit)).map(\.element.task))
+    }
+
+    /// What Siri and Shortcuts offer before anyone types: tasks due today or overdue first, then the
+    /// next dated tasks, then the rest, never more than `limit`.
+    static func suggested(_ tasks: [Record], today: String, limit: Int = 10) -> [Record] {
+        let rows = open(tasks)
+        let due = ordered(rows.filter { let d = $0.string("due_date"); return !d.isEmpty && d <= today })
+        let later = ordered(rows.filter { let d = $0.string("due_date"); return !d.isEmpty && d > today })
+        let undated = ordered(rows.filter { $0.string("due_date").isEmpty })
+        return Array((due + later + undated).prefix(max(0, limit)))
+    }
+
     /// `today` is due today; `overdue` is before today; `upcoming` is the next seven days
     /// including today. A project shows every open task in it and its subprojects.
     static func filter(_ tasks: [Record], _ kind: IntentListFilter, today: String, calendar: Calendar = Calendar(identifier: .gregorian),
@@ -65,6 +100,37 @@ enum IntentDate {
               let resolved = QuickNaturalDateText.resolve(text, relativeTo: now, calendar: calendar, inclusiveWeekday: true, datePreferences: preferences) else { return nil }
         return Dates.day(resolved)
     }
+}
+
+extension IntentDate {
+    /// The day after `now`, as a stored day string, in the given calendar.
+    static func tomorrow(now: Date = Date(), calendar: Calendar = .current) -> String {
+        let next = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(86_400)
+        // Read the day in the caller's calendar and zone, so "tomorrow" is the person's tomorrow.
+        var iso = Calendar(identifier: .gregorian); iso.timeZone = calendar.timeZone
+        let parts = iso.dateComponents([.year, .month, .day], from: next)
+        return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+    }
+}
+
+/// What a "move this task to a day" action should do with the task it was given.
+enum IntentMovePlan: Equatable {
+    case move([String: JSON]), alreadySet, heading, shared
+
+    /// `shared` is true for tasks in shared or team projects, which are reviewed in the app rather
+    /// than changed by voice (the same rule Reschedule has always followed).
+    static func resolve(task: Record, day: String, shared: Bool, calendar: Calendar = .current) -> IntentMovePlan {
+        guard TaskKind.mayComplete(task) else { return .heading }
+        guard !shared else { return .shared }
+        let fields = TaskPlanner.dayFields(task: task, day: day, calendar: calendar)
+        return fields.isEmpty ? .alreadySet : .move(fields)
+    }
+}
+
+/// Whether the task entity may describe tasks to the system right now. Signed-out and locked
+/// devices (protected data unavailable) show nothing, on top of the intents' own passcode rule.
+enum IntentEntityAccess {
+    static func allowed(signedIn: Bool, protectedDataAvailable: Bool) -> Bool { signedIn && protectedDataAvailable }
 }
 
 enum IntentAddOptions {
