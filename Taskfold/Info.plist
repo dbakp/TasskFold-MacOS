@@ -78,7 +78,7 @@
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Show busy time from calendars you select to help plan your tasks. Taskfold does not change your calendar events.</string>
+	<string>Show busy time from calendars you select to help plan your tasks. If you turn on time blocks, Taskfold also adds your planned tasks, by title, to one calendar and changes only the events it created.</string>
 	<key>TaskfoldGoogleCalendarClientID</key>
 	<string>$(TASKFOLD_GOOGLE_CALENDAR_CLIENT_ID)</string>
 	<key>TaskfoldMicrosoftCalendarClientID</key>
