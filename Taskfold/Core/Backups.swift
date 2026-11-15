@@ -23,7 +23,7 @@ struct WorkspaceBackup: Codable, Sendable {
     var legacy = false
     static let maximumBytes = 256 * 1024 * 1024
     static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions", ReminderSnooze.table, WorkflowTemplate.table]
-    static func make(_ snapshot: Snapshot, account: String, now: Date = Date()) -> Self {
+    static func make(_ snapshot: Snapshot, account: String, now: Date = Date(), childRows: Bool = TaskTree.rowsEnabled) -> Self {
         var tables = snapshot.tables
         // A portable file cannot certify server-recorded actors in another workspace.
         tables.removeValue(forKey: TaskAssignmentProvenance.table)
@@ -35,7 +35,13 @@ struct WorkspaceBackup: Codable, Sendable {
             return row
         }
         let headings = TaskKind.containsTypeMetadata(tables["tasks"] ?? [])
-        return Self(version: headings ? 2 : 1, capabilities: headings ? ["task_headings"] : nil, id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
+        // Version 3 stores subtasks as rows (`parent_id`, `child_order`). It is written only when child rows are on or present.
+        let rows = childRows || (tables["tasks"] ?? []).contains { !$0.string("parent_id").isEmpty }
+        // Older formats do not know the child-row columns. The server sends them empty on every task, so leave them out.
+        if !rows { tables["tasks"] = tables["tasks"]?.map { row in
+            var row = row; row.fields.removeValue(forKey: "parent_id"); row.fields.removeValue(forKey: "child_order"); return row
+        } }
+        return Self(version: rows ? 3 : (headings ? 2 : 1), capabilities: headings ? ["task_headings"] : nil, id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
                     tables: tables, unsyncedChanges: snapshot.pending.count + ConversationOutbox.rows(snapshot, account: account).count)
     }
     func data() throws -> Data {
@@ -57,7 +63,7 @@ struct WorkspaceBackup: Codable, Sendable {
             guard case .object(let object) = root else { throw BackupFailure(message: "A Taskfold backup must be a JSON object.") }
             var backup: Self
             if object["format"] != nil || object["version"] != nil {
-                guard object["format"] == .string("com.taskfold.workspace"), [JSON.number(1), .number(2)].contains(object["version"] ?? .null) else {
+                guard object["format"] == .string("com.taskfold.workspace"), [JSON.number(1), .number(2), .number(3)].contains(object["version"] ?? .null) else {
                     throw BackupFailure(message: "This backup format or version is unsupported. Update Taskfold before restoring it.")
                 }
                 backup = try TaskfoldJSONDecoder().decode(Self.self, from: data)
@@ -85,7 +91,7 @@ struct WorkspaceBackup: Codable, Sendable {
         "labels": ["id","user_id","name","color","created_at"],
         WorkflowTemplate.table: ["id","user_id","name","document","created_at","updated_at"],
         "sections": ["id","user_id","project_id","name","created_at","order_index"],
-        "tasks": ["is_heading","id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at","waiting_on"],
+        "tasks": ["is_heading","id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at","waiting_on","parent_id","child_order"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
         "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences",ProductivityGoals.field],
@@ -94,11 +100,16 @@ struct WorkspaceBackup: Codable, Sendable {
         ReminderSnooze.table: ["id","user_id","settings","updated_at"]
     ]
     func validate() throws {
-        guard version == 1 && capabilities == nil || version == 2 && capabilities == ["task_headings"],
-              !TaskKind.containsTypeMetadata(tables["tasks"] ?? []) || version == 2 else {
+        guard version == 1 && capabilities == nil || version == 2 && capabilities == ["task_headings"] || version == 3 && (capabilities == nil || capabilities == ["task_headings"]),
+              !TaskKind.containsTypeMetadata(tables["tasks"] ?? []) || version == 2 || version == 3 && capabilities == ["task_headings"] else {
             throw BackupFailure(message: "This backup requires the supported task-heading format. Its contents are unchanged.")
         }
         guard tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw BackupFailure(message: "This backup exceeds the 50,000-record limit.") }
+        if version >= 3 {
+            // Subtasks are rows: every parent exists, no cycle, at most ten levels, same project and section.
+            let posts = (tables["tasks"] ?? []).map { Mutation(table: "tasks", recordID: $0.id, method: "POST", fields: $0.fields, insertOnly: true) }
+            do { try TaskTree.validate(posts, tasks: []) } catch let failure as TaskTree.Failure { throw BackupFailure(message: "The subtasks in this backup are invalid: " + failure.message) }
+        }
         for (table, rows) in tables {
             let activity = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable].contains(table)
             let conversation = [SharedComment.table, SharedMention.table, ConversationOutbox.table, ConversationOutbox.viewsTable].contains(table)
@@ -129,7 +140,7 @@ struct WorkspaceBackup: Codable, Sendable {
                 }
                 if metadata && table != "_local_day_order" { continue }
                 guard !row.id.isEmpty, row.id.unicodeScalars.count <= 300, ids.insert(UUID(uuidString: row.id)?.uuidString.lowercased() ?? row.id).inserted else { throw BackupFailure(message: "The \(table) table has a missing, duplicate or invalid ID.") }
-                guard let allowed = Self.columns[table == "_local_day_order" ? "view_orders" : table], Set(row.fields.keys).isSubset(of: allowed) else { throw BackupFailure(message: "The \(table) table includes newer or unsupported fields. Update Taskfold before restoring it.") }
+                guard let known = Self.columns[table == "_local_day_order" ? "view_orders" : table], Set(row.fields.filter { table != "tasks" || version >= 3 || !["parent_id", "child_order"].contains($0.key) || $0.value != .null }.keys).isSubset(of: table == "tasks" && version < 3 ? known.subtracting(["parent_id", "child_order"]) : known) else { throw BackupFailure(message: "The \(table) table includes newer or unsupported fields. Update Taskfold before restoring it.") }
                 for key in ["id","user_id","name","title","description","color","project_id","parent_id","section_id","assigned_to","recurrence_parent_id","time_zone","due_date","due_time","deadline_date","recurrence_end_date","scheduled_at"] {
                     if let value = row.fields[key], value != .null, case .string = value {} else if let value = row.fields[key], value != .null { throw BackupFailure(message: "\(table).\(key) must be text.") }
                 }
@@ -231,7 +242,7 @@ struct RestorePlan {
 }
 
 extension WorkspaceBackup {
-    func plan(current: Snapshot, account: String, policy: RestorePolicy = .keepCurrent) throws -> RestorePlan {
+    func plan(current: Snapshot, account: String, policy: RestorePolicy = .keepCurrent, childRows: Bool = TaskTree.rowsEnabled) throws -> RestorePlan {
         try validate()
         guard !account.isEmpty else { throw BackupFailure(message: "Open a workspace before restoring a backup.") }
         var result = RestorePlan()
@@ -239,6 +250,20 @@ extension WorkspaceBackup {
         let source = sourceAccount.isEmpty ? "legacy" : canonical(sourceAccount)
         var tables = self.tables
         if tables["view_orders"] == nil, let orders = tables["_local_day_order"] { tables["view_orders"] = orders }
+        // Rows with a parent need child-row support; an older-format file's JSON subtasks become rows when it is on.
+        if !childRows, (tables["tasks"] ?? []).contains(where: { !$0.string("parent_id").isEmpty }) {
+            throw BackupFailure(message: "This backup stores subtasks as separate tasks. Update Taskfold before restoring it.")
+        }
+        var skippedLegacyChildren = 0
+        if childRows, let rows = tables["tasks"], rows.contains(where: { !$0["subtasks"].list.isEmpty }) {
+            var kept = rows, converted: [Record] = []
+            for (index, row) in rows.enumerated() where !row["subtasks"].list.isEmpty {
+                let result = LegacySubtaskConversion.convert(root: row)
+                converted += result.rows; skippedLegacyChildren += result.skipped.count
+                kept[index]["subtasks"] = .array([])
+            }
+            tables["tasks"] = kept + converted
+        }
         let defaults: [String: [String: JSON]] = [
             "projects": ["order_index": .number(0), "source_metadata": .object([:])],
             "sections": ["order_index": .number(0)],
@@ -335,18 +360,26 @@ extension WorkspaceBackup {
         func orderedRows(_ table: String) throws -> [Record] {
             let rows = tables[table] ?? []
             guard table == "tasks" || table == "projects" else { return rows }
-            let parentField = table == "projects" ? "parent_id" : "recurrence_parent_id"
+            // A task also waits for its `parent_id` row (version 3); a project only for its parent project.
+            let parentFields = table == "projects" ? ["parent_id"] : ["recurrence_parent_id", "parent_id"]
             let byID = Dictionary(uniqueKeysWithValues: rows.map { (canonical($0.id), $0) })
             var remaining: [String: Int] = [:], children: [String: [String]] = [:]
             for row in rows {
-                let parent = canonical(row.string(parentField))
-                remaining[canonical(row.id)] = byID[parent] == nil ? 0 : 1
-                if byID[parent] != nil { children[parent, default: []].append(canonical(row.id)) }
+                var parents: [String] = []
+                for field in parentFields {
+                    let parent = canonical(row.string(field))
+                    if byID[parent] != nil, !parents.contains(parent) { parents.append(parent) }
+                }
+                remaining[canonical(row.id)] = parents.count
+                for parent in parents { children[parent, default: []].append(canonical(row.id)) }
             }
             var queue = rows.filter { remaining[canonical($0.id)] == 0 }, cursor = 0
             while cursor < queue.count {
                 let row = queue[cursor]; cursor += 1
-                for child in children[canonical(row.id)] ?? [] { remaining[child] = 0; queue.append(byID[child]!) }
+                for child in children[canonical(row.id)] ?? [] {
+                    remaining[child, default: 0] -= 1
+                    if remaining[child] == 0 { queue.append(byID[child]!) }
+                }
             }
             guard queue.count == rows.count else { throw BackupFailure(message: "Project or recurring task relationships contain a cycle.") }
             return queue
@@ -432,6 +465,11 @@ extension WorkspaceBackup {
                     for (key, fallback) in [("completed",JSON.bool(false)),("priority",.number(4)),("is_recurring",.bool(false)),("reminder_specs",.array([])),("source_metadata",.object([:]))] where row.fields[key] == nil || row[key] == .null { row[key] = fallback }
                     // The new task needs its own notification scheduling; provider import mappings are not replayed.
                     row["notification_sent_at"] = .null
+                    if !original.string("parent_id").isEmpty {
+                        row["parent_id"] = .string(try mapped("tasks", original.string("parent_id"), required: true))
+                    } else if currentRows[table]?[canonical(row.id)]?.string("parent_id").isEmpty == false {
+                        row["parent_id"] = .null; row["child_order"] = .null
+                    } else { row.fields.removeValue(forKey: "parent_id"); row.fields.removeValue(forKey: "child_order") }
                 }
                 if table == "saved_views" {
                     let originalRule = try FilterRule(document: row["query_ast"])
@@ -475,6 +513,11 @@ extension WorkspaceBackup {
                 try ProjectOrganization.validate(row, previous: nil, account: account, projects: restoredProjects)
             }
         }
+        if childRows {
+            do { try TaskTree.validate(result.changes, tasks: current.tables["tasks"] ?? []) }
+            catch let failure as TaskTree.Failure { throw BackupFailure(message: "The subtasks in this backup cannot be restored: " + failure.message) }
+        }
+        if skippedLegacyChildren > 0 { result.warnings.append("\(skippedLegacyChildren) subtasks had no usable title or were nested too deeply, and were left out.") }
         if legacy { result.warnings.append("This is an older unversioned export. Its records and references were validated before preview.") }
         if unsyncedChanges > 0 { result.warnings.append("The backup includes \(unsyncedChanges) changes that had not synced. Their visible work is included; the old network queue is not replayed.") }
         if promotedSharedProjects > 0 { result.warnings.append("\(promotedSharedProjects) shared subprojects have an unavailable parent. Their copies become top-level projects and retain their archived state.") }
