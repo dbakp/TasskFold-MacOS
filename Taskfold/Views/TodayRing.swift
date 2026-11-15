@@ -4,6 +4,12 @@ import Observation
 // The Today header ring and the fold-to-complete signature (design review rounds 2 and 3). One file for both apps.
 // All numbers come from Core (`DayPlan.todayRing`, `Brand.Ring`); this file only draws them.
 
+/// "Show day ring" in Settings. On by default; when off every ring is hidden and the text beside it stays.
+enum DayRingSetting {
+    static let key = "showDayRing"
+    static let footer = "The ring shows how much of your working hours today\u{2019}s tasks fill, by their time estimates, in project colours."
+}
+
 /// The day ring, as an object (round 3). Segments are today's tasks in full project colour, sized by estimate:
 /// open ones are a 6pt band inside the 10pt track, done ones widen to 10pt and are lit from the top left. 2pt gaps,
 /// rounded caps. There is no grey under planned work; only the unplanned remainder shows, as a dashed hairline.
@@ -102,6 +108,7 @@ struct TodayHeader: View {
     var flight: FoldFlight? = nil
     var plan: () -> Void
     var setHours: () -> Void
+    @AppStorage(DayRingSetting.key) private var showRing = true
     @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
         if textSize.isAccessibilitySize { stacked } else { regular }
@@ -111,7 +118,7 @@ struct TodayHeader: View {
     private var regular: some View {
         HStack(alignment: .center, spacing: DS.Space.l) {
             HStack(alignment: .center, spacing: DS.Space.l) {
-                ringView
+                if showRing { ringView }
                 VStack(alignment: .leading, spacing: 1) {
                     // "Saturday 14 Nov": sentence case, no comma, never an eyebrow.
                     Text(dateText).font(DS.Font.dateLine).foregroundStyle(DS.Palette.textSecondary)
@@ -141,7 +148,7 @@ struct TodayHeader: View {
     /// Accessibility sizes: the ring, then one sentence that wraps, then the date. Plan is in the toolbar.
     private var stacked: some View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
-            ringView
+            if showRing { ringView }
             Text(ring.figure + " " + (ring.capacity.map { $0 + " planned" } ?? "planned"))
                 .font(.title3.weight(.semibold).width(.expanded)).foregroundStyle(DS.Palette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -186,13 +193,14 @@ struct DayRingHeader: View {
     var figure: DayFigure
     var spoken: String
     var hue: (String) -> ProjectHue
+    @AppStorage(DayRingSetting.key) private var showRing = true
     @Environment(\.dynamicTypeSize) private var textSize
     @ScaledMetric(relativeTo: .subheadline) private var ringSize = 20
 
     private var ringView: some View { TodayRingView(ring: dayOff ? ring.outline : ring, hue: hue, size: ringSize, showsOverflow: true) }
     private var title: some View {
         HStack(alignment: .center, spacing: DS.Space.s) {
-            ringView
+            if showRing { ringView }
             Text(name).font(DS.Font.sectionHeader).foregroundStyle(nameColor).lineLimit(1)
             if !detail.isEmpty { Text(detail).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).lineLimit(1) }
         }
@@ -223,6 +231,7 @@ struct DayRingHeader: View {
 struct ProjectWeekHeader: View {
     var week: ProjectWeekRing
     var hue: (String) -> ProjectHue
+    @AppStorage(DayRingSetting.key) private var showRing = true
     @Environment(\.dynamicTypeSize) private var textSize
     @ScaledMetric(relativeTo: .headline) private var ringSize = 28
     private var figure: Text {
@@ -231,11 +240,11 @@ struct ProjectWeekHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if textSize.isAccessibilitySize {
-                TodayRingView(ring: week.ring, hue: hue, size: ringSize)
+                if showRing { TodayRingView(ring: week.ring, hue: hue, size: ringSize) }
                 figure.font(.headline.width(.expanded).monospacedDigit()).fixedSize(horizontal: false, vertical: true)
             } else {
                 HStack(alignment: .center, spacing: 10) {
-                    TodayRingView(ring: week.ring, hue: hue, size: ringSize)
+                    if showRing { TodayRingView(ring: week.ring, hue: hue, size: ringSize) }
                     figure.font(.headline.width(.expanded).monospacedDigit()).fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -253,13 +262,14 @@ struct ProjectWeekHeader: View {
 struct WeekRingsCard: View {
     var summary: WeekSummary
     var hue: (String) -> ProjectHue
+    @AppStorage(DayRingSetting.key) private var showRing = true
     @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // The date range lives here, nowrap, so the figure line below never wraps awkwardly.
             Text(captionText).font(.footnote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 4).padding(.bottom, 10)
-            HStack(alignment: .top, spacing: 2) {
+            if showRing { HStack(alignment: .top, spacing: 2) {
                 ForEach(summary.days) { day in
                     VStack(spacing: 5) {
                         TodayRingView(ring: day.isDayOff ? day.ring.outline : day.ring, hue: hue, size: 38, showsOverflow: true)
@@ -270,7 +280,7 @@ struct WeekRingsCard: View {
                     .accessibilityLabel(day.accessibilityLabel)
                     .accessibilityIdentifier("weekRing-" + day.key)
                 }
-            }
+            } }
             if summary.isEmpty {
                 Text(summary.emptyLine).font(.callout).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 12).padding(.horizontal, 4)
