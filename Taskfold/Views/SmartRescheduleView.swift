@@ -239,8 +239,10 @@ struct SmartRescheduleView: View {
         events = await calendarEvents()
         #endif
         rebuild()
-        if SmartRescheduleFixtureNotes.enabled { notes = SmartRescheduleFixtureNotes.notes(for: plan) }
-        else if noteUnavailable == nil { writeNotes() }
+        #if DEBUG
+        if SmartRescheduleFixtureNotes.enabled { notes = SmartRescheduleFixtureNotes.notes(for: plan); return }
+        #endif
+        if noteUnavailable == nil { writeNotes() }
     }
     private func calendarEvents() async -> [PlannerEvent] {
         guard let window = await CalendarBusyStore.shared.capacityWindow(), window.state == "ready" else { return [] }
