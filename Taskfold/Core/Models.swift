@@ -1799,6 +1799,12 @@ final class TaskCache {
         return value
     }
     private(set) var tasks: [Record] = []
+    /// Parent/child index over `tasks`, built on first read after each change (nothing is built while no task has a parent and nobody asks).
+    private var treeResult: TaskTree?
+    var tree: TaskTree {
+        if let treeResult { return treeResult }
+        let value = TaskTree(tasks); treeResult = value; return value
+    }
     private struct OrderKey: Equatable {
         let priority: Int
         let createdAt: String
@@ -1859,7 +1865,7 @@ final class TaskCache {
             source = rows
             return false
         }
-        projectPresentation = nil; projectOutline = nil; labelPositions = nil
+        projectPresentation = nil; projectOutline = nil; labelPositions = nil; treeResult = nil
         tasks = orderedRows(rows)
         source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; excludedProductiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
         results.removeAll(keepingCapacity: true); queryRead = 0

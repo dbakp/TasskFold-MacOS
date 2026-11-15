@@ -185,6 +185,13 @@ final class Store {
                            session: backend.reminderSessionIncarnation, access: presentationAccessEpoch))
     }
 
+    // MARK: Child rows (`parent_id`), behind Info.plist `TaskfoldChildRowsEnabled` (absent = off).
+    func children(of id: String) -> [Record] { TaskTree.rowsEnabled ? taskCache.tree.children(of: id) : [] }
+    func parent(of id: String) -> Record? { TaskTree.rowsEnabled ? taskCache.tree.parent(of: id) : nil }
+    func breadcrumb(of id: String) -> [Record] { TaskTree.rowsEnabled ? taskCache.tree.breadcrumb(of: id) : [] }
+    /// Replaces `subtaskProgress` once subtasks are rows: counts every descendant task.
+    func childProgress(of id: String) -> (completed: Int, total: Int) { TaskTree.rowsEnabled ? taskCache.tree.childProgress(of: id) : (0, 0) }
+
     @ObservationIgnored private var presentationAccessEpoch = UUID()
     private var presentedTables: [String: [Record]] {
         guard workspaceCacheReadable else { return [:] }
@@ -3275,6 +3282,10 @@ final class Store {
         let preparedChanges=prepared
         guard !preparedChanges.contains(where: { $0.table == "tasks" && $0.recordID.hasPrefix("subtask:") }) else {
             error = "Open this subtask's details to make this change."; return false
+        }
+        if TaskTree.rowsEnabled {
+            do { try TaskTree.validate(preparedChanges, tasks: snapshot.tables["tasks"] ?? []) }
+            catch { self.error = error.localizedDescription; return false }
         }
         if let draft = sharedCaptureReceipt {
             guard draft.workspace.account == userID, preparedChanges.count == 1,
