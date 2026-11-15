@@ -37,6 +37,10 @@ struct WorkspaceBackup: Codable, Sendable {
         let headings = TaskKind.containsTypeMetadata(tables["tasks"] ?? [])
         // Version 3 stores subtasks as rows (`parent_id`, `child_order`). It is written only when child rows are on or present.
         let rows = childRows || (tables["tasks"] ?? []).contains { !$0.string("parent_id").isEmpty }
+        // Older formats do not know the child-row columns. The server sends them empty on every task, so leave them out.
+        if !rows { tables["tasks"] = tables["tasks"]?.map { row in
+            var row = row; row.fields.removeValue(forKey: "parent_id"); row.fields.removeValue(forKey: "child_order"); return row
+        } }
         return Self(version: rows ? 3 : (headings ? 2 : 1), capabilities: headings ? ["task_headings"] : nil, id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
                     tables: tables, unsyncedChanges: snapshot.pending.count + ConversationOutbox.rows(snapshot, account: account).count)
     }
@@ -136,7 +140,7 @@ struct WorkspaceBackup: Codable, Sendable {
                 }
                 if metadata && table != "_local_day_order" { continue }
                 guard !row.id.isEmpty, row.id.unicodeScalars.count <= 300, ids.insert(UUID(uuidString: row.id)?.uuidString.lowercased() ?? row.id).inserted else { throw BackupFailure(message: "The \(table) table has a missing, duplicate or invalid ID.") }
-                guard let known = Self.columns[table == "_local_day_order" ? "view_orders" : table], Set(row.fields.keys).isSubset(of: table == "tasks" && version < 3 ? known.subtracting(["parent_id", "child_order"]) : known) else { throw BackupFailure(message: "The \(table) table includes newer or unsupported fields. Update Taskfold before restoring it.") }
+                guard let known = Self.columns[table == "_local_day_order" ? "view_orders" : table], Set(row.fields.filter { table != "tasks" || version >= 3 || !["parent_id", "child_order"].contains($0.key) || $0.value != .null }.keys).isSubset(of: table == "tasks" && version < 3 ? known.subtracting(["parent_id", "child_order"]) : known) else { throw BackupFailure(message: "The \(table) table includes newer or unsupported fields. Update Taskfold before restoring it.") }
                 for key in ["id","user_id","name","title","description","color","project_id","parent_id","section_id","assigned_to","recurrence_parent_id","time_zone","due_date","due_time","deadline_date","recurrence_end_date","scheduled_at"] {
                     if let value = row.fields[key], value != .null, case .string = value {} else if let value = row.fields[key], value != .null { throw BackupFailure(message: "\(table).\(key) must be text.") }
                 }

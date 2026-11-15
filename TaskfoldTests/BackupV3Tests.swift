@@ -31,6 +31,26 @@ final class BackupV3Tests: XCTestCase {
         let headed = WorkspaceBackup.make(snapshot([task(rootID, title: "Root", extra: ["is_heading": .bool(true)])]), account: owner, childRows: false)
         XCTAssertEqual(headed.version, 2); XCTAssertEqual(headed.capabilities, ["task_headings"])
     }
+    /// Since migration A every task from the server carries empty `parent_id` and `child_order`.
+    /// An older-format backup leaves them out, and still restores one that kept them empty.
+    func testEmptyChildColumnsStayRestorableInOlderFormats() throws {
+        let fromServer = task(rootID, title: "Root", extra: ["parent_id": .null, "child_order": .null])
+        let file = WorkspaceBackup.make(snapshot([fromServer]), account: owner, childRows: false)
+        XCTAssertEqual(file.version, 1)
+        XCTAssertNil(file.tables["tasks"]?.first?.fields["parent_id"]); XCTAssertNil(file.tables["tasks"]?.first?.fields["child_order"])
+        XCTAssertEqual(try WorkspaceBackup.read(file.data()).tables["tasks"]?.count, 1)
+        // A file written before this fix kept the empty columns.
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: file.data()) as? [String: Any])
+        var tables = try XCTUnwrap(object["tables"] as? [String: Any])
+        var rows = try XCTUnwrap(tables["tasks"] as? [[String: Any]])
+        rows[0]["parent_id"] = NSNull(); rows[0]["child_order"] = NSNull()
+        tables["tasks"] = rows; object["tables"] = tables
+        let old = try JSONSerialization.data(withJSONObject: object)
+        XCTAssertEqual(try WorkspaceBackup.read(old).tables["tasks"]?.count, 1)
+        // A real parent in an older-format file is still refused.
+        rows[0]["parent_id"] = childID; tables["tasks"] = rows; object["tables"] = tables
+        XCTAssertThrowsError(try WorkspaceBackup.read(JSONSerialization.data(withJSONObject: object)))
+    }
     func testVersionThreeIsWrittenForParentsOrWhenChildRowsAreOn() throws {
         XCTAssertEqual(WorkspaceBackup.make(snapshot(family), account: owner, childRows: false).version, 3)
         XCTAssertEqual(WorkspaceBackup.make(snapshot([task(rootID, title: "Root")]), account: owner, childRows: true).version, 3)
