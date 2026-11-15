@@ -589,11 +589,7 @@ private struct PlannerBlockCard: View {
     let maxLength: Double
     let open: () -> Void, complete: () -> Void, schedule: () -> Void
     let move: (Int) -> Void, resize: (Int) -> Void, removeTime: () -> Void
-    @State private var movement: CGFloat = 0
     @State private var resizing: CGFloat = 0
-    private var moveDrag: some Gesture {
-        DragGesture(minimumDistance: 8, coordinateSpace: .named("planner-timeline")).onChanged { movement = $0.translation.height }.onEnded { value in movement = 0; move(Int((value.translation.height / scale / 15).rounded()) * 15) }
-    }
     var body: some View {
         // The shared time-grid block: solid project colour, exactly start and duration; an open-ended task is dashed.
         let height = min(CGFloat(maxLength) * scale, CGFloat(block.renderLength) * scale + resizing)
@@ -604,11 +600,6 @@ private struct PlannerBlockCard: View {
                       kind: block.end == nil ? .suggestion(hue) : .task(hue), height: height)
         .frame(width: width, height: max(1, height), alignment: .topLeading)
         .contentShape(.rect).onTapGesture(perform: open)
-        #if os(iOS)
-        .gesture(LongPressGesture(minimumDuration: 0.35).sequenced(before: DragGesture(minimumDistance: 8, coordinateSpace: .named("planner-timeline"))).onChanged { value in if case .second(true, let drag?) = value { movement = drag.translation.height } }.onEnded { value in movement = 0; if case .second(true, let drag?) = value { move(Int((drag.translation.height / scale / 15).rounded()) * 15) } })
-        #else
-        .gesture(moveDrag)
-        #endif
         .overlay(alignment: .bottom) {
             if block.end != nil {
                 Capsule().fill(Color.white.opacity(0.7)).frame(width: min(30, width / 2), height: 3)
@@ -619,8 +610,6 @@ private struct PlannerBlockCard: View {
                     .accessibilityIdentifier("plannerResize-" + block.id)
             }
         }
-        .offset(y: movement)
-        .zIndex(movement == 0 && resizing == 0 ? 0 : 1)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("plannerBlock-" + block.id)
         .accessibilityAction(named: "Schedule") { schedule() }
@@ -636,6 +625,35 @@ private struct PlannerBlockCard: View {
             if block.end != nil { Button("Add 15 minutes") { resize(15) }; Button("Remove 15 minutes") { resize(-15) } }
             Button("Move to all day", action: removeTime)
         }
+        // Last, so the drag offset is the only thing that changes per finger movement (see PlannerBlockMove).
+        .modifier(PlannerBlockMove(scale: scale, lifted: resizing != 0, move: move))
+    }
+}
+
+/// Moves a block with the finger. The drag translation lives here, in a modifier, and not in `PlannerBlockCard`:
+/// a state change in a modifier re-runs only this small body (an offset), never the card's project lookup or the
+/// block face, which is what made dragging stutter. Long press then drag on iOS, a plain drag on the Mac.
+private struct PlannerBlockMove: ViewModifier {
+    let scale: CGFloat
+    let lifted: Bool
+    let move: (Int) -> Void
+    @State private var movement: CGFloat = 0
+    private func steps(_ translation: CGFloat) -> Int { Int((translation / scale / 15).rounded()) * 15 }
+    func body(content: Content) -> some View {
+        let moveGesture = DragGesture(minimumDistance: 8, coordinateSpace: .named("planner-timeline"))
+        return content
+            #if os(iOS)
+            .gesture(LongPressGesture(minimumDuration: 0.35).sequenced(before: moveGesture).onChanged { value in
+                if case .second(true, let drag?) = value { movement = drag.translation.height }
+            }.onEnded { value in
+                movement = 0
+                if case .second(true, let drag?) = value { move(steps(drag.translation.height)) }
+            })
+            #else
+            .gesture(moveGesture.onChanged { movement = $0.translation.height }.onEnded { value in movement = 0; move(steps(value.translation.height)) })
+            #endif
+            .offset(y: movement)
+            .zIndex(movement == 0 && !lifted ? 0 : 1)
     }
 }
 
