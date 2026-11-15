@@ -5,6 +5,7 @@ struct AppearanceSettings: View {
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("accent") private var accent = "rose"
     @AppStorage("mac.taskDensity") private var density = "roomy"
+    @AppStorage(DayRingSetting.key) private var showDayRing = true
     @AppStorage("mac.savedAccents") private var saved = ""
     @State private var proposed = Color.accentValue(UserDefaults.standard.string(forKey: "accent") ?? "rose")
     @State private var colorPanel = AccentColorPanel()
@@ -15,6 +16,10 @@ struct AppearanceSettings: View {
                 Picker("Appearance", selection: $appearance) { Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark") }.pickerStyle(.segmented)
                 Picker("Task layout", selection: $density) { Text("Roomy").tag("roomy"); Text("Compact").tag("compact") }.pickerStyle(.segmented).accessibilityIdentifier("taskDensity")
                 Text("Preferences apply only to this Mac. Accent shades adapt to keep controls readable in light and dark appearance.").font(.caption).foregroundStyle(.secondary)
+            }
+            Section {
+                Toggle("Show day ring", isOn: $showDayRing).accessibilityIdentifier("showDayRingToggle")
+                Text(DayRingSetting.footer).font(.caption).foregroundStyle(.secondary)
             }
             Section("Accent color") {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
