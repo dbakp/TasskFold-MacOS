@@ -464,7 +464,7 @@ export async function prepare(snapshot: Snapshot, user: string) {
   let allComments = 0;
   let attachments = 0;
   // Since the child-rows cutover every Todoist task becomes its own Taskfold task: children follow their parent in
-  // the bundle (parents first) with `parent_source_id` and `child_order`, and `subtasks` stays empty. A child deeper
+  // the bundle (parents first) with `parent_source_id` and `child_order` (no `subtasks` key: the column is retired). A child deeper
   // than ten levels hangs from its level-9 ancestor, as in the JSON-subtasks conversion.
   const items: SourceItem[] = [];
   let reparented = 0;
@@ -568,7 +568,6 @@ export async function prepare(snapshot: Snapshot, user: string) {
         ? sectionIDs.get(task.section_id) ?? null
         : null,
       labels: task.labels ?? [],
-      subtasks: [],
       ...(depth ? { child_order: order } : {}),
       comments,
       attachments: files,

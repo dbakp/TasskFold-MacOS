@@ -8,7 +8,7 @@ select set_config('request.jwt.claim.sub','f01dcafe-0000-4000-8000-000000000001'
 set local role authenticated;
 insert into public.projects(id,user_id,name) values ('f01dcafe-0000-4000-8000-000000000010',auth.uid(),'Collaboration transaction fixture');
 insert into public.project_collaborators(id,project_id,invited_by,invited_email) values ('f01dcafe-0000-4000-8000-000000000020','f01dcafe-0000-4000-8000-000000000010',auth.uid(),'TASKFOLD-QA-MEMBER@example.invalid');
-insert into public.tasks(id,user_id,title,project_id,subtasks) values ('f01dcafe-0000-4000-8000-000000000030',auth.uid(),'Initial','f01dcafe-0000-4000-8000-000000000010','[{"id":"child","title":"Child","completed":false,"subtasks":[{"id":"grand","title":"Grand","completed":false}]}]');
+insert into public.tasks(id,user_id,title,project_id) values ('f01dcafe-0000-4000-8000-000000000030',auth.uid(),'Initial','f01dcafe-0000-4000-8000-000000000010');
 select set_config('request.jwt.claim.sub','f01dcafe-0000-4000-8000-000000000002',true);
 do $$ begin
  if exists(select 1 from public.tasks where id='f01dcafe-0000-4000-8000-000000000030') then raise exception 'Pending invite exposed tasks'; end if;
@@ -24,12 +24,13 @@ select set_config('request.jwt.claim.sub','f01dcafe-0000-4000-8000-000000000001'
 select public.taskfold_patch_task('f01dcafe-0000-4000-8000-000000000030','{"comments":[]}','{"comments":[{"id":"b","text":"Simultaneous comment"}]}');
 -- Retry after a lost response must not duplicate a comment.
 select public.taskfold_patch_task('f01dcafe-0000-4000-8000-000000000030','{"comments":[]}','{"comments":[{"id":"b","text":"Simultaneous comment"}]}');
-select public.taskfold_patch_task('f01dcafe-0000-4000-8000-000000000030','{"subtasks":[{"id":"child","title":"Child","completed":false,"subtasks":[{"id":"grand","title":"Grand","completed":false}]}]}','{"subtasks":[{"id":"child","title":"Renamed child","completed":false,"subtasks":[{"id":"grand","title":"Grand","completed":false}]}]}');
+-- Subtasks are task rows since Migration C; concurrent edits of different fields still merge.
+select public.taskfold_patch_task('f01dcafe-0000-4000-8000-000000000030','{"title":"Initial"}','{"title":"Renamed"}');
 select set_config('request.jwt.claim.sub','f01dcafe-0000-4000-8000-000000000002',true);
-select public.taskfold_patch_task('f01dcafe-0000-4000-8000-000000000030','{"subtasks":[{"id":"child","title":"Child","completed":false,"subtasks":[{"id":"grand","title":"Grand","completed":false}]}]}','{"subtasks":[{"id":"child","title":"Child","completed":false,"subtasks":[{"id":"grand","title":"Grand","completed":true,"assigned_to":"f01dcafe-0000-4000-8000-000000000002"}]}]}');
+select public.taskfold_patch_task('f01dcafe-0000-4000-8000-000000000030','{"description":null}','{"description":"Member note"}');
 do $$ declare t public.tasks; begin
  select * into t from public.tasks where id='f01dcafe-0000-4000-8000-000000000030';
- if jsonb_array_length(t.comments)<>2 or t.subtasks#>>'{0,title}'<>'Renamed child' or t.subtasks#>>'{0,subtasks,0,completed}'<>'true' then raise exception 'Concurrent edits lost data'; end if;
+ if jsonb_array_length(t.comments)<>2 or t.title<>'Renamed' or t.description is distinct from 'Member note' then raise exception 'Concurrent edits lost data'; end if;
  begin
    perform public.taskfold_patch_task(t.id,'{"title":"Stale title"}','{"title":"Conflict"}');
    raise exception 'Expected conflict';

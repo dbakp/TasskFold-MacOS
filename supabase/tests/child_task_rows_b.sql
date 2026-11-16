@@ -6,6 +6,12 @@
 -- Scripts/legacy_subtasks_fixture.py with Python's hashlib, independent of the Swift and SQL code under test).
 -- Keep it byte-identical: `python3 Scripts/legacy_subtasks_fixture.py` regenerates both (and git diff shows drift).
 -- Cast: A owns everything and shares project S with B (accepted). C is an outsider. P is private, TP a team project.
+-- Historical since Migration C dropped `subtasks`: on a post-C schema this file skips itself (psql \if).
+select not exists (select 1 from pg_catalog.pg_attribute where attrelid = 'public.tasks'::regclass and attname = 'subtasks' and not attisdropped) as child_rows_c_applied \gset
+\if :child_rows_c_applied
+\echo 'child_task_rows_b: skipped (Migration C dropped the JSON subtasks this cutover converts)'
+\q
+\endif
 begin;
 
 create function public.zz_u(n integer) returns uuid language sql immutable as
@@ -3800,7 +3806,8 @@ do $$
 declare s jsonb; r public.tasks; c taskfold_private.json_subtask_conversions; v jsonb; deepest integer;
 begin
  s := taskfold_private.convert_json_subtasks();
- if (s->>'roots')::int < 6 or (s->>'deferred_team_roots')::int < 1 then raise exception 'conversion summary %', s; end if;
+ -- Since Migration T (phase T) team trees convert too; nothing is deferred.
+ if (s->>'roots')::int < 7 or (s->>'deferred_team_roots')::int <> 0 then raise exception 'conversion summary %', s; end if;
  if taskfold_private.remap_subtask_view_orders() < 1 then raise exception 'view order not remapped'; end if;
  if (select count(*) from pg_trigger where tgrelid='public.tasks'::regclass and tgname in('zz_taskfold_webhook_capture','taskfold_capture_node_activity','taskfold_capture_activity') and tgenabled='O') is distinct from 3 then
   raise exception 'capture triggers were not re-enabled'; end if;
@@ -3835,10 +3842,11 @@ begin
  -- Inbox: a self-assignee passes check_task_assignment; children inherit the null project.
  select * into r from public.tasks where id='c69248f4-a4c8-781a-7ec4-05836ddde5ce';
  if r.parent_id is distinct from public.zz_u(4000) or r.project_id is not null or r.assigned_to is distinct from public.zz_u(1) then raise exception 'inbox child wrong'; end if;
- -- Team: deferred to phase T, tree untouched, nothing inserted.
+ -- Team (since Migration T): converted like any root, the child row is team content.
  select * into c from taskfold_private.json_subtask_conversions where root_id=public.zz_u(5000);
- if c.status is distinct from 'deferred' or c.skipped->>'reason' is distinct from 'team, phase T' or (select subtasks from public.tasks where id=public.zz_u(5000)) is distinct from '[{"id":"t","title":"Team child"}]'
-    or exists(select 1 from public.tasks where parent_id=public.zz_u(5000)) then raise exception 'team root not deferred'; end if;
+ if c.status is distinct from 'converted' or (select subtasks from public.tasks where id=public.zz_u(5000)) is distinct from '[]'
+    or not exists(select 1 from public.tasks x join taskfold_private.team_content_tasks k on k.task_id=x.id where x.parent_id=public.zz_u(5000)
+                  and x.id=taskfold_private.legacy_child_id(public.zz_u(5000)::text,array['t'])) then raise exception 'team root not converted'; end if;
  -- A non-list tree is archived and cleared.
  if (select skipped->>'reason' from taskfold_private.json_subtask_conversions where root_id=public.zz_u(6000)) is distinct from 'not_a_list' or (select subtasks from public.tasks where id=public.zz_u(6000)) is distinct from '[]' then raise exception 'odd root'; end if;
  -- Unknown keys (a Todoist import's own metadata) move to source_metadata.taskfold_legacy_child.
@@ -3873,7 +3881,7 @@ begin
  if public.zz_digest() is distinct from before then raise exception 'second run changed data'; end if;
 end $$;
 
--- 5. Freeze: requests cannot write JSON trees any more (inserts included); team projects are exempt until phase T.
+-- 5. Freeze: requests cannot write JSON trees any more (inserts included); since Migration T team projects too.
 do $$
 declare t public.tasks;
 begin
@@ -3884,8 +3892,8 @@ begin
  -- Empty trees are still fine (old builds send them on every insert).
  insert into public.tasks(id,user_id,title,project_id,subtasks) values(public.zz_u(8000),public.zz_u(1),'plain insert',public.zz_u(102),'[]');
  update public.tasks set subtasks='[]' where id=public.zz_u(6000);
- -- Team trees pass the freeze and meet the closed team-content guard as before.
- perform public.zz_expect($q$update public.tasks set subtasks='[{"id":"t","title":"Team edit"}]' where id=public.zz_u(5000)$q$,'PT503');
+ -- Team trees are frozen too (Migration T); the freeze fires before the closed team-content guard.
+ perform public.zz_expect($q$update public.tasks set subtasks='[{"id":"t","title":"Team edit"}]' where id=public.zz_u(5000)$q$,'PT409','Subtasks are now tasks');
  -- Service-role requests (automation, functions) are requests too.
  perform set_config('request.jwt.claim.sub','',true);
  perform set_config('request.jwt.claim.role','service_role',true);
