@@ -25,9 +25,18 @@ enum DS {
         static let xl: CGFloat = 20
     }
 
-    /// Dynamic Type text styles by role (Mac column). Display text is SF Pro Expanded semibold; every time and count is tabular.
+    /// Dynamic Type text styles by role (Mac column). Screen titles are Fraunces SemiBold; other display text is
+    /// SF Pro Expanded semibold; rows and controls stay SF. Every time and count is tabular.
     enum Font {
-        static let screenTitle = SwiftUI.Font.title2.weight(.semibold).width(.expanded)
+        /// PostScript names of the bundled static Fraunces instances (Taskfold/Resources/Fonts, SIL OFL 1.1, see
+        /// Fraunces-OFL.txt): wght 600, SOFT 0, WONK 0; opsz 72 for display sizes, opsz 24 for title2-size titles.
+        static let displayTitleFace = "Fraunces-SemiBold"
+        static let screenTitleFace = "Fraunces24pt-SemiBold"
+        /// Screen and panel titles: Fraunces SemiBold 17 (the opsz 24 cut), relative to title2. Display use only;
+        /// falls back to the system face if the font is missing.
+        static let screenTitle = SwiftUI.Font.custom(screenTitleFace, size: 17, relativeTo: .title2)
+        /// The sign-in wordmark: Fraunces SemiBold 34 (the opsz 72 cut), relative to largeTitle.
+        static let displayTitle = SwiftUI.Font.custom(displayTitleFace, size: 34, relativeTo: .largeTitle)
         static let sectionHeader = SwiftUI.Font.subheadline.weight(.semibold)
         static let taskTitle = SwiftUI.Font.body
         /// Pair with `Palette.textSecondary`.
