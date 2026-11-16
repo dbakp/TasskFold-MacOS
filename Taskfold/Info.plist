@@ -111,6 +111,8 @@
 	<true/>
 	<key>TaskfoldChildRepairEnabled</key>
 	<true/>
+	<key>TaskfoldChildRowsEnabled</key>
+	<true/>
 	<key>TaskfoldTeamsEnabled</key>
 	<true/>
 </dict>

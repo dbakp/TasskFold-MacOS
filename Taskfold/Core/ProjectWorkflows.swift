@@ -117,6 +117,7 @@ struct WorkflowTemplateFile: Sendable {
     }
 }
 
+
 /// Owns one external read so dismissing a review also cancels provider coordination.
 /// Security-scoped access remains paired with the actual read, even if a provider
 /// finishes late. The UI separately fences results by request and workspace.
@@ -458,9 +459,11 @@ struct WorkflowTemplate: Sendable {
         return ["projects": selectedProjects, "sections": selectedSections, "tasks": selectedTasks,
                 "view_orders": (snapshot.tables["view_orders"] ?? []).filter { groups.contains($0.id) }]
     }
-    static func capture(kind: Kind, id: String, snapshot: Snapshot, now: Date = Date(), teamCache: TeamWorkspaceCache? = nil) throws -> Self {
+    static func capture(kind: Kind, id: String, snapshot: Snapshot, now: Date = Date(), teamCache: TeamWorkspaceCache? = nil, childRows: Bool = TaskTree.rowsEnabled) throws -> Self {
         let sources = try captureSources(kind: kind, id: id, snapshot: snapshot)
-        let selectedProjects = sources["projects"]!, selectedSections = sources["sections"]!, selectedTasks = sources["tasks"]!, labels = snapshot.tables["labels"] ?? []
+        // Child rows are saved the way templates always stored subtasks: nested under their parent in `subtasks`.
+        let selectedTasks = childRows ? ChildRowTemplates.nest(sources["tasks"]!, all: snapshot.tables["tasks"] ?? []) : sources["tasks"]!
+        let selectedProjects = sources["projects"]!, selectedSections = sources["sections"]!, labels = snapshot.tables["labels"] ?? []
         let calendar = Calendar(identifier: .gregorian)
         let anchor = selectedTasks.compactMap(\.due).min() ?? selectedTasks.compactMap(\.deadline).min() ?? calendar.startOfDay(for: now)
         func offset(_ day: String) -> JSON? { Dates.parse(day).flatMap { calendar.dateComponents([.day], from: anchor, to: $0).day }.map { .number(Double($0)) } }
@@ -508,7 +511,7 @@ struct WorkflowTemplate: Sendable {
         if headings { definition["capabilities"] = .array([.string("task_headings")]) }
         return try Self(document: .object(definition))
     }
-    func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws -> [Mutation] {
+    func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID(), childRows: Bool = TaskTree.rowsEnabled, checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws -> [Mutation] {
         try checkCancellation()
         guard !account.isEmpty, kind != .project || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, kind != .section || !targetProject.isEmpty else { throw AppFailure(message: "Choose a project name or destination before using this template.") }
         func fresh(_ kind: String, _ id: String) -> String { WorkspaceBackup.stableID("template-run:" + run.uuidString + ":" + kind, id) }
@@ -561,8 +564,15 @@ struct WorkflowTemplate: Sendable {
             row["subtasks"] = .array(try source["subtasks"].list.enumerated().map { index, child in .object(try task(Record(child.object), path: path + ":" + String(index)).fields) })
             return row
         }
-        var taskChanges: [Mutation] = []
-        for source in tasks { let row = try task(source, path: fresh("source", source.id)); taskChanges.append(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields)) }
+        var taskChanges: [Mutation] = [], childChanges: [Mutation] = []
+        for source in tasks {
+            let row = try task(source, path: fresh("source", source.id))
+            guard childRows else { taskChanges.append(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields)); continue }
+            // Child rows: the nested template subtasks become task rows under the new task, parents first.
+            let rows = ChildRowTemplates.flatten(row)
+            taskChanges.append(Mutation(table: "tasks", recordID: rows[0].id, method: "POST", fields: rows[0].fields))
+            childChanges += rows.dropFirst().map { Mutation(table: "tasks", recordID: $0.id, method: "POST", fields: $0.fields) }
+        }
         var orders: [Mutation] = []
         if kind != .task {
             let groups = Dictionary(grouping: taskChanges) { change in
@@ -576,7 +586,7 @@ struct WorkflowTemplate: Sendable {
         }
         // Every row belongs to this run's fresh identities (including its list
         // order). A retry after a lost reply must not upsert over later edits.
-        return try (changes + taskChanges + orders).map { change in
+        return try (changes + taskChanges + childChanges + orders).map { change in
             try checkCancellation()
             var change = change; change.insertOnly = true; change.workflowRun = run; return change
         }

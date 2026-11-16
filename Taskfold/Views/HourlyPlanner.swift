@@ -596,7 +596,9 @@ private struct PlannerBlockCard: View {
         let project = store.record("projects", id: block.task.string("project_id"))
         let hue = DS.Palette.project(project)
         let time = block.start < block.clippedStart ? "Continues" : ClockFormat.string(block.start) + (block.end.map { "–" + ClockFormat.string($0) } ?? "")
-        TimeGridBlock(title: block.task.title, time: time, detail: block.end == nil ? "no estimate" : project?.name,
+        // A subtask block names its parent ("↳ Parent") where the project would be.
+        let parentLine = store.parent(of: block.task.id).map { "↳ " + ($0.title.isEmpty ? "Untitled task" : $0.title) }
+        TimeGridBlock(title: block.task.title, time: time, detail: block.end == nil ? "no estimate" : parentLine ?? project?.name,
                       kind: block.end == nil ? .suggestion(hue) : .task(hue), height: height)
         .frame(width: width, height: max(1, height), alignment: .topLeading)
         .contentShape(.rect).onTapGesture(perform: open)

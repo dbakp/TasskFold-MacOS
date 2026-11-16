@@ -248,7 +248,12 @@ struct TaskInspectorForm: View {
         .sheet(item: $breakdown) { request in
             TaskBreakdownView(request: request, current: { editorAvailable ? draft : nil }, onApply: { children in
                 guard editorAvailable, request.matches(draft, workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation) else { throw AppFailure(message: "This task or workspace changed. Reopen its current details.") }
-                saveTask?.cancel(); draft["subtasks"] = children
+                saveTask?.cancel()
+                if rowsMode {
+                    guard saveNow(), store.addChildTasks(ChildRowSteps.addedTitles(children, previous: draft["subtasks"]), to: taskID) else { throw AppFailure(message: store.error ?? "These steps couldn’t be added. Your task is unchanged.") }
+                    return
+                }
+                draft["subtasks"] = children
                 _ = saveNow()
             })
         }
@@ -403,6 +408,8 @@ struct TaskInspectorForm: View {
 
     // MARK: Menu
 
+    /// Child rows: suggested steps are added as subtasks of this saved task.
+    private var canSuggestSteps: Bool { rowsMode ? workspace.taskDepth(taskID) < TaskTree.maximumAncestors : canBreakDown }
     private var canBreakDown: Bool { !rowsMode && (workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty) }
     /// A legacy embedded subtask (virtual id). A child row is an ordinary task: it repeats, moves, has reminders and every other field.
     private var isSubtask: Bool { Workspace.subtaskPath(taskID) != nil }
@@ -423,13 +430,13 @@ struct TaskInspectorForm: View {
             if !isTeamTask, store.record("tasks", id: taskID) != nil {
                 Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
             }
-            if canBreakDown {
+            if canSuggestSteps {
                 Button("Suggest steps", systemImage: "sparkles") {
                     saveTask?.cancel()
                     guard saveNow() else { return }
                     do { breakdown = try TaskBreakdownRequest(workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, source: draft, depth: workspace.taskDepth(taskID)) }
                     catch { store.error = error.localizedDescription }
-                }.disabled(!editorAvailable || draft.completed || !TaskKind.mayComplete(draft) || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !SubtaskTree.hasListContainer(draft["subtasks"]) || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth)
+                }.disabled(!editorAvailable || draft.completed || !TaskKind.mayComplete(draft) || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !SubtaskTree.hasListContainer(draft["subtasks"]) || workspace.taskDepth(taskID) >= (rowsMode ? TaskTree.maximumAncestors : SubtaskTree.maximumDepth))
                     .accessibilityIdentifier("suggestTaskSteps")
             }
             if !isSubtask, store.conversationsAvailable, let saved = current, !saved.string("project_id").isEmpty {
