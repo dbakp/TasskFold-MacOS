@@ -197,6 +197,10 @@ final class ChildRowSatellitesTests: XCTestCase {
                                                tasks: tasks.filter { $0.string("parent_id").isEmpty }))
     }
 
+    func testLocalWorkspaceWithoutJSONSubtasksIsLeftUntouched() {
+        XCTAssertNil(LocalChildRows.convert(["tasks": [row("plain"), row("kid", parent: "plain", order: 1)]]), "No marker and no rewrite when nothing is in the old shape")
+    }
+
     func testLocalConversionMarkerIsNotBackedUp() throws {
         var source = row(root, project: nil, subtasks: .array([node("a", "Alpha")])); source["task_generation"] = .string("8f0d7f52-5a0e-4a36-9a43-6c1d1f1f00aa")
         let outcome = try XCTUnwrap(LocalChildRows.convert(["tasks": [source]]))

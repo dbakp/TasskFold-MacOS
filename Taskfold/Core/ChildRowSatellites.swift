@@ -150,7 +150,7 @@ enum LocalChildRows {
         var skipped = 0
     }
 
-    /// nil when the marker is already present. Otherwise every root with JSON subtasks gains its child rows
+    /// nil when the marker is already present or nothing is in the old shape. Otherwise every root with JSON subtasks gains its child rows
     /// (deterministic ids, parents first), keeps `subtasks = []`, and legacy references in list orders are remapped.
     static func convert(_ tables: [String: [Record]], now: Date = Date()) -> Outcome? {
         guard !converted(tables) else { return nil }
@@ -168,6 +168,9 @@ enum LocalChildRows {
             tasks[index]["subtasks"] = .array([])
             outcome.roots += 1
         }
+        // Nothing saved in the old shape: leave the workspace untouched (no marker), so loading stays a no-op.
+        let legacyOrders = (tables["view_orders"] ?? []).contains { $0["ids"].list.contains { $0.text.hasPrefix("subtask:") } }
+        guard outcome.roots > 0 || legacyOrders else { return nil }
         outcome.tables["tasks"] = tasks + added
         if let orders = outcome.tables["view_orders"] {
             outcome.tables["view_orders"] = orders.map { row in
@@ -200,7 +203,9 @@ enum LegacyChildJournalExport {
 /// Completing from a widget or the Watch follows the same rule as the app: a parent completes its open descendants.
 enum ChildRowCompletion {
     static func complete(_ task: Record, tasks: [Record], at now: Date, calendar: Calendar, account: String, enabled: Bool = TaskTree.rowsEnabled) -> [Mutation] {
-        if enabled, !task.completed, let plan = TaskTree.completion(of: task, tasks: tasks, at: now, calendar: calendar, account: account) { return plan.mutations }
+        // Only a task with child rows takes the tree plan; any other task completes exactly as before.
+        if enabled, !task.completed, tasks.contains(where: { TaskTree.parentKey(of: $0) == TaskTree.key(task.id) }),
+           let plan = TaskTree.completion(of: task, tasks: tasks, at: now, calendar: calendar, account: account) { return plan.mutations }
         return TaskCompletion.complete(task, tasks: tasks, at: now, calendar: calendar, account: account)
     }
 }
