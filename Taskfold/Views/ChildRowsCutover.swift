@@ -14,25 +14,10 @@ extension Store {
         return commit(rows.map { Mutation(table: "tasks", recordID: $0.id, method: "POST", fields: $0.fields) })
     }
 
-    /// Every legacy child journal that still holds saved work, encoded as saved. Empty when there is nothing to offer.
+    /// Every legacy child journal that still holds saved work, as saved. Empty when there is nothing to offer.
     func legacyChildJournals() async throws -> [String: Data] {
         guard TaskTree.rowsEnabled, let scope = childTaskFieldRecoveryScope else { return [:] }
-        let account = scope.account, origin = scope.origin
-        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
-        var result: [String: Data] = [:]
-        func keep<T: Encodable>(_ kind: String, _ state: T, _ pending: Bool) throws { if pending { result[kind] = try encoder.encode(state) } }
-        let fields = try await childTaskFieldJournal(account: account, origin: origin).load(); try keep("fields", fields, !fields.entries.isEmpty)
-        let completions = try await childTaskCompletionJournal(account: account, origin: origin).load(); try keep("completions", completions, !completions.entries.isEmpty)
-        let mixed = try await mixedTaskCompletionJournal(account: account, origin: origin).load(); try keep("mixed_completions", mixed, !mixed.entries.isEmpty)
-        let groups = try await childTaskCompletionBatchJournal(account: account, origin: origin).load(); try keep("completion_groups", groups, !groups.entries.isEmpty)
-        let hierarchy = try await childTaskStructureJournal(account: account, origin: origin).load(); try keep("hierarchy", hierarchy, !hierarchy.entries.isEmpty || !hierarchy.disposals.isEmpty)
-        let drafts = try await childTaskStructureDraftJournal(account: account, origin: origin).load(); try keep("hierarchy_drafts", drafts, !drafts.entries.isEmpty)
-        let steps = try await reviewedTaskStepsJournal(account: account, origin: origin).load(); try keep("step_additions", steps, !steps.entries.isEmpty)
-        let transfers = try await childTaskTransferJournal(account: account, origin: origin).load(); try keep("transfers", transfers, !transfers.entries.isEmpty)
-        let adoptions = try await childTaskAdoptionJournal(account: account, origin: origin).load(); try keep("adoptions", adoptions, !adoptions.entries.isEmpty)
-        let repairs = try await childTaskRepairJournal(account: account, origin: origin).load(); try keep("repairs", repairs, !repairs.entries.isEmpty || !repairs.drafts.isEmpty)
-        let restorations = try await childTaskRestoreJournal(account: account, origin: origin).load(); try keep("restorations", restorations, !restorations.entries.isEmpty)
-        return result
+        return try legacyChildJournalBlobs(scope)
     }
 }
 

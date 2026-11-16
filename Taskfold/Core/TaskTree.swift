@@ -10,9 +10,8 @@ struct TaskTree: Sendable {
     /// Info.plist `TaskfoldChildRowsEnabled`. Absent means off, and then nothing here changes existing behaviour.
     static var rowsEnabled: Bool {
         #if DEBUG
-        // UI tests: the fixture forces rows on; `--child-rows-off` pins the legacy JSON subtasks for tests of that UI.
+        // UI tests: the fixture forces rows on.
         if ProcessInfo.processInfo.arguments.contains("--child-rows-fixture") { return true }
-        if ProcessInfo.processInfo.arguments.contains("--child-rows-off") { return false }
         #endif
         return Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRowsEnabled") as? Bool == true
     }
