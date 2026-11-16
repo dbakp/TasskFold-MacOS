@@ -8,7 +8,12 @@ import Foundation
 /// and `validate` allow at most `maximumAncestors` ancestors, counting the whole moved subtree.
 struct TaskTree: Sendable {
     /// Info.plist `TaskfoldChildRowsEnabled`. Absent means off, and then nothing here changes existing behaviour.
-    static var rowsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRowsEnabled") as? Bool == true }
+    static var rowsEnabled: Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--child-rows-fixture") { return true }
+        #endif
+        return Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRowsEnabled") as? Bool == true
+    }
     static let maximumAncestors = 10
     /// A gap between two neighbouring `child_order` values below this triggers a renumbering.
     static let renumberGap = 1e-6
