@@ -93,11 +93,22 @@ struct TaskListView: View {
     private var dated: Bool { scope == .today || scope == .upcoming }
     private var projectID: String { if case .project(let id) = scope { return id }; return "" }
     private var overdueKey: String { "overdue:" + preferenceKey }
+    /// Child rows: in a project or Inbox list that nests, a row whose parent is also in the list shows under that parent only.
+    private var nestedChildIDs: Set<String> {
+        guard workspace.nestedRowsList else { return [] }
+        let present = Set(filtered.map { TaskTree.key($0.id) })
+        return Set(filtered.filter { TaskTree.parentKey(of: $0).map(present.contains) == true && store.parent(of: $0.id) != nil }.map(\.id))
+    }
+    private func nestingRoots(_ rows: [Record]) -> [Record] {
+        let hidden = nestedChildIDs
+        return hidden.isEmpty ? rows : rows.filter { !hidden.contains($0.id) }
+    }
     private var overdueTasks: [Record] {
         if case .saved = scope { return [] }
         let today = Dates.day(Date()); var planningRead = TaskPlannedDayRead()
+        let nestedChildren = nestedChildIDs
         return ordered(filtered.filter { task in
-            guard !task.completed else { return false }
+            guard !task.completed, !nestedChildren.contains(task.id) else { return false }
             let day = planningRead.day(task)
             return !day.isEmpty && day < today
         }, day: overdueKey)
@@ -164,21 +175,22 @@ struct TaskListView: View {
         let horizon = (0..<14).compactMap { calendar.date(byAdding: .day, value: $0, to: now).map(Dates.day) }
         return [("Overdue", overdue)] + read.upcomingDays(adding: horizon).map { day in (day, ordered(read.rowsByDay[day] ?? [], day: day)) }
     }
-    private struct Group { var title: String; var key: String; var tasks: [Record] }
+    /// `counted` holds every row of the group when `tasks` shows roots only (child rows nest under their parent), so counts include subtasks.
+    private struct Group { var title: String; var key: String; var tasks: [Record]; var counted: [Record]? = nil }
     private var groups: [Group] {
         if case .saved = scope {
             return store.filterGroups(scope, tasks: filtered, includeCompleted: showCompleted).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
         }
         if !projectID.isEmpty {
             let read = ProjectSectionTaskRead(project: projectID, sections: store.rows("sections"), tasks: regularTasks)
-            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(read.tasks(in: ""), day: groupKey(section: nil)))
+            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(nestingRoots(read.tasks(in: "")), day: groupKey(section: nil)), counted: TaskTree.rowsEnabled ? read.tasks(in: "") : nil)
             return [loose] + read.sections.map { section in
                 let key = groupKey(section: section.id)
-                return Group(title: section.name, key: key, tasks: ordered(read.tasks(in: section.id), day: key))
+                return Group(title: section.name, key: key, tasks: ordered(nestingRoots(read.tasks(in: section.id)), day: key), counted: TaskTree.rowsEnabled ? read.tasks(in: section.id) : nil)
             }
         }
         let key = groupKey(section: nil)
-        return [Group(title: "", key: key, tasks: ordered(regularTasks, day: key))]
+        return [Group(title: "", key: key, tasks: ordered(nestingRoots(regularTasks), day: key), counted: TaskTree.rowsEnabled ? regularTasks : nil)]
     }
     private func collapsed(_ key: String) -> Bool { collapsedSections.split(separator: "\n").contains(Substring(key)) }
     private func collapseBinding(_ key: String) -> Binding<Bool> {
@@ -376,7 +388,7 @@ struct TaskListView: View {
                                 }
                             } header: {
                                 if !projectID.isEmpty {
-                                    ProjectSectionHeader(key: group.key, title: group.title, count: TaskKind.listCountLabel(group.tasks), collapsed: collapseBinding(group.key)) {
+                                    ProjectSectionHeader(key: group.key, title: group.title, count: TaskKind.listCountLabel(group.counted ?? group.tasks), collapsed: collapseBinding(group.key)) {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
                                     }

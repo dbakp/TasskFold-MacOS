@@ -293,6 +293,13 @@ struct TaskInspectorForm: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
+            if rowsMode, let back = workspace.inspectorBackTitle {
+                Button { if saveNow() { workspace.popInspector() } } label: {
+                    Label(back.isEmpty ? "Back" : back, systemImage: "chevron.left").font(DS.Font.taskMeta).lineLimit(1)
+                }
+                .buttonStyle(.plain).foregroundStyle(DS.Palette.accent).pointerStyle(.link)
+                .accessibilityLabel("Back to " + (back.isEmpty ? "parent task" : back)).accessibilityIdentifier("inspectorBack")
+            }
             HStack(alignment: .top, spacing: DS.Space.s) {
                 completionControl
                 TextField("Title", text: text("title"), selection: $titleSelection, prompt: Text("What needs doing?"), axis: .vertical)
@@ -303,6 +310,14 @@ struct TaskInspectorForm: View {
                     .accessibilityIdentifier("taskTitle")
                     .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: quickExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
                 moreMenu
+            }
+            if rowsMode, let parent = store.parent(of: taskID) {
+                Button { if saveNow() { workspace.pushInspector(from: taskID, to: parent.id) } } label: {
+                    (Text("Subtask of ") + Text(parent.title.isEmpty ? "Untitled task" : parent.title).fontWeight(.semibold)).font(DS.Font.taskMeta).lineLimit(1)
+                }
+                .buttonStyle(.plain).foregroundStyle(DS.Palette.textSecondary).pointerStyle(.link)
+                .accessibilityLabel("Subtask of " + (parent.title.isEmpty ? "untitled task" : parent.title)).accessibilityHint("Opens the parent task")
+                .accessibilityIdentifier("subtaskOf")
             }
             if !TaskKind.mayComplete(draft) {
                 Label(TaskKind(draft) == .heading ? "Heading · stays open" : "Task type unavailable", systemImage: TaskKind(draft) == .heading ? "textformat" : "questionmark.square")
@@ -388,8 +403,11 @@ struct TaskInspectorForm: View {
 
     // MARK: Menu
 
-    private var canBreakDown: Bool { workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty }
+    private var canBreakDown: Bool { !rowsMode && (workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty) }
+    /// A legacy embedded subtask (virtual id). A child row is an ordinary task: it repeats, moves, has reminders and every other field.
     private var isSubtask: Bool { Workspace.subtaskPath(taskID) != nil }
+    /// Child rows: this saved personal task owns real subtask rows.
+    private var rowsMode: Bool { TaskTree.rowsEnabled && !isCreating && !isTeamTask && Workspace.subtaskPath(taskID) == nil && store.record("tasks", id: taskID) != nil }
     private var moreMenu: some View {
         Menu {
             if store.canAuthorTaskHeadings(teamDraft: teamDraft) {
@@ -425,6 +443,12 @@ struct TaskInspectorForm: View {
             }
             if !isSubtask, !isCreating, let request = store.audioConversationRequest(taskID: taskID), draft.string("project_id") == current?.string("project_id") {
                 Button("Audio comments", systemImage: "waveform.bubble") { audioConversation = request }.accessibilityIdentifier("openAudioConversation")
+            }
+            if rowsMode {
+                Divider()
+                Button("Indent", systemImage: "increase.indent") { if saveNow() { workspace.indentTask(taskID) } }.disabled(!workspace.canIndent(taskID)).accessibilityIdentifier("taskIndent")
+                Button("Outdent", systemImage: "decrease.indent") { if saveNow() { workspace.outdentTask(taskID) } }.disabled(!workspace.canOutdent(taskID)).accessibilityIdentifier("taskOutdent")
+                if workspace.canOutdent(taskID) { Button("Make it a Task", systemImage: "arrow.up.right.square") { if saveNow() { workspace.makeTask(taskID) } }.accessibilityIdentifier("taskMakeTask") }
             }
             Divider()
             if !isTeamTask, !isCreating, !isSubtask {
@@ -641,7 +665,17 @@ struct TaskInspectorForm: View {
     }
 
     @ViewBuilder private var subtasksSection: some View {
-        if canBreakDown {
+        if rowsMode {
+            let progress = store.childProgress(of: taskID)
+            block("subtasks", "Subtasks", summary: progress.total == 0 ? nil : "\(progress.completed)/\(progress.total)") {
+                ChildRowsList(parentID: taskID, flush: { saveTask?.cancel(); return saveNow() }, canAdd: true)
+            }
+            // Embedded checklist items written before the move to rows stay reachable until they are converted.
+            if !draft["subtasks"].list.isEmpty { legacySubtasksSection }
+        } else { legacySubtasksSection }
+    }
+    @ViewBuilder private var legacySubtasksSection: some View {
+        if canBreakDown || (rowsMode && !draft["subtasks"].list.isEmpty) {
             let childRows = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope)
             let done = childRows.filter { SubtaskTree.inlinePresentation($0.value).completed }.count
             block("subtasks", "Subtasks", summary: childRows.isEmpty ? nil : "\(done)/\(childRows.count)") {

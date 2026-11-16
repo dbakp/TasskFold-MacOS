@@ -113,8 +113,15 @@ final class Workspace {
     }
     var deadlineSelection: DeadlineSelection?
     var selection = Set<String>() {
-        didSet { if selection != oldValue && !selection.isEmpty { finderTaskID = nil } }
+        didSet {
+            if selection != oldValue && !selection.isEmpty { finderTaskID = nil }
+            // Choosing a task anywhere else ends the inspector's drill-down; only the inspector's own pushes keep the stack.
+            if selection != oldValue && !inspectorNavigating && !inspectorBackStack.isEmpty { inspectorBackStack = [] }
+        }
     }
+    /// Child rows: the tasks the inspector came from, oldest first. The "‹ Parent" button pops one.
+    var inspectorBackStack: [String] = []
+    @ObservationIgnored var inspectorNavigating = false
     var expandedTasks = Set<String>()
     var projectMembers: [String: [Record]] = [:]
     var memberLoadError: String?
@@ -1260,7 +1267,11 @@ extension Workspace {
     func childID(parent: String, value: JSON, index: Int) -> String {
         SubtaskTree.reference(parent: parent, key: Self.childKey(value, index: index))
     }
-    func taskDepth(_ id: String) -> Int { (Self.subtaskPath(id)?.count ?? 1) - 1 }
+    func taskDepth(_ id: String) -> Int {
+        // Child rows: depth is the number of ancestors by `parent_id`. (`subtaskPath` stays the legacy JSON path of a virtual id; a row is a real task and has none.)
+        if TaskTree.rowsEnabled, Self.subtaskPath(id) == nil { return store.breadcrumb(of: id).count }
+        return (Self.subtaskPath(id)?.count ?? 1) - 1
+    }
     func taskRecord(_ id: String) -> Record? {
         guard let path = Self.subtaskPath(id) else { return store.record("tasks", id: id) }
         if hierarchyPresentation, let projected = try? store.selectionRecord(id) { return projected }
@@ -1276,9 +1287,11 @@ extension Workspace {
         scope.usesProductiveWork && store.productiveReading.contains(task.id)
     }
     func canExpandTask(_ task: Record) -> Bool {
-        !hierarchyFilter && section != .assigned && taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty && !(TaskKind(task) == .heading && independentWorkRow(task))
+        if TaskTree.rowsEnabled, nestedRowsList, !store.children(of: task.id).isEmpty { return true }
+        return !hierarchyFilter && section != .assigned && taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty && !(TaskKind(task) == .heading && independentWorkRow(task))
     }
     func visibleTasks(_ roots: [Record]) -> [Record] {
+        if TaskTree.rowsEnabled, nestedRowsList { return nestedRows(roots) }
         if section == .assigned || hierarchyFilter { return roots }
         return roots.flatMap { task -> [Record] in
             guard canExpandTask(task), expandedTasks.contains(task.id) else { return [task] }

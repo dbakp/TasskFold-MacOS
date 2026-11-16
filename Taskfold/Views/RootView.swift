@@ -622,6 +622,12 @@ struct RootView: View {
                     try? store.persist()
                     workspace.section = .today
                 }
+        if arguments.contains("--child-rows-fixture"), arguments.contains("--uitesting") || arguments.contains("--preview") {
+            store.startLocal(); store.seedChildRowsFixture()
+            UserDefaults.standard.set("list", forKey: "mac.view.project:\(ChildRowsFixture.project).layout")
+            UserDefaults.standard.set("manual", forKey: "mac.view.project:\(ChildRowsFixture.project).sortBy")
+            workspace.section = .project(ChildRowsFixture.project)
+        }
         if arguments.contains("--pinned-notes-seed") { store.startLocal(); store.seedPinnedNotesFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--project-pulse-seed") { store.startLocal(); store.seedProjectPulseFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--focus-session-seed") {

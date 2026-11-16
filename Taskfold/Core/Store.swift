@@ -186,11 +186,12 @@ final class Store {
     }
 
     // MARK: Child rows (`parent_id`), behind Info.plist `TaskfoldChildRowsEnabled` (absent = off).
-    func children(of id: String) -> [Record] { TaskTree.rowsEnabled ? taskCache.tree.children(of: id) : [] }
-    func parent(of id: String) -> Record? { TaskTree.rowsEnabled ? taskCache.tree.parent(of: id) : nil }
-    func breadcrumb(of id: String) -> [Record] { TaskTree.rowsEnabled ? taskCache.tree.breadcrumb(of: id) : [] }
+    // Each read observes `taskRevision` so a view that shows children refreshes when any task changes.
+    func children(of id: String) -> [Record] { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.children(of: id) : [] }
+    func parent(of id: String) -> Record? { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.parent(of: id) : nil }
+    func breadcrumb(of id: String) -> [Record] { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.breadcrumb(of: id) : [] }
     /// Replaces `subtaskProgress` once subtasks are rows: counts every descendant task.
-    func childProgress(of id: String) -> (completed: Int, total: Int) { TaskTree.rowsEnabled ? taskCache.tree.childProgress(of: id) : (0, 0) }
+    func childProgress(of id: String) -> (completed: Int, total: Int) { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.childProgress(of: id) : (0, 0) }
 
     @ObservationIgnored private var presentationAccessEpoch = UUID()
     private var presentedTables: [String: [Record]] {
@@ -3279,7 +3280,7 @@ final class Store {
                 }
             }
         } catch { self.error=error.localizedDescription;return false }
-        let preparedChanges=prepared
+        let preparedChanges = TaskTree.rowsEnabled ? childRowsDetaching(prepared) : prepared
         guard !preparedChanges.contains(where: { $0.table == "tasks" && $0.recordID.hasPrefix("subtask:") }) else {
             error = "Open this subtask's details to make this change."; return false
         }
@@ -3454,7 +3455,10 @@ final class Store {
                 continue
             }
             let before = change.table == "tasks" ? current : nil
+            // A parent's project/section move: the server cascades to descendants, so only the screen follows here (not queued).
+            let cascadedMoves = TaskTree.rowsEnabled && change.table == "tasks" && change.method == "PATCH" ? TaskTree.cascadeLocal([change], tasks: snapshot.tables["tasks"] ?? []) : []
             snapshot.apply(change)
+            for edit in cascadedMoves { snapshot.apply(Mutation(table: "tasks", recordID: edit.id, method: "PATCH", fields: edit.fields)) }
             if localMode {
                 let after = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
                 TaskActivity.recordLocal(change, before: before, after: after, snapshot: &snapshot, account: userID)
@@ -3639,7 +3643,8 @@ final class Store {
                 changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["section_id": .null]))
             }
         }
-        changes.append(Mutation(table: table, recordID: id, method: "DELETE", fields: [:]))
+        if table == "tasks", TaskTree.rowsEnabled { changes += childRowsDeletion([id]) }
+        else { changes.append(Mutation(table: table, recordID: id, method: "DELETE", fields: [:])) }
         commit(changes)
     }
     /// Source-only local acceptance switch. Normal app configuration omits it;
@@ -3697,10 +3702,15 @@ final class Store {
     }
     /// Deletes several tasks as one undoable change.
     func removeAll(_ ids: [String]) {
-        let changes = ids.filter { record("tasks", id: $0) != nil }.map { Mutation(table: "tasks", recordID: $0, method: "DELETE", fields: [:]) }
+        var changes = ids.filter { record("tasks", id: $0) != nil }.map { Mutation(table: "tasks", recordID: $0, method: "DELETE", fields: [:]) }
+        if TaskTree.rowsEnabled { changes = childRowsDeletion(ids) }
         if !changes.isEmpty { commit(changes) }
     }
-    func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
+    func toggleChanges(_ task: Record) -> [Mutation] {
+        // With child rows, completing a parent completes its open descendants in the same commit (one Undo); reopening a child reopens its completed ancestors; a recurring parent gets successor children.
+        if TaskTree.rowsEnabled, let plan = TaskTree.completion(of: task, tasks: tasks, account: userID) { return plan.mutations }
+        return TaskCompletion.toggle(task, tasks: tasks, account: userID)
+    }
     private func markPersonalTaskMove(_ input: Mutation, existing: Record?) -> Mutation {
         var change = input
         if TaskAssignment.scopedProject(change) != nil { return change }
@@ -5610,7 +5620,7 @@ extension Store {
     func commitSelection(_ tasks: [Record], action: (Record) -> TaskSelectionPlan.Action) throws -> Bool {
         let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration)
         let requests = tasks.map { TaskSelectionPlan.Request(task: $0, action: action($0), workspace: workspace) }
-        let changes = try TaskSelectionPlan.changes(requests, accessibleRoots: activeTasks, projects: projects, workspace: workspace)
+        let changes = try TaskTree.rowsEnabled ? childRowsSelectionChanges(requests, workspace: workspace) : TaskSelectionPlan.changes(requests, accessibleRoots: activeTasks, projects: projects, workspace: workspace)
         guard !changes.isEmpty else { return true }
         guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The selection could not be saved. Try again.") }
         return true
@@ -8673,5 +8683,69 @@ extension Store {
         let baseline = task
         task["waiting_on"] = normalized.map { .string($0) } ?? .null
         return save("tasks", task, baseline: baseline)
+    }
+}
+
+// MARK: - Child rows (`parent_id`): thin hooks that route through `TaskTree`. All of them are inert unless `TaskTree.rowsEnabled`.
+
+extension Store {
+    /// Deleting a parent deletes its descendants deepest first, each with its full baseline. The single Undo entry recreates the parent first.
+    func childRowsDeletion(_ ids: [String]) -> [Mutation] {
+        var working = tasks, result: [Mutation] = []
+        for id in ids {
+            guard working.contains(where: { TaskTree.key($0.id) == TaskTree.key(id) }) else { continue }
+            let expansion = TaskTree.deletionExpansion(of: id, tasks: working)
+            result += expansion; working = TaskTree.apply(expansion, to: working)
+        }
+        return result
+    }
+
+    /// Selection completion and deletion for plain rows: one plan per selected task, applied in order so overlapping subtrees never double-write.
+    /// Any other action (a field patch) keeps the existing selection plan.
+    func childRowsSelectionChanges(_ requests: [TaskSelectionPlan.Request], workspace: WorkspaceBinding) throws -> [Mutation] {
+        let plain = requests.allSatisfy { SubtaskTree.referencePath($0.task.id) == nil && record("tasks", id: $0.task.id) != nil }
+        var completions: [(Record, Bool, Date)] = [], deletes: [String] = []
+        for request in requests {
+            switch request.action {
+            case .completion(let done, let date): completions.append((request.task, done, date))
+            case .delete: deletes.append(request.task.id)
+            case .patch: break
+            }
+        }
+        guard plain, completions.count + deletes.count == requests.count, completions.isEmpty != deletes.isEmpty else {
+            return try TaskSelectionPlan.changes(requests, accessibleRoots: activeTasks, projects: projects, workspace: workspace)
+        }
+        if !deletes.isEmpty { return childRowsDeletion(deletes) }
+        var working = tasks, result: [Mutation] = []
+        for (task, done, date) in completions {
+            guard let current = working.first(where: { TaskTree.key($0.id) == TaskTree.key(task.id) }) else { continue }
+            guard TaskKind.mayComplete(current) else { throw SubtaskTree.Failure(message: "Headings stay open. Select tasks to complete.") }
+            guard current.completed != done, let plan = TaskTree.completion(of: current, tasks: working, at: date, account: userID) else { continue }
+            result += plan.mutations; working = TaskTree.apply(plan.mutations, to: working)
+        }
+        return result
+    }
+
+    /// A child never leaves its parent's project or section on its own: moving a child somewhere else detaches it
+    /// (`parent_id` null), matching `TaskTree.moveToProject`. Moving a parent together with its child keeps the link.
+    func childRowsDetaching(_ changes: [Mutation]) -> [Mutation] {
+        let moves = changes.filter { $0.table == "tasks" && $0.method == "PATCH" && ($0.fields["project_id"] != nil || $0.fields["section_id"] != nil) }
+        guard !moves.isEmpty else { return changes }
+        let rows = Dictionary(tasks.map { (TaskTree.key($0.id), $0) }, uniquingKeysWith: { first, _ in first })
+        let batch = Dictionary(moves.map { (TaskTree.key($0.recordID), $0) }, uniquingKeysWith: { first, _ in first })
+        func place(_ id: String) -> (String, String)? {
+            guard let row = rows[TaskTree.key(id)] else { return nil }
+            let move = batch[TaskTree.key(id)]
+            return (move?.fields["project_id"]?.text ?? row.string("project_id"), move?.fields["section_id"]?.text ?? row.string("section_id"))
+        }
+        return changes.map { change in
+            guard change.table == "tasks", change.method == "PATCH", batch[TaskTree.key(change.recordID)] != nil,
+                  let row = rows[TaskTree.key(change.recordID)], let parent = TaskTree.parentKey(of: row), rows[parent] != nil,
+                  change.fields["parent_id"] == nil, let mine = place(change.recordID), let theirs = place(parent), mine != theirs else { return change }
+            var detached = change
+            detached.fields["parent_id"] = .null; detached.fields["child_order"] = .null
+            if detached.baseline != nil { detached.baseline?["parent_id"] = row["parent_id"]; detached.baseline?["child_order"] = row["child_order"] }
+            return detached
+        }
     }
 }

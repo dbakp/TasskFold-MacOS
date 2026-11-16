@@ -17,6 +17,7 @@ struct TaskfoldMacApp: App {
         // Fixture launches are force-quit by the test runner, which leaves window-restoration state that can
         // restore "no windows" on the next launch. Ignore it for fixtures so every test starts with a window.
         let arguments = ProcessInfo.processInfo.arguments
+        ChildRowsFixture.enableFlagIfRequested()
         if arguments.contains("--uitesting") || arguments.contains("--preview") || TeamEditorNativeFixture.enabled || ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
             UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
         }
@@ -287,6 +288,15 @@ struct TaskfoldCommands: Commands {
             // Space and Return are handled by the focused list itself so typing in text fields is never intercepted.
             Button(completeTitle) { workspace.toggle(workspace.actionSelection) }.keyboardShortcut("k", modifiers: [.command, .shift]).disabled(workspace.actionSelection.isEmpty)
             Button("Edit Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.open(id) } }.keyboardShortcut("e", modifiers: .command).disabled(workspace.actionSelection.count != 1)
+            if TaskTree.rowsEnabled {
+                // Child rows: ⌘] nests the task under the one above it, ⌘[ lifts it one level.
+                Button("Indent Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.indentTask(id) } }
+                    .keyboardShortcut("]", modifiers: .command).disabled(workspace.actionSelection.count != 1 || !workspace.canIndent(workspace.actionSelection.first ?? ""))
+                Button("Outdent Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.outdentTask(id) } }
+                    .keyboardShortcut("[", modifiers: .command).disabled(workspace.actionSelection.count != 1 || !workspace.canOutdent(workspace.actionSelection.first ?? ""))
+                Button("Make it a Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.makeTask(id) } }
+                    .disabled(workspace.actionSelection.count != 1 || !workspace.canOutdent(workspace.actionSelection.first ?? ""))
+            }
             Divider()
             Menu("Reschedule") {
                 Button("Today") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Date()), label: "today") }.keyboardShortcut("t", modifiers: [.command, .option])
