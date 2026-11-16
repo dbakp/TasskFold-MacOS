@@ -106,7 +106,6 @@ struct TaskRowView: View {
             .modifier(HoverLift())
             .pointerStyle(.link)
             .accessibilityLabel(checked ? "Reopen \(task.title)" : "Complete \(task.title)")
-            .disabled(store.childTaskCompletionEnabled && Workspace.subtaskPath(task.id) != nil && store.childListCompletionBusy)
             .accessibilityIdentifier((checked ? "reopen-" : "complete-") + task.id)
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
             } else {
@@ -269,17 +268,17 @@ struct TaskRowView: View {
         return store.record("projects", id: task.string("project_id"))
     }
     /// Indentation steps: only in a project or Inbox list that nests its children.
-    private var indentSteps: Int { TaskTree.rowsEnabled ? workspace.rowIndent(task) : workspace.taskDepth(task.id) }
+    private var indentSteps: Int { workspace.rowIndent(task) }
     /// "↳ Parent" under a child shown out of its parent (Today, Upcoming, Calendar, boards); labels, filters and search show the whole breadcrumb.
     private var childParentLine: String? {
-        guard TaskTree.rowsEnabled, !inInspector, !workspace.nestedRowsList else { return nil }
+        guard !inInspector, !workspace.nestedRowsList else { return nil }
         let trail = store.breadcrumb(of: task.id)
         guard !trail.isEmpty else { return nil }
         let flat: Bool
         switch rowScope { case .label?, .saved?, .all?, .completed?: flat = true; default: flat = !workspace.search.isEmpty }
         return "↳ " + (flat ? trail.map { $0.title.isEmpty ? "Untitled task" : $0.title }.joined(separator: " › ") : (trail.last?.title ?? ""))
     }
-    private var rowChildProgress: (completed: Int, total: Int) { TaskTree.rowsEnabled ? store.childProgress(of: task.id) : (0, 0) }
+    private var rowChildProgress: (completed: Int, total: Int) { store.childProgress(of: task.id) }
     private var labelNames: [String] { task["labels"].list.map(\.text).filter { !$0.isEmpty }.map { store.record("labels", id: $0)?.name ?? $0 } }
     private func hasMetadata(_ planning: TaskRowPlanningRead) -> Bool {
         cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || rowChildProgress.total > 0 || !task["comments"].list.isEmpty

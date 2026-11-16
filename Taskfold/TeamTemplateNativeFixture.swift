@@ -926,14 +926,12 @@ private extension Optional where Wrapped==URL {func unwrapFullSchema()throws->UR
 @MainActor struct FullSchemaNativeView:View {
     @Environment(Store.self) private var store
     @State private var status="Starting genuine Store check"
-    @State private var stepReview: ReviewedTaskStepsOpening?
     var body:some View {
         VStack(alignment:.leading,spacing:12){Text("Offline recovery").font(.title2);Text(status).accessibilityIdentifier("fullSchemaNativeStatus");if let c=try? FullSchemaNativeFixture.configuration(),let task=store.record("tasks",id:c.task){Text(task.title).font(.headline);Text(task.string("description"))}}.padding().task {
             guard status=="Starting genuine Store check" else{return}
-            do{try await store.runFullSchemaNativePhase();status="Verified "+FullSchemaNativeFixture.phase; if FullSchemaNativeFixture.phase == "step-ui" { stepReview = .init(root: try FullSchemaNativeFixture.configuration().task) }}
+            do{try await store.runFullSchemaNativePhase();status="Verified "+FullSchemaNativeFixture.phase}
             catch{status=error.localizedDescription;try? store.writeFullSchemaNativeFailure(error)}
         }
-        .sheet(item: $stepReview) { ReviewedTaskStepsView(opening: $0) }
     }
 }
 #endif

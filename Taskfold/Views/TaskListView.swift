@@ -183,14 +183,14 @@ struct TaskListView: View {
         }
         if !projectID.isEmpty {
             let read = ProjectSectionTaskRead(project: projectID, sections: store.rows("sections"), tasks: regularTasks)
-            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(nestingRoots(read.tasks(in: "")), day: groupKey(section: nil)), counted: TaskTree.rowsEnabled ? read.tasks(in: "") : nil)
+            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(nestingRoots(read.tasks(in: "")), day: groupKey(section: nil)), counted: read.tasks(in: ""))
             return [loose] + read.sections.map { section in
                 let key = groupKey(section: section.id)
-                return Group(title: section.name, key: key, tasks: ordered(nestingRoots(read.tasks(in: section.id)), day: key), counted: TaskTree.rowsEnabled ? read.tasks(in: section.id) : nil)
+                return Group(title: section.name, key: key, tasks: ordered(nestingRoots(read.tasks(in: section.id)), day: key), counted: read.tasks(in: section.id))
             }
         }
         let key = groupKey(section: nil)
-        return [Group(title: "", key: key, tasks: ordered(nestingRoots(regularTasks), day: key), counted: TaskTree.rowsEnabled ? regularTasks : nil)]
+        return [Group(title: "", key: key, tasks: ordered(nestingRoots(regularTasks), day: key), counted: regularTasks)]
     }
     private func collapsed(_ key: String) -> Bool { collapsedSections.split(separator: "\n").contains(Substring(key)) }
     private func collapseBinding(_ key: String) -> Binding<Bool> {
@@ -865,27 +865,11 @@ struct ConfirmationBar: View {
                 Text(confirmation.message).fontWeight(.semibold).lineLimit(1).id(confirmation.id).transition(.textSwap)
                 Text(confirmation.celebration ?? "").foregroundStyle(DS.Palette.textSecondary).lineLimit(1)
             } else {
-            Image(systemName: confirmation.mixedGroupReview ? "clock.arrow.circlepath" : "checkmark.circle.fill").foregroundStyle(DS.Palette.accent).id(confirmation.id).transition(.iconSwap)
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(DS.Palette.accent).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
             }
             Spacer()
-            if confirmation.mixedGroupReview { Button("Review") { workspace.reviewMixedGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListMixedGroup") }
-            if confirmation.childGroupReview {
-                Button("Review") { workspace.reviewChildGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListChildGroup")
-            }
-            if confirmation.childCompletionReview {
-                Button("Review") { workspace.reviewChildCompletion() }.buttonStyle(.link).accessibilityIdentifier("reviewListChildCompletion")
-            }
-            if let token = confirmation.mixedGroup, workspace.canUndoMixedGroup(token) {
-                Button("Undo") { workspace.undoMixedGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
-                Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
-            } else if let token = confirmation.childGroup, workspace.canUndoChildGroup(token) {
-                Button("Undo") { workspace.undoChildGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
-                Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
-            } else if let token = confirmation.childCompletion, workspace.canUndoChildCompletion(token) {
-                Button("Undo") { workspace.undoChildCompletion(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
-                Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
-            } else if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
+            if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
                 Button("Undo") { workspace.undoFromConfirmation(request, confirmationID: confirmation.id) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
                 Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
             }

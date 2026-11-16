@@ -34,7 +34,6 @@ struct SubtaskOrganizerButton: View {
     var admittedWorkspace: WorkspaceBinding? = nil
     var teamDraft: TeamTaskEditorDraft? = nil
     var present: ((SubtaskOrganizerRequest) -> Void)? = nil
-    var presentHierarchy: ((String) -> Void)? = nil
     var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
     var body: some View {
         Group {
@@ -49,8 +48,6 @@ struct SubtaskOrganizerButton: View {
         }
             .accessibilityIdentifier("organizeSubtasks")
             .accessibilityLabel("Edit subtasks")
-        ChildTaskFieldEditorLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID, reference: SubtaskTree.referencePath(taskID) == nil ? nil : taskID)
-        ChildTaskStructureLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID, show: presentHierarchy)
         }
         .sheet(item: $opening) { SubtaskOrganizerPresentation(request: $0) }
     }

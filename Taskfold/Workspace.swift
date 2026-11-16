@@ -72,12 +72,6 @@ struct Confirmation: Equatable {
     var historyRequest: EditHistoryRequest?
     /// Second line for a celebration toast, such as "5 of 5 today".
     var celebration: String? = nil
-    var childCompletion: ChildTaskListCompletionUndo? = nil
-    var childCompletionReview = false
-    var mixedGroup: MixedTaskListUndo? = nil
-    var mixedGroupReview = false
-    var childGroup: ChildTaskListBatchUndo? = nil
-    var childGroupReview = false
 }
 
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
@@ -348,7 +342,6 @@ final class Workspace {
         if store.undoStack.last?.redo.map(\.id) != previous { register(name) }
     }
     private func register(_ name: String) {
-        childCompletionUndoID = nil; childGroupUndoID = nil; mixedGroupUndoID = nil
         guard let undoManager else { return }
         undoManager.setActionName(name)
         undoManager.registerUndo(withTarget: self) { workspace in
@@ -361,16 +354,11 @@ final class Workspace {
     }
 
     func confirm(_ message: String, undoable: Bool = true, celebration: String? = nil) {
-        childCompletionUndoID = nil; childGroupUndoID = nil; mixedGroupUndoID = nil
         confirmationTimer?.cancel()
         confirmationHovering = false
         withAnimation(toastAnimation) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil, celebration: celebration) }
         confirmationTimer = Task { [weak self] in
-            #if DEBUG
-            let delay = ChildFieldNativeIdentity.mainListTesting && ProcessInfo.processInfo.arguments.contains("--child-fields-list-completion") ? 90.0 : Self.toastLifetime
-            #else
             let delay = Self.toastLifetime
-            #endif
             // The countdown only advances while the pointer is away from the bar.
             var remaining = delay
             while remaining > 0 {
@@ -479,145 +467,6 @@ final class Workspace {
         confirmationTimer?.cancel(); withAnimation(toastAnimation) { confirmation = nil }
     }
 
-    var childGroupReview = false
-    private var childGroupUndoID: String?
-    var childCompletionReview = false
-    private var childCompletionUndoID: String?
-    func clearChildCompletion() {
-        childGroupUndoID = nil; childGroupReview = false; mixedGroupUndoID = nil; mixedGroupReview = false
-        childCompletionUndoID = nil; childCompletionReview = false
-        if confirmation?.mixedGroup != nil || confirmation?.mixedGroupReview == true || confirmation?.childCompletion != nil || confirmation?.childCompletionReview == true || confirmation?.childGroup != nil || confirmation?.childGroupReview == true { confirmationTimer?.cancel(); confirmation = nil }
-    }
-    func reviewChildCompletion() {
-        confirmationTimer?.cancel(); confirmation = nil; childCompletionReview = true
-    }
-    func canUndoChildCompletion(_ token: ChildTaskListCompletionUndo) -> Bool {
-        childCompletionUndoID == token.command.id && store.canUndoChildListCompletion(token)
-    }
-    private func showChildCompletion(_ result: ChildTaskListCompletionResult) {
-        confirm(result.message, undoable: false)
-        confirmation?.childCompletion = result.undo
-        confirmation?.childCompletionReview = result.needsReview
-        guard let token = result.undo, let manager = undoManager else { return }
-        childCompletionUndoID = token.command.id
-        manager.registerUndo(withTarget: self) { workspace in
-            guard workspace.canUndoChildCompletion(token) else { return }
-            workspace.childCompletionUndoID = nil
-            Task { [weak workspace] in
-                guard let workspace, let result = await workspace.store.undoChildFromList(token) else { return }
-                workspace.showChildCompletion(result)
-            }
-        }
-        manager.setActionName(token.command.body["action"] == .string("complete") ? "Complete Subtask" : "Reopen Subtask")
-    }
-    func undoChildCompletion(_ token: ChildTaskListCompletionUndo) {
-        guard canUndoChildCompletion(token), let manager = undoManager, manager.canUndo else { return }
-        manager.undo()
-    }
-    func reviewChildGroup() { confirmationTimer?.cancel(); confirmation = nil; childGroupReview = true }
-    func canUndoChildGroup(_ token: ChildTaskListBatchUndo) -> Bool { childGroupUndoID == token.command.id && store.canUndoChildListBatch(token) }
-    private func showChildGroup(_ result: ChildTaskListBatchResult) {
-        confirm(result.message, undoable: false); confirmation?.childGroup = result.undo; confirmation?.childGroupReview = result.needsReview
-        guard let token = result.undo, let manager = undoManager else { return }; childGroupUndoID = token.command.id
-        manager.registerUndo(withTarget: self) { workspace in
-            guard workspace.canUndoChildGroup(token) else { return }; workspace.childGroupUndoID = nil
-            Task { [weak workspace] in
-                guard let workspace, let result = await workspace.store.undoChildBatchFromList(token) else { return }; workspace.showChildGroup(result)
-            }
-        }
-        manager.setActionName(token.command.items[0].body["action"] == .string("complete") ? "Complete Subtasks" : "Reopen Subtasks")
-    }
-    func undoChildGroup(_ token: ChildTaskListBatchUndo) { guard canUndoChildGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
-    var mixedGroupReview = false
-    private var mixedGroupUndoID: String?
-    private(set) var completionHistory: ConfirmedHistoryBridge?
-    func reviewMixedGroup() { confirmationTimer?.cancel(); confirmation = nil; mixedGroupReview = true }
-    func canUndoMixedGroup(_ token: MixedTaskListUndo) -> Bool { mixedGroupUndoID == token.command.id && completionHistory?.canUndo == true && store.canUndoMixedFromList(token) }
-    private func showMixedGroup(_ result: MixedTaskListResult) {
-        confirm(result.message, undoable: false); confirmation?.mixedGroup = result.undo; confirmation?.mixedGroupReview = result.needsReview
-        guard let token = result.undo, let manager = undoManager else { return }; mixedGroupUndoID = token.command.id
-        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
-        completionHistory?.record(store.mixedHistoryStep(token) { [weak self] value in
-            guard let self else { return }
-            self.confirm(value.message, undoable: false)
-            self.confirmation?.mixedGroupReview = value.needsReview
-        })
-    }
-    func rememberReviewedTaskSteps(_ entry: ReviewedTaskStepsState.Entry, scope: ChildTaskFieldClientScope) {
-        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
-        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
-        guard let history = completionHistory, !history.contains(key: entry.command.id) else { return }
-        let step = store.reviewedTaskStepsHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) }
-        if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, history.acceptConfirmedInverse(of: parent, next: step) { return }
-        history.record(step)
-    }
-    func rememberChildStructure(_ entry: ChildTaskStructureJournalState.Entry, scope: ChildTaskFieldClientScope) {
-        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
-        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
-        guard let history = completionHistory, !history.contains(key: entry.command.id) else { return }
-        let step = store.childStructureHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) }
-        if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, history.acceptConfirmedInverse(of: parent, next: step) { return }
-        if entry.phase == .confirmed, entry.command.action == .undo,
-           let parent = entry.command.body["undo_of"]?.text,
-           history.adoptConfirmedInverse(of: parent, next: step) { return }
-        history.record(step)
-    }
-    func invokeChildFieldHistory(_ entry: ChildTaskFieldJournalState.Entry) -> Bool {
-        if completionHistory?.canUndo(key: entry.command.id) == true { completionHistory?.undo(); return true }
-        if completionHistory?.canRedo(key: entry.command.id) == true { completionHistory?.redo(); return true }
-        return false
-    }
-    func rememberChildField(_ entry: ChildTaskFieldJournalState.Entry, scope: ChildTaskFieldClientScope) {
-        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
-        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
-        guard completionHistory?.contains(key: entry.command.id) != true else { return }
-        completionHistory?.record(store.childFieldHistoryStep(entry, scope: scope) { [weak self] notice in self?.confirm(notice.message, undoable: false) })
-    }
-    func invokeChildTransferHistory(_ entry: ChildTaskTransferState.Entry) -> Bool {
-        if completionHistory?.canUndo(key: entry.command.id) == true { completionHistory?.undo(); return true }
-        if completionHistory?.canRedo(key: entry.command.id) == true { completionHistory?.redo(); return true }
-        return false
-    }
-    func rememberChildTransfer(_ entry: ChildTaskTransferState.Entry, scope: ChildTaskFieldClientScope) {
-        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
-        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
-        guard completionHistory?.contains(key: entry.command.id) != true else { return }
-        completionHistory?.record(store.childTransferHistoryStep(entry, scope: scope) { [weak self] notice in
-            self?.confirm(notice.message, undoable: false)
-        })
-    }
-    func undoMixedGroup(_ token: MixedTaskListUndo) { guard canUndoMixedGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
-    private func completeMixedGroup(_ tasks: [Record]) {
-        do {
-            let intent = try store.captureMixedListCompletion(tasks, completed: tasks.contains { !$0.completed })
-            Task { [weak self] in
-                guard let self, let result = await self.store.completeMixedFromList(intent) else { return }
-                if result.undo != nil { self.selection.subtract(tasks.map(\.id)); Feedback.complete() }
-                self.showMixedGroup(result)
-            }
-        } catch { store.error = error.localizedDescription }
-    }
-    private func completeIndependentGroup(_ tasks: [Record]) {
-        do {
-            let intent = try store.captureChildListBatch(tasks, completed: tasks.contains { !$0.completed })
-            Task { [weak self] in
-                guard let self, let result = await self.store.completeChildBatchFromList(intent) else { return }
-                if result.undo != nil { self.selection.subtract(tasks.map(\.id)); Feedback.complete() }
-                self.showChildGroup(result)
-            }
-        } catch { store.error = error.localizedDescription }
-    }
-    private func completeIndependentChild(_ task: Record) {
-        do {
-            let intent = try store.captureChildListCompletion(task)
-            Task { [weak self] in
-                guard let self, let result = await self.store.completeChildFromList(intent) else { return }
-                if result.undo != nil { self.selection.remove(task.id); if !intent.completed { Feedback.complete() } }
-                self.showChildCompletion(result)
-            }
-        } catch { store.error = error.localizedDescription }
-    }
-
     // MARK: Task actions
 
     func open(_ id: String) {
@@ -649,8 +498,6 @@ final class Workspace {
         guard TaskKind.mayComplete(task) else { store.error = "Headings stay open. Open the heading to edit its details."; return }
         // Checking a row that is still lingering undoes its completion instead of completing it again.
         if lingering[task.id] != nil, cancelLingerByUndo(task.id) { return }
-        // Independent child records exist only on the server; a local workspace completes its embedded subtasks in place.
-        if store.childTaskCompletionEnabled, !store.localMode, Self.subtaskPath(task.id) != nil { completeIndependentChild(task); return }
         if Self.subtaskPath(task.id) == nil, store.hasSharedTaskSelection([task.id]) {
             var saved = false
             run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { saved = store.toggleNativeTask(task) } }
@@ -686,18 +533,6 @@ final class Workspace {
         if !task.completed { Feedback.complete(); beginLinger(task); confirm("Completed “\(task.title)”"); celebrateDailyGoalIfReached() }
     }
     func toggle(_ ids: Set<String>) {
-        if store.childTaskCompletionEnabled, !store.localMode, ids.contains(where: { Self.subtaskPath($0) != nil }) {
-            if ids.count == 1, let id = ids.first, let task = taskRecord(id) { complete(task); return }
-            guard store.childTaskCompletionBatchesEnabled else { store.error = "Bulk subtask completion is not available yet."; return }
-            do {
-                let tasks = try ids.sorted().map { try store.selectionRecord($0) }
-                if tasks.contains(where: { Self.subtaskPath($0.id) == nil }) {
-                    guard store.mixedTaskCompletionEnabled else { throw MixedTaskCompletionCommand.invalid }
-                    completeMixedGroup(tasks)
-                } else { completeIndependentGroup(tasks) }
-            } catch { store.error = error.localizedDescription }
-            return
-        }
         guard ids.allSatisfy({ id in taskRecord(id).map(TaskKind.mayComplete) == true }) else {
             store.error = "Headings stay open. Select tasks to complete."; return
         }
@@ -1269,7 +1104,7 @@ extension Workspace {
     }
     func taskDepth(_ id: String) -> Int {
         // Child rows: depth is the number of ancestors by `parent_id`. (`subtaskPath` stays the legacy JSON path of a virtual id; a row is a real task and has none.)
-        if TaskTree.rowsEnabled, Self.subtaskPath(id) == nil { return store.breadcrumb(of: id).count }
+        if Self.subtaskPath(id) == nil { return store.breadcrumb(of: id).count }
         return (Self.subtaskPath(id)?.count ?? 1) - 1
     }
     func taskRecord(_ id: String) -> Record? {
@@ -1287,11 +1122,11 @@ extension Workspace {
         scope.usesProductiveWork && store.productiveReading.contains(task.id)
     }
     func canExpandTask(_ task: Record) -> Bool {
-        if TaskTree.rowsEnabled, nestedRowsList, !store.children(of: task.id).isEmpty { return true }
+        if nestedRowsList, !store.children(of: task.id).isEmpty { return true }
         return !hierarchyFilter && section != .assigned && taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty && !(TaskKind(task) == .heading && independentWorkRow(task))
     }
     func visibleTasks(_ roots: [Record]) -> [Record] {
-        if TaskTree.rowsEnabled, nestedRowsList { return nestedRows(roots) }
+        if nestedRowsList { return nestedRows(roots) }
         if section == .assigned || hierarchyFilter { return roots }
         return roots.flatMap { task -> [Record] in
             guard canExpandTask(task), expandedTasks.contains(task.id) else { return [task] }

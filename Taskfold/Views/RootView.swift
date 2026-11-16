@@ -41,7 +41,6 @@ struct RootView: View {
         }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; workspace.workspaceChanged(account: store.userID, generation: store.workspaceGeneration); seed() }
-        .onChange(of: store.childTaskFieldRecoveryScope) { _, _ in workspace.clearChildCompletion() }
         .onChange(of: store.userID) { _, _ in workspace.workspaceChanged(account: store.userID, generation: store.workspaceGeneration) }
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
@@ -50,15 +49,6 @@ struct RootView: View {
         .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openInsights,{insightsRequest=InsightsRequest(workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))})
-        .sheet(isPresented: Binding(get: { workspace.mixedGroupReview }, set: { workspace.mixedGroupReview = $0 })) {
-            WorkflowShell(title: "Saved task selections") { MixedTaskGroupRecoveryView() }
-        }
-        .sheet(isPresented: Binding(get: { workspace.childGroupReview }, set: { workspace.childGroupReview = $0 })) {
-            WorkflowShell(title: "Saved subtask selections") { ChildTaskGroupRecoveryView() }
-        }
-        .sheet(isPresented: Binding(get: { workspace.childCompletionReview }, set: { workspace.childCompletionReview = $0 })) {
-            WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
-        }
         .sheet(item:$insightsRequest) { InsightsView(request:$0) }
         .environment(\.openWeeklyReview, { weeklyReviewRequest = WeeklyReviewRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .sheet(item: $weeklyReviewRequest) { WeeklyReviewView(request: $0) }
@@ -118,9 +108,6 @@ struct RootView: View {
         }
         .task(id: "realtime-\(store.signedIn)-\(store.localMode)") {
             guard store.signedIn, !store.localMode else { return }
-            #if DEBUG
-            if ChildFieldNativeIdentity.mainListTesting { return }
-            #endif
             await store.runRealtime()
         }
         .task(id: "focus-finished-\(NotificationRoute.shared.focusReceipt?.signature ?? "")-\(store.workspaceGeneration)-\(store.widgetPublicationRevision)") {
@@ -240,7 +227,6 @@ struct RootView: View {
     /// Debug-only fixtures shared with the UI tests. Release builds ignore these arguments.
     private func seed() {
         #if DEBUG
-        if ChildFieldNativeIdentity.mainListTesting { return }
         // Every window shares this workspace; a new window must not reset active routes or data.
         guard !workspace.fixturePrepared else { return }; workspace.fixturePrepared = true
         let arguments = ProcessInfo.processInfo.arguments
@@ -496,36 +482,6 @@ struct RootView: View {
                 task["deadline_date"] = .string(Dates.day(Calendar.current.date(byAdding: .day, value: 2, to: Date())!))
                 return task
             }
-            try? store.persist()
-        }
-        if arguments.contains("--hierarchy-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
-            var root = Record.task(user: store.userID, date: Date())
-            root["id"] = .string("hierarchy-root"); root["title"] = .string("Launch project")
-            root["subtasks"] = .array([
-                .object(["id": .string("child-one"), "title": .string("Prepare release"), "completed": .bool(false), "subtasks": .array([
-                    .object(["id": .string("grandchild-one"), "title": .string("Review checklist"), "completed": .bool(false)])
-                ])]),
-                .object(["id": .string("child-two"), "title": .string("Send announcement"), "completed": .bool(false)])
-            ])
-            var other = Record.task(user: store.userID, date: Date())
-            other["id"] = .string("hierarchy-other"); other["title"] = .string("Another task")
-            store.snapshot.tables["tasks"] = [root, other]
-            try? store.persist()
-        }
-        if arguments.contains("--assignment-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
-            let project = Record(["id": .string("shared-fixture"), "user_id": .string(store.userID), "name": .string("Product launch")])
-            var root = Record.task(user: store.userID, project: project.id, date: Date())
-            root["id"] = .string("assignment-root"); root["title"] = .string("Coordinate launch"); root["assigned_to"] = .string("morgan")
-            root["subtasks"] = .array([.object(["id": .string("assigned-child"), "title": .string("Prepare launch notes"), "completed": .bool(false), "assigned_to": .string(store.userID), "subtasks": .array([
-                .object(["id": .string("assigned-grand"), "title": .string("Check final wording"), "completed": .bool(false)])
-            ])])])
-            var own = Record.task(user: store.userID, date: Date())
-            own["id"] = .string("assignment-personal"); own["title"] = .string("Review my priorities"); own["assigned_to"] = .string(store.userID)
-            store.snapshot.tables["projects"] = [project]; store.snapshot.tables["tasks"] = [root, own]
-            workspace.projectMembers[project.id] = [Record(["user_id": .string(store.userID), "display_name": .string("Me")]), Record(["user_id": .string("morgan"), "display_name": .string("Morgan")])]
-            workspace.section = .today
             try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--assignee-pattern-testing") { store.startLocal(); store.startAssigneePatternFixture(); workspace.section = .inbox }
