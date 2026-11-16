@@ -19,7 +19,7 @@ struct AuthView: View {
             // Brand panel
             VStack(alignment: .leading, spacing: 18) {
                 TaskfoldMark(size: 84)
-                Text("Taskfold").font(.system(size: 34, weight: .bold, design: .rounded))
+                Text("Taskfold").font(DS.Font.displayTitle)
                 Text("A little clarity for your day.").font(.title3).foregroundStyle(.secondary)
                 Spacer()
                 Text("Your tasks sync with the Taskfold web and iOS apps through your existing account.").font(.callout).foregroundStyle(.secondary)

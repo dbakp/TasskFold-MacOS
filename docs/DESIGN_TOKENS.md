@@ -8,6 +8,7 @@ The same spec lives in both app repos at `docs/DESIGN_TOKENS.md`. Each app imple
   - Leave a short comment explaining why.
 - Text uses Dynamic Type text styles through `DS.Font` roles.
   - `.font(.system(size:))` is allowed only for SF Symbols that need an exact optical size.
+  - The one custom face, Fraunces, is reached only through the title roles below, never with an ad-hoc `Font.custom`.
 - Colours use semantic roles.
   - Raw `Color(red:)`, hex and system colours live only in `DesignTokens.swift` and the existing palette tables: accents, priority and project colours.
 - Every animation goes through the existing `Motion` vocabulary and respects Reduce Motion.
@@ -41,7 +42,8 @@ Use `.continuous` style for every rounded rectangle.
 ## Typography: `DS.Font`
 | Role | Style |
 |---|---|
-| `screenTitle` | `.largeTitle.bold()` (iOS) / `.title2.weight(.semibold)` (Mac) |
+| `screenTitle` | Fraunces SemiBold: `Font.custom("Fraunces-SemiBold", size: 34, relativeTo: .largeTitle)` (iOS) / `Font.custom("Fraunces24pt-SemiBold", size: 17, relativeTo: .title2)` (Mac) |
+| `displayTitle` (Mac only) | `Font.custom("Fraunces-SemiBold", size: 34, relativeTo: .largeTitle)`, the sign-in wordmark |
 | `sectionHeader` | `.subheadline.weight(.semibold)` |
 | `taskTitle` | `.body` |
 | `taskNote` | `.subheadline`, secondary text colour |
@@ -49,6 +51,16 @@ Use `.continuous` style for every rounded rectangle.
 | `chip` | `.caption.weight(.medium)` |
 | `badge` | `.caption2.weight(.semibold).monospacedDigit()` |
 | `inspectorLabel` | `.subheadline` (Mac) / `.body` (iOS) |
+
+### Screen-title face: Fraunces
+- Screen titles use Fraunces, a display serif. Everything else, including task titles, buttons and controls, stays SF.
+- The apps bundle two static instances cut from the Google Fonts variable font (`google/fonts`, `ofl/fraunces`) with fontTools. Both are wght 600, SOFT 0 and WONK 0 (wonk off).
+  - `Fraunces-SemiBold.ttf` (PostScript `Fraunces-SemiBold`) is opsz 72. It is for large titles at 34pt and up.
+  - `Fraunces24pt-SemiBold.ttf` (PostScript `Fraunces24pt-SemiBold`) is opsz 24. It is for the 17pt titles: the iOS inline navigation-bar title and the Mac `screenTitle`.
+- The files live in `Taskfold/Resources/Fonts/`. iOS registers them with `UIAppFonts`. The Mac app registers them with `ATSApplicationFontsPath = .`.
+- iOS navigation bars get the same faces through `BrandAppearance` in `TaskfoldApp.swift`, scaled with `UIFontMetrics`. The large title uses -0.3 kern.
+- Every use scales with Dynamic Type through `relativeTo:`. If the font fails to load, the system face is used instead.
+- Licence: SIL Open Font License 1.1, copyright 2018 The Fraunces Project Authors. The licence ships with the apps as `Fraunces-OFL.txt`. The OFL allows bundling in an app. The font must not be sold on its own, and any modified font must keep the OFL. The static instances are such a modified version, so they keep the OFL.
 
 ## Semantic colour: `DS.Palette`
 | Role | Value |
