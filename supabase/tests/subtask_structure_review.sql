@@ -1,5 +1,13 @@
 -- Actual-role fixture. All accounts and task writes are rolled back.
 begin;
+-- This fixture writes JSON `subtasks` trees as a signed-in user: the pre-cutover path that Migration B
+-- (20261116100000_child_task_rows_b) freezes. Inside this rolled-back transaction the freeze is switched off so the
+-- legacy behaviour stays covered while team trees remain JSON (phase T). Retire this fixture with Migration C.
+do $$ begin
+ if exists (select 1 from pg_trigger where tgrelid='public.tasks'::regclass and tgname='aaa_taskfold_subtasks_frozen') then
+  alter table public.tasks disable trigger aaa_taskfold_subtasks_frozen;
+ end if;
+end $$;
 insert into auth.users(id,email) values
  ('f1711000-0000-4000-8000-000000000001','taskfold-subtask-owner@example.invalid'),
  ('f1711000-0000-4000-8000-000000000002','taskfold-subtask-outsider@example.invalid');
