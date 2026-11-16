@@ -24,7 +24,6 @@ const fields = [
   "project_id",
   "section_id",
   "labels",
-  "subtasks",
   "reminders",
   "reminder_specs",
   "attachments",
@@ -40,6 +39,8 @@ const fields = [
   "time_zone",
   "scheduled_at",
   "source_metadata",
+  "parent_id",
+  "child_order",
   "revision",
 ];
 const json = (
@@ -112,6 +113,7 @@ function task(value: unknown): Record<string, unknown> {
       "section_id",
       "recurrence_parent_id",
       "assigned_to",
+      "parent_id",
     ]
   ) {
     if (
@@ -119,6 +121,11 @@ function task(value: unknown): Record<string, unknown> {
       (typeof value[key] !== "string" || !uuid.test(value[key] as string))
     ) throw new Error("Invalid identity");
   }
+  if (
+    value.child_order !== null &&
+    (typeof value.child_order !== "number" ||
+      !Number.isFinite(value.child_order))
+  ) throw new Error("Invalid subtask order");
   if (
     typeof value.revision !== "string" || !/^[0-9a-f]{64}$/.test(value.revision)
   ) throw new Error("Invalid revision");
@@ -476,6 +483,24 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
     }
     const action = input.action as string,
       body = input.body as Record<string, unknown>;
+    // Subtasks are child tasks (parent_id/child_order) since the child-rows cutover. An empty legacy list is
+    // dropped so it can never clear a tree; a non-empty one is refused instead of silently ignored.
+    if (
+      writes && object(body.fields) && Object.hasOwn(body.fields, "subtasks")
+    ) {
+      const legacy = body.fields.subtasks;
+      if (!Array.isArray(legacy) || legacy.length) {
+        return json({
+          error:
+            "Subtasks are now tasks. Create each one with parent_id (and child_order) instead of subtasks.",
+        }, 400);
+      }
+      const { subtasks: _dropped, ...rest } = body.fields;
+      body.fields = rest;
+      if (action === "update" && !Object.keys(rest).length) {
+        return json({ error: "Choose task details to change." }, 400);
+      }
+    }
     const hex = raw[2],
       id = hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) +
         "-" + hex.slice(16, 20) + "-" + hex.slice(20);

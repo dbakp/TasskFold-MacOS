@@ -120,7 +120,10 @@ Deno.test("invalid pagination and cursor cycles fail instead of silently returni
 });
 Deno.test("source identity separates same titles, users and source accounts", async () => {
   const prepared = await prepare(snapshot(), "user-a");
-  equal(prepared.bundle.tasks.length, 3);
+  // Children are separate task items since the child-rows cutover: a, c, d (children of a), b, e.
+  equal(prepared.bundle.tasks.length, 5);
+  const roots = prepared.bundle.tasks.filter((t) => !t.parent_source_id);
+  equal(roots.length, 3);
   equal(prepared.bundle.labels.length, 2);
   assert(
     prepared.bundle.tasks[0].record.id !== prepared.bundle.tasks[1].record.id,
@@ -137,7 +140,7 @@ Deno.test("source identity separates same titles, users and source accounts", as
     await stableID("u", "a", "tasks", "t") !==
       await stableID("u", "b", "tasks", "t"),
   );
-  equal(prepared.bundle.tasks[2].record.project_id, null);
+  equal(roots[2].record.project_id, null);
   equal(color("mint_green"), "#6accbc");
 });
 Deno.test("nested children retain planning, descriptions and their own comments; preview counts are exact", async () => {
@@ -149,12 +152,25 @@ Deno.test("nested children retain planning, descriptions and their own comments;
   equal(task.time_zone, "Europe/Copenhagen");
   equal(task.deadline_date, "2026-10-09");
   equal(task.duration_minutes, 30);
-  equal(task.subtasks[0].description, "Kept");
-  equal(task.subtasks[0].subtasks[0].comments[0].text, "Nested note");
+  equal(task.subtasks, []);
+  const [child, grandchild] = [bundle.tasks[1], bundle.tasks[2]];
+  equal(child.parent_source_id, "a");
+  equal(child.record.child_order, 1);
+  equal(child.record.description, "Kept");
+  equal(child.record.subtasks, []);
+  equal(grandchild.parent_source_id, "c");
+  equal(grandchild.record.comments[0].text, "Nested note");
+  equal(task.child_order, undefined);
   equal(preview.counts.comments, 2);
   equal(preview.counts.subtasks, 2);
+  equal(preview.counts.tasks, 3);
   equal(bundle.tasks[0].subtask_count, 2);
-  equal(bundle.tasks[0].comment_count, 2);
+  equal(child.subtask_count, 0);
+  equal(bundle.tasks[0].comment_count, 1);
+  equal(
+    bundle.tasks.reduce((n, t) => n + (t.comment_count ?? 0), 0),
+    2,
+  );
   assert(preview.warnings.some((x) => x.includes("expire")));
 });
 Deno.test("date-only, floating, timezone rollover and DST remain distinct from deadlines", () => {
@@ -377,8 +393,10 @@ Deno.test("source-only heading mapping preserves identity, notes, files, dates a
   equal(root.attachments.length, 1);
   equal(root.comments.length, 1);
   equal(root.due_date, "2026-10-06");
-  equal(root.subtasks[0].is_heading, true);
-  equal(root.subtasks[0].subtasks[0].title, "Grandchild");
+  equal(root.subtasks, []);
+  equal(prepared.bundle.tasks[1].record.is_heading, true);
+  equal(prepared.bundle.tasks[2].record.title, "Grandchild");
+  equal(prepared.bundle.tasks[2].parent_source_id, "c");
   equal(root.source_metadata.original.content, "* Review notes");
   equal(source.tasks, original);
   equal(root.id, await stableID("user", source.account, "tasks", "a"));
@@ -513,4 +531,27 @@ Deno.test("heading nesting outside current reader capacity refuses before partia
   const boundary = await prepare(source, "user");
   equal(boundary.preview.headings.roots, 1);
   equal(boundary.preview.counts.subtasks, 32);
+});
+
+Deno.test("children deeper than ten levels hang from their level-9 ancestor, parents first", async () => {
+  const source = snapshot();
+  source.tasks = Array.from({ length: 13 }, (_, n) => ({
+    id: "n" + n,
+    content: "Level " + n,
+    project_id: "p",
+    parent_id: n ? "n" + (n - 1) : null,
+  }));
+  source.comments = new Map();
+  const { bundle, preview } = await prepare(source, "user");
+  equal(bundle.tasks.map((t) => t.source_id), source.tasks.map((t) => t.id));
+  for (let n = 1; n <= 10; n++) {
+    equal(bundle.tasks[n].parent_source_id, "n" + (n - 1));
+    equal(bundle.tasks[n].record.child_order, 1);
+  }
+  equal(bundle.tasks[11].parent_source_id, "n9");
+  equal(bundle.tasks[11].record.child_order, 1001);
+  equal(bundle.tasks[12].parent_source_id, "n9");
+  equal(bundle.tasks[12].record.child_order, 1002);
+  equal(bundle.tasks[0].subtask_count, 12);
+  assert(preview.warnings.some((x) => x.includes("ten levels")));
 });

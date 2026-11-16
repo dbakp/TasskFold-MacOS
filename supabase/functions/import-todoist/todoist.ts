@@ -3,6 +3,8 @@ export type Row = Record<string, any>;
 export type SourceItem = {
   source_id: string;
   record: Row;
+  /** Todoist ID of the parent task: the item is imported as a child task (parents come first). */
+  parent_source_id?: string;
   subtask_count?: number;
   comment_count?: number;
 };
@@ -461,7 +463,17 @@ export async function prepare(snapshot: Snapshot, user: string) {
   let rootHeadings = 0, nestedHeadings = 0;
   let allComments = 0;
   let attachments = 0;
-  async function taskRecord(task: Row, depth = 0): Promise<Row> {
+  // Since the child-rows cutover every Todoist task becomes its own Taskfold task: children follow their parent in
+  // the bundle (parents first) with `parent_source_id` and `child_order`, and `subtasks` stays empty. A child deeper
+  // than ten levels hangs from its level-9 ancestor, as in the JSON-subtasks conversion.
+  const items: SourceItem[] = [];
+  let reparented = 0;
+  async function taskRecord(
+    task: Row,
+    depth = 0,
+    ancestors: string[] = [],
+    order = 0,
+  ): Promise<Row> {
     if (depth > 100) {
       throw new ImportError(
         "Todoist task nesting exceeds the supported limit. Nothing has been imported.",
@@ -528,16 +540,9 @@ export async function prepare(snapshot: Snapshot, user: string) {
         "Todoist assignees are retained in source metadata. Invite and assign collaborators in Taskfold after import.",
       );
     }
-    const nested = await Promise.all(
-      (children.get(task.id) ?? []).sort((a, b) =>
-        (a.child_order ?? 0) - (b.child_order ?? 0)
-      ).map((t) => taskRecord(t, depth + 1)),
+    const kids = (children.get(task.id) ?? []).sort((a, b) =>
+      (a.child_order ?? 0) - (b.child_order ?? 0)
     );
-    if (depth > 1) {
-      warnings.add(
-        "Deeply nested children are retained. Some editors currently show only the first level.",
-      );
-    }
     const project = projects.get(task.project_id);
     if (!project) {
       warnings.add(
@@ -545,7 +550,7 @@ export async function prepare(snapshot: Snapshot, user: string) {
       );
     }
     const section = sections.get(task.section_id);
-    return {
+    const record: Row = {
       id: await stableID(
         user,
         snapshot.account,
@@ -563,7 +568,8 @@ export async function prepare(snapshot: Snapshot, user: string) {
         ? sectionIDs.get(task.section_id) ?? null
         : null,
       labels: task.labels ?? [],
-      subtasks: nested,
+      subtasks: [],
+      ...(depth ? { child_order: order } : {}),
       comments,
       attachments: files,
       created_at: task.added_at ?? null,
@@ -574,19 +580,46 @@ export async function prepare(snapshot: Snapshot, user: string) {
         original: task,
       },
     };
-  }
-  function count(row: Row, key: string): number {
-    return (key === "subtasks" ? row.subtasks.length : row.comments.length) +
-      (row.subtasks as Row[]).reduce((n, child) => n + count(child, key), 0);
+    const item: SourceItem = {
+      source_id: task.id,
+      ...(depth ? { parent_source_id: ancestors.at(-1) } : {}),
+      record,
+      subtask_count: 0,
+      comment_count: comments.length,
+    };
+    items.push(item);
+    let below = 0;
+    for (const [index, kid] of kids.entries()) {
+      // A child at level 11 or deeper is placed under the level-9 ancestor (ten ancestors at most).
+      const reparent = depth + 1 > 10;
+      const parents = reparent
+        ? ancestors.slice(0, 10)
+        : [...ancestors, task.id];
+      if (reparent) reparented++;
+      const before = items.length;
+      await taskRecord(
+        kid,
+        depth + 1,
+        parents,
+        reparent ? 1000 + reparented : index + 1,
+      );
+      below += items.length - before;
+    }
+    item.subtask_count = below;
+    return record;
   }
   for (const task of roots) {
-    const record = await taskRecord(task);
-    bundle.tasks.push({
-      source_id: task.id,
-      record,
-      subtask_count: count(record, "subtasks"),
-      comment_count: count(record, "comments"),
-    });
+    const start = items.length;
+    await taskRecord(task);
+    // Only roots report their subtasks; the import result sums subtask_count over the items it saved.
+    for (const item of items.slice(start + 1)) item.subtask_count = 0;
+  }
+  bundle.tasks.push(...items);
+  const rootItems = items.filter((item) => !item.parent_source_id);
+  if (reparented) {
+    warnings.add(
+      "Tasks nested deeper than ten levels are placed under their tenth-level parent.",
+    );
   }
   if (attachments) {
     warnings.add(
@@ -613,8 +646,8 @@ export async function prepare(snapshot: Snapshot, user: string) {
     projects: bundle.projects.length,
     sections: bundle.sections.length,
     labels: bundle.labels.length,
-    tasks: bundle.tasks.length,
-    subtasks: snapshot.tasks.length - bundle.tasks.length,
+    tasks: rootItems.length,
+    subtasks: snapshot.tasks.length - rootItems.length,
     comments: allComments,
   };
   const samples = {
@@ -628,7 +661,7 @@ export async function prepare(snapshot: Snapshot, user: string) {
         bundle.projects.find((p) => p.record.id === s.record.project_id)?.record
           .name ?? "",
     })),
-    tasks: bundle.tasks.slice(0, 5).map((t) => ({
+    tasks: rootItems.slice(0, 5).map((t) => ({
       title: t.record.title,
       completed: t.record.completed,
       hasDescription: !!t.record.description,
