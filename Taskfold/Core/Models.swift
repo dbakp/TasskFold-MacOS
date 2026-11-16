@@ -1,5 +1,6 @@
 import Foundation
 import Darwin
+import Observation
 
 /// Exact authored-source comparison for caches and reviewed output. Domain-level
 /// Record/JSON equality keeps its existing semantic behavior.
@@ -1597,6 +1598,120 @@ struct EditHistoryRequest: Equatable, Sendable {
     func matches(direction: Direction, history: EditHistory?, workspace: WorkspaceBinding, session: UUID) -> Bool {
         self.direction == direction && self.workspace == workspace && self.session == session && entry == history?.id
             && !(direction == .undo ? history?.undo ?? [] : history?.redo ?? []).isEmpty
+    }
+}
+
+/// Bridges confirmed asynchronous changes into native Undo/Redo. The inverse is
+/// registered synchronously while UndoManager is undoing; its payload becomes
+/// available only after the asynchronous operation confirms the next state.
+@MainActor @Observable final class ConfirmedHistoryBridge {
+    struct Step {
+        let name: String
+        let key: String?
+        let retained: () -> Bool
+        let available: () -> Bool
+        let immediate: (() -> Step?)?
+        let perform: () async -> Step?
+        init(name: String, key: String? = nil, retained: @escaping () -> Bool, available: @escaping () -> Bool = { true }, immediate: (() -> Step?)? = nil, perform: @escaping () async -> Step? = { nil }) {
+            self.name = name; self.key = key; self.retained = retained; self.available = available; self.immediate = immediate; self.perform = perform
+        }
+    }
+    private final class Frame: NSObject {
+        var step: Step?
+        init(_ step: Step) { self.step = step }
+    }
+    let manager: UndoManager
+    private var frames: [Frame] = []
+    private var cursor = 0
+    private var generation = UUID()
+    private(set) var busy = false
+    private let unavailable: () -> Void
+    var canUndo: Bool { !busy && manager.canUndo && cursor > 0 && frames[cursor - 1].step.map { $0.retained() && $0.available() } == true }
+    var canRedo: Bool { !busy && manager.canRedo && cursor < frames.count && frames[cursor].step.map { $0.retained() && $0.available() } == true }
+    init(manager: UndoManager, unavailable: @escaping () -> Void = {}) { self.manager = manager; self.unavailable = unavailable }
+    func record(_ step: Step) {
+        guard step.retained() else { return }
+        if busy { clear() } // A new edit owns history; late confirmations stay in saved recovery.
+        for frame in frames.dropFirst(cursor) { manager.removeAllActions(withTarget: frame) }
+        frames.removeSubrange(cursor...)
+        let frame = Frame(step); frames.append(frame); cursor = frames.count
+        manager.beginUndoGrouping(); install(frame); manager.endUndoGrouping()
+        while frames.count > 30 { let old = frames.removeFirst(); manager.removeAllActions(withTarget: old); cursor -= 1 }
+    }
+    /// A saved-action screen can confirm the inverse of the current frame.
+    /// Advance native history synchronously without submitting that action twice.
+    @discardableResult func acceptConfirmedInverse(of key: String, next: Step) -> Bool {
+        guard !busy, let nextKey = next.key, nextKey != key, next.retained() else { return false }
+        let undoing = cursor > 0 && frames[cursor - 1].step?.key == key
+        let redoing = cursor < frames.count && frames[cursor].step?.key == key
+        guard undoing || redoing, undoing ? manager.canUndo : manager.canRedo else { return false }
+        let frame = frames[undoing ? cursor - 1 : cursor]
+        guard let old = frame.step, old.retained() else { return false }
+        let inverse = Self.renaming(next, as: old.name)
+        frame.step = .init(name: old.name, key: key, retained: old.retained, immediate: { inverse })
+        if undoing { manager.undo() } else { manager.redo() }
+        return frame.step?.key == nextKey
+    }
+    private static func renaming(_ step: Step, as name: String) -> Step {
+        let immediate: (() -> Step?)? = step.immediate.map { action in { action().map { Self.renaming($0, as: name) } } }
+        return .init(name: name, key: step.key, retained: step.retained, available: step.available, immediate: immediate, perform: {
+            guard let next = await step.perform() else { return nil }; return Self.renaming(next, as: name)
+        })
+    }
+    /// A reviewed Undo confirmed after relaunch has no original native frame.
+    /// Adopt its already-confirmed inverse on the Redo side without sending it
+    /// again or consuming any older local Undo operation.
+    @discardableResult func adoptConfirmedInverse(of key: String, next: Step) -> Bool {
+        guard !busy, !manager.isUndoing, !manager.isRedoing, !key.isEmpty,
+              let nextKey = next.key, !nextKey.isEmpty, nextKey != key,
+              next.retained(), !contains(key: key), !contains(key: nextKey) else { return false }
+        record(.init(name: next.name, key: key, retained: next.retained, immediate: { next }))
+        if acceptConfirmedInverse(of: key, next: next) { return true }
+        if let frame = frames.last, frame.step?.key == key { remove(frame) }
+        return false
+    }
+    func contains(key: String) -> Bool { frames.contains { $0.step?.key == key } }
+    func canRedo(key: String) -> Bool { canRedo && frames[cursor].step?.key == key }
+    func canUndo(key: String) -> Bool { canUndo && frames[cursor - 1].step?.key == key }
+    func undo() { guard canUndo else { return }; manager.undo() }
+    func redo() { guard canRedo else { return }; manager.redo() }
+    func clear() {
+        generation = UUID()
+        for frame in frames { frame.step = nil; manager.removeAllActions(withTarget: frame) }
+        frames = []; cursor = 0; busy = false
+    }
+    private func remove(_ frame: Frame) {
+        manager.removeAllActions(withTarget: frame)
+        if let index = frames.firstIndex(where: { $0 === frame }) { frames.remove(at: index); if index < cursor { cursor -= 1 } }
+        frame.step = nil
+    }
+    private func install(_ frame: Frame) {
+        manager.registerUndo(withTarget: frame) { [weak self] target in self?.invoke(target) }
+        if let step = frame.step { manager.setActionName(step.name) }
+    }
+    private func invoke(_ frame: Frame) {
+        if busy { generation = UUID(); busy = false; remove(frame); unavailable(); return }
+        let undoing = manager.isUndoing
+        let expected = undoing ? (cursor > 0 ? frames[cursor - 1] : nil) : (cursor < frames.count ? frames[cursor] : nil)
+        guard !busy, expected === frame, let step = frame.step, step.retained(), step.available() else {
+            remove(frame); unavailable(); return
+        }
+        let captured = generation
+        cursor += undoing ? -1 : 1
+        // Must happen before returning to UndoManager, never after awaiting.
+        install(frame); frame.step = nil; busy = true
+        if let immediate = step.immediate {
+            let next = immediate(); busy = false
+            guard step.retained(), let next, next.retained() else { remove(frame); return }
+            frame.step = next; return
+        }
+        Task { [weak self, weak frame] in
+            let next = await step.perform()
+            guard let self, let frame, self.generation == captured, self.frames.contains(where: { $0 === frame }) else { return }
+            self.busy = false
+            guard step.retained(), let next, next.retained() else { self.remove(frame); return }
+            frame.step = next
+        }
     }
 }
 

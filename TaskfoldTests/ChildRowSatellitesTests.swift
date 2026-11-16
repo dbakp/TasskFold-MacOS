@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import TaskfoldCore
 
 /// Phase 5 satellites: legacy references, templates, filters, Breakdown, widgets, print and local-mode conversion.
@@ -216,5 +217,30 @@ final class ChildRowSatellitesTests: XCTestCase {
         let decoded = try TaskfoldJSONDecoder().decode(JSON.self, from: data)
         XCTAssertEqual(decoded.object["version"], .number(1))
         XCTAssertEqual(decoded.object["journals"]?.object["fields"]?.object["entries"], .array([.number(1)]))
+    }
+
+    /// The export reads the files the retired journals sealed, offers only saved work, and account removal unlinks them.
+    func testLegacyJournalsAreReadAsSealedAndRemoved() throws {
+        let vault = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: vault) }
+        let scope = LegacyChildJournalExport.Scope(account: "8f0d7f52-5a0e-4a36-9a43-6c1d1f1f00ab", origin: "https://synthetic.example")
+        let key = SymmetricKey(size: .bits256), digest = CalendarOAuthConfiguration.digest(scope.origin)
+        func seal(_ kind: String, _ state: String) throws {
+            let journal = try XCTUnwrap(LegacyChildJournalExport.journals.first { $0.kind == kind })
+            let url = LegacyChildJournalExport.file(journal, vault: vault, scope: scope)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            let context = Data((journal.context + "|" + journal.prefix + scope.account + "." + digest).utf8)
+            try XCTUnwrap(AES.GCM.seal(Data(state.utf8), using: key, authenticating: context).combined).write(to: url)
+        }
+        XCTAssertEqual(try LegacyChildJournalExport.load(vault: vault, scope: scope) { XCTFail("No file, no key"); return key }, [:])
+        let saved = #"{"version":1,"account":"\#(scope.account)","origin":"\#(scope.origin)","entries":[{"phase":"queued"}]}"#
+        try seal("fields", saved)
+        try seal("transfers", #"{"version":1,"account":"\#(scope.account)","origin":"\#(scope.origin)","entries":[]}"#)
+        try seal("repairs", #"{"version":1,"account":"other","origin":"\#(scope.origin)","entries":[1],"drafts":[]}"#)
+        XCTAssertEqual(try LegacyChildJournalExport.load(vault: vault, scope: scope) { key }, ["fields": Data(saved.utf8)])
+        XCTAssertThrowsError(try LegacyChildJournalExport.load(vault: vault, scope: scope) { SymmetricKey(size: .bits256) })
+        try LegacyChildJournalExport.remove(vault: vault, scope: scope)
+        XCTAssertEqual(try LegacyChildJournalExport.load(vault: vault, scope: scope) { key }, [:])
+        XCTAssertNoThrow(try LegacyChildJournalExport.remove(vault: vault, scope: scope))
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 /// Child rows outside the lists (phase 5): legacy references, templates, filters, Breakdown, widgets, Watch and
 /// local mode. Pure: every function reads and returns values, and callers decide whether `TaskTree.rowsEnabled`.
@@ -186,10 +187,71 @@ enum LocalChildRows {
 }
 
 /// Offline edits the JSON child-record system saved before the update cannot be sent any more. They are offered
-/// once, together, for export as they were saved.
+/// once, together, for export as they were saved. Only the saved files are read: nothing here writes, sends or removes.
 enum LegacyChildJournalExport {
     static let title = "Subtask edits saved before the update"
     static let message = "Taskfold saved these subtask edits on this device before subtasks became tasks. They can’t be sent now. Export them to keep a copy, then re-enter anything still needed."
+
+    /// The signed-in account whose saved journals are offered.
+    struct Scope: Equatable, Sendable { let account: String; let origin: String }
+
+    /// Where one retired journal saved its sealed state: `<vault>/<folder>/<account>/<digest(origin)>/<file>`, AES-GCM
+    /// sealed with the device key and bound to `context|prefix<account>.<digest(origin)>`.
+    struct Journal: Sendable {
+        let kind: String, folder: String, file: String, context: String, prefix: String, limit: Int
+    }
+    static let journals: [Journal] = [
+        .init(kind: "fields", folder: "Child field requests", file: "requests.taskfoldchildfields", context: "com.taskfold.child-field-journal.v1", prefix: "child-field-journal-v1.", limit: 8_400_000),
+        .init(kind: "completions", folder: "Child completion requests", file: "requests.taskfoldchildcompletions", context: "com.taskfold.child-completion-journal.v1", prefix: "child-completion-journal-v1.", limit: 2_100_000),
+        .init(kind: "mixed_completions", folder: "Task selection requests", file: "requests.taskfoldmixedcompletiongroups", context: "com.taskfold.mixed-completion-groups.v1", prefix: "mixed-completion-groups-v1.", limit: 4_300_000),
+        .init(kind: "completion_groups", folder: "Child completion groups", file: "requests.taskfoldchildcompletiongroups", context: "com.taskfold.child-completion-groups.v1", prefix: "child-completion-groups-v1.", limit: 4_300_000),
+        .init(kind: "hierarchy", folder: "Child hierarchy requests", file: "requests.taskfoldchildstructure", context: "com.taskfold.child-structure-journal.v1", prefix: "child-structure-journal-v1.", limit: 8_400_000),
+        .init(kind: "hierarchy_drafts", folder: "Child hierarchy drafts", file: "drafts.taskfoldchildstructure", context: "com.taskfold.child-structure-drafts.v1", prefix: "child-structure-drafts-v1.", limit: 1_600_000),
+        .init(kind: "step_additions", folder: "Reviewed task steps", file: "requests.taskfoldsteps", context: "com.taskfold.reviewed-task-steps.v1", prefix: "reviewed-task-steps-v1.", limit: 1_600_000),
+        .init(kind: "transfers", folder: "Child transfer requests", file: "moves.taskfoldchildtransfers", context: "com.taskfold.child-transfer-journal.v1", prefix: "child-transfer-journal-v1.", limit: 8_400_000),
+        .init(kind: "adoptions", folder: "Child adoption requests", file: "requests.taskfoldchildadoption", context: "com.taskfold.child-adoption-state.v1", prefix: "child-adoption-state-v1.", limit: 1_000_000),
+        .init(kind: "repairs", folder: "Child repair requests", file: "requests.taskfoldchildrepair", context: "com.taskfold.child-repair-state.v1", prefix: "child-repair-state-v1.", limit: 5_000_000),
+        .init(kind: "restorations", folder: "Child original restoration requests", file: "requests.taskfoldchildrestore", context: "com.taskfold.child-original-restore-state.v1", prefix: "child-original-restore-state-v1.", limit: 512_000),
+    ]
+
+    /// Every journal under `vault` that still holds saved work, as its decrypted JSON. The key is asked for only
+    /// when a file exists.
+    static func load(vault: URL, scope: Scope, key: () throws -> SymmetricKey) throws -> [String: Data] {
+        var result: [String: Data] = [:]
+        for journal in journals {
+            if let plain = try read(journal, vault: vault, scope: scope, key: key), pending(plain, scope: scope) { result[journal.kind] = plain }
+        }
+        return result
+    }
+
+    static func file(_ journal: Journal, vault: URL, scope: Scope) -> URL {
+        vault.appendingPathComponent(journal.folder, isDirectory: true).appendingPathComponent(scope.account)
+            .appendingPathComponent(CalendarOAuthConfiguration.digest(scope.origin)).appendingPathComponent(journal.file)
+    }
+
+    static func read(_ journal: Journal, vault: URL, scope: Scope, key: () throws -> SymmetricKey) throws -> Data? {
+        let digest = CalendarOAuthConfiguration.digest(scope.origin), url = file(journal, vault: vault, scope: scope)
+        var info = stat()
+        guard lstat(url.path, &info) == 0 else { if errno == ENOENT { return nil }; throw invalid }
+        guard info.st_mode & S_IFMT == S_IFREG, info.st_size > 0, info.st_size <= journal.limit + 1_024 else { throw invalid }
+        let sealed = try Data(contentsOf: url)
+        let context = Data((journal.context + "|" + journal.prefix + scope.account + "." + digest).utf8)
+        let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: sealed), using: key(), authenticating: context)
+        guard plain.count <= journal.limit else { throw invalid }
+        return plain
+    }
+
+    /// Account removal: unlinks every saved journal of `scope`. Needs no key.
+    static func remove(vault: URL, scope: Scope) throws {
+        for journal in journals where unlink(file(journal, vault: vault, scope: scope).path) != 0 && errno != ENOENT { throw invalid }
+    }
+
+    /// A saved state with queued entries, disposals or drafts for this account.
+    static func pending(_ data: Data, scope: Scope) -> Bool {
+        guard case .object(let state)? = try? TaskfoldJSONDecoder().decode(JSON.self, from: data),
+              state["account"] == .string(scope.account), state["origin"] == .string(scope.origin) else { return false }
+        return ["entries", "disposals", "drafts"].contains { !(state[$0]?.list.isEmpty ?? true) }
+    }
 
     /// One JSON document: `{"version":1,"exported_at":…,"journals":{kind: saved state}}`, keys sorted.
     static func document(_ journals: [String: Data], now: Date = Date()) throws -> Data {
@@ -198,6 +260,8 @@ enum LegacyChildJournalExport {
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return try encoder.encode(JSON.object(["version": .number(1), "exported_at": .string(ISO8601DateFormatter().string(from: now)), "journals": .object(entries)]))
     }
+
+    static let invalid = AppFailure(message: "Saved subtask edits couldn’t be read.")
 }
 
 /// Completing from a widget or the Watch follows the same rule as the app: a parent completes its open descendants.
