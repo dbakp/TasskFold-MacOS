@@ -159,14 +159,22 @@ tasks may have a null generation; use exactly the value read from the server.
 Use the returned task projection as `base`; update planning requires the reviewed
 `due_date`, `due_time`, `time_zone`, `scheduled_at` and `reminder_specs` values.
 Writable details include title, description, priority, dates/planning, project,
-section, labels, assignment, checklist, recurrence, deadline and estimate.
+section, labels, assignment, parent task and order, recurrence, deadline and estimate.
 Server identity, creator, completion history, comments, attachments, provenance
 and unknown fields are not freely writable. Description capacity is 512,000
 UTF-8 bytes. Strict bounds/types and destination/member checks apply.
 
-Project moves clear old section and recursive assignees before reviewing any
-explicit replacements. Checklist updates preserve omitted nested children and
-opaque/read-only data; authoring completion progress requires complete scope.
+Subtasks are tasks (child-rows cutover, Migration B): a subtask is a task whose
+`parent_id` names its parent, ordered by `child_order` (a number; omitted, it goes
+last). Reads return `parent_id` and `child_order` and no longer return `subtasks`.
+Writes accept `parent_id` and `child_order`; a non-empty `subtasks` list is refused
+with `400` (an empty one is ignored). A subtask stays in its parent's project and
+at most ten levels deep; moving a parent moves its subtasks. Deleting a task that
+still has subtasks is refused with `409`: delete or move its subtasks first.
+
+Project moves clear old section and assignees before reviewing any explicit
+replacements; a `subtasks` baseline is no longer required. Team-project
+checklists keep their JSON form until team subtasks become tasks (phase T).
 Portable relative, absolute, calendar, elapsed-interval and holiday-aware reminders
 can be authored and edited, including Time Sensitive wrappers. Future/private rows
 are preserved exactly; private location markers require native private-place review.

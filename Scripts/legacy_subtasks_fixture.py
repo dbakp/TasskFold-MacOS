@@ -7,6 +7,7 @@ standard library (hashlib.md5), so the expected UUIDs do not come from the Swift
     legacy_child_id(root, path) = md5('taskfold.child-row.v1|' + lower(root) + '|' + U+001F.join(path)) as a uuid
 
 Run from the repo root:  python3 Scripts/legacy_subtasks_fixture.py
+It also refreshes the verbatim copy embedded in supabase/tests/child_task_rows_b.sql.
 """
 import base64, hashlib, json, os
 
@@ -196,3 +197,17 @@ with open(path, "w", encoding="utf-8") as f:
     json.dump(out, f, indent=2, ensure_ascii=False, sort_keys=False)
     f.write("\n")
 print("wrote", os.path.normpath(path), len(out["trees"]), "trees")
+
+# supabase/tests/child_task_rows_b.sql (Migration B) embeds a verbatim copy, because SQL tests cannot read repo files.
+sql_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "supabase", "tests", "child_task_rows_b.sql")
+if os.path.exists(sql_path):
+    with open(path, encoding="utf-8") as f:
+        fixture = f.read()
+    with open(sql_path, encoding="utf-8") as f:
+        sql = f.read()
+    start = sql.index("$json$") + len("$json$")
+    end = sql.index("$json$", start)
+    if sql[start:end] != fixture:
+        with open(sql_path, "w", encoding="utf-8") as f:
+            f.write(sql[:start] + fixture + sql[end:])
+        print("updated", os.path.normpath(sql_path))

@@ -30,7 +30,6 @@ function task(taskID = id) {
     project_id: null,
     section_id: null,
     labels: [],
-    subtasks: [],
     reminders: [],
     reminder_specs: [],
     attachments: [],
@@ -46,6 +45,8 @@ function task(taskID = id) {
     time_zone: null,
     scheduled_at: null,
     source_metadata: {},
+    parent_id: null,
+    child_order: null,
     revision: "a".repeat(64),
   };
 }
@@ -753,5 +754,94 @@ Deno.test("write contention directs an exact request-ID retry", async () => {
   assert(
     (await response.json()).error.includes("same request ID"),
     "Write retry would lose its idempotent identity",
+  );
+});
+
+Deno.test("child rows: projection carries parent_id/child_order and never subtasks", async () => {
+  const parent = "f093cafe-0000-4000-8000-000000000042";
+  const f = fixture({
+    task: {
+      ...task(),
+      subtasks: [{ title: "legacy" }],
+      parent_id: parent,
+      child_order: 2.5,
+    },
+  });
+  const reply = await f.handler(request());
+  const value = await reply.json();
+  assert(reply.status === 200, "Child projection failed");
+  assert(
+    value.task.parent_id === parent && value.task.child_order === 2.5,
+    "Child fields lost",
+  );
+  assert(!Object.hasOwn(value.task, "subtasks"), "Legacy subtasks escaped");
+  for (
+    const row of [
+      { ...task(), parent_id: "no" },
+      { ...task(), child_order: "1" },
+      (() => {
+        const r: Record<string, unknown> = { ...task() };
+        delete r.parent_id;
+        return r;
+      })(),
+    ]
+  ) {
+    assert(
+      (await fixture({ task: row }).handler(request())).status === 503,
+      "Malformed child fields escaped",
+    );
+  }
+});
+Deno.test("child rows: writes refuse non-empty subtasks and drop empty ones", async () => {
+  const f = fixture();
+  for (
+    const subtasks of [[{ title: "nested" }], "x", null, { a: 1 }]
+  ) {
+    const reply = await f.handler(writeRequest("create", {
+      ...writeBody(),
+      fields: { title: "Parent", subtasks },
+    }));
+    assert(reply.status === 400, "Legacy subtasks accepted");
+    assert(
+      (await reply.text()).includes("parent_id"),
+      "Refusal does not point at parent_id",
+    );
+  }
+  assert(f.calls.length === 0, "Legacy subtasks reached service");
+  const g = fixture({
+    replayed: false,
+    receipt: {
+      request_id: requestID,
+      operation: "create",
+      task_id: id,
+      task_generation: generation,
+      completion_version: 0,
+      successor_id: null,
+      successor_generation: null,
+      deleted: false,
+      applied_at: "2026-11-16T10:00:00Z",
+    },
+  });
+  await g.handler(writeRequest("create", {
+    ...writeBody(),
+    fields: { title: "Child", subtasks: [], parent_id: owner, child_order: 1 },
+  }));
+  const sent = await g.calls[0].json();
+  assert(
+    !Object.hasOwn(sent._body.fields, "subtasks"),
+    "Empty legacy list forwarded",
+  );
+  assert(
+    sent._body.fields.parent_id === owner &&
+      sent._body.fields.child_order === 1,
+    "Child fields not forwarded",
+  );
+  const h = fixture();
+  assert(
+    (await h.handler(writeRequest("update", {
+          ...writeBody("update"),
+          fields: { subtasks: [] },
+        }))).status === 400 && h.calls.length === 0,
+    "Empty-only update reached service",
   );
 });
