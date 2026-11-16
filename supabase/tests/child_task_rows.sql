@@ -331,8 +331,8 @@ end $$;
 reset role;
 
 select set_config('request.jwt.claim.sub','',true);
--- 8. Team projects. Nothing creates team child rows before phase T, so the migration must leave the closed-content
--- guard untouched and refuse the one dangerous path: a cascade that would delete team children without their custody.
+-- 8. Team projects. The closed-content guard stays untouched and the one dangerous path is refused: a cascade that would
+-- delete team children without their custody. Since phase T the team lifecycle RPC deletes the children itself.
 do $$ begin
  perform public.zz_task(5000,0,104,1,'team parent'); perform public.zz_task(5001,5000,104,1,'team child'); perform public.zz_task(5002,5001,104,1,'team grandchild');
  if (select count(*) from taskfold_private.team_content_tasks where task_id between public.zz_u(5000) and public.zz_u(5002)) <> 3 then raise exception 'team custody rows missing'; end if;
@@ -342,7 +342,7 @@ do $$ begin
  perform set_config('request.jwt.claim.sub',public.zz_u(1)::text,true);
  insert into taskfold_private.team_task_edit_scope(transaction_id,team_id,project_id,task_id,generation,actor_id,operation)
   select txid_current(),public.zz_u(130),public.zz_u(104),id,task_generation,public.zz_u(1),'delete' from public.tasks where id=public.zz_u(5000);
- perform public.zz_expect($q$delete from public.tasks where id=public.zz_u(5000)$q$,'PT409','Remove the subtasks of this team task');
+ perform public.zz_expect($q$delete from public.tasks where id=public.zz_u(5000)$q$,'PT409','supported Taskfold app');
  if (select count(*) from public.tasks where id between public.zz_u(5000) and public.zz_u(5002)) <> 3 then raise exception 'refused team delete changed data'; end if;
  -- Without a scope the existing closed-content guard still refuses first.
  delete from taskfold_private.team_task_edit_scope where transaction_id=txid_current();

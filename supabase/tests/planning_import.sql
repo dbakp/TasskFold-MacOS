@@ -1,8 +1,7 @@
 -- Execute as one transaction and ROLLBACK. Isolated fixtures; no outbound email.
 begin;
--- This fixture writes JSON `subtasks` trees as a signed-in user: the pre-cutover path that Migration B
--- (20261116100000_child_task_rows_b) freezes. Inside this rolled-back transaction the freeze is switched off so the
--- legacy behaviour stays covered while team trees remain JSON (phase T). Retire this fixture with Migration C.
+-- The bundle still carries a legacy JSON `subtasks` tree in a record; since Migration C the import ignores that key
+-- (Todoist children arrive as separate items with parent_source_id). Before C the freeze is switched off here.
 do $$ begin
  if exists (select 1 from pg_trigger where tgrelid='public.tasks'::regclass and tgname='aaa_taskfold_subtasks_frozen') then
   alter table public.tasks disable trigger aaa_taskfold_subtasks_frozen;
@@ -18,7 +17,7 @@ do $$ declare bundle jsonb; result jsonb; task_id uuid := 'f01dcafe-1000-4000-80
  result := public.taskfold_import_todoist('source-account',bundle);
  if result->>'tasksImported'<>'2' or result->>'subtasksImported'<>'2' or result->>'commentsImported'<>'1' then raise exception 'Import counts incorrect: %',result; end if;
  if (select count(*) from public.tasks where id in(task_id,'f01dcafe-1000-4000-8000-000000000031') and title='Same' and user_id=auth.uid())<>2 then raise exception 'Distinct titles or enforced account ownership failed'; end if;
- if not exists(select 1 from public.tasks where id=task_id and deadline_date='2026-10-09' and duration_minutes=30 and due_date='2026-10-06' and time_zone='Europe/Copenhagen' and subtasks#>>'{0,subtasks,0,comments,0,text}'='Retained') then raise exception 'Planning or nested fields lost'; end if;
+ if not exists(select 1 from public.tasks where id=task_id and deadline_date='2026-10-09' and duration_minutes=30 and due_date='2026-10-06' and time_zone='Europe/Copenhagen') then raise exception 'Planning fields lost'; end if;
  perform public.taskfold_patch_task(task_id,'{"title":"Same","deadline_date":"2026-10-09","duration_minutes":30}','{"title":"User edit","deadline_date":"2026-10-10","duration_minutes":45}');
  result := public.taskfold_import_todoist('source-account',bundle);
  if result->>'tasksImported'<>'0' or result->>'tasksSkipped'<>'2' or result->>'projectsSkipped'<>'1' then raise exception 'Replay counts incorrect'; end if;
