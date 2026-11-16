@@ -86,10 +86,11 @@ struct RowDropDelegate: DropDelegate {
         defer { workspace.drag.end() }
         let visible = workspace.visibleTasks(tasks)
         var ids = visible.map(\.id)
-        let moved = source.compactMap { visible.indices.contains($0) ? visible[$0].id : nil }.filter { Workspace.subtaskPath($0) == nil }
+        // Child rows nested under a parent are not list roots: only the parent moves in the list.
+        let moved = source.compactMap { visible.indices.contains($0) ? visible[$0].id : nil }.filter { workspace.isListRoot($0) }
         guard !moved.isEmpty else { return }
         ids.move(fromOffsets: source, toOffset: destination)
-        let roots = ids.filter { Workspace.subtaskPath($0) == nil }
+        let roots = ids.filter { workspace.isListRoot($0) }
         guard let last = roots.lastIndex(where: { moved.contains($0) }) else { return }
         let before = roots.indices.contains(last + 1) ? roots[last + 1] : nil
         workspace.move(moved, to: DragSlot(day: day, before: before))
@@ -97,7 +98,7 @@ struct RowDropDelegate: DropDelegate {
     }
     func insert(at index: Int, providers: [NSItemProvider]) {
         let visible = workspace.visibleTasks(tasks)
-        let before = visible.indices.contains(index) ? (Workspace.subtaskPath(visible[index].id)?.first ?? visible[index].id) : nil
+        let before = visible.indices.contains(index) ? (workspace.nestedRowsList ? visible[index...].first { workspace.isListRoot($0.id) }?.id : Workspace.subtaskPath(visible[index].id)?.first ?? visible[index].id) : nil
         let ids = workspace.drag.ids
         if !ids.isEmpty {
             workspace.move(ids, to: DragSlot(day: day, before: before)); workspace.drag.end(); return

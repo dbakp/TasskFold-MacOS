@@ -52,6 +52,8 @@ struct TaskRowView: View {
     @State private var fullNote: (request: TaskNotePreviewReadCache.Request, reading: Linkify.Reading)?
     @State private var notePresentation: UUID?
     var compactDate = false
+    /// Child rows: the row inside the inspector's Subtasks section (no indent, disclosure, parent line or hover actions).
+    var inInspector = false
     @State private var hovering = false
     @State private var checkHover = false
     @Environment(\.taskRowScope) private var rowScope
@@ -72,8 +74,10 @@ struct TaskRowView: View {
         let notePreview = fullReading?.text ?? store.taskNotePreview(task)
         let titleLinks = Linkify.reading(task.title), previewLinks = fullReading ?? Linkify.reading(notePreview)
         HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
-            if card == nil, !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1) /* indent geometry: depth steps, not spacing */.accessibilityHidden(true) }
-            if workspace.canExpandTask(task) {
+            if card == nil, !inInspector, !workspace.hierarchyFilter && !workspace.independentWorkRow(task) && indentSteps > 0 { Color.clear.frame(width: CGFloat(min(indentSteps, 5)) * 24 - 10, height: 1) /* indent geometry: depth steps, not spacing */.accessibilityHidden(true) }
+            if inInspector {
+                // A child row carries no disclosure triangle; its own children are one tap away.
+            } else if workspace.canExpandTask(task) {
                 Button {
                     if !workspace.expandedTasks.insert(task.id).inserted { workspace.expandedTasks.remove(task.id) }
                 } label: {
@@ -145,7 +149,10 @@ struct TaskRowView: View {
                     ProgressView("Preparing full note…").controlSize(.small).font(DS.Font.chip)
                         .accessibilityIdentifier("taskNotesPreparing-" + task.id)
                 }
-                if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
+                if let line = childParentLine {
+                    Text(line).font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary).lineLimit(1)
+                        .accessibilityIdentifier("parentLine-" + task.id)
+                } else if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary).lineLimit(1)
                 }
                 if hasMetadata(planning) {
@@ -162,9 +169,9 @@ struct TaskRowView: View {
             if !task.string("assigned_to").isEmpty {
                 AssigneeMenu(task: task, selected: isSelected) { workspace.assign(task.id, to: $0) }
             }
-            if card == nil { trailing }
+            if card == nil, !inInspector { trailing }
         }
-        .overlay(alignment: .topTrailing) { if card != nil { trailing.background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: DS.Radius.s)).opacity(hovering || isSelected ? 1 : 0).allowsHitTesting(hovering || isSelected) } }
+        .overlay(alignment: .topTrailing) { if card != nil, !inInspector { trailing.background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: DS.Radius.s)).opacity(hovering || isSelected ? 1 : 0).allowsHitTesting(hovering || isSelected) } }
         .padding(.vertical, card == nil ? DS.Size.rowVerticalPadding(compact: density == "compact") : DS.Space.s)
         .padding(.horizontal, card == nil ? DS.Space.xs : DS.Space.s)
         .frame(minHeight: DS.Size.rowMinHeight)
@@ -261,9 +268,21 @@ struct TaskRowView: View {
         guard let card, card.showsProject else { return nil }
         return store.record("projects", id: task.string("project_id"))
     }
+    /// Indentation steps: only in a project or Inbox list that nests its children.
+    private var indentSteps: Int { TaskTree.rowsEnabled ? workspace.rowIndent(task) : workspace.taskDepth(task.id) }
+    /// "↳ Parent" under a child shown out of its parent (Today, Upcoming, Calendar, boards); labels, filters and search show the whole breadcrumb.
+    private var childParentLine: String? {
+        guard TaskTree.rowsEnabled, !inInspector, !workspace.nestedRowsList else { return nil }
+        let trail = store.breadcrumb(of: task.id)
+        guard !trail.isEmpty else { return nil }
+        let flat: Bool
+        switch rowScope { case .label?, .saved?, .all?, .completed?: flat = true; default: flat = !workspace.search.isEmpty }
+        return "↳ " + (flat ? trail.map { $0.title.isEmpty ? "Untitled task" : $0.title }.joined(separator: " › ") : (trail.last?.title ?? ""))
+    }
+    private var rowChildProgress: (completed: Int, total: Int) { TaskTree.rowsEnabled ? store.childProgress(of: task.id) : (0, 0) }
     private var labelNames: [String] { task["labels"].list.map(\.text).filter { !$0.isEmpty }.map { store.record("labels", id: $0)?.name ?? $0 } }
     private func hasMetadata(_ planning: TaskRowPlanningRead) -> Bool {
-        cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty
+        cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || rowChildProgress.total > 0 || !task["comments"].list.isEmpty
             || !labelNames.isEmpty || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || store.dependencyIndicator(for: task) != nil
     }
     private enum DateRole { case overdue, today, tomorrow, thisWeek, later }
@@ -341,6 +360,12 @@ struct TaskRowView: View {
                     .accessibilityIdentifier("subtaskSummary-" + task.id)
             }
         }
+        if rowChildProgress.total > 0 {
+            let progress = rowChildProgress
+            Label("\(progress.completed)/\(progress.total)", systemImage: "list.bullet")
+                .accessibilityLabel("\(progress.completed) of \(progress.total) subtasks completed")
+                .accessibilityIdentifier("childSummary-" + task.id)
+        }
         if !task["comments"].list.isEmpty {
             Label("\(task["comments"].list.count)", systemImage: "bubble.left")
                 .accessibilityLabel(task["comments"].list.count == 1 ? "1 comment" : "\(task["comments"].list.count) comments")
@@ -370,10 +395,11 @@ struct TaskRowView: View {
         if let marker = store.dependencyIndicator(for: task) { parts.append(marker.label) }
         let labels = labelNames
         if !labels.isEmpty { parts.append("labels " + labels.joined(separator: ", ")) }
-        let progress = store.subtaskProgress(task)
+        let progress = rowChildProgress.total > 0 ? rowChildProgress : store.subtaskProgress(task)
         if progress.total > 0 { parts.append("\(progress.completed) of \(progress.total) subtasks done") }
         else if !store.taskNotePreview(task).isEmpty { parts.append("has note") }
         if workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) { parts.append("Subtask of " + parent) }
+        else if let line = childParentLine { parts.append("Subtask of " + line.dropFirst(2)) }
         return parts.joined(separator: ", ")
     }
     static func timeText(_ value: String) -> String {
