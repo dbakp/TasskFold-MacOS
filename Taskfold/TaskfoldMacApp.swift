@@ -48,10 +48,6 @@ struct TaskfoldMacApp: App {
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
         if AccountRemovalNativeFixture.recoveryTesting { AccountRemovalRecoveryFixtureView() }
-        else if ChildFieldNativeIdentity.enabled {
-            if ChildFieldNativeIdentity.mainListTesting { ChildFieldMainListNativeFixtureView() }
-            else { ChildFieldNativeFixtureView() }
-        }
         else if AudioCommentNativeFixture.ownerReviewTesting { AudioOwnerReviewNativeFixtureView() }
         else if AudioCommentNativeFixture.conversationTesting { AudioConversationNativeFixtureView() }
         else if AudioCommentNativeFixture.enabled { AudioCommentNativeFixtureView() }
@@ -247,11 +243,11 @@ struct TaskfoldCommands: Commands {
             Button(NSApp.keyWindow?.firstResponder?.undoManager?.undoMenuItemTitle ?? "Undo") {
                 NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
             }.keyboardShortcut("z", modifiers: .command)
-                .disabled(workspace.completionHistory?.busy == true || store.childListCompletionBusy || NSApp.keyWindow?.firstResponder?.undoManager?.canUndo != true)
+                .disabled(NSApp.keyWindow?.firstResponder?.undoManager?.canUndo != true)
             Button(NSApp.keyWindow?.firstResponder?.undoManager?.redoMenuItemTitle ?? "Redo") {
                 NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
             }.keyboardShortcut("z", modifiers: [.command, .shift])
-                .disabled(workspace.completionHistory?.busy == true || store.childListCompletionBusy || NSApp.keyWindow?.firstResponder?.undoManager?.canRedo != true)
+                .disabled(NSApp.keyWindow?.firstResponder?.undoManager?.canRedo != true)
         }
         CommandGroup(replacing: .printItem) {
             Button("Print or Export…") { printAction?.perform() }.keyboardShortcut("p", modifiers: .command).disabled(printAction?.isEnabled != true)
@@ -288,15 +284,13 @@ struct TaskfoldCommands: Commands {
             // Space and Return are handled by the focused list itself so typing in text fields is never intercepted.
             Button(completeTitle) { workspace.toggle(workspace.actionSelection) }.keyboardShortcut("k", modifiers: [.command, .shift]).disabled(workspace.actionSelection.isEmpty)
             Button("Edit Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.open(id) } }.keyboardShortcut("e", modifiers: .command).disabled(workspace.actionSelection.count != 1)
-            if TaskTree.rowsEnabled {
-                // Child rows: ⌘] nests the task under the one above it, ⌘[ lifts it one level.
-                Button("Indent Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.indentTask(id) } }
-                    .keyboardShortcut("]", modifiers: .command).disabled(workspace.actionSelection.count != 1 || !workspace.canIndent(workspace.actionSelection.first ?? ""))
-                Button("Outdent Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.outdentTask(id) } }
-                    .keyboardShortcut("[", modifiers: .command).disabled(workspace.actionSelection.count != 1 || !workspace.canOutdent(workspace.actionSelection.first ?? ""))
-                Button("Make it a Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.makeTask(id) } }
-                    .disabled(workspace.actionSelection.count != 1 || !workspace.canOutdent(workspace.actionSelection.first ?? ""))
-            }
+            // Child rows: ⌘] nests the task under the one above it, ⌘[ lifts it one level.
+            Button("Indent Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.indentTask(id) } }
+                .keyboardShortcut("]", modifiers: .command).disabled(workspace.actionSelection.count != 1 || !workspace.canIndent(workspace.actionSelection.first ?? ""))
+            Button("Outdent Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.outdentTask(id) } }
+                .keyboardShortcut("[", modifiers: .command).disabled(workspace.actionSelection.count != 1 || !workspace.canOutdent(workspace.actionSelection.first ?? ""))
+            Button("Make it a Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.makeTask(id) } }
+                .disabled(workspace.actionSelection.count != 1 || !workspace.canOutdent(workspace.actionSelection.first ?? ""))
             Divider()
             Menu("Reschedule") {
                 Button("Today") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Date()), label: "today") }.keyboardShortcut("t", modifiers: [.command, .option])

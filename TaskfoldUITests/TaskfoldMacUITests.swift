@@ -94,7 +94,7 @@ extension TaskfoldMacUITests {
         app.buttons["saveTaskCSV"].click(); let cancel = app.sheets["save-panel"].buttons["CancelButton"]; XCTAssertTrue(cancel.waitForExistence(timeout: 10)); cancel.click()
         XCTAssertTrue(cancel.waitForNonExistence(timeout: 10)); XCTAssertFalse(app.staticTexts["csvExportStatus"].exists); XCTAssertEqual(try outputTables(), before)
         app.buttons["closeTaskCSV"].click(); app.buttons["closePrintReview"].click()
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertEqual(try outputTables(), before)
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertEqual(try outputTables(), before)
         // The outer acceptance driver removes only verified synthetic outputs. The UI runner has read access, not delete authority, for files saved by the host.
     }
     @MainActor func testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn() throws {
@@ -110,7 +110,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["saveTaskPDF"].isHittable); XCTAssertEqual(try outputTables(), before)
         app.buttons["saveTaskPDF"].click(); let saveCancel = app.sheets["save-panel"].buttons["CancelButton"]; XCTAssertTrue(saveCancel.waitForExistence(timeout: 10)); saveCancel.click()
         XCTAssertTrue(saveCancel.waitForNonExistence(timeout: 10)); app.buttons["closePrintReview"].click()
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertEqual(try outputTables(), before)
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertEqual(try outputTables(), before)
         // Verified synthetic output cleanup belongs to the outer acceptance driver.
     }
 }
@@ -263,7 +263,7 @@ final class TaskfoldMacUITests: XCTestCase {
     }
 
     @MainActor func testTodoistImportPreviewFailureAndSafeRetry() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--child-rows-off", "--todoist-import-testing"]; app.launch(); defer { app.terminate() }
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--todoist-import-testing"]; app.launch(); defer { app.terminate() }
         app.menuBars.menuBarItems["Account"].click(); app.menuItems["Import from Todoist…"].click()
         let field = app.secureTextFields["todoistToken"]
         XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText("fixture-native-token-0001")
@@ -868,37 +868,6 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Returning to the project must restore the viewport (anchor \(anchor.frame) was y=\(y); list \(list.frame); window title \(app.windows.firstMatch.title))")
     }
 
-    @MainActor func testAssignmentsIncludeNestedTasksAndPersist() throws {
-        func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
-        let child = try nestedID(["assignment-root", "assigned-child"])
-        let grand = try nestedID(["assignment-root", "assigned-child", "assigned-grand"])
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--child-rows-off", "--assignment-fixture"]; app.launch()
-        XCTAssertTrue(app.staticTexts["title-assignment-root"].waitForExistence(timeout: 10))
-        app.textNamed("Assigned to Me").firstMatch.click()
-        XCTAssertTrue(app.staticTexts["title-" + child].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["title-assignment-personal"].exists)
-        XCTAssertFalse(app.staticTexts["title-assignment-root"].exists)
-        app.staticTexts["title-" + child].click()
-        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Prepare launch notes")
-        app.textNamed("Today").firstMatch.click()
-        app.buttons["expand-assignment-root"].click(); app.buttons["expand-" + child].click()
-        app.staticTexts["title-" + grand].click()
-        openAssigneePicker(app); app.buttons["assign-member-ui-testing"].click()
-        // Changing selection flushes the inspector's debounced save.
-        app.staticTexts["title-assignment-root"].click()
-        app.textNamed("Assigned to Me").firstMatch.click()
-        XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 5))
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off"]; app.launch()
-        XCTAssertTrue(app.textNamed("Assigned to Me").firstMatch.waitForExistence(timeout: 10))
-        app.textNamed("Assigned to Me").firstMatch.click()
-        XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 10))
-        app.buttons["complete-" + grand].click()
-        XCTAssertTrue(waitForDisappearance(app.staticTexts["title-" + grand], timeout: 5))
-        app.typeKey("z", modifierFlags: .command)
-        XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 5))
-        let screenshot = XCTAttachment(screenshot: app.screenshot()); screenshot.name = "Assigned tasks with nested work"; screenshot.lifetime = .keepAlways; add(screenshot)
-    }
 
     @MainActor func testConflictResolutionKeepsIndependentComment() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"]; app.launch()
@@ -1054,92 +1023,8 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"].waitForExistence(timeout: 10))
     }
 
-    @MainActor func testExpandableSubtasksEditCompleteAndPersist() throws {
-        func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
-        let childID = try nestedID(["hierarchy-root", "child-one"])
-        let grandchildID = try nestedID(["hierarchy-root", "child-one", "grandchild-one"])
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--child-rows-off", "--hierarchy-fixture"]; app.launch()
-        let root = app.staticTexts["title-hierarchy-root"], child = app.staticTexts["title-" + childID], grandchild = app.staticTexts["title-" + grandchildID]
-        XCTAssertTrue(root.waitForExistence(timeout: 10))
-        XCTAssertFalse(child.exists)
-        app.buttons["expand-hierarchy-root"].click()
-        XCTAssertTrue(child.waitForExistence(timeout: 5))
-        app.buttons["expand-" + childID].click()
-        XCTAssertTrue(grandchild.waitForExistence(timeout: 5))
-        XCTAssertGreaterThan(child.frame.minX, root.frame.minX)
-        XCTAssertGreaterThan(grandchild.frame.minX, child.frame.minX)
-        grandchild.click()
-        let title = app.descendants(matching: .any)["taskTitle"]
-        XCTAssertTrue(title.waitForExistence(timeout: 5))
-        XCTAssertEqual(title.value as? String, "Review checklist")
-        XCTAssertTrue(app.textFields["addSubtask"].exists, "Nesting continues below a sub-subtask, up to the depth limit")
-        title.click(); app.typeKey("a", modifierFlags: .command); app.typeText("Review final checklist"); app.typeKey(.return, modifierFlags: [])
-        app.buttons["complete-" + grandchildID].click()
-        XCTAssertTrue(app.buttons["reopen-" + grandchildID].waitForExistence(timeout: 5))
-        grandchild.click()  // the title field still has keyboard focus and would take ⌘Z for its own typing
-        app.typeKey("z", modifierFlags: .command)
-        XCTAssertTrue(app.buttons["complete-" + grandchildID].waitForExistence(timeout: 5))
-        child.click(); app.typeKey(" ", modifierFlags: [])
-        XCTAssertTrue(app.buttons["reopen-" + childID].waitForExistence(timeout: 5), "Space completes the selected subtask")
-        XCTAssertTrue(app.buttons["complete-hierarchy-root"].exists, "The parent stays independent")
-        app.buttons["expand-hierarchy-root"].click()
-        XCTAssertTrue(waitForDisappearance(child, timeout: 5))
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off"]; app.launch()
-        XCTAssertTrue(root.waitForExistence(timeout: 10))
-        app.buttons["expand-hierarchy-root"].click(); app.buttons["expand-" + childID].click()
-        XCTAssertTrue(app.buttons["reopen-" + childID].waitForExistence(timeout: 5))
-        grandchild.click()
-        XCTAssertTrue(title.waitForExistence(timeout: 5))
-        XCTAssertEqual(title.value as? String, "Review final checklist")
-        let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
-        screenshot.name = "Expanded subtasks and inspector"; screenshot.lifetime = .keepAlways; add(screenshot)
-    }
 
-    @MainActor func testDraggingParentKeepsExpandedChildrenTogether() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--child-rows-off", "--hierarchy-fixture"]; app.launch()
-        let root = app.staticTexts["title-hierarchy-root"], other = app.staticTexts["title-hierarchy-other"]
-        XCTAssertTrue(root.waitForExistence(timeout: 10))
-        app.buttons["expand-hierarchy-root"].click()
-        let childID = "subtask:" + (try JSONEncoder().encode(["hierarchy-root", "child-one"])).base64EncodedString()
-        let child = app.staticTexts["title-" + childID]
-        XCTAssertTrue(child.waitForExistence(timeout: 5))
-        // XCUIElement.press(forDuration:thenDragTo:) synthesizes no mouse events on macOS 27; click(forDuration:thenDragTo:) does, and starts the table drag.
-        other.click(forDuration: 0.4, thenDragTo: root)
-        sleep(1)
-        XCTAssertLessThan(other.frame.minY, root.frame.minY)
-        XCTAssertGreaterThan(child.frame.minY, root.frame.minY)
-        app.typeKey("z", modifierFlags: .command)
-        sleep(1)
-        XCTAssertLessThan(root.frame.minY, other.frame.minY)
-        XCTAssertGreaterThan(other.frame.minY, child.frame.minY)
-    }
 
-    @MainActor func testCreateSubSubtaskAndEnforceDepthLimit() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--child-rows-off", "--hierarchy-fixture"]; app.launch()
-        let childID = "subtask:" + (try JSONEncoder().encode(["hierarchy-root", "child-two"])).base64EncodedString()
-        XCTAssertTrue(app.buttons["expand-hierarchy-root"].waitForExistence(timeout: 10))
-        app.buttons["expand-hierarchy-root"].click()
-        app.staticTexts["title-" + childID].click()
-        let input = app.textFields["addSubtask"]
-        XCTAssertTrue(input.waitForExistence(timeout: 5))
-        input.click(); input.typeText("Write release email"); app.typeKey(.return, modifierFlags: [])
-        let created = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "Write release email")).firstMatch
-        XCTAssertTrue(created.waitForExistence(timeout: 5))
-        created.click()
-        XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Write release email")
-        // Subtasks nest to 10 levels (SubtaskTree.maximumDepth): keep adding one level at a time until the field disappears.
-        var depth = 2
-        while input.exists, depth < 12 {
-            depth += 1
-            input.click(); input.typeText("Level \(depth)"); app.typeKey(.return, modifierFlags: [])
-            let next = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "Level \(depth)")).firstMatch
-            XCTAssertTrue(next.waitForExistence(timeout: 5), "Level \(depth) should appear under its parent")
-            next.click()
-            XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Level \(depth)")
-        }
-        XCTAssertEqual(depth, 10, "The inspector must stop offering Add a subtask exactly at the 10-level limit")
-        XCTAssertFalse(input.exists)
-    }
 
     @MainActor func testTaskEntryIsExplicitAndFilterLivesAboveTasks() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
@@ -3448,7 +3333,7 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor func testProjectWorkflowMultiLineTemplateArchiveAndRelaunch() throws {
         guard Bundle(for: Self.self).bundleIdentifier?.contains("workflowtests") == true else { throw XCTSkip("Requires a disposable workflow test app") }
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--section=inbox"]
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--workflow-fixture", "--section=inbox"]
         app.launch(); defer { app.terminate() }
         let capture = app.buttons["openMultiLineCapture"]
         XCTAssertTrue(capture.waitForExistence(timeout: 8)); capture.click()
@@ -3475,7 +3360,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.textNamed("Design studio").waitForExistence(timeout: 5))
         app.buttons["restoreProject-f0742000-1111-4111-8111-000000000001"].click()
         app.buttons["Done"].firstMatch.click()
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "--section=inbox"]; app.launch()
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
         app.textNamed("Inbox").firstMatch.click()
         XCTAssertTrue(app.textNamed("Capture Mac workflow idea").waitForExistence(timeout: 8))
         XCTAssertTrue(app.textNamed("Weekly Mac launch").exists)
@@ -4477,7 +4362,7 @@ extension TaskfoldMacUITests {
     @MainActor func testTodoistHeadingReviewAvailabilityAndTypedRetry() throws {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated Mac heading host required") }
         continueAfterFailure = false
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--todoist-import-testing", "-localMode", "YES"]; app.launch(); defer { app.terminate() }
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--workflow-fixture", "--todoist-import-testing", "-localMode", "YES"]; app.launch(); defer { app.terminate() }
         app.menuBars.menuBarItems["Account"].click(); app.menuItems["Import from Todoist…"].click()
         let field = app.secureTextFields["todoistToken"]; XCTAssertTrue(field.waitForExistence(timeout: 8))
         let window = app.windows.containing(.secureTextField, identifier: "todoistToken").firstMatch
@@ -4508,7 +4393,7 @@ extension TaskfoldMacUITests {
         var copiedChange: Int?
         defer { if let copiedChange, board.changeCount == copiedChange { board.clearContents(); let items = previous.map { values in let item = NSPasteboardItem(); for (type, data) in values { item.setData(data, forType: type) }; return item }; if !items.isEmpty { board.writeObjects(items) } } }
         let app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
         try launchHeadingWorkspace(app)
         let cacheURL = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func tables() throws -> [String: Any] { try XCTUnwrap((JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any])?["tables"] as? [String: Any]) }
@@ -4553,7 +4438,7 @@ extension TaskfoldMacUITests {
         let source = try XCTUnwrap((before["project_templates"] as? [[String: Any]])?.first)
         let imported = try XCTUnwrap(definitions.first { $0["id"] as? String != source["id"] as? String })
         XCTAssertEqual((imported["document"] as? [String: Any])?["version"] as? Int, 2)
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription); app.buttons["openTemplates"].click()
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription); app.buttons["openTemplates"].click()
         XCTAssertTrue(app.buttons["workflowTemplate-" + (imported["id"] as! String)].waitForExistence(timeout: 8))
         XCTAssertEqual(try tables()["tasks"] as? NSArray, before["tasks"] as? NSArray)
     }
@@ -4565,7 +4450,7 @@ extension TaskfoldMacUITests {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure = false
         let app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--task-heading-fixture", "--heading-progress-fixture", "-localMode", "YES"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--heading-progress-fixture", "-localMode", "YES"]
         try launchHeadingWorkspace(app)
         func pulse(_ expected: String = "1 of 3 completed") {
             XCTAssertTrue(app.buttons["openProjectPulse"].waitForExistence(timeout: 15), app.debugDescription)
@@ -4602,7 +4487,7 @@ extension TaskfoldMacUITests {
         let children = try XCTUnwrap(completed["subtasks"] as? [[String: Any]])
         XCTAssertEqual(children[2]["is_heading"] as? Bool, true)
         pulse("2 of 3 completed"); retainWindow(app, name: "Mac heading child completion Undo Redo updates project totals")
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES"]; try launchHeadingWorkspace(app); pulse("2 of 3 completed")
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); pulse("2 of 3 completed")
         XCTAssertEqual(try savedRoot() as NSDictionary, completed as NSDictionary)
     }
 }
@@ -4632,7 +4517,7 @@ extension TaskfoldMacUITests {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure = false
         let app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
         try launchHeadingWorkspace(app)
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func tables() throws -> NSDictionary { try XCTUnwrap((JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary)?["tables"] as? NSDictionary) }
@@ -4683,7 +4568,7 @@ extension TaskfoldMacUITests {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure = false
         let app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--task-heading-fixture", "--heading-progress-fixture", "--heading-planner-fixture", "--section=calendar", "--calendar-mode=day", "-localMode", "YES"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--heading-progress-fixture", "--heading-planner-fixture", "--section=calendar", "--calendar-mode=day", "-localMode", "YES"]
         try launchHeadingWorkspace(app)
         let calendar = app.outlines["Sidebar"].staticTexts["Calendar"].firstMatch
         XCTAssertTrue(calendar.waitForExistence(timeout: 15)); calendar.click()
@@ -4712,7 +4597,7 @@ extension TaskfoldMacUITests {
         let complete = app.buttons.matching(NSPredicate(format: "identifier == %@", "plannerComplete-" + child)).firstMatch; XCTAssertTrue(complete.waitForExistence(timeout: 5)); complete.click()
         capacity("30 min estimated · 0 without estimates")
         let completed = try root(); XCTAssertEqual((completed["subtasks"] as? [[String: Any]])?[0]["completed"] as? Bool, true); XCTAssertEqual(completed["completed"] as? Bool, false)
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "--section=calendar", "--calendar-mode=day", "-localMode", "YES"]; try launchHeadingWorkspace(app)
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day", "-localMode", "YES"]; try launchHeadingWorkspace(app)
         capacity("30 min estimated · 0 without estimates"); XCTAssertEqual(try root(), completed)
     }
 }
@@ -4722,7 +4607,7 @@ extension TaskfoldMacUITests {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner","com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure=false
         let app=XCUIApplication();defer{app.terminate()}
-        app.launchArguments=["--uitesting", "--child-rows-off","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","-localMode","YES"]
+        app.launchArguments=["--uitesting","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","-localMode","YES"]
         try launchHeadingWorkspace(app)
         let cache=URL(fileURLWithPath:"/Users/"+NSUserName()+"/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func root() throws -> NSDictionary {
@@ -4745,7 +4630,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(complete.waitForExistence(timeout:5));complete.click()
         waitChild("completed",true);XCTAssertEqual(try root()["completed"] as? Bool,false)
         app.typeKey("z",modifierFlags:.command);waitChild("completed",false);XCTAssertTrue(title.waitForExistence(timeout:8));let restored=try root()
-        app.terminate();app.launchArguments=["--uitesting", "--child-rows-off","--section=today","-localMode","YES"];try launchHeadingWorkspace(app)
+        app.terminate();app.launchArguments=["--uitesting","--section=today","-localMode","YES"];try launchHeadingWorkspace(app)
         XCTAssertTrue(title.waitForExistence(timeout:10));XCTAssertEqual(try root(),restored);app.outlines["Sidebar"].staticTexts["Upcoming"].firstMatch.click();XCTAssertTrue(title.waitForExistence(timeout:8))
     }
 }
@@ -4755,7 +4640,7 @@ extension TaskfoldMacUITests {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner","com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else {throw XCTSkip("Reserved isolated host required")}
         continueAfterFailure=false
         let app=XCUIApplication();defer{app.terminate()}
-        app.launchArguments=["--uitesting", "--child-rows-off","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","--heading-inbox-work-fixture","--widget-action-testing","--inbox-review-testing","-localMode","YES"]
+        app.launchArguments=["--uitesting","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","--heading-inbox-work-fixture","--widget-action-testing","--inbox-review-testing","-localMode","YES"]
         try launchHeadingWorkspace(app)
         let cache=URL(fileURLWithPath:"/Users/"+NSUserName()+"/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func root() throws -> NSDictionary {let data=try XCTUnwrap(try JSONSerialization.jsonObject(with:Data(contentsOf:cache)) as? [String:Any]);return try XCTUnwrap(((data["tables"] as? [String:Any])?["tasks"] as? [NSDictionary])?.first{$0["id"] as? String == "f1810000-0000-4000-8000-000000000001"})}
@@ -4766,7 +4651,7 @@ extension TaskfoldMacUITests {
         chooseProject();app.buttons["inboxHeadingMoveConfirm"].click();XCTAssertTrue(app.staticTexts["inboxReviewSummary"].waitForExistence(timeout:8));XCTAssertEqual(try root()["project_id"] as? String,"f0742000-1111-4111-8111-000000000001")
         app.buttons["inboxReviewUndo"].click();XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout:8));XCTAssertEqual((try root())["subtasks"] as? NSArray,original["subtasks"] as? NSArray)
         app.buttons["inboxReviewComplete"].click();XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout:5));XCTAssertEqual(renderedText(app.staticTexts["inboxReviewTitle"]),"Check the layout");let saved=try root()
-        app.terminate();app.launchArguments=["--uitesting", "--child-rows-off","--widget-action-testing","--inbox-review-testing","--section=inbox","-localMode","YES"];try launchHeadingWorkspace(app)
+        app.terminate();app.launchArguments=["--uitesting","--widget-action-testing","--inbox-review-testing","--section=inbox","-localMode","YES"];try launchHeadingWorkspace(app)
         XCTAssertTrue(projection.waitForExistence(timeout:15));XCTAssertEqual(renderedText(projection),"Inbox: 1");XCTAssertEqual(try root(),saved)
     }
 }
@@ -4776,7 +4661,7 @@ extension TaskfoldMacUITests {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner","com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure=false
         let app=XCUIApplication();defer{app.terminate()}
-        app.launchArguments=["--uitesting", "--child-rows-off","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","--heading-list-work-fixture","-localMode","YES"]
+        app.launchArguments=["--uitesting","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","--heading-list-work-fixture","-localMode","YES"]
         try launchHeadingWorkspace(app)
         let cache=URL(fileURLWithPath:"/Users/"+NSUserName()+"/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func root() throws -> NSDictionary {let data=try XCTUnwrap(try JSONSerialization.jsonObject(with:Data(contentsOf:cache)) as? [String:Any]);return try XCTUnwrap(((data["tables"] as? [String:Any])?["tasks"] as? [NSDictionary])?.first{$0["id"] as? String == "f1810000-0000-4000-8000-000000000001"})}
@@ -4789,7 +4674,7 @@ extension TaskfoldMacUITests {
         let complete=app.buttons.matching(NSPredicate(format:"identifier == %@","complete-"+child)).firstMatch;XCTAssertTrue(complete.waitForExistence(timeout:5));complete.click()
         func state(_ expected:Bool){let ready=XCTNSPredicateExpectation(predicate:NSPredicate{_,_ in guard let row=try? root(),let children=row["subtasks"] as? [[String:Any]] else{return false};return children.first?["completed"] as? Bool == expected},object:nil);XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:8),.completed)}
         state(true);app.typeKey("z",modifierFlags:.command);state(false);XCTAssertTrue(title.waitForExistence(timeout:8));app.typeKey("z",modifierFlags:[.command,.shift]);state(true);let saved=try root();XCTAssertEqual(saved["completed"] as? Bool,false)
-        app.terminate();app.launchArguments=["--uitesting", "--child-rows-off","-localMode","YES"];try launchHeadingWorkspace(app)
+        app.terminate();app.launchArguments=["--uitesting","-localMode","YES"];try launchHeadingWorkspace(app)
         choose("Design work");XCTAssertFalse(title.waitForExistence(timeout:3));choose("Completed");XCTAssertTrue(title.waitForExistence(timeout:8));XCTAssertEqual(try root(),saved)
         let cacheValue = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? [String: Any])
         let history = try XCTUnwrap((cacheValue["tables"] as? [String: Any])?["task_node_activity"] as? [[String: Any]])
@@ -4807,7 +4692,7 @@ extension TaskfoldMacUITests {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure = false
         let app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
         try launchHeadingWorkspace(app)
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func tables() throws -> NSDictionary { try XCTUnwrap((JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary)?["tables"] as? NSDictionary) }
@@ -4845,7 +4730,7 @@ extension TaskfoldMacUITests {
         let document = try XCTUnwrap(imported["document"] as? [String: Any]), tasks = try XCTUnwrap(document["tasks"] as? [[String: Any]])
         XCTAssertEqual(document["version"] as? Int, 2); XCTAssertEqual(tasks[0]["is_heading"] as? Bool, true)
         XCTAssertEqual(tasks[1]["title"] as? String, "* Ordinary action"); XCTAssertNil(tasks[0]["completed"])
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES"]; try launchHeadingWorkspace(app)
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app)
         XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15)); app.buttons["openTemplates"].click()
         XCTAssertTrue(app.buttons["workflowTemplate-" + (imported["id"] as! String)].waitForExistence(timeout: 8))
         XCTAssertEqual((try tables())["tasks"] as? NSArray, before["tasks"] as? NSArray)
@@ -5531,7 +5416,7 @@ extension TaskfoldMacUITests {
     @MainActor private func noteProofStart(_ app: XCUIApplication, flags: [String] = []) throws {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure = false
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--task-heading-fixture", "-localMode", "YES", "-appearance", "light"] + flags
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "-localMode", "YES", "-appearance", "light"] + flags
         try launchHeadingWorkspace(app); noteProofOpen(app)
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, "Keep the original notes.")
     }
@@ -5575,7 +5460,7 @@ extension TaskfoldMacUITests {
         noteProofWait { try self.noteProofTask()["description"] as? String == "**Keep the original notes.**" }
         let saved = try noteProofTables()
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
-        app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES", "-appearance", "light"]
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
         try launchHeadingWorkspace(app); noteProofOpen(app)
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, "**Keep the original notes.**")
         XCTAssertEqual(try noteProofTables(), saved)
@@ -5625,7 +5510,7 @@ extension TaskfoldMacUITests {
         noteProofShot(app, "Mac stale formatting keeps newer note and original draft")
         app.sheets.buttons["Cancel"].firstMatch.click(); let discard = app.windows.buttons["Discard changes"].firstMatch
         XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.click(); XCTAssertEqual(try noteProofTables(), newer)
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES", "-appearance", "light"]
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
         try launchHeadingWorkspace(app); noteProofOpen(app)
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, "Updated elsewhere while formatting.")
         XCTAssertEqual(try noteProofTables(), newer)
@@ -5753,7 +5638,7 @@ extension TaskfoldMacUITests {
         try importedHeadingAssert(before, title: "Plan tomorrow #work p1", heading: true, revision: 3)
         let saved = try outputTables(); app.typeKey("q", modifierFlags: .command)
         XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
-        app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES", "-appearance", "light"]
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
         try launchHeadingWorkspace(app); noteProofOpen(app)
         XCTAssertTrue(app.descendants(matching: .any)["taskKindStatus"].exists)
         XCTAssertFalse(app.buttons["reviewImportedHeading"].exists)
@@ -5775,7 +5660,7 @@ extension TaskfoldMacUITests {
         try importedHeadingAssert(before, title: original, heading: true, revision: 1)
         let saved = try outputTables(); app.typeKey("q", modifierFlags: .command)
         XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
-        app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES", "-appearance", "light"]
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
         try launchHeadingWorkspace(app); noteProofOpen(app)
         XCTAssertEqual(try outputTables(), saved)
     }
@@ -5815,7 +5700,7 @@ extension TaskfoldMacUITests {
         try Data(#"{"format":"taskfold-template","version":1,"name":"Provider retry workflow","document":{"version":1,"kind":"project","projects":[{"id":"p","name":"Synthetic retry"}],"sections":[],"tasks":[{"id":"t","title":"Review recovered workflow","description":"Synthetic provider cancellation proof.","project_id":"p","labels":[],"subtasks":[],"planned_offset":0}]}}"#.utf8).write(to: file, options: .atomic)
         defer { try? FileManager.default.removeItem(at: file) }
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--section=inbox"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--section=inbox"]
         app.launch(); defer { app.terminate() }
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststemplatecancel/Data/Library/Application Support/Taskfold/ui-testing.json")
         let before = try Data(contentsOf: cache)
@@ -5854,7 +5739,7 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(app.textFields["importTemplateName"].value as? String, "Provider retry workflow")
         app.buttons["cancelImportTemplateReview"].click()
         XCTAssertEqual(try Data(contentsOf: cache), before)
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "--section=inbox"]; app.launch()
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
         app.buttons["openTemplates"].click()
         XCTAssertTrue(app.buttons["importWorkflowTemplate"].waitForExistence(timeout: 8))
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary, try JSONSerialization.jsonObject(with: before) as? NSDictionary)
@@ -5876,7 +5761,7 @@ extension TaskfoldMacUITests {
     @MainActor private func voiceMacStart(_ app: XCUIApplication, denied: Bool = false) throws {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated voice host required") }
         continueAfterFailure = false
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--voice-fixture", "-localMode", "YES", "-appearance", denied ? "dark" : "light"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--voice-fixture", "-localMode", "YES", "-appearance", denied ? "dark" : "light"]
         if denied { app.launchArguments.append("--voice-denial-fixture") }
         try launchHeadingWorkspace(app)
         let open = app.buttons["openMultiLineCapture"]
@@ -5932,7 +5817,7 @@ extension TaskfoldMacUITests {
         }
         let saved = try voiceMacBytes(voiceMacTables())
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
-        app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES", "-appearance", "light"]
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
         try launchHeadingWorkspace(app)
         XCTAssertTrue(app.buttons["openMultiLineCapture"].waitForExistence(timeout: 10))
         XCTAssertEqual(try voiceMacBytes(voiceMacTables()), saved)
@@ -5960,7 +5845,7 @@ extension TaskfoldMacUITests {
         app.buttons["Done"].firstMatch.click()
         XCTAssertEqual(try voiceMacBytes(voiceMacTables()), before, "Closing an unapplied task draft must never save voice proposals")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
-        app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES", "-appearance", "dark"]
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "dark"]
         try launchHeadingWorkspace(app)
         XCTAssertTrue(app.buttons["openMultiLineCapture"].waitForExistence(timeout: 10))
         XCTAssertEqual(try voiceMacBytes(voiceMacTables()), before)
@@ -5995,7 +5880,7 @@ extension TaskfoldMacUITests {
         XCTAssertFalse(FileManager.default.fileExists(atPath: output.path)); XCTAssertEqual(app.state, .runningForeground)
         XCTAssertEqual(try outputTables(), before)
         let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); image.name = csv ? "CSV Save revoked by workspace incarnation" : "PDF Save revoked by changed source"; image.lifetime = .keepAlways; add(image)
-        app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES"]; try launchHeadingWorkspace(app)
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app)
         XCTAssertEqual(try outputTables(), before)
     }
     @MainActor func testPinnedNotePDFSaveRevokesChangedSourceWithoutWriting() throws { try outputRace(csv: false, pinned: true) }
@@ -6016,7 +5901,7 @@ extension TaskfoldMacUITests {
         app.buttons["saveTaskPDF"].click(); let cancel = app.sheets["save-panel"].buttons["CancelButton"]
         XCTAssertTrue(cancel.waitForExistence(timeout: 10)); cancel.click(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["printStatus"].exists); XCTAssertEqual(try outputTables(), before)
-        app.buttons["closePrintReview"].click(); app.terminate(); app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES"]; try launchHeadingWorkspace(app)
+        app.buttons["closePrintReview"].click(); app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app)
         XCTAssertEqual(try outputTables(), before)
     }
 }
@@ -6062,7 +5947,7 @@ extension TaskfoldMacUITests {
     @MainActor private func assignmentStart(_ app: XCUIApplication, unsupported: Bool) throws -> URL {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved synthetic host required") }
         continueAfterFailure = false
-        app.launchArguments = ["--uitesting", "--child-rows-off", "--workflow-fixture", "--assignment-tree-fixture", "-localMode", "YES", "-appearance", "dark"]
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--assignment-tree-fixture", "-localMode", "YES", "-appearance", "dark"]
         if unsupported { app.launchArguments.append("--assignment-tree-unsupported") }
         try launchHeadingWorkspace(app)
         XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription)
@@ -6242,7 +6127,7 @@ extension TaskfoldMacUITests {
         noteProofWait { try self.noteProofTask()["description"] as? String == expected }
         let saved = try noteProofTables()
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
-        app.launchArguments = ["--uitesting", "--child-rows-off", "-localMode", "YES", "-appearance", "light"]
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
         try launchHeadingWorkspace(app); noteProofOpen(app)
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, expected)
         XCTAssertEqual(try noteProofTables(), saved)

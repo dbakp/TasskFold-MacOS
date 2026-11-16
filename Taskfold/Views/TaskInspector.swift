@@ -11,12 +11,7 @@ struct TaskInspector: View {
     var body: some View {
         Group {
             if let task = workspace.primaryTask {
-                Group {
-                    // Independent child records live on the server; a local workspace only has embedded subtasks, which the classic editor handles.
-                    if store.childTaskFieldEditingEnabled, !store.localMode, let path = SubtaskTree.referencePath(task.id) {
-                        ChildTaskFieldDetailView(reference: task.id, root: store.record("tasks", id: path[0]), workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
-                    } else { TaskInspectorForm(taskID: task.id) }
-                }.id(task.id).transition(.panelReveal(distance: 24))
+                TaskInspectorForm(taskID: task.id).id(task.id).transition(.panelReveal(distance: 24))
             } else if workspace.selection.count > 1 {
                 MultiSelectionInspector(count: workspace.selection.count)
             } else {
@@ -103,7 +98,6 @@ struct TaskInspectorForm: View {
               workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration),
               session: store.backend.reminderSessionIncarnation, generation: currentGeneration)
     }
-    @State private var independentHierarchy: ChildTaskStructurePresentationRequest?
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
     @State private var sourceRoot: Record?
@@ -192,7 +186,7 @@ struct TaskInspectorForm: View {
         }
         recoverySession?.capture(draft,extras:recoveryExtras)
     }
-    private func stopEditing() {checkpoint();accessStopped=true;independentHierarchy=nil;audioDraft=nil;audioConversation=nil;saveTask?.cancel();titleFocused=false}
+    private func stopEditing() {checkpoint();accessStopped=true;audioDraft=nil;audioConversation=nil;saveTask?.cancel();titleFocused=false}
     var body: some View {
         Group {
             if editorAvailable {editingBody}
@@ -258,10 +252,6 @@ struct TaskInspectorForm: View {
             })
         }
         .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
-        // Reusable form rows must not own a nested hierarchy presentation.
-        .sheet(item: $independentHierarchy) { request in
-            WorkflowShell(title: "Organize subtasks") { ChildTaskStructureView(rootID: request.rootID) }
-        }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
         .onDisappear {checkpoint()}
@@ -410,11 +400,12 @@ struct TaskInspectorForm: View {
 
     /// Child rows: suggested steps are added as subtasks of this saved task.
     private var canSuggestSteps: Bool { rowsMode ? workspace.taskDepth(taskID) < TaskTree.maximumAncestors : canBreakDown }
-    private var canBreakDown: Bool { !rowsMode && (workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty) }
+    /// Team checklists stay embedded JSON until they move to rows; personal subtasks are always rows.
+    private var canBreakDown: Bool { isTeamTask && (workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty) }
     /// A legacy embedded subtask (virtual id). A child row is an ordinary task: it repeats, moves, has reminders and every other field.
     private var isSubtask: Bool { Workspace.subtaskPath(taskID) != nil }
     /// Child rows: this saved personal task owns real subtask rows.
-    private var rowsMode: Bool { TaskTree.rowsEnabled && !isCreating && !isTeamTask && Workspace.subtaskPath(taskID) == nil && store.record("tasks", id: taskID) != nil }
+    private var rowsMode: Bool { !isCreating && !isTeamTask && Workspace.subtaskPath(taskID) == nil && store.record("tasks", id: taskID) != nil }
     private var moreMenu: some View {
         Menu {
             if store.canAuthorTaskHeadings(teamDraft: teamDraft) {
@@ -677,23 +668,15 @@ struct TaskInspectorForm: View {
             block("subtasks", "Subtasks", summary: progress.total == 0 ? nil : "\(progress.completed)/\(progress.total)") {
                 ChildRowsList(parentID: taskID, flush: { saveTask?.cancel(); return saveNow() }, canAdd: true)
             }
-            // Embedded checklist items written before the move to rows stay reachable until they are converted.
-            if !draft["subtasks"].list.isEmpty { legacySubtasksSection }
-        } else { legacySubtasksSection }
+        } else { teamChecklistSection }
     }
-    @ViewBuilder private var legacySubtasksSection: some View {
-        if canBreakDown || (rowsMode && !draft["subtasks"].list.isEmpty) {
+    /// A team task's embedded checklist (JSON `subtasks`).
+    @ViewBuilder private var teamChecklistSection: some View {
+        if canBreakDown {
             let childRows = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope)
             let done = childRows.filter { SubtaskTree.inlinePresentation($0.value).completed }.count
             block("subtasks", "Subtasks", summary: childRows.isEmpty ? nil : "\(done)/\(childRows.count)") {
-                SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, presentHierarchy: { independentHierarchy = .init(rootID: $0) }, saveAndOpen: { children, path in
-                    let previous = draft
-                    draft["subtasks"] = children
-                    guard saveNow() else { draft = previous; return false }
-                    let childID = path.reduce(taskID) { parent, id in workspace.childID(parent: parent, value: .object(["id": .string(id)]), index: 0) }
-                    workspace.open(childID)
-                    return true
-                })
+                SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 })
                 ForEach(childRows) { row in subtaskRow(row) }
                 HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(!SubtaskTree.hasListContainer(draft["subtasks"]) || subtask.trimmingCharacters(in: .whitespaces).isEmpty || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth) }
             }

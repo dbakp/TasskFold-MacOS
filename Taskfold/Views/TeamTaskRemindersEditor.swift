@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TeamTaskRemindersRequest: Identifiable {
-    enum Source { case team(TeamTaskEditorDraft), child(WorkspaceBinding) }
+    enum Source { case team(TeamTaskEditorDraft) }
     let id: UUID
     let source: Source
     let record: Record
@@ -12,11 +12,7 @@ struct TeamTaskRemindersRequest: Identifiable {
     init(teamDraft: TeamTaskEditorDraft, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?) {
         id = UUID(); closed = {}; source = .team(teamDraft); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
     }
-    init(childWorkspace: WorkspaceBinding, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?, presentationID: UUID = UUID(), closed: @escaping () -> Void = {}) {
-        id = presentationID; self.closed = closed; source = .child(childWorkspace); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
-    }
-    var workspace: WorkspaceBinding { switch source { case .team(let draft): draft.workspace; case .child(let workspace): workspace } }
-    var isChild: Bool { if case .child = source { return true }; return false }
+    var workspace: WorkspaceBinding { switch source { case .team(let draft): draft.workspace } }
 }
 
 struct TeamTaskRemindersEditor: View {
@@ -37,12 +33,11 @@ struct TeamTaskRemindersEditor: View {
         guard !stopped, request.current() else { return false }
         switch request.source {
         case .team(let draft): return store.editorMayWrite(source: draft.source, proposed: draft.source, teamDraft: draft)
-        case .child(let workspace): return store.childTaskFieldEditingEnabled && workspace.matches(account: store.userID, generation: store.workspaceGeneration)
         }
     }
     private var fixtureRevoke: (() -> Void)? {
         #if DEBUG
-        return !request.isChild && TeamEditorNativeFixture.enabled ? { store.revokeTeamEditorNativeFixture() } : nil
+        return TeamEditorNativeFixture.enabled ? { store.revokeTeamEditorNativeFixture() } : nil
         #else
         return nil
         #endif
@@ -61,7 +56,6 @@ struct TeamTaskRemindersEditor: View {
         }
         var task = request.record; if draft.changed { task["reminder_specs"] = draft.value }
         var extras: [String: JSON] = ["source_identity": request.sourceIdentity, "team_reminder_source": draft.original, "unsubmitted_reminder_settings": childState]
-        if request.isChild { extras["independent_child_fields"] = request.sourceIdentity }
         session.capture(task, extras: extras)
     }
     var body: some View {
@@ -78,9 +72,6 @@ struct TeamTaskRemindersEditor: View {
                                 })).disabled(!draft.plannedEditable || session == nil).accessibilityIdentifier("teamReminderPlanned")
                             } footer: {
                                 Text("Before and after reminders move with the task’s plan. A date without a time uses 8:00 AM in each device’s time zone.")
-                                if request.isChild, request.record.due == nil {
-                                    Text("Planned-time, before and after reminders need a planned date. Add one in Plan before expecting an alert.")
-                                }
                             }
                             Section("Reminder choices") {
                                 ForEach(Array(draft.rows.enumerated()), id: \.offset) { index, row in
@@ -109,12 +100,12 @@ struct TeamTaskRemindersEditor: View {
                                 if draft.rows.count >= ReminderSpec.maximum { Text("This task has 20 reminder choices. Remove an editable one before adding another.").font(.footnote).foregroundStyle(.secondary) }
                             }
                             Section {
-                                Text(request.isChild ? "Apply keeps these choices in your private task draft until you save, review and send them. Each device controls local delivery. Private places and other channels stay unchanged." : "These choices are shared with people who can read this task. Each device controls its own delivery. Device settings and private places stay separate.").font(.footnote).foregroundStyle(.secondary)
+                                Text("These choices are shared with people who can read this task. Each device controls its own delivery. Device settings and private places stay separate.").font(.footnote).foregroundStyle(.secondary)
                             }
                             if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamReminderMessage") } }
                             if let failure = session?.failure { Section { Text(failure).foregroundStyle(.red); Button("Retry preserving edit") { checkpoint(); _ = session?.flush() } } }
                             #if DEBUG
-                            if !request.isChild && TeamEditorNativeFixture.enabled {
+                            if TeamEditorNativeFixture.enabled {
                                 Section { Button("Change test role to viewer") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("revokeTeamRemindersFixture") }
                             }
                             #endif
@@ -129,13 +120,13 @@ struct TeamTaskRemindersEditor: View {
                 } else {
                     ScrollView { VStack(alignment: .leading, spacing: 16) {
                         Label("Reminder editing paused", systemImage: "lock.shield").font(.title2)
-                        Text(request.isChild ? "This task or workspace changed. Close these settings and reopen the task before editing again." : "Project access changed. Reopen this task’s current details before editing again.")
+                        Text("Project access changed. Reopen this task’s current details before editing again.")
                         if session?.latest != nil { Text(recoveryStatus).accessibilityIdentifier("teamReminderRecoveryStatus") }
                         if let failure = session?.failure { Text(failure).foregroundStyle(.red); Button("Retry preserving edit") { checkpoint(); _ = session?.flush() } }
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(24) }.accessibilityIdentifier("teamRemindersPaused")
                 }
             }
-            .navigationTitle(request.isChild ? "Subtask reminders" : "Shared reminders")
+            .navigationTitle("Shared reminders")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
