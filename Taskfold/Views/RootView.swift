@@ -154,6 +154,7 @@ struct RootView: View {
             if let url = store.spotlightURL(for: activity) { handleExternalURL(url) }
         }
         .onContinueUserActivity(HandoffActivity.activityType) { continueHandoff($0) }
+        .legacySubtaskEditsReview()
         .modifier(HandoffAdvertising())
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         #if DEBUG
@@ -186,7 +187,9 @@ struct RootView: View {
         }
     }
 
-    private func handleExternalURL(_ url: URL) {
+    private func handleExternalURL(_ incoming: URL) {
+        // Links saved before subtasks became rows (widgets, Spotlight) open the converted row.
+        let url = LegacyTaskReference.remap(incoming)
         guard store.allowsWidgetRecordLink(url) else {
             store.error = "This widget belongs to another workspace or is unavailable. Open a task or list in your current workspace."
             return

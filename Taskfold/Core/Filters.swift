@@ -714,9 +714,10 @@ indirect enum FilterRule: Hashable, Sendable {
             case "shared", "personal":
                 let project = task.string("project_id")
                 return project.isEmpty ? field == "personal" : bindings.first { $0.field == field && $0.value == value }?.ids.contains(project) == true
-            case "root": return childPath == nil
-            case "subtask": return childPath != nil
-            case "parent": return !task["subtasks"].list.isEmpty
+            // Child rows (`parent_id`) answer the same questions as the legacy JSON paths; with no rows nothing changes.
+            case "root": return childPath == nil && !ChildRowFilterScope.isChildRow(task)
+            case "subtask": return childPath != nil || ChildRowFilterScope.isChildRow(task)
+            case "parent": return !task["subtasks"].list.isEmpty || ChildRowFilterScope.hasChildRows(task)
             case "project": return task.string("project_id") == value
             case "project_tree": return bindings.first { $0.field == field && $0.value == value }?.ids.contains(task.string("project_id")) == true
             case "section": return task.string("section_id") == value
@@ -1104,7 +1105,7 @@ struct TaskGrouping {
             let key = keys[index]
             let bindings = query.nameBindings(projects: projects, sections: sections, labels: labels, people: people)
             let name = "\(index + 1) · " + query.sectionTitle(in: context)
-            let matches = tasks.filter { task in (includeCompleted || query.includesCompletion || !task.completed) && query.matches(task, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: context.datePreferences, people: people, productiveWork: work.map { reading in reading.contains(task.id) }, assignments: context.assignments) }
+            let matches = ChildRowFilterScope.with(tasks) { tasks.filter { task in (includeCompleted || query.includesCompletion || !task.completed) && query.matches(task, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: context.datePreferences, people: people, productiveWork: work.map { reading in reading.contains(task.id) }, assignments: context.assignments) } }
             let nested = groups(matches, by: field, projects: context.projects, timeZone: timeZone)
             if nested.isEmpty { return [Group(id: key + ":all", name: name, tasks: [])] }
             return nested.map { Group(id: key + ":" + $0.id, name: field == "none" ? name : name + " / " + $0.name, tasks: $0.tasks) }

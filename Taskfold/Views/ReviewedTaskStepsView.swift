@@ -289,7 +289,7 @@ struct SavedReviewedTaskStepsLink: View {
     @State private var selected: ReviewedTaskStepsOpening?
     var body: some View {
         Group {
-        if scope != nil, store.childTaskStructureEditingEnabled || hasHistory || historyUnavailable {
+        if scope != nil, !TaskTree.rowsEnabled, store.childTaskStructureEditingEnabled || hasHistory || historyUnavailable {
             Section {
                 Button("Saved step additions", systemImage: "sparkles") { showing = true }
                     .sheet(isPresented: $showing) {

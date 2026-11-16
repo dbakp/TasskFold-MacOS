@@ -727,7 +727,8 @@ struct DayPlanTimeline: View {
             let end = block.end.map { "–" + dayPlanClock($0) } ?? ""
             let project = store.record("projects", id: block.task.string("project_id"))
             let hue = DS.Palette.project(project)
-            TimeGridBlock(title: block.task.title, time: dayPlanClock(block.start) + (preview ? "" : end), detail: preview ? nil : project?.name,
+            let parentLine = store.parent(of: block.task.id).map { "↳ " + ($0.title.isEmpty ? "Untitled task" : $0.title) }
+            TimeGridBlock(title: block.task.title, time: dayPlanClock(block.start) + (preview ? "" : end), detail: preview ? nil : parentLine ?? project?.name,
                           kind: preview ? .suggestion(hue) : .task(hue), height: height)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel((preview ? "Proposed: " : "Scheduled: ") + block.task.title + ", " + dayPlanClock(block.start) + (block.end.map { " to " + dayPlanClock($0) } ?? ""))

@@ -68,6 +68,18 @@ struct PrintDocument: Equatable, Sendable {
                 }
             }
         }
+        // Child rows: a project list prints a subtask under its parent when both are shown; anywhere else (and in
+        // hierarchy filter results) a subtask prints flat with its breadcrumb.
+        let displayedRows = groups.flatMap { $0.1 }
+        let rowTree: TaskTree? = displayedRows.contains(where: ChildRowFilterScope.isChildRow) ? TaskTree(TaskTreeDisplay.deduplicated((hierarchyRoots ?? []) + displayedRows)) : nil
+        let nestRows = rowTree != nil && !noteOnly && (hierarchyRoots == nil || expandOrdinaryChecklists)
+        var shownRows = Set<String>()
+        if let rowTree {
+            for task in displayedRows where ChildRowFilterScope.isChildRow(task) {
+                let trail = rowTree.breadcrumb(of: task.id).map { $0.title.isEmpty ? "Untitled task" : $0.title }
+                if !trail.isEmpty { parentContext[task.id] = trail.joined(separator: " › "); parentTitlePaths[task.id] = trail }
+            }
+        }
         var labelLookup: [String: [Record]] = [:]
         for label in labels {
             labelLookup[label.id, default: []].append(label)
@@ -130,10 +142,22 @@ struct PrintDocument: Equatable, Sendable {
                 var child = Record(value.object); child["project_id"] = task["project_id"]
                 result += try item(child, depth: depth + 1, project: project, parentTitles: (depth == 0 ? parentTitlePaths[task.id] ?? [] : parentTitles) + [name])
             }
+            if nestRows, let rowTree {
+                // Shown descendants whose nearest shown ancestor is this task (a hidden level in between is skipped).
+                for child in rowTree.descendants(of: task.id) where shownRows.contains(TaskTree.key(child.id)) &&
+                    rowTree.ancestors(of: child.id).first(where: { shownRows.contains(TaskTree.key($0.id)) }).map({ TaskTree.key($0.id) }) == TaskTree.key(task.id) {
+                    result += try item(child, depth: depth + 1, project: project, parentTitles: (depth == 0 ? parentTitlePaths[task.id] ?? [] : parentTitles) + [name])
+                }
+            }
             return result
         }
         let captured = try groups.map { title, tasks in
             bytes += title.utf8.count
+            var tasks = tasks
+            if nestRows, let rowTree {
+                shownRows = Set(tasks.map { TaskTree.key($0.id) })
+                tasks = tasks.filter { task in !rowTree.ancestors(of: task.id).contains { shownRows.contains(TaskTree.key($0.id)) } }
+            }
             return Group(title: title, items: try tasks.flatMap { task in
                 try item(task, depth: 0, project: projects.first(where: { $0.id == task.string("project_id") })?.name ?? "")
             })

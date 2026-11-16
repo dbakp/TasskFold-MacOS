@@ -1902,7 +1902,8 @@ final class TaskCache {
             else { candidates = reading.presentation }
         }
         var plannedDays = TaskPlannedDayRead(timeZone: query.timeZone)
-        let matched = candidates.filter { task in
+        // Child rows: `parent` needs to know which tasks have children, so bind them for the whole evaluation.
+        let matched = ChildRowFilterScope.with(tasks) { candidates.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
             if let focus = query.focusProjects, !focus.contains(task.string("project_id")) { return false }
@@ -1925,7 +1926,7 @@ final class TaskCache {
             case .label(let id): return task["labels"].list.contains(.string(id)) || task["labels"].list.contains(.string(query.labelName))
             default: return true
             }
-        }
+        } }
         let sorted: [Record]
         if query.sort == "priority", query.filter?.usesTaskHierarchy == true || query.scope.usesProductiveWork {
             sorted = matched.enumerated().sorted { $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority }.map(\.element)
@@ -2567,13 +2568,15 @@ enum WidgetProjection {
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
         var incomplete = reading.incomplete
+        let rowTree = tasks.contains(where: ChildRowFilterScope.isChildRow) ? TaskTree(tasks) : nil
         let rows = try reading.presentation.filter { TaskKind.mayComplete($0) && !$0.completed }.compactMap { task -> JSON? in
             try checking(.task)
             if SubtaskTree.referencePath(task.id) != nil {
                 guard let item = nestedByID[task.id] else { incomplete = true; return nil }
                 return projected(task, parent: item.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext(item))
             }
-            return projected(task)
+            // A child row is a plain widget row; its parent's title is the optional context line.
+            return projected(task, parent: rowTree.flatMap { ChildRowDisplay.parentTitle(of: task, tree: $0) })
         }
         let filterChildren = WidgetCompletion.hasChildFilter(Snapshot(tables: ["saved_views": savedViews])) ? nested : []
         let nestedRows = try filterChildren.map { item in

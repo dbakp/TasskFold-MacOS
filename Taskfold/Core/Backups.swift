@@ -29,6 +29,8 @@ struct WorkspaceBackup: Codable, Sendable {
         tables.removeValue(forKey: TaskAssignmentProvenance.table)
         // Dependency rows are not portable yet (their task IDs are remapped on restore); the "waiting_on" note is.
         tables.removeValue(forKey: TaskDependencies.table)
+        // The device-local record of the signed-out child-row conversion is not portable.
+        tables.removeValue(forKey: LocalChildRows.markerTable)
         tables[FocusSessionChange.table] = tables[FocusSessionChange.table]?.map { row in
             var row = row
             if let session = FocusSessionChange.session(in: row, account: account), let checkpoint = try? session.checkpoint(at: now) { row["state"] = checkpoint.document }

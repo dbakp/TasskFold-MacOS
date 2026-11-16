@@ -436,7 +436,10 @@ final class Store {
         return .init(account:userID,origin:origin,workspace:workspaceGeneration,
                      session:backend.reminderSessionIncarnation,access:workspaceReadRevision)
     }
+    /// The legacy JSON child-record system. Retired once subtasks are rows (`TaskTree.rowsEnabled`): every gate
+    /// derived from this one, and the saved-recovery entry points, turn off; pending journals are offered for export.
     var childTaskFieldEditingEnabled: Bool {
+        !TaskTree.rowsEnabled &&
         Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordWritesEnabled") as? Bool == true &&
         Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordReadsEnabled") as? Bool == true
     }
@@ -520,7 +523,7 @@ final class Store {
     private let childRecoveryDiscovery = ChildTaskRecoveryDiscovery()
     var childRecoveryPresenceScope: ChildTaskFieldClientScope? { childRecoveryDiscovery.scope }
     func hasSavedChildRecovery(_ kind: ChildTaskRecoveryKind) -> Bool {
-        childRecoveryDiscovery.contains(kind, scope: childTaskFieldRecoveryScope)
+        !TaskTree.rowsEnabled && childRecoveryDiscovery.contains(kind, scope: childTaskFieldRecoveryScope)
     }
     var hasSavedChildFields: Bool { hasSavedChildRecovery(.fields) }
     var hasSavedChildCompletions: Bool { hasSavedChildRecovery(.completions) }
@@ -966,7 +969,7 @@ final class Store {
     /// Read-only recovery can remain available if repair authoring is disabled.
     /// The independent switch is absent/off in normal app configuration.
     var childTaskRepairArchiveReadsEnabled: Bool {
-        childTaskRepairEnabled || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairArchiveReadsEnabled") as? Bool == true
+        childTaskRepairEnabled || !TaskTree.rowsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairArchiveReadsEnabled") as? Bool == true
     }
     func childTaskRepairJournal(account: String, origin: String) throws -> ChildTaskRepairJournal {
         let admission = childTaskActionAdmission(account: account, origin: origin)
@@ -1056,10 +1059,10 @@ final class Store {
         let original = try await backend.childTaskRepairOriginal(entry.command, result: result, session: scope.session)
         try Task.checkCancellation(); guard scope == childTaskFieldRecoveryScope, revision == snapshotRevision else { throw CancellationError() }; return original
     }
-    var childTaskOriginalRestorationEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalRestorationEnabled") as? Bool == true }
-    var childTaskOriginalReversalsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalReversalsEnabled") as? Bool == true }
-    var childTaskOriginalAdoptionEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalAdoptionEnabled") as? Bool == true }
-    var childTaskOriginalFinishEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalFinishEnabled") as? Bool == true }
+    var childTaskOriginalRestorationEnabled: Bool { !TaskTree.rowsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalRestorationEnabled") as? Bool == true }
+    var childTaskOriginalReversalsEnabled: Bool { !TaskTree.rowsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalReversalsEnabled") as? Bool == true }
+    var childTaskOriginalAdoptionEnabled: Bool { !TaskTree.rowsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalAdoptionEnabled") as? Bool == true }
+    var childTaskOriginalFinishEnabled: Bool { !TaskTree.rowsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildOriginalFinishEnabled") as? Bool == true }
     private func childTaskRestoreModeEnabled(_ mode: ChildTaskRestoreMode) -> Bool {
         switch mode {
         case .restore, .restoreNewer: return childTaskOriginalRestorationEnabled && childTaskOriginalReversalsEnabled
@@ -1128,7 +1131,7 @@ final class Store {
             }, reviewCurrent: { [weak self] in self?.childTaskRestoreReviewIsCurrent($0) == true })
     }
     var childTaskRepairArchiveCleanupEnabled: Bool {
-        Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairArchiveCleanupEnabled") as? Bool ?? false
+        !TaskTree.rowsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRepairArchiveCleanupEnabled") as? Bool ?? false
     }
     func childTaskRepairOriginalCleanup(_ archive: ChildTaskRepairArchive, operation: ChildTaskRepairOriginalCleanupOperation) async throws -> ChildTaskRepairOriginalCleanup {
         guard childTaskRepairArchiveCleanupEnabled, let scope = childTaskFieldRecoveryScope, scope == archive.scope else { throw CancellationError() }
@@ -2540,7 +2543,7 @@ final class Store {
         accessRecoveryPending = UserDefaults.standard.bool(forKey: accessRecoveryNoticeKey)
         workspaceCacheReadable = false;workspaceCacheDecoded=false;workspaceRepairFingerprint=nil
         defer {
-            if localMode, workspaceCacheReadable { migrateOrganization() }
+            if localMode, workspaceCacheReadable { convertLocalChildRows(); migrateOrganization() }
             if workspaceCacheReadable {
                 do { try persist(); consumeWidgetCompletions() }
                 catch { self.error = "Could not prepare widget actions: " + error.localizedDescription }
@@ -4156,6 +4159,12 @@ final class Store {
         if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && !workflowUndoBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.syncAutomatically()}}
     }
     /// Only fill missing remote rows after a successful fetch. Existing synchronized choices win.
+    /// Child rows in a signed-out workspace: its JSON subtasks become task rows once, the way Migration B converts
+    /// them on the server. `LocalChildRows` leaves a marker row so this never repeats; the marker is not backed up.
+    private func convertLocalChildRows() {
+        guard TaskTree.rowsEnabled, let outcome = LocalChildRows.convert(snapshot.tables) else { return }
+        snapshot.tables = outcome.tables
+    }
     private func migrateOrganization() {
         let legacyOrders = rows("_local_day_order").filter { record(DayPlacement.table, id: $0.id) == nil }.map { row in
             Mutation(table: DayPlacement.table, recordID: row.id, method: "POST", fields: ["id": .string(row.id), "user_id": .string(userID), "ids": row["ids"]])

@@ -225,8 +225,8 @@ struct PlanDayView: View {
                     LinkText(text: task.string("description"), color: .secondaryLabelColor, linkColor: NSColor(Color.taskfold), lineLimit: 5)
                 }
             }
-            if !task["subtasks"].list.isEmpty {
-                let progress = store.subtaskProgress(task)
+            if TaskTree.rowsEnabled ? store.childProgress(of: task.id).total > 0 : !task["subtasks"].list.isEmpty {
+                let progress = TaskTree.rowsEnabled ? store.childProgress(of: task.id) : store.subtaskProgress(task)
                 Label("\(progress.completed) of \(progress.total) subtasks done", systemImage: "checklist").font(.caption).foregroundStyle(.secondary)
             }
         }

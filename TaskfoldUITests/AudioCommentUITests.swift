@@ -31,7 +31,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(element.exists && element.isHittable, app.debugDescription)
     }
     @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false, beforeDraft: Bool = false, lostDiscard: Bool = false, lookupLock: Bool = false, prejournal: Bool = false, interrupted: Bool = false, interruptedCopy: Bool = false) {
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--audio-comment-testing", "-appearance", large || denied ? "dark" : "light"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--audio-comment-testing", "-appearance", large || denied ? "dark" : "light"]
         if reset { app.launchArguments.append("--audio-comment-reset") }
         if lostSave { app.launchArguments.append("--audio-save-lost-ack") }
         if beforeDraft { app.launchArguments.append("--audio-save-before-draft") }
@@ -555,7 +555,7 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor private func conversationOpen(_ app:XCUIApplication,owner:Bool=false,short:Bool=false,large:Bool=false,extra:String?=nil) throws {
         try audioGuard()
-        app.launchArguments=["--uitesting","--team-editor-testing","--audio-conversation-testing","-appearance",large ? "dark":"light","-UIPreferredContentSizeCategoryName",large ? "UICTContentSizeCategoryAccessibilityXXXL":"UICTContentSizeCategoryL"]
+        app.launchArguments=["--uitesting", "--child-rows-off","--team-editor-testing","--audio-conversation-testing","-appearance",large ? "dark":"light","-UIPreferredContentSizeCategoryName",large ? "UICTContentSizeCategoryAccessibilityXXXL":"UICTContentSizeCategoryL"]
         if owner {app.launchArguments.append("--audio-conversation-owner")};if short {app.launchArguments.append("--audio-conversation-short")};if let extra {app.launchArguments.append(extra)}
         app.launchArguments += ["-ApplePersistenceIgnoreState","YES"]
         app.launch();app.activate()
@@ -659,7 +659,7 @@ extension TaskfoldMacUITests {
     }
     @MainActor func testUnifiedConversationTimelineAccessLossPreservesTextAndRejectsPlayback() throws {
         let app=XCUIApplication();defer{app.terminate()};try audioGuard()
-        app.launchArguments=["--uitesting","--team-editor-testing","--audio-conversation-testing","--audio-conversation-short","--audio-timeline-testing","--audio-conversation-departure"]
+        app.launchArguments=["--uitesting", "--child-rows-off","--team-editor-testing","--audio-conversation-testing","--audio-conversation-short","--audio-timeline-testing","--audio-conversation-departure"]
         app.launch();let open=app.buttons["audioConversationFixtureOpen"];XCTAssertTrue(open.waitForExistence(timeout:20));audioPress(open)
         let play=app.buttons["audioConversationPlay-ad311000-0000-4000-8000-000000000001"];XCTAssertTrue(play.waitForExistence(timeout:10));audioPress(play)
         XCTAssertTrue(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:play)],timeout:5) == .completed)
@@ -697,7 +697,7 @@ extension TaskfoldMacUITests {
     }
     @MainActor private func ownerReviewOpen(_ app: XCUIApplication, reset: Bool = true, large: Bool = false, extra: String? = nil) throws {
         try audioGuard()
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--audio-owner-review-testing", "-appearance", large ? "dark" : "light", "-UIPreferredContentSizeCategoryName", large ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--audio-owner-review-testing", "-appearance", large ? "dark" : "light", "-UIPreferredContentSizeCategoryName", large ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
         if reset { app.launchArguments.append("--audio-owner-reset") }; if let extra { app.launchArguments.append(extra) }
         app.launch(); app.activate()
         let open = app.buttons["audioOwnerFixtureOpen"]; XCTAssertTrue(open.waitForExistence(timeout: 20), app.debugDescription); audioPress(open)
@@ -825,7 +825,7 @@ extension TaskfoldMacUITests {
         try childGuard()
         let voiceWasOn = try ownerVoiceDisabled()
         addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", large ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", large ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
         if reset { app.launchArguments.append("--child-fields-native-reset") }; if let extra { app.launchArguments.append(extra) }
         if extra?.hasPrefix("--child-structure") == true, extra != "--child-structure-native" { app.launchArguments.append("--child-structure-native") }
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
@@ -1108,7 +1108,7 @@ extension TaskfoldMacUITests {
         try childGuard()
         let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
-        let arguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        let arguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
         let reference = "subtask:" + (try JSONSerialization.data(withJSONObject: ["ec990000-0000-4000-8000-000000000002", "concept"])).base64EncodedString()
         let row = app.buttons["taskDetails-" + reference]
         app.launchArguments = arguments + ["--child-fields-native-reset"]; app.launch(); app.activate()
@@ -1199,7 +1199,7 @@ extension TaskfoldMacUITests {
 
     @MainActor private func childPausedRecoveryLaunch(_ app: XCUIApplication, reset: Bool, draftOnly: Bool = false) throws {
         try childGuard()
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-recovery-paused", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-recovery-paused", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
         if reset { app.launchArguments.append("--child-fields-native-reset") }
         if draftOnly { app.launchArguments.append("--child-recovery-draft-only") }
         else { app.launchArguments.append("--child-transfer-native") }
@@ -1254,7 +1254,7 @@ extension TaskfoldMacUITests {
 
     @MainActor private func childCompletionListLaunch(_ app: XCUIApplication, reset: Bool, lost: Bool = false, groupLost: Bool = false, blocking: Bool = false) throws -> String {
         try childGuard()
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "--child-fields-list-completion", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "--child-fields-list-completion", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
         if reset { app.launchArguments.append("--child-fields-native-reset") }
         if lost { app.launchArguments.append("--child-completion-lose-reply") }
         if groupLost { app.launchArguments.append("--child-batch-lose-reply") }
@@ -1370,7 +1370,7 @@ extension TaskfoldMacUITests {
             #endif
         }
         func launch(_ reset: Bool) {
-            app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+            app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
             if reset { app.launchArguments.append("--child-fields-native-reset") }
             app.launch(); app.activate()
             XCTAssertTrue(row().waitForExistence(timeout: 30), app.debugDescription)
@@ -1789,7 +1789,7 @@ extension TaskfoldMacUITests {
         try childGuard()
         let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
-        let arguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-structure-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        let arguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-structure-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
         app.launchArguments = arguments + ["--child-fields-native-reset"]; app.launch(); app.activate()
         let root = app.buttons["taskDetails-ec990000-0000-4000-8000-000000000002"]
         XCTAssertTrue(root.waitForExistence(timeout: 30), app.debugDescription); childPress(root)
@@ -2335,7 +2335,7 @@ extension TaskfoldMacUITests {
         let configured = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: channel.appendingPathComponent("channel.json").path) }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [configured], timeout: 90), .completed, "Host fixture must attach to the installed synthetic container")
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-adoption-saved-copies", "--child-mapping-sql-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-adoption-saved-copies", "--child-mapping-sql-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         func launchReview() {
             app.launch(); app.activate()
             XCTAssertTrue(app.buttons["childNativeRepair"].waitForExistence(timeout: 25), app.debugDescription)
@@ -2685,7 +2685,7 @@ extension TaskfoldMacUITests {
         #if os(macOS)
         throw XCTSkip("Mac mixed selection uses the authorized direct app walkthrough")
         #else
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-list-completion", "--mixed-completion-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-list-completion", "--mixed-completion-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
         if reset { app.launchArguments.append("--child-fields-native-reset") }
         if lost { app.launchArguments.append("--mixed-completion-lose-reply") }
         app.launch(); app.activate()
@@ -2782,7 +2782,7 @@ extension TaskfoldMacUITests {
         try childGuard()
         let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
-        let arguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-transfer-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        let arguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-transfer-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
         app.launchArguments = arguments + ["--child-fields-native-reset"]; app.launch(); app.activate()
         let details = app.buttons["taskDetails-ec990000-0000-4000-8000-000000000002"]; XCTAssertTrue(details.waitForExistence(timeout: 30), app.debugDescription); childPress(details)
         let organize = app.buttons["organizeIndependentChildren"]; childReveal(organize, app); completionReadyPress(organize, app)
@@ -2817,7 +2817,7 @@ extension TaskfoldMacUITests {
     @MainActor func testSharedFileViewerReadOnlyAndRevokedAccess() throws {
         try audioGuard()
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--file-viewer-testing", "--team-editor-reset", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--file-viewer-testing", "--team-editor-reset", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         defer { app.terminate() }
         app.launch(); app.activate()
         let verify = app.buttons["fileViewerVerifyDownload"]
@@ -2878,7 +2878,7 @@ extension TaskfoldMacUITests {
     @MainActor func testTeamRecordingNativeSelectionRecovery() throws {
         try audioGuard()
         let app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--team-editor-reset", "--team-audio-controls-testing", "--audio-team-native-service", "--audio-lifecycle-review-testing", "--audio-selection-recovery-testing", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--team-editor-reset", "--team-audio-controls-testing", "--audio-team-native-service", "--audio-lifecycle-review-testing", "--audio-selection-recovery-testing", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         let account = "ec240000-0000-4000-8000-000000000001"
         func cache() throws -> [String: Any] {
             let file = try macAudioTaskHome().appendingPathComponent("Library/Application Support/Taskfold/" + account + ".json")
@@ -3001,7 +3001,7 @@ extension TaskfoldMacUITests {
         let configured = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: channel.appendingPathComponent("channel.json").path) }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [configured], timeout: 150), .completed)
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
-        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-adoption-saved-copies", "--child-mapping-sql-native", "--child-restored-adoption-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["--uitesting", "--child-rows-off", "--team-editor-testing", "--child-fields-native", "--child-adoption-saved-copies", "--child-mapping-sql-native", "--child-restored-adoption-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         func launchReview() {
             app.launch(); app.activate()
             XCTAssertTrue(app.buttons["childNativeRepair"].waitForExistence(timeout: 25), app.debugDescription)

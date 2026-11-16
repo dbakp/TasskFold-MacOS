@@ -68,7 +68,7 @@ struct SavedChildTaskStructureLink: View {
             SavedReviewedTaskStepsLink()
             SavedChildTaskTransfersLink()
             SavedChildTaskAdoptionsLink()
-            if scope != nil, store.hasSavedChildRecovery(.hierarchy) || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true {
+            if scope != nil, store.hasSavedChildRecovery(.hierarchy) || !TaskTree.rowsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true {
                 Section {
                     Button("Saved hierarchy actions", systemImage: "square.stack.3d.up") { showing = true }.accessibilityIdentifier("savedChildStructure")
                         .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) { WorkflowShell(title: "Saved hierarchy actions") { ChildTaskStructureRecoveryView() } }

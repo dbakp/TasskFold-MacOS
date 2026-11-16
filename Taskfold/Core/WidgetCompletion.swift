@@ -150,6 +150,15 @@ enum WidgetCompletion {
     static func plan(_ request: WidgetCompletionRequest, snapshot: Snapshot, account: String, calendar: Calendar = .current) -> Plan {
         guard !account.isEmpty, account == request.account, UUID(uuidString: request.token) == request.id else { return .stale }
         if snapshot.widgetCompletion.saved(request) { return .saved }
+        if request.taskID.hasPrefix("subtask:"), TaskTree.rowsEnabled {
+            // Child rows: a checkbox from an older widget timeline carries the legacy id and the token issued for it.
+            let id = LegacyTaskReference.resolve(request.taskID, enabled: true)
+            guard id != request.taskID, snapshot.widgetCompletion.states[request.taskID]?.token == request.token,
+                  let task = snapshot.tables["tasks"]?.first(where: { TaskTree.key($0.id) == TaskTree.key(id) }), TaskKind.mayComplete(task) else { return .stale }
+            if task.completed { return .saved }
+            guard !ProjectOrganization.archived(task.string("project_id"), in: snapshot.tables["projects"] ?? []) else { return .stale }
+            return .complete(ChildRowCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar, account: account))
+        }
         if request.taskID.hasPrefix("subtask:") {
             guard let index = hierarchy(snapshot, account: account), let selection = index.selection(request.taskID),
                   hasChildFilter(snapshot) || ProductiveTaskReading(tasks: snapshot.tables["tasks"] ?? []).contains(request.taskID),
@@ -165,7 +174,7 @@ enum WidgetCompletion {
         if task.completed { return .saved }
         guard !ProjectOrganization.archived(task.string("project_id"), in: snapshot.tables["projects"] ?? []) else { return .stale }
         guard snapshot.widgetCompletion.states[task.id.lowercased()]?.token == request.token else { return .stale }
-        return .complete(TaskCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar, account: account))
+        return .complete(ChildRowCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar, account: account))
     }
     /// One canonicalization pass owns its parsers and memo. Never share mutable
     /// formatters, cached dates or account metadata between saves or workers.

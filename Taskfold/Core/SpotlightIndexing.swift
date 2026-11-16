@@ -216,7 +216,8 @@ enum SpotlightRoute: Equatable, Sendable {
     case task(String), project(String)
     init?(identifier: String) {
         guard let parsed = SpotlightIdentifier.parse(identifier) else { return nil }
-        self = parsed.kind == .task ? .task(parsed.id) : .project(parsed.id)
+        // An item indexed before subtasks became rows still opens the converted row.
+        self = parsed.kind == .task ? .task(LegacyTaskReference.resolve(parsed.id)) : .project(parsed.id)
     }
     /// Reuses the widget deep links, which the app already scopes to the current account.
     func url(account: String) -> URL? {

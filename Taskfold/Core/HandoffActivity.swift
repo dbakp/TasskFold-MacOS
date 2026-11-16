@@ -109,7 +109,9 @@ struct HandoffActivity: Equatable, Sendable {
         guard signedIn, !current.isEmpty else { return .failure(.signedOut) }
         guard activity.account == current else { return .failure(.otherWorkspace) }
         switch activity.destination {
-        case .task(let id): return hasTask(id) ? .success(activity.destination) : .failure(.unavailable)
+        case .task(let id):
+            let current = LegacyTaskReference.resolve(id)
+            return hasTask(current) ? .success(.task(current)) : .failure(.unavailable)
         case .project(let id): return hasProject(id) ? .success(activity.destination) : .failure(.unavailable)
         case .today, .calendar: return .success(activity.destination)
         }
