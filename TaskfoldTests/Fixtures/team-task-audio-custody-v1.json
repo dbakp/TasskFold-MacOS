@@ -17,7 +17,6 @@
       "due_date": null,
       "due_time": null,
       "priority": 4,
-      "subtasks": [],
       "completed": false,
       "reminders": [],
       "time_zone": null,
@@ -82,7 +81,7 @@
       "task_generation": "b38dd024-271b-4e7d-91af-ad26f13b2f7c",
       "project_id": "3e1dcb50-5825-4db1-bbd4-d9eb89ccef58"
     },
-    "caption": "Keep this exact recording cafe\u0301 \ud83c\udf3f",
+    "caption": "Keep this exact recording café 🌿",
     "audio": {
       "version": 1,
       "mime_type": "audio/mp4",
@@ -106,7 +105,7 @@
       "task_generation": "b38dd024-271b-4e7d-91af-ad26f13b2f7c"
     },
     "account": "4fb41b1b-e6f1-4f06-bb7f-00377eb7a277",
-    "caption": "Keep this exact recording cafe\u0301 \ud83c\udf3f",
+    "caption": "Keep this exact recording café 🌿",
     "asset_id": "694c5d43-9c86-4e08-9b81-8185bf2f19da",
     "protocol": 1,
     "author_id": "4fb41b1b-e6f1-4f06-bb7f-00377eb7a277",
@@ -140,7 +139,6 @@
       "due_date": null,
       "due_time": null,
       "priority": 4,
-      "subtasks": [],
       "completed": false,
       "reminders": [],
       "time_zone": null,
@@ -198,7 +196,7 @@
       "task_generation": "b38dd024-271b-4e7d-91af-ad26f13b2f7c"
     },
     "account": "d84e4a60-264f-4501-a0ae-4caf9a6d7427",
-    "caption": "Keep this exact recording cafe\u0301 \ud83c\udf3f",
+    "caption": "Keep this exact recording café 🌿",
     "asset_id": "694c5d43-9c86-4e08-9b81-8185bf2f19da",
     "protocol": 1,
     "author_id": "4fb41b1b-e6f1-4f06-bb7f-00377eb7a277",

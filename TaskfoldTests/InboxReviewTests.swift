@@ -75,7 +75,6 @@ final class InboxReviewTests: XCTestCase {
         row["deadline_date"] = .string("2026-10-27"); row["duration_minutes"] = .number(45)
         row["description"] = .string("Keep these instructions")
         row["reminder_specs"] = .array([.object(["id": .string("reminder"), "kind": .string("relative"), "anchor": .string("due"), "offset_minutes": .number(-30)])])
-        row["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Child"), "assigned_to": .string("old-member")])])
         let move = try InboxReviewRequest.move(row, to: "project")
         XCTAssertEqual(Set(move.fields.keys), ["project_id", "section_id"])
         let changes = try TaskAssignment.mutations(move, existing: row).map { change -> Mutation in
@@ -86,7 +85,7 @@ final class InboxReviewTests: XCTestCase {
         for change in changes { changed.apply(change); changed.pending.append(change) }
         let saved = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(changed))
         let after = try XCTUnwrap(saved.tables["tasks"]?.first)
-        XCTAssertEqual(after.string("project_id"), "project"); XCTAssertEqual(after["subtasks"].list.first?.object["assigned_to"], .null)
+        XCTAssertEqual(after.string("project_id"), "project")
         for key in ["due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "description", "reminder_specs"] { XCTAssertEqual(after[key], row[key], key) }
         XCTAssertEqual(saved.pending.map(\.recordID), [row.id])
         for inverse in history.undo { changed.apply(inverse) }

@@ -147,7 +147,7 @@ final class BackupV3Tests: XCTestCase {
         let plan = try legacyFile().plan(current: Snapshot(), account: owner, childRows: true)
         let posts = plan.changes.filter { $0.table == "tasks" }
         XCTAssertEqual(posts.count, 4)
-        XCTAssertEqual(posts[0].recordID, rootID); XCTAssertEqual(posts[0].fields["subtasks"], .array([]))
+        XCTAssertEqual(posts[0].recordID, rootID); XCTAssertNil(posts[0].fields["subtasks"])
         let a = LegacySubtaskConversion.legacyChildID(root: rootID, path: ["a"]), b = LegacySubtaskConversion.legacyChildID(root: rootID, path: ["a", "b"])
         let plain = LegacySubtaskConversion.legacyChildID(root: rootID, path: ["@1"])
         XCTAssertEqual(Set(posts.map(\.recordID)), [rootID, a, b, plain])
@@ -165,14 +165,16 @@ final class BackupV3Tests: XCTestCase {
         let a = LegacySubtaskConversion.legacyChildID(root: rootID, path: ["a"])
         XCTAssertEqual(plan.changes.first { $0.recordID == map[a] }?.fields["parent_id"], .string(map[rootID]!))
     }
-    func testJSONSubtasksAreUntouchedWhileTheFlagIsOff() throws {
+    func testJSONSubtasksConvertToRowsEvenWhileTheFlagIsOff() throws {
         let subtasks: JSON = .array([.object(["id": .string("a"), "title": .string("A"), "subtasks": .array([.object(["id": .string("b"), "title": .string("B")])])])])
         let file = WorkspaceBackup.make(snapshot([task(rootID, title: "Root", extra: ["subtasks": subtasks])]), account: owner, childRows: false)
         let plan = try file.plan(current: Snapshot(), account: owner, childRows: false)
         let posts = plan.changes.filter { $0.table == "tasks" }
-        XCTAssertEqual(posts.count, 1)
-        XCTAssertEqual(posts[0].fields["subtasks"]?.list.count, 1)
-        XCTAssertEqual(posts[0].fields["subtasks"]?.list.first?.object["subtasks"]?.list.count, 1)
-        XCTAssertNil(posts[0].fields["parent_id"]); XCTAssertNil(posts[0].fields["child_order"])
+        XCTAssertEqual(posts.count, 3)
+        XCTAssertNil(posts[0].fields["subtasks"]); XCTAssertNil(posts[0].fields["parent_id"])
+        let a = LegacySubtaskConversion.legacyChildID(root: rootID, path: ["a"]), b = LegacySubtaskConversion.legacyChildID(root: rootID, path: ["a", "b"])
+        XCTAssertEqual(Set(posts.map(\.recordID)), [rootID, a, b])
+        XCTAssertEqual(posts.first { $0.recordID == b }?.fields["parent_id"], .string(a))
+        XCTAssertTrue(posts.allSatisfy { $0.fields["subtasks"] == nil })
     }
 }

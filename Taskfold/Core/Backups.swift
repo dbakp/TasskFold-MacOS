@@ -256,13 +256,21 @@ extension WorkspaceBackup {
         if !childRows, (tables["tasks"] ?? []).contains(where: { !$0.string("parent_id").isEmpty }) {
             throw BackupFailure(message: "This backup stores subtasks as separate tasks. Update Taskfold before restoring it.")
         }
+        // An older backup (v1/v2) keeps subtasks as JSON inside each task: they become child rows here, with the ids
+        // Migration B gives them. The `subtasks` column itself is never restored (the server no longer has it).
         var skippedLegacyChildren = 0
-        if childRows, let rows = tables["tasks"], rows.contains(where: { !$0["subtasks"].list.isEmpty }) {
+        if let rows = tables["tasks"], rows.contains(where: { $0.fields["subtasks"] != nil }) {
             var kept = rows, converted: [Record] = []
-            for (index, row) in rows.enumerated() where !row["subtasks"].list.isEmpty {
-                let result = LegacySubtaskConversion.convert(root: row)
-                converted += result.rows; skippedLegacyChildren += result.skipped.count
-                kept[index]["subtasks"] = .array([])
+            for (index, row) in rows.enumerated() where row.fields["subtasks"] != nil {
+                if !row["subtasks"].list.isEmpty {
+                    let result = LegacySubtaskConversion.convert(root: row)
+                    // A converted heading keeps the same rule as any heading row: it is never restored completed.
+                    guard result.rows.allSatisfy({ TaskKind.permits(Mutation(table: "tasks", recordID: $0.id, method: "POST", fields: $0.fields), existing: nil) }) else {
+                        throw BackupFailure(message: "A subtask heading in this backup is marked complete or has an unsupported type. Its contents are unchanged.")
+                    }
+                    converted += result.rows; skippedLegacyChildren += result.skipped.count
+                }
+                kept[index].fields.removeValue(forKey: "subtasks")
             }
             tables["tasks"] = kept + converted
         }
@@ -328,20 +336,6 @@ extension WorkspaceBackup {
             let allowed = currentRows["projects"]?[project]?.string("user_id") == value.text || current.tables["project_collaborators"]?.contains { $0.string("project_id") == project && $0.string("user_id") == value.text && $0.string("status") == "accepted" } == true
             if allowed { return value }
             clearedAssignments += 1; return .null
-        }
-        var childIDs = Set<String>()
-        func children(_ values: [JSON], root: String, project: String, reuseIDs: Bool, path: String = "") throws -> [JSON] {
-            return try values.enumerated().map { index, child in
-                guard case .object(var fields) = child, case .string = fields["title"] else { throw BackupFailure(message: "A subtask is malformed.") }
-                let old = fields["id"]?.text ?? "", location = path + "/" + String(index)
-                guard old.isEmpty || childIDs.insert(old).inserted else { throw BackupFailure(message: "A task contains duplicate subtask IDs.") }
-                for key in ["id", "assigned_to"] where fields[key] != nil && fields[key] != .null { guard case .string = fields[key] else { throw BackupFailure(message: "A subtask has an invalid \(key).") } }
-                if let completed = fields["completed"], case .bool = completed {} else if fields["completed"] != nil { throw BackupFailure(message: "A subtask completion value is invalid.") }
-                fields["id"] = .string(reuseIDs && !old.isEmpty ? old : Self.stableID(source + "|" + account + "|child", root + "|" + (old.isEmpty ? location : old)))
-                if fields["assigned_to"] != nil { fields["assigned_to"] = person(fields["assigned_to"]!, project: project) }
-                if let nested = fields["subtasks"] { guard case .array(let rows) = nested else { throw BackupFailure(message: "A nested subtask collection is malformed.") }; fields["subtasks"] = .array(try children(rows, root: root, project: project, reuseIDs: reuseIDs, path: location)) }
-                return .object(fields)
-            }
         }
         func remapRule(_ rule: FilterRule) throws -> FilterRule {
             switch rule {
@@ -461,8 +455,6 @@ extension WorkspaceBackup {
                     let normalized = TaskLabels.normalized(original["labels"].list, labels: tables["labels"] ?? [])
                     row["labels"] = .array(normalized.map { value in (result.mappedIDs["labels"]?[value.text] ?? result.mappedIDs["labels"]?[canonical(value.text)]).map(JSON.string) ?? value })
                     row["assigned_to"] = person(original["assigned_to"], project: row.string("project_id"))
-                    childIDs = []
-                    row["subtasks"] = .array(try children(original["subtasks"].list, root: original.id, project: row.string("project_id"), reuseIDs: row.id == original.id))
                     if !original.string("recurrence_parent_id").isEmpty { row["recurrence_parent_id"] = (result.mappedIDs["tasks"]?[original.string("recurrence_parent_id")] ?? result.mappedIDs["tasks"]?[canonical(original.string("recurrence_parent_id"))]).map(JSON.string) ?? .null }
                     for (key, fallback) in [("completed",JSON.bool(false)),("priority",.number(4)),("is_recurring",.bool(false)),("reminder_specs",.array([])),("source_metadata",.object([:]))] where row.fields[key] == nil || row[key] == .null { row[key] = fallback }
                     // The new task needs its own notification scheduling; provider import mappings are not replayed.
@@ -493,11 +485,7 @@ extension WorkspaceBackup {
                     if fields["project_id"] != nil && fields["project_id"] != existing["project_id"] {
                         var assignments: [String: JSON] = [:]
                         if (fields["assigned_to"] == nil || row.string("project_id").isEmpty) && !row.string("assigned_to").isEmpty { assignments["assigned_to"] = row["assigned_to"] }
-                        func hasAssignment(_ values: [JSON]) -> Bool {
-                            values.contains { value in let child = Record(value.object); return !child.string("assigned_to").isEmpty || hasAssignment(child["subtasks"].list) }
-                        }
-                        if hasAssignment(row["subtasks"].list) { assignments["subtasks"] = row["subtasks"] }
-                        if !assignments.isEmpty { result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: assignments, baseline: Dictionary(uniqueKeysWithValues: try assignments.keys.map { ($0, $0 == "assigned_to" ? JSON.null : try TaskAssignment.clearChildren(row["subtasks"])) }))) }
+                        if !assignments.isEmpty { result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: assignments, baseline: ["assigned_to": .null])) }
                     }
                     result.updated += 1
                 } else {
@@ -908,12 +896,18 @@ struct TaskEditorRecovery: Codable, Equatable, Sendable {
             guard let url=URLComponents(string:origin),url.scheme=="https",url.host?.isEmpty==false,url.user==nil,url.password==nil,url.path.isEmpty,url.query==nil,url.fragment==nil else {throw BackupFailure(message:"This saved edit has an invalid workspace address.")}
         }
     }
+    /// One new Inbox task, plus the subtask rows its saved checklist becomes (each under that task or another new subtask).
     static func requireNewTaskPlan(_ plan: RestorePlan) throws {
-        guard plan.added==1,plan.updated==0,plan.kept==0,plan.changes.count==1,
-              let change=plan.changes.first,change.table=="tasks",change.method=="POST",change.insertOnly==true,
-              change.fields["project_id"] == nil || change.fields["project_id"] == .null,
-              change.fields["assigned_to"] == nil || change.fields["assigned_to"] == .null else {
-            throw BackupFailure(message:"This recovery must create one new Inbox task. Existing tasks will not be replaced. Your original edit is kept.")
+        let fail = BackupFailure(message:"This recovery must create one new Inbox task. Existing tasks will not be replaced. Your original edit is kept.")
+        guard plan.updated==0,plan.kept==0,plan.added==plan.changes.count,
+              plan.changes.allSatisfy({ $0.table=="tasks" && $0.method=="POST" && $0.insertOnly==true &&
+                  ($0.fields["project_id"] == nil || $0.fields["project_id"] == .null) && ($0.fields["assigned_to"] == nil || $0.fields["assigned_to"] == .null) && $0.fields["subtasks"] == nil }) else { throw fail }
+        let roots = plan.changes.filter { ($0.fields["parent_id"] ?? .null) == .null }
+        guard roots.count == 1 else { throw fail }
+        var known: Set<String> = [TaskTree.key(roots[0].recordID)]
+        for change in plan.changes where change.recordID != roots[0].recordID {
+            guard known.contains(TaskTree.key(change.fields["parent_id"]?.text ?? "")) else { throw fail }
+            known.insert(TaskTree.key(change.recordID))
         }
     }
     var copyID: String {WorkspaceBackup.stableID("editor-recovery-copy",id.uuidString.lowercased())}
@@ -928,7 +922,7 @@ struct TaskEditorRecovery: Codable, Equatable, Sendable {
         var count=0
         func clean(_ source: Record, path: String, depth: Int) throws -> Record {
             count+=1
-            guard depth<=SubtaskTree.maximumDepth,count<=10000 else {throw BackupFailure(message:"This saved edit is too large for an Inbox copy in this version. The full original is kept for export.")}
+            guard depth<=TaskTree.maximumAncestors,count<=10000 else {throw BackupFailure(message:"This saved edit is too large for an Inbox copy in this version. The full original is kept for export.")}
             guard TaskKind(source) != .unsupported else { throw BackupFailure(message: "This saved task type needs a supported editor. The full original is kept for export.") }
             var row=Record(source.fields.filter{fields.contains($0.key)})
             row["id"] = .string(depth==0 ? copyID:WorkspaceBackup.stableID(id.uuidString.lowercased(),"child:"+path))
@@ -1132,15 +1126,9 @@ struct TaskEditorSourceContext: Equatable, Sendable {
     init(record: Record, root: Record?) {
         self.record=record;self.root=root
         guard let root else {path=nil;invalid=false;return}
+        // Subtasks are rows: an editor always edits the persisted row itself.
         if record.id==root.id {path=[];invalid=false;return}
-        if let reference=SubtaskTree.referencePath(record.id) {
-            path=Array(reference.dropFirst())
-            invalid=reference.first != root.id || Self.node(root,path:path!)==nil
-        } else {
-            let paths=Self.paths(root,id:record.id)
-            path=paths.count==1 ? paths[0]:nil
-            invalid=paths.count>1
-        }
+        path=nil;invalid=true
     }
     var persistedSelection: Bool {root != nil && !invalid && path != nil}
     var identity: JSON {.object(["root":.string(root?.id ?? record.id),"root_generation":root?["task_generation"] ?? record["task_generation"],"project":root?["project_id"] ?? record["project_id"],"path":path.map{.array($0.map(JSON.string))} ?? .null])}
@@ -1148,53 +1136,9 @@ struct TaskEditorSourceContext: Equatable, Sendable {
         guard !invalid else {return false}
         guard let root else {return true} // A new local draft has no persisted root.
         guard let current,current.id==root.id,current["task_generation"]==root["task_generation"],current["project_id"]==root["project_id"],current["user_id"]==root["user_id"] else {return false}
-        guard let path else {return Self.paths(current,id:record.id).isEmpty}
-        if path.isEmpty {return true}
-        guard let before=Self.node(root,path:path),let live=Self.node(current,path:path) else {return false}
-        // UUIDs alone cannot authorize a replacement with a new incarnation.
-        for key in ["created_at","task_generation"] where before[key] != .null {if live[key] != before[key] {return false}}
-        return true
+        return path != nil
     }
-    static func projection(_ root: Record, reference: String) -> Record? {
-        if reference==root.id {return root}
-        let path: [String]
-        if let reference=SubtaskTree.referencePath(reference) {
-            guard reference.first==root.id else {return nil};path=Array(reference.dropFirst())
-        } else {
-            let paths=paths(root,id:reference);guard paths.count==1 else {return nil};path=paths[0]
-        }
-        guard var child=node(root,path:path) else {return nil}
-        child["id"] = .string(reference)
-        for key in ["project_id","section_id","user_id","task_generation"] {child[key]=root[key]}
-        return child
-    }
-    private static func node(_ root: Record,path:[String]) -> Record? {
-        guard path.count<=SubtaskTree.readableDepth else {return nil}
-        var current=root
-        for key in path {
-            let matches=current["subtasks"].list.enumerated().filter{SubtaskTree.childKey($0.element,index:$0.offset)==key}
-            guard matches.count==1,case .object(let fields)=matches[0].element else {return nil}
-            current=Record(fields)
-        }
-        return current
-    }
-    private static func paths(_ root:Record,id:String) -> [[String]] {
-        var found:[[String]]=[],visited=0
-        func visit(_ record:Record,_ path:[String]) {
-            guard path.count<SubtaskTree.readableDepth,found.count<2,visited<100000 else {return}
-            for (index,value) in record["subtasks"].list.enumerated() {
-                visited+=1;guard case .object(let fields)=value else {continue}
-                let child=Record(fields),next=path+[SubtaskTree.childKey(value,index:index)]
-                if child.id==id {found.append(next)}
-                visit(child,next)
-            }
-        }
-        visit(root,[])
-        // Oversized trees refuse admission rather than treating an unvisited
-        // persisted node as a new draft.
-        if visited>=100000 {return [[],[]]}
-        return found
-    }
+    static func projection(_ root: Record, reference: String) -> Record? { reference==root.id ? root : nil }
 }
 
 /// Captured at the opening action, before SwiftUI can defer presentation.

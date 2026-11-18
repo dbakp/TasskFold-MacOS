@@ -29,9 +29,8 @@ final class AssignmentProvenanceHTTPIntegrationTests: XCTestCase {
             return TaskAssignmentProvenance.Catalog(try XCTUnwrap(rows,"Actual HTTP history read unavailable"))
         }
         func patch(_ client: Backend, task: Record, recipient: String) async throws -> Record {
-            var child = task["subtasks"].list[0].object; child["assigned_to"] = .string(recipient)
-            let fields: [String:JSON] = ["assigned_to":.string(recipient),"subtasks":.array([.object(child)])]
-            let base: [String:JSON] = ["assigned_to":task["assigned_to"],"subtasks":task["subtasks"],"task_generation":task["task_generation"]]
+            let fields: [String:JSON] = ["assigned_to":.string(recipient)]
+            let base: [String:JSON] = ["assigned_to":task["assigned_to"],"task_generation":task["task_generation"]]
             let result = try await client.send(Mutation(table:"tasks",recordID:task.id,method:"PATCH",fields:fields,baseline:base))
             return try XCTUnwrap(result)
         }
@@ -45,7 +44,6 @@ final class AssignmentProvenanceHTTPIntegrationTests: XCTestCase {
             _ = try await member.send(Mutation(table:"project_collaborators",recordID:invitationID,method:"PATCH",fields:["status":.string("accepted")]))
             var draft = Record.task(user:ownerID,project:projectID,date:Date())
             draft["id"] = .string(taskID); draft["task_generation"] = .string(UUID().uuidString.lowercased()); draft["title"] = .string("Disposable assignment HTTP handoff"); draft["assigned_to"] = .string(memberID)
-            draft["subtasks"] = .array([.object(["id":.string(childID),"title":.string("Disposable nested handoff"),"completed":.bool(false),"assigned_to":.string(memberID)])])
             let created = try await owner.send(Mutation(table:"tasks",recordID:taskID,method:"POST",fields:draft.fields,insertOnly:true))
             var current = try XCTUnwrap(created)
             let initial = try await catalog(member)
@@ -55,10 +53,6 @@ final class AssignmentProvenanceHTTPIntegrationTests: XCTestCase {
             let history = try await catalog(owner)
             guard case .known(let actor,let event,_) = history.resolution(root:changed) else { throw AppFailure(message:"HTTP member actor missing") }
             XCTAssertEqual(actor,memberID)
-            let index = try TaskHierarchyIndex(roots:[changed],projects:[Record(["id":.string(projectID),"name":.string("Fixture")])],workspace:WorkspaceBinding(account:ownerID,generation:UUID()))
-            let child = try XCTUnwrap(index.items.first { $0.isSubtask })
-            guard case .known(let childActor,_,_) = history.resolution(item:child) else { throw AppFailure(message:"HTTP child actor missing") }
-            XCTAssertEqual(childActor,memberID)
             // A lost-response retry by the other client is not a new assignment.
             current = try await patch(owner,task:current,recipient:ownerID)
             let retried = try await catalog(owner)

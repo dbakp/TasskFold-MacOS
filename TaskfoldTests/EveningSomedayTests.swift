@@ -84,8 +84,8 @@ final class EveningSomedayTests: XCTestCase {
     }
     func testOnlyOpenTasksDueTodayOrEarlierQualifyForEvening() {
         let tasks = [task("future", due: "2026-10-09"), task("undated"), task("done", due: "2026-10-08", completed: true),
-                     task("heading", due: "2026-10-08", extra: ["is_heading": .bool(true)]), task(SubtaskTree.reference(parent: "a", key: "k"), due: "2026-10-08")]
-        for id in ["future", "undated", "done", "heading", SubtaskTree.reference(parent: "a", key: "k")] {
+                     task("heading", due: "2026-10-08", extra: ["is_heading": .bool(true)]), task(LegacySubtaskReference.reference(["a", "k"]), due: "2026-10-08")]
+        for id in ["future", "undated", "done", "heading", LegacySubtaskReference.reference(["a", "k"])] {
             XCTAssertThrowsError(try Planning.moveToEvening([id], tasks: tasks, rows: [], account: account, today: "2026-10-08"), id)
         }
     }

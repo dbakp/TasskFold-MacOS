@@ -55,11 +55,11 @@ enum TaskAssignmentProvenance {
         func resolution(root: Record) -> Resolution { resolve(source: root, root: root, path: []) }
         func resolution(projected task: Record) -> Resolution {
             guard task.id.hasPrefix("subtask:") else { return resolution(root: task) }
-            guard let path = SubtaskTree.referencePath(task.id), let rootID = path.first else { return .unknown(.unsupported) }
+            guard let path = LegacySubtaskReference.path(task.id), let rootID = path.first else { return .unknown(.unsupported) }
             return resolve(source: task, root: Record(["id":.string(rootID),"task_generation":task["task_generation"]]), path: Array(path.dropFirst()))
         }
         /// Hierarchy items have already passed the bounded identity/tree validator.
-        func resolution(item: TaskHierarchyIndex.Item) -> Resolution { resolve(source: item.source, root: item.root, path: item.path) }
+        func resolution(item: ActivityNode) -> Resolution { resolve(source: item.source, root: item.root, path: item.path) }
         private func resolve(source: Record, root: Record, path: [String]) -> Resolution {
             let recipient = source["assigned_to"]
             if recipient == .null || recipient == .string("") { return .unassigned }
@@ -107,8 +107,8 @@ enum TaskAssignmentProvenance {
         return value
     }
     /// An index validates stable identities without normalizing or generating any.
-    private static func nodes(_ root: Record, hierarchy: LocalActivityHierarchy? = nil) -> [String: TaskHierarchyIndex.Item]? {
-        let items: [TaskHierarchyIndex.Item]?
+    private static func nodes(_ root: Record, hierarchy: LocalActivityHierarchy? = nil) -> [String: ActivityNode]? {
+        let items: [ActivityNode]?
         if let hierarchy { items = hierarchy.items }
         else { items = LocalActivityHierarchy.read(root, scope: "assignment-index") }
         guard let items else { return nil }
@@ -131,7 +131,7 @@ enum TaskAssignmentProvenance {
                 rows[i]["origin"] = .string("pending"); rows[i]["actor_id"] = .null
             }
             appendMissing(after,path:[],changed:true)
-            for item in nodes(after)?.values ?? Dictionary<String,TaskHierarchyIndex.Item>().values where item.isSubtask { appendMissing(item.source,path:item.path,changed:true) }
+            for item in nodes(after)?.values ?? Dictionary<String,ActivityNode>().values where item.isSubtask { appendMissing(item.source,path:item.path,changed:true) }
             snapshot.tables[table] = rows; return
         }
         let oldNodes = before["subtasks"] == after["subtasks"] ? nil : nodes(before)
@@ -150,7 +150,7 @@ enum TaskAssignmentProvenance {
         }
         appendMissing(after,path:[],changed:recipient(before["assigned_to"]) != recipient(after["assigned_to"]))
         if before["subtasks"] != after["subtasks"] {
-            for item in newNodes?.values ?? Dictionary<String,TaskHierarchyIndex.Item>().values where item.isSubtask {
+            for item in newNodes?.values ?? Dictionary<String,ActivityNode>().values where item.isSubtask {
                 appendMissing(item.source,path:item.path,changed:oldNodes == nil || recipient(oldNodes?[item.path.last ?? ""]?.source["assigned_to"] ?? .null) != recipient(item.source["assigned_to"]))
             }
         }
@@ -175,7 +175,7 @@ enum TaskAssignmentProvenance {
             positions[rows[i].string("node_key")] = positions[rows[i].string("node_key")] ?? i
         }
         // An unsupported checklist does not prevent a real root assignment.
-        values[""] = TaskHierarchyIndex.Item(source:after,root:after,path:[],parentTitles:[],id:after.id)
+        values[""] = ActivityNode(source:after,root:after,path:[],parentTitles:[],id:after.id)
         if current == nil {
             for i in rows.indices where rows[i].string("task_id").lowercased() == rootID && rows[i].string("task_generation").lowercased() == incarnation && !rows[i].string("node_key").isEmpty {
                 rows[i]["active"] = .bool(false); rows[i]["origin"] = .string("unsupported"); rows[i]["actor_id"] = .null
@@ -398,7 +398,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
                 guard case .object(let fields) = value, Set(fields.keys) == ["task_id", "task_generation", "project_id", "node_key"],
                       let root = UUID(uuidString: fields["task_id"]?.text ?? ""),
                       let generation = UUID(uuidString: fields["task_generation"]?.text ?? ""),
-                      case .string(let key)? = fields["node_key"], ChecklistRecovery.validIdentity(key) else { return nil }
+                      case .string(let key)? = fields["node_key"], ActivityNode.validKey(key) else { return nil }
                 if fields["project_id"] == .null { project = nil }
                 else if let value = UUID(uuidString: fields["project_id"]?.text ?? "") { project = value.uuidString.lowercased() }
                 else { return nil }
@@ -429,8 +429,8 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             guard case .object(let fields) = value, Set(fields.keys) == ["before", "after"],
                   case .array(let old)? = fields["before"], case .array(let new)? = fields["after"],
                   (2..<100_000).contains(old.count), old.count == new.count,
-                  (old + new).allSatisfy({ if case .string(let key) = $0 { return ChecklistRecovery.validIdentity(key) }; return false }),
-                  let bytes = try? TaskfoldJSONEncoder().encode(value), bytes.count <= 2 * ChecklistRecovery.maximumBytes else { return nil }
+                  (old + new).allSatisfy({ if case .string(let key) = $0 { return ActivityNode.validKey(key) }; return false }),
+                  let bytes = try? TaskfoldJSONEncoder().encode(value), bytes.count <= 2 * ActivityNode.maximumBytes else { return nil }
             before = old.map(\.text); after = new.map(\.text)
             guard Set(before).count == before.count, Set(before) == Set(after), before != after else { return nil }
         }
@@ -455,7 +455,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             var subjects: [Subject] = [], seen = Set<String>()
             for value in raw {
                 guard case .object(let subject) = value, Set(subject.keys) == ["node_key", "reset_completion", "retired"],
-                      case .string(let key)? = subject["node_key"], ChecklistRecovery.validIdentity(key),
+                      case .string(let key)? = subject["node_key"], ActivityNode.validKey(key),
                       key.utf8.elementsEqual(key.precomposedStringWithCanonicalMapping.utf8),
                       subject["reset_completion"] == .bool(true), case .bool(let retired)? = subject["retired"],
                       seen.insert(key).inserted else { return nil }
@@ -528,7 +528,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
                   !workBefore, !workAfter, typeBefore == nil, typeAfter == nil, revision == 0 else { return nil }
         } else {
             guard let generation, !generation.isEmpty,
-                  ChecklistRecovery.validIdentity(row.string("node_key")),
+                  ActivityNode.validKey(row.string("node_key")),
                   before.isEmpty == beforePath.isEmpty, after.isEmpty == afterPath.isEmpty,
                   !(before.isEmpty && after.isEmpty),
                   beforePath.isEmpty || beforePath.last == row.string("node_key"),
@@ -554,8 +554,8 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         self.before = before; self.after = after; self.typeBefore = typeBefore; self.typeAfter = typeAfter; self.workBefore = workBefore; self.workAfter = workAfter; self.kinds = kinds
     }
     static func path(_ value: JSON) -> [String]? {
-        guard case .array(let list) = value, list.count <= SubtaskTree.readableDepth,
-              list.allSatisfy({ if case .string(let key) = $0 { return ChecklistRecovery.validIdentity(key) }; return false }),
+        guard case .array(let list) = value, list.count <= LegacySubtaskReference.readableDepth,
+              list.allSatisfy({ if case .string(let key) = $0 { return ActivityNode.validKey(key) }; return false }),
               let data = try? TaskfoldJSONEncoder().encode(value), data.count <= 65_536 else { return nil }
         return list.map(\.text)
     }
@@ -580,10 +580,9 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
               tasks.filter({ $0.id.lowercased() == rootID }).count == 1,
               Self.generation(root) == generation, root.string("user_id").lowercased() == owner.lowercased(),
               !root.string("project_id").isEmpty || root.string("user_id").lowercased() == account.lowercased(),
-              let index = try? TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: account, generation: UUID())),
-              !index.items.isEmpty else { return nil }
-        if isOrdering || reconciliation != nil, nodeKey.isEmpty { return root }
-        return index.items.first(where: { $0.isSubtask && $0.path.last == nodeKey })?.record
+              ProjectOrganization.archivedIDs(in: projects).isDisjoint(with: [root.string("project_id")]) else { return nil }
+        // Subtasks are rows: an older entry about a node inside a task's JSON checklist has no current task.
+        return nodeKey.isEmpty ? root : nil
     }
     private struct Node {
         let generation: String
@@ -603,8 +602,8 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     private static func nodes(_ root: Record?, dates: LocalActivityDates, hierarchy: LocalActivityHierarchy? = nil) -> [String: Node]? {
         guard let root else { return [:] }
         guard let generation = generation(root), TaskKind(root) != .unsupported,
-              let bytes = try? TaskfoldJSONEncoder().encode(root["subtasks"]), bytes.count <= ChecklistRecovery.maximumBytes else { return nil }
-        let items: [TaskHierarchyIndex.Item]?
+              let bytes = try? TaskfoldJSONEncoder().encode(root["subtasks"]), bytes.count <= ActivityNode.maximumBytes else { return nil }
+        let items: [ActivityNode]?
         if let hierarchy { items = hierarchy.items }
         else { items = LocalActivityHierarchy.read(root, scope: "node-history") }
         guard let items else { return nil }
@@ -776,7 +775,7 @@ struct ProjectWorkScope {
     func items(project: String) -> [Item] { groups[project.lowercased()] ?? [] }
     func incomplete(project: String) -> Bool { incompleteProjects.contains(project.lowercased()) }
     init(tasks: [Record]) {
-        var roots: [String: Record] = [:], visited = 0
+        var roots: [String: Record] = [:]
         for root in tasks {
             let project = root.string("project_id").lowercased(), key = root.id.lowercased()
             guard !key.isEmpty, !root.id.hasPrefix("subtask:") else { incompleteProjects.insert(project); continue }
@@ -785,51 +784,17 @@ struct ProjectWorkScope {
                 continue
             }
             roots[key] = root
-            func visit(_ source: Record, positions: [Int], keys: [String], reference: String?, titles: [String], depth: Int) {
-                visited += 1
-                guard depth <= SubtaskTree.readableDepth, visited <= TaskHierarchyIndex.maximumItems else { incompleteProjects.insert(project); return }
-                switch TaskKind(source) {
-                case .unsupported:
-                    incompleteProjects.insert(project)
-                    if let reference {
-                        let context = TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: reference).record
-                        contexts.append(context); outline.append(context)
-                    }
-                case .task:
-                    let id: String
-                    if positions.isEmpty { id = root.id }
-                    else {
-                        let identity = try! TaskfoldJSONEncoder().encode([root.id.lowercased()] + positions.map(String.init))
-                        id = "work:" + SHA256.hash(data: identity).map { String(format: "%02x", $0) }.joined()
-                    }
-                    var task = source; task["id"] = .string(id)
-                    for field in ["project_id", "section_id", "user_id", "task_generation"] { task[field] = root[field] }
-                    let navigation = reference.map { TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: $0).record }
-                    let item = Item(id: id, task: task, root: root, navigationTask: navigation, parentTitles: titles)
-                    items.append(item); groups[project, default: []].append(item)
-                    if let navigation { outline.append(navigation) }
-                case .heading:
-                    if let reference {
-                        let context = TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: reference).record
-                        contexts.append(context); outline.append(context)
-                    }
-                    if source.completed { incompleteProjects.insert(project) }
-                    let children = source["subtasks"]
-                    guard SubtaskTree.hasListContainer(children) else { incompleteProjects.insert(project); return }
-                    let indices = SubtaskTree.uniqueChildIndices(children)
-                    for (index, child) in children.list.enumerated() {
-                        let row: Record
-                        if case .string(let title) = child, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { row = Record(["title": .string(title)]) }
-                        else if case .object(let fields) = child, case .string(let title)? = fields["title"], !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { row = Record(fields) }
-                        else { incompleteProjects.insert(project); continue }
-                        let childKey = row.id
-                        let unique = !childKey.isEmpty && indices[childKey] != nil
-                        let next = unique ? reference.map { SubtaskTree.reference(parent: $0, key: childKey) } : nil
-                        visit(row, positions: positions + [index], keys: keys + [childKey], reference: next, titles: titles + [source.title], depth: depth + 1)
-                    }
-                }
+            // Subtasks are rows: a heading's subtasks are tasks of their own, so each row is read once, by itself.
+            switch TaskKind(root) {
+            case .unsupported:
+                incompleteProjects.insert(project); contexts.append(root); outline.append(root)
+            case .task:
+                let item = Item(id: root.id, task: root, root: root, navigationTask: root, parentTitles: [])
+                items.append(item); groups[project, default: []].append(item); outline.append(root)
+            case .heading:
+                contexts.append(root); outline.append(root)
+                if root.completed { incompleteProjects.insert(project) }
             }
-            visit(root, positions: [], keys: [], reference: root.id, titles: [], depth: 0)
         }
     }
     func attention(project: String, now: Date, calendar: Calendar = .current) -> [Item] {
@@ -865,10 +830,8 @@ struct ProductiveTaskReading {
     private let presentationIDs: Set<String>
     func contains(_ id: String) -> Bool { presentationIDs.contains(id) }
     init(tasks: [Record]) {
-        let roots = tasks.filter { SubtaskTree.referencePath($0.id) == nil }
-        let rootIDs = Set(roots.map { $0.id.lowercased() })
-        let scope = ProjectWorkScope(tasks: roots)
-        var work: [Record] = [], rows: [Record] = [], seen = Set<String>(), unavailable = 0
+        let scope = ProjectWorkScope(tasks: tasks)
+        var work: [Record] = [], rows: [Record] = [], unavailable = 0
         var parents: [String: String] = [:]
         for item in scope.items {
             let row = item.navigationTask ?? item.task
@@ -876,13 +839,6 @@ struct ProductiveTaskReading {
             if !item.parentTitles.isEmpty { parents[row.id] = item.parentTitles.joined(separator: " › ") }
             if item.navigationTask != nil { rows.append(row) }
             else { unavailable += 1 }
-            seen.insert(row.id)
-        }
-        // Already projected native rows are valid read inputs too. A source root
-        // wins over its projections, so repeated projection never double-counts.
-        for task in tasks {
-            guard let path = SubtaskTree.referencePath(task.id), !rootIDs.contains(path[0].lowercased()), seen.insert(task.id).inserted else { continue }
-            if TaskKind.mayComplete(task) { work.append(task); rows.append(task) }
         }
         // Retain addressable heading context, including legacy branches that need
         // parent review. Do not invent routable identities for unreadable children.
@@ -1814,14 +1770,30 @@ enum LocalActivityCreation {
 /// No lookup key, normalized identity, account state or cache survives the entry.
 fileprivate final class LocalActivityHierarchy {
     private let root: Record
-    private lazy var indexed: [TaskHierarchyIndex.Item]? = Self.read(root, scope: "node-history")
+    private lazy var indexed: [ActivityNode]? = Self.read(root, scope: "node-history")
     init(_ root: Record) { self.root = root }
-    var items: [TaskHierarchyIndex.Item]? { indexed }
-    static func read(_ root: Record, scope: String) -> [TaskHierarchyIndex.Item]? {
-        let project = root.string("project_id")
-        let projects = project.isEmpty ? [] : [Record(["id": .string(project), "name": .string("Containment")])]
-        guard let index = try? TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: scope, generation: UUID())) else { return nil }
-        return index.items
+    var items: [ActivityNode]? { indexed }
+    /// Subtasks are rows, so a task's only node is the task itself.
+    static func read(_ root: Record, scope: String) -> [ActivityNode]? {
+        guard ActivityNode.validKey(root.id), !root.id.hasPrefix(LegacySubtaskReference.prefix) else { return nil }
+        return [ActivityNode(source: root, root: root, path: [], parentTitles: [], id: root.id)]
+    }
+}
+
+/// One task as the activity ledgers read it. Older ledger rows may name a node inside a task's former JSON
+/// checklist (`node_key`, `node_path`); those are read as history, but every current node is a whole row.
+struct ActivityNode: Equatable, Sendable {
+    let source: Record
+    let root: Record
+    let path: [String]
+    let parentTitles: [String]
+    let id: String
+    var isSubtask: Bool { !path.isEmpty }
+    var record: Record { source }
+    static let maximumBytes = 2_100_000
+    static func validKey(_ id: String) -> Bool {
+        !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && id.unicodeScalars.count <= 400 &&
+            !id.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
     }
 }
 

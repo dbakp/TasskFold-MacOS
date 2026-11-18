@@ -33,15 +33,11 @@ enum WidgetCompletion {
             fileprivate let entries: [String: Entry]
         }
         private let maximumEntries: Int
-        private let projectionCache: TaskHierarchyIndex.ProjectionCache
-        var hierarchyStatistics: TaskHierarchyIndex.ProjectionCache.Statistics { projectionCache.statistics }
-        fileprivate var projections: TaskHierarchyIndex.ProjectionCache? { scope != nil && projectionCache.enabled ? projectionCache : nil }
         private var scope: Scope?
         private var entries: [String: Entry] = [:], next: [String: Entry] = [:]
         private(set) var statistics = Statistics()
-        init(maximumEntries: Int = 4096, seed: Seed? = nil, maximumProjectionBytes: Int = 8 * 1024 * 1024) {
+        init(maximumEntries: Int = 4096, seed: Seed? = nil) {
             self.maximumEntries = max(0, maximumEntries)
-            projectionCache = .init(maximumItems: max(0, min(4096, maximumEntries)), maximumBytes: maximumProjectionBytes)
             if let seed {
                 scope = seed.scope
                 entries = Dictionary(uniqueKeysWithValues: seed.entries.prefix(self.maximumEntries).map { ($0.key, $0.value) })
@@ -53,22 +49,15 @@ enum WidgetCompletion {
             guard let current, current == scope else { return nil }
             return Seed(scope: current, entries: entries)
         }
-        func clear() { scope = nil; entries = [:]; next = [:]; statistics = Statistics(); projectionCache.clear() }
+        func clear() { scope = nil; entries = [:]; next = [:]; statistics = Statistics() }
         fileprivate func begin(_ current: Scope?) {
-            if current == nil || current != scope { entries = [:]; projectionCache.clear() }
+            if current == nil || current != scope { entries = [:] }
             scope = current; next = [:]; statistics = Statistics()
         }
         fileprivate func signature(for row: Record, compute: () -> String) -> String {
             let id = row.id.lowercased()
             return signature(key: "root:" + id, source: row.authoredSourceToken,
                 cacheable: id.utf8.count <= 256, compute: compute) ?? ""
-        }
-        fileprivate func signature(for child: TaskHierarchyIndex.Item, compute: () -> String?) -> String? {
-            // Prove the original child tree and routing inputs, not unrelated
-            // root dates/notes. Projections and current visibility still rebuild
-            // every pass; action admission independently checks current data.
-            signature(key: "child:" + child.id, source: child.root.widgetChildSignatureSourceToken,
-                cacheable: child.id.utf8.count <= 256, compute: compute)
         }
         private func signature(key: String, source: Record.SourceToken, cacheable: Bool, compute: () -> String?) -> String? {
             guard cacheable else { statistics.computed += 1; return compute() }
@@ -93,8 +82,7 @@ enum WidgetCompletion {
         let tasks = snapshot.tables["tasks"] ?? []
         let instants = InstantNormalizer()
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
-        let children = childItems(snapshot, account: "widget-index", projections: signatures?.projections)
-        let ids = Set(tasks.map { WidgetTaskIdentity.key($0.id) } + children.map(\.id))
+        let ids = Set(tasks.map { WidgetTaskIdentity.key($0.id) })
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
         for task in tasks where !task.id.isEmpty {
             let id = task.id.lowercased()
@@ -108,49 +96,12 @@ enum WidgetCompletion {
                 snapshot.widgetCompletion.states[id] = .init(token: UUID().uuidString.lowercased(), signature: signature)
             }
         }
-        for child in children {
-            let signature = signatures.map { $0.signature(for: child) { childSignature(child) } } ?? childSignature(child)
-            if let signature, snapshot.widgetCompletion.states[child.id]?.signature != signature {
-                snapshot.widgetCompletion.states[child.id] = .init(token: UUID().uuidString.lowercased(), signature: signature)
-            }
-        }
-    }
-    static func hasChildFilter(_ snapshot: Snapshot) -> Bool {
-        (snapshot.tables["saved_views"] ?? []).contains { (try? FilterRule(document: $0["query_ast"]).needsChildCandidates) == true }
-    }
-    /// Primary widgets opt into independent work beneath headings. Ordinary
-    /// checklists still require an explicit child filter, including at replay.
-    static func hierarchy(_ snapshot: Snapshot, account: String, projections: TaskHierarchyIndex.ProjectionCache? = nil) -> TaskHierarchyIndex? {
-        guard hasChildFilter(snapshot) || (snapshot.tables["tasks"] ?? []).contains(where: { TaskKind($0) == .heading }) else { projections?.clear(); return nil }
-        return try? TaskHierarchyIndex(roots: snapshot.tables["tasks"] ?? [], projects: snapshot.tables["projects"] ?? [], workspace: WorkspaceBinding(account: account, generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!), projections: projections)
-    }
-    static func childItems(_ snapshot: Snapshot, account: String, projections: TaskHierarchyIndex.ProjectionCache? = nil) -> [TaskHierarchyIndex.Item] {
-        guard let index = hierarchy(snapshot, account: account, projections: projections) else { return [] }
-        if hasChildFilter(snapshot) { return index.items.filter(\.isSubtask) }
-        let reading = ProductiveTaskReading(tasks: snapshot.tables["tasks"] ?? [])
-        return index.items.filter { $0.isSubtask && reading.contains($0.id) }
-    }
-    /// Root incarnation and path bind a link without making completion/editing invalidate it.
-    static func routeContext(_ item: TaskHierarchyIndex.Item) -> String? {
-        let values: [JSON] = [.string(item.id), item.root["task_generation"], item.root["created_at"], item.root["project_id"], item.root["section_id"], item.source["task_generation"], item.source["created_at"]]
-        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
-        return (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) }
-    }
-    private static func childSignature(_ item: TaskHierarchyIndex.Item) -> String? {
-        // Completion changes only this node; a descendant's independent action
-        // must not invalidate its parent's still-visible checkbox.
-        var own = item.source.fields; own.removeValue(forKey: "subtasks")
-        var values: [JSON] = []; values.reserveCapacity(6)
-        values.append(.string(item.id)); values.append(.object(own))
-        item.root.appendWidgetChildSignatureContext(to: &values)
-        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
-        return (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) }
     }
     static func tokens(_ snapshot: Snapshot) -> [String: String] { snapshot.widgetCompletion.states.mapValues(\.token) }
     static func plan(_ request: WidgetCompletionRequest, snapshot: Snapshot, account: String, calendar: Calendar = .current) -> Plan {
         guard !account.isEmpty, account == request.account, UUID(uuidString: request.token) == request.id else { return .stale }
         if snapshot.widgetCompletion.saved(request) { return .saved }
-        if request.taskID.hasPrefix("subtask:"), TaskTree.rowsEnabled {
+        if request.taskID.hasPrefix(LegacySubtaskReference.prefix), TaskTree.rowsEnabled {
             // Child rows: a checkbox from an older widget timeline carries the legacy id and the token issued for it.
             let id = LegacyTaskReference.resolve(request.taskID, enabled: true)
             guard id != request.taskID, snapshot.widgetCompletion.states[request.taskID]?.token == request.token,
@@ -159,16 +110,7 @@ enum WidgetCompletion {
             guard !ProjectOrganization.archived(task.string("project_id"), in: snapshot.tables["projects"] ?? []) else { return .stale }
             return .complete(ChildRowCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar, account: account))
         }
-        if request.taskID.hasPrefix("subtask:") {
-            guard let index = hierarchy(snapshot, account: account), let selection = index.selection(request.taskID),
-                  hasChildFilter(snapshot) || ProductiveTaskReading(tasks: snapshot.tables["tasks"] ?? []).contains(request.taskID),
-                  let state = snapshot.widgetCompletion.states[request.taskID], state.token == request.token,
-                  childSignature(selection.item) == state.signature else { return .stale }
-            guard TaskKind.mayComplete(selection.item.record) else { return .stale }
-            if selection.item.record.completed { return .saved }
-            guard let changes = try? TaskHierarchyIndex.changes([.completion(selection, completed: true, at: request.createdAt)], accessibleRoots: snapshot.tables["tasks"] ?? [], projects: snapshot.tables["projects"] ?? [], workspace: index.workspace) else { return .stale }
-            return .complete(changes)
-        }
+        if request.taskID.hasPrefix(LegacySubtaskReference.prefix) { return .stale }
         guard let task = snapshot.tables["tasks"]?.first(where: { $0.id.lowercased() == WidgetTaskIdentity.key(request.taskID) }) else { return .stale }
         guard TaskKind.mayComplete(task) else { return .stale }
         if task.completed { return .saved }

@@ -42,8 +42,8 @@ final class ActivityDateCompatibilityTests: XCTestCase {
         XCTAssertEqual(rows.count, 375)
         let digest = DueReminder.digest(String(decoding: bytes, as: UTF8.self))
         print("HISTORY_DATE_CORPUS_SHA \(digest)")
-        // Frozen before the formatter reuse change.
-        XCTAssertEqual(digest, "901745ac563fae6de8dab06750891d3a603061398928f060dde2db55861db977")
+        // Frozen before the formatter reuse change, then re-frozen once when plain task rows stopped carrying an empty `subtasks` key.
+        XCTAssertEqual(digest, "7d67b16d9de97ffaa00d90ca6cfd060927b02d6af3e70bd9a6bcac1cefbb6f3f")
     }
     func testCreationBatchDatesMatchOrdinaryRecordsAcrossAllSpellings() throws {
         var snapshot = Snapshot(), entries = [LocalActivityCreation.Entry](), ordinary = Snapshot()

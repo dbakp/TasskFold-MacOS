@@ -42,7 +42,6 @@
         "due_date": null,
         "due_time": null,
         "priority": 3,
-        "subtasks": [],
         "completed": true,
         "reminders": [],
         "time_zone": null,
@@ -85,7 +84,6 @@
           {
             "id": "fdad0000-0000-4000-8000-000000000016",
             "title": "Synthetic independent child",
-            "subtasks": [],
             "completed": true,
             "completed_at": "2026-10-26T12:12:40.739Z"
           }
@@ -396,7 +394,6 @@
         "due_date": null,
         "due_time": null,
         "priority": 3,
-        "subtasks": [],
         "completed": true,
         "reminders": [],
         "time_zone": null,
@@ -439,7 +436,6 @@
           {
             "id": "fdad0000-0000-4000-8000-000000000016",
             "title": "Synthetic independent child",
-            "subtasks": [],
             "completed": true,
             "completed_at": "2026-10-26T12:12:40.739Z"
           }

@@ -1,106 +1,5 @@
 import Foundation
 
-/// Assignment changes operate on full source objects, never display projections.
-/// One budget may cover an entire selection before any mutation is published.
-enum TaskAssignmentTree {
-    struct Budget { var nodes = 0; var rawBytes = 0 }
-    static var invalid: AppFailure { AppFailure(message: "Review this task’s checklist before changing its project. Your task is unchanged.") }
-    static func cleared(_ tree: JSON, removing: Bool, budget: inout Budget) throws -> JSON {
-        func list(_ value: JSON, depth: Int, budget: inout Budget) throws -> JSON {
-            if value == .null { return value }
-            guard depth <= SubtaskTree.readableDepth, case .array(let rows) = value else { throw invalid }
-            return .array(try rows.map { source in
-                budget.nodes += 1
-                guard budget.nodes <= TaskHierarchyIndex.maximumItems else { throw invalid }
-                // Legacy text rows have no assignment and remain text.
-                if case .string = source { return source }
-                let fields: [String: JSON]
-                switch source {
-                case .object(let values): fields = values
-                case .preserved(let raw) where raw.kind == .object:
-                    guard raw.data.count <= TaskHierarchyIndex.maximumPreservedProjectionBytes - budget.rawBytes else { throw invalid }
-                    budget.rawBytes += raw.data.count
-                    fields = try source.fieldEditingProjection()
-                default: throw invalid
-                }
-                var changes: [String: JSON] = removing ? [:] : ["assigned_to": .null]
-                if let children = fields["subtasks"], children != .null {
-                    changes["subtasks"] = try list(children, depth: depth + 1, budget: &budget)
-                }
-                return try source.editingASCIIFields(changes, removing: removing ? ["assigned_to"] : [])
-            })
-        }
-        do { return try list(tree, depth: 0, budget: &budget) }
-        catch { throw invalid }
-    }
-    static func cleared(_ tree: JSON, removing: Bool) throws -> JSON {
-        var budget = Budget(); return try cleared(tree, removing: removing, budget: &budget)
-    }
-}
-
-
-/// A routine personal move stays in the existing queue and picker. Its saved
-/// request identity certifies retry without projecting historical task contents.
-enum PersonalTaskMove {
-    static var invalid: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: Review this saved project move before sending it.") }
-    static func historyAction(_ change: Mutation) -> Mutation {
-        guard change.personalTaskMove == true else { return change }
-        var action = change; action.id = UUID(); return action
-    }
-    static func clearAssignments(_ tree: JSON) throws -> JSON {
-        try TaskAssignmentTree.cleared(tree, removing: true)
-    }
-    static func projectedFields(_ change: Mutation, onto old: Record) throws -> [String: JSON] {
-        guard TaskAssignment.permitsScope(change, current: old) else { throw TaskAssignment.staleMove }
-        var fields = change.fields
-        if TaskAssignment.scopedProject(change) != nil { fields.removeValue(forKey: "project_id") }
-        if change.personalTaskMove == true, change.table == "tasks", change.method == "PATCH",
-           let destination = fields["project_id"], destination != old["project_id"] {
-            fields["assigned_to"] = .null
-            if fields["section_id"] == nil { fields["section_id"] = .null }
-            fields["subtasks"] = try clearAssignments(fields["subtasks"] ?? old["subtasks"])
-        }
-        return fields
-    }
-    static func body(_ change: Mutation, account: String) throws -> [String: JSON] {
-        guard change.personalTaskMove == true, change.table == "tasks", change.method == "PATCH", change.teamTaskScope == nil,
-              change.teamCompletion == nil, change.teamTaskBatch == nil, TeamProjectValue.id(account), TeamProjectValue.id(change.recordID),
-              let base = change.baseline, base["task_generation"] != nil, base["project_id"] != nil,
-              let destination = change.fields["project_id"], base["project_id"] != destination,
-              change.fields.keys.allSatisfy({ base[$0] != nil }), !change.fields.keys.contains(where: { ["id", "user_id", "task_generation", "completion_version"].contains($0) }) else { throw invalid }
-        _ = try TeamProjectValue.optionalID(base["task_generation"])
-        _ = try TeamProjectValue.optionalID(base["project_id"])
-        _ = try TeamProjectValue.optionalID(destination)
-        if let tree = change.fields["subtasks"] { try TeamTaskMoveTree.validate(tree) }
-        let body: [String: JSON] = ["protocol": .number(1), "account": .string(account), "request_id": .string(change.id.uuidString.lowercased()), "task_id": .string(change.recordID.lowercased()), "baseline": .object(base), "changes": .object(change.fields)]
-        guard try TaskfoldJSONEncoder().encode(body).count <= 4_194_304 else { throw invalid }
-        return body
-    }
-    static func confirmed(_ reply: [String: JSON], change: Mutation, account: String) throws -> Record? {
-        _ = try body(change, account: account)
-        guard Set(reply.keys) == ["protocol", "account", "request_id", "task_id", "task_generation", "source_project_id", "destination_project_id", "applied", "replayed", "task"],
-              reply["protocol"] == .number(1), reply["account"] == .string(account), reply["request_id"] == .string(change.id.uuidString.lowercased()),
-              reply["task_id"] == .string(change.recordID.lowercased()), reply["task_generation"] == change.baseline?["task_generation"],
-              reply["source_project_id"] == change.baseline?["project_id"], reply["destination_project_id"] == change.fields["project_id"],
-              reply["applied"] == .bool(true), case .bool(let replayed)? = reply["replayed"] else { throw invalid }
-        // Every confirmation is metadata-only. Current workspace reads supply
-        // the task, so even a first reply cannot overwrite newer local work.
-        _ = replayed
-        guard reply["task"] == .null else { throw invalid }
-        return nil
-    }
-    static func status(_ reply: [String: JSON], change: Mutation, account: String) throws -> Bool {
-        if reply["applied"] == .bool(true) {
-            guard reply["replayed"] == .bool(true) else { throw invalid }
-            _ = try confirmed(reply, change: change, account: account); return true
-        }
-        var hypothetical = reply
-        hypothetical["applied"] = .bool(true); hypothetical["replayed"] = .bool(true)
-        _ = try confirmed(hypothetical, change: change, account: account)
-        guard reply["applied"] == .bool(false), reply["replayed"] == .bool(false), reply["task"] == .null else { throw invalid }
-        return false
-    }
-}
 import Observation
 
 /// A reviewed move is deliberately separate from ordinary task editing. The
@@ -123,26 +22,6 @@ struct TeamTaskMoveScope: Equatable, Sendable {
     var operation: String { undoes == nil ? "move" : "undo" }
 }
 
-/// Read-only move envelopes support the record engine's null/sparse shapes.
-/// This does not relax ordinary checklist mutation or completion admission.
-enum TeamTaskMoveTree {
-    static func validate(_ value: JSON) throws {
-        var identities = Set<String>()
-        func walk(_ value: JSON, depth: Int) throws {
-            if value == .null { return }
-            guard case .array(let rows) = value, rows.isEmpty || depth <= 24 else { throw TeamTaskMoveCommand.invalid }
-            for row in rows {
-                guard case .object(let fields) = row, case .string(let id)? = fields["id"], !id.isEmpty, id.utf8.count <= 128,
-                      id.precomposedStringWithCanonicalMapping.utf8.count <= 128, identities.count < 1000,
-                      identities.insert(id.precomposedStringWithCanonicalMapping).inserted else { throw TeamTaskMoveCommand.invalid }
-                if let token = fields[TeamChecklist.key], TeamChecklist.token(token) == nil { throw TeamTaskMoveCommand.invalid }
-                if let children = fields["subtasks"] { try walk(children, depth: depth + 1) }
-            }
-        }
-        try walk(value, depth: 1)
-    }
-}
-
 struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomDebugStringConvertible {
     let scope: TeamTaskMoveScope
     let token: String, expiresText: String, sourceName: String, destinationName: String
@@ -151,6 +30,8 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
     let keepsSubtaskUndoPrivate: Bool, privateSubtaskUndoCount: Int
     let taskBoundFileCount: Int?
     let taskBoundAudioCount: Int?
+    /// Subtasks that move with the task (`child_row_count`); 0 for a task without subtasks or an older service.
+    let subtaskCount: Int
     var description: String { "Private task move review" }; var debugDescription: String { description }
     init(_ raw: [String: JSON], scope: TeamTaskMoveScope) throws {
         guard raw["move_review_protocol"] == .number(1), raw["account"] == .string(scope.account),
@@ -163,22 +44,23 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
               try TaskfoldJSONEncoder().encode(fields).count <= 128_000 else { throw TeamTaskMoveCommand.invalid }
         _ = try TeamOrganizationValue.id(fields["user_id"])
         guard case .string(let title)? = fields["title"], title.utf8.count <= 120_000 else { throw TeamTaskMoveCommand.invalid }
-        try TeamTaskMoveTree.validate(fields["subtasks"] ?? .array([]))
         self.scope = scope; self.token = token; self.expiresText = expiresText; expires = try TeamOrganizationValue.date(.string(expiresText))
         sourceName = try TeamOrganizationValue.name(raw["source_name"]); destinationName = try TeamOrganizationValue.name(raw["destination_name"])
         task = Record(fields); self.visibility = visibility
         clearedAssignments = try Self.count(raw["cleared_assignments"], limit: 1001)
         restoredAssignments = try Self.count(raw["restored_assignments"], limit: 1001)
         discussionCount = try Self.count(raw["discussion_count"], limit: 500)
+        subtaskCount = raw["child_row_count"] == nil || raw["child_row_count"] == .null ? 0 : try Self.count(raw["child_row_count"], limit: 100_000)
         if raw["file_custody_policy"] == nil, raw["file_custody_count"] == nil { taskBoundFileCount = nil }
         else {
             guard raw["file_custody_policy"] == .string("task_bound_v1") else { throw TeamTaskMoveCommand.invalid }
-            taskBoundFileCount = try Self.count(raw["file_custody_count"], limit: 256)
+            // Counts include the subtasks that move with the task.
+            taskBoundFileCount = try Self.count(raw["file_custody_count"], limit: 100_000)
         }
         if raw["audio_custody_policy"] == nil, raw["audio_custody_count"] == nil { taskBoundAudioCount = nil }
         else {
             guard raw["audio_custody_policy"] == .string("published_same_generation_v1") else { throw TeamTaskMoveCommand.invalid }
-            taskBoundAudioCount = try Self.count(raw["audio_custody_count"], limit: 20)
+            taskBoundAudioCount = try Self.count(raw["audio_custody_count"], limit: 100_000)
         }
         if raw["subtask_undo_policy"] == nil, raw["subtask_undo_count"] == nil {
             keepsSubtaskUndoPrivate = false; privateSubtaskUndoCount = 0
@@ -244,7 +126,7 @@ struct TeamTaskMoveCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
                   try TaskfoldJSONEncoder().encode(fields).count <= 128_000 else { throw Self.invalid }
             _ = try TeamOrganizationValue.id(fields["user_id"])
             guard case .string? = fields["title"] else { throw Self.invalid }
-            try TeamTaskMoveTree.validate(fields["subtasks"] ?? .array([])); task = Record(fields)
+            task = Record(fields)
         }
         return TeamTaskMoveReceipt(command: self, task: task, replayed: replayed, raw: raw)
     }

@@ -99,7 +99,7 @@ final class LegacySubtaskConversionTests: XCTestCase {
             XCTAssertEqual(checked, reference["expected_with_tree"]!.text.isEmpty ? nil : reference["expected_with_tree"]!.text, text)
         }
         XCTAssertNil(LegacySubtaskConversion.newID(forReference: "work:abc")); XCTAssertNil(LegacySubtaskConversion.newID(forReference: "subtask:@@@"))
-        let built = SubtaskTree.reference(parent: "11111111-1111-4111-8111-111111111111", key: "a")
+        let built = LegacySubtaskReference.reference(["11111111-1111-4111-8111-111111111111", "a"])
         XCTAssertEqual(LegacySubtaskConversion.newID(forReference: built), LegacySubtaskConversion.legacyChildID(root: "11111111-1111-4111-8111-111111111111", path: ["a"]))
     }
     func testSegmentsFollowChildKey() {

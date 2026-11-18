@@ -27,24 +27,6 @@
         },
         "created_at": "2026-10-26T12:00:00Z",
         "labels": [],
-        "subtasks": [
-          {
-            "id": "design-heading",
-            "title": "Design review",
-            "is_heading": true,
-            "completed": false,
-            "completed_at": null,
-            "subtasks": [
-              {
-                "id": "productive-detail",
-                "title": "Approve contrast",
-                "completed": false,
-                "completed_at": null,
-                "subtasks": []
-              }
-            ]
-          }
-        ],
         "attachments": [],
         "comments": [],
         "reminders": [],
@@ -72,7 +54,6 @@
               {
                 "id": "productive-detail",
                 "title": "Approve contrast",
-                "subtasks": [],
                 "completed": false,
                 "completed_at": null,
                 "taskfold_completion_v1": {
@@ -145,32 +126,6 @@
         "due_date": "2026-10-26",
         "due_time": null,
         "priority": 2,
-        "subtasks": [
-          {
-            "id": "design-heading",
-            "title": "Design review",
-            "subtasks": [
-              {
-                "id": "productive-detail",
-                "title": "Approve contrast",
-                "subtasks": [],
-                "completed": false,
-                "completed_at": null,
-                "taskfold_completion_v1": {
-                  "epoch": "ffb7f319-d0c6-4747-96b1-7a921f94e4a3",
-                  "version": 0
-                }
-              }
-            ],
-            "completed": false,
-            "is_heading": true,
-            "completed_at": null,
-            "taskfold_completion_v1": {
-              "epoch": "a758407d-5b3a-4573-8d5d-b55030e1d741",
-              "version": 0
-            }
-          }
-        ],
         "completed": false,
         "reminders": [],
         "time_zone": null,
@@ -230,32 +185,6 @@
         "due_date": "2026-10-26",
         "due_time": null,
         "priority": 2,
-        "subtasks": [
-          {
-            "id": "design-heading",
-            "title": "Design review",
-            "subtasks": [
-              {
-                "id": "productive-detail",
-                "title": "Approve contrast",
-                "subtasks": [],
-                "completed": false,
-                "completed_at": null,
-                "taskfold_completion_v1": {
-                  "epoch": "ffb7f319-d0c6-4747-96b1-7a921f94e4a3",
-                  "version": 0
-                }
-              }
-            ],
-            "completed": false,
-            "is_heading": true,
-            "completed_at": null,
-            "taskfold_completion_v1": {
-              "epoch": "a758407d-5b3a-4573-8d5d-b55030e1d741",
-              "version": 0
-            }
-          }
-        ],
         "completed": false,
         "reminders": [],
         "time_zone": null,
@@ -303,7 +232,6 @@
               {
                 "id": "productive-detail",
                 "title": "Approve contrast",
-                "subtasks": [],
                 "completed": false,
                 "completed_at": null,
                 "taskfold_completion_v1": {

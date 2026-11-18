@@ -156,27 +156,21 @@ final class TeamTaskTypeLifecycleTests: XCTestCase {
         XCTAssertEqual(body["restore_from"], .string(deletion.id.uuidString.lowercased())); XCTAssertEqual(body["record"]?.object["is_heading"], .bool(true))
         XCTAssertThrowsError(try scope(authoring: false, transport: false).lifecycleBody(for: deletion))
     }
-    func testNestedHeadingCreationNeedsAuthoringAndPreservesOrdinaryDescendants() throws {
-        var task = row(); task["subtasks"] = .array([.object(["id": .string("heading"), "title": .string("Plan"), "is_heading": .bool(true), "completed": .bool(false), "subtasks": .array([.object(["id": .string("work"), "title": .string("Prepare"), "completed": .bool(false)])])])])
-        let active = scope(), command = try active.capturing(change(task, scope: active), existing: nil)
-        XCTAssertEqual(try active.lifecycleBody(for: command)["record"]?.object["subtasks"], command.fields["subtasks"])
-        XCTAssertThrowsError(try scope(authoring: false).lifecycleBody(for: command))
-        XCTAssertEqual(command.fields["subtasks"]?.list[0].object["taskfold_completion_v1"]?.object["version"], .number(0))
-    }
     func testOrdinaryNullTypeUsesTransportWithoutAuthoringAndLegacyBodyStaysCompatible() throws {
         let plain = row(), legacy = scope(authoring: false, transport: false)
         XCTAssertNil(try legacy.lifecycleBody(for: change(plain, scope: legacy))["task_type_lifecycle_protocol"])
-        var typed = plain; typed["is_heading"] = .null
+        var unset = plain; unset["is_heading"] = .null
+        XCTAssertNil(try legacy.lifecycleBody(for: change(unset, scope: legacy))["record"]?.object["is_heading"], "A NULL is_heading is left out, so it is not typed")
+        XCTAssertNil(try legacy.lifecycleBody(for: change(unset, scope: legacy))["task_type_lifecycle_protocol"])
+        var typed = plain; typed["is_heading"] = .bool(false)
         let supported = scope(authoring: false)
         XCTAssertEqual(try supported.lifecycleBody(for: change(typed, scope: supported))["task_type_lifecycle_protocol"], .number(1))
         XCTAssertThrowsError(try legacy.lifecycleBody(for: change(typed, scope: legacy)))
     }
-    func testCompletedUnknownAndInvalidNestedTypesCannotBeCreated() throws {
+    func testCompletedAndUnknownTypesCannotBeCreated() throws {
         let active = scope(); var task = row(); task["is_heading"] = .bool(true); task["completed"] = .bool(true)
         XCTAssertThrowsError(try active.lifecycleBody(for: change(task, scope: active)))
         task["completed"] = .bool(false); task["is_heading"] = .string("future")
-        XCTAssertThrowsError(try active.lifecycleBody(for: change(task, scope: active)))
-        task["is_heading"] = .bool(false); task["subtasks"] = .array([.object(["id": .string("child"), "is_heading": .bool(true), "completed": .bool(true)])])
         XCTAssertThrowsError(try active.lifecycleBody(for: change(task, scope: active)))
     }
     func testTypedReceiptAndDurableCommandRetainProtocol() throws {
@@ -203,11 +197,11 @@ extension TeamTaskTypeLifecycleTests {
             XCTAssertEqual(try scope.lifecycleBody(for: command), body)
             let result = try scope.lifecycleSaved(part["reply"]!.object, for: command)
             if action == "delete" { XCTAssertNil(result) }
-            else { XCTAssertEqual(result?["is_heading"], .bool(true)); XCTAssertEqual(result?["subtasks"].list[0].object["is_heading"], .bool(true)) }
+            else { XCTAssertEqual(result?["is_heading"], .bool(true)) }
         }
     }
     func testTypedSelectionUndoRetainsCapabilityAndRequiresTypedAcknowledgement() throws {
-        let first = try TaskKind.setting(row(), heading: true); var second = row(); second["is_heading"] = .null
+        let first = try TaskKind.setting(row(), heading: true); var second = row(); second["is_heading"] = .bool(false)
         let active = scope(authoring: false), rows = [first, second]
         let prepared = try TeamTaskBatch.preparing(rows.map { change($0, deleting: true, scope: active) }, snapshot: Snapshot(tables: ["tasks": rows]))
         let header = try XCTUnwrap(prepared.first), batch = try XCTUnwrap(header.teamTaskBatch), body = try batch.body(for: header)

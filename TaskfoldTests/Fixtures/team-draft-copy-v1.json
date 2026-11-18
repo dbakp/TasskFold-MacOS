@@ -18,38 +18,6 @@
         "due_date": "2026-10-24",
         "due_time": "09:00:00",
         "priority": 2,
-        "subtasks": [
-          {
-            "id": "original-child",
-            "title": "Approve contrast",
-            "comments": [],
-            "subtasks": [],
-            "completed": false,
-            "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
-            "attachments": [
-              {
-                "path": "fixture/child.pdf"
-              }
-            ],
-            "description": "Check every state",
-            "reminder_specs": [
-              {
-                "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
-                "kind": "relative",
-                "anchor": "planned",
-                "enabled": true,
-                "version": 1,
-                "channels": [
-                  "local"
-                ],
-                "offset_minutes": 15
-              }
-            ],
-            "source_metadata": {
-              "future": "child extension"
-            }
-          }
-        ],
         "completed": false,
         "reminders": [],
         "time_zone": "Europe/Copenhagen",
@@ -125,41 +93,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 1,
-      "subtasks": [
-        {
-          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
-          "title": "Approve all contrast",
-          "comments": [],
-          "subtasks": [],
-          "completed": true,
-          "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
-          "attachments": [
-            {
-              "path": "fixture/child.pdf"
-            }
-          ],
-          "description": "Check every state",
-          "completed_at": null,
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
-              "kind": "relative",
-              "anchor": "planned",
-              "enabled": true,
-              "version": 1,
-              "channels": [
-                "local"
-              ],
-              "offset_minutes": 15
-            }
-          ],
-          "source_metadata": {
-            "future": "child extension"
-          },
-          "notification_sent_at": null
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -237,46 +170,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 1,
-      "subtasks": [
-        {
-          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
-          "title": "Approve all contrast",
-          "comments": [],
-          "subtasks": [],
-          "completed": true,
-          "reminders": [],
-          "assigned_to": null,
-          "attachments": [
-            {
-              "path": "fixture/child.pdf"
-            }
-          ],
-          "description": "Check every state",
-          "completed_at": "2026-10-24T09:27:55.156545+00:00",
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "00000000-0000-4000-8000-000000000001",
-              "kind": "relative",
-              "anchor": "planned",
-              "enabled": false,
-              "version": 1,
-              "channels": [
-                "local"
-              ],
-              "offset_minutes": 0
-            }
-          ],
-          "source_metadata": {
-            "future": "child extension"
-          },
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -359,46 +252,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 1,
-      "subtasks": [
-        {
-          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
-          "title": "Approve all contrast",
-          "comments": [],
-          "subtasks": [],
-          "completed": true,
-          "reminders": [],
-          "assigned_to": null,
-          "attachments": [
-            {
-              "path": "fixture/child.pdf"
-            }
-          ],
-          "description": "Check every state",
-          "completed_at": "2026-10-24T09:27:55.360649+00:00",
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "00000000-0000-4000-8000-000000000001",
-              "kind": "relative",
-              "anchor": "planned",
-              "enabled": false,
-              "version": 1,
-              "channels": [
-                "local"
-              ],
-              "offset_minutes": 0
-            }
-          ],
-          "source_metadata": {
-            "future": "child extension"
-          },
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -481,46 +334,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 1,
-      "subtasks": [
-        {
-          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
-          "title": "Approve all contrast",
-          "comments": [],
-          "subtasks": [],
-          "completed": true,
-          "reminders": [],
-          "assigned_to": null,
-          "attachments": [
-            {
-              "path": "fixture/child.pdf"
-            }
-          ],
-          "description": "Check every state",
-          "completed_at": "2026-10-24T09:27:55.360649+00:00",
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "00000000-0000-4000-8000-000000000001",
-              "kind": "relative",
-              "anchor": "planned",
-              "enabled": false,
-              "version": 1,
-              "channels": [
-                "local"
-              ],
-              "offset_minutes": 0
-            }
-          ],
-          "source_metadata": {
-            "future": "child extension"
-          },
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -603,46 +416,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 1,
-      "subtasks": [
-        {
-          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
-          "title": "Approve all contrast",
-          "comments": [],
-          "subtasks": [],
-          "completed": true,
-          "reminders": [],
-          "assigned_to": null,
-          "attachments": [
-            {
-              "path": "fixture/child.pdf"
-            }
-          ],
-          "description": "Check every state",
-          "completed_at": "2026-10-24T09:27:55.360649+00:00",
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "00000000-0000-4000-8000-000000000001",
-              "kind": "relative",
-              "anchor": "planned",
-              "enabled": false,
-              "version": 1,
-              "channels": [
-                "local"
-              ],
-              "offset_minutes": 0
-            }
-          ],
-          "source_metadata": {
-            "future": "child extension"
-          },
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -748,38 +521,6 @@
         "due_date": "2026-10-24",
         "due_time": "09:00:00",
         "priority": 2,
-        "subtasks": [
-          {
-            "id": "original-child",
-            "title": "Approve contrast",
-            "comments": [],
-            "subtasks": [],
-            "completed": false,
-            "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
-            "attachments": [
-              {
-                "path": "fixture/child.pdf"
-              }
-            ],
-            "description": "Check every state",
-            "reminder_specs": [
-              {
-                "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
-                "kind": "relative",
-                "anchor": "planned",
-                "enabled": true,
-                "version": 1,
-                "channels": [
-                  "local"
-                ],
-                "offset_minutes": 15
-              }
-            ],
-            "source_metadata": {
-              "future": "child extension"
-            }
-          }
-        ],
         "completed": false,
         "reminders": [],
         "time_zone": "Europe/Copenhagen",
@@ -855,41 +596,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 1,
-      "subtasks": [
-        {
-          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
-          "title": "Approve all contrast",
-          "comments": [],
-          "subtasks": [],
-          "completed": true,
-          "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
-          "attachments": [
-            {
-              "path": "fixture/child.pdf"
-            }
-          ],
-          "description": "Check every state",
-          "completed_at": null,
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
-              "kind": "relative",
-              "anchor": "planned",
-              "enabled": true,
-              "version": 1,
-              "channels": [
-                "local"
-              ],
-              "offset_minutes": 15
-            }
-          ],
-          "source_metadata": {
-            "future": "child extension"
-          },
-          "notification_sent_at": null
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -984,45 +690,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 1,
-      "subtasks": [
-        {
-          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
-          "title": "Approve all contrast",
-          "comments": [],
-          "subtasks": [],
-          "completed": true,
-          "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
-          "attachments": [
-            {
-              "path": "fixture/child.pdf"
-            }
-          ],
-          "description": "Check every state",
-          "completed_at": "2026-10-24T09:27:56.281448+00:00",
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
-              "kind": "relative",
-              "anchor": "planned",
-              "enabled": true,
-              "version": 1,
-              "channels": [
-                "local"
-              ],
-              "offset_minutes": 15
-            }
-          ],
-          "source_metadata": {
-            "future": "child extension"
-          },
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "e8c30a69-90bb-5fd2-a70b-d4d5cca12039",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",

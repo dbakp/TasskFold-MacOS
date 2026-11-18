@@ -12,7 +12,6 @@ extension EnvironmentValues {
 
 private struct InboxReviewEditor: Identifiable {
     let opening: TaskEditorOpening
-    let hierarchy: TaskHierarchyIndex.Selection?
     var id: String { opening.id }
 }
 
@@ -26,8 +25,6 @@ struct InboxReviewView: View {
     @State private var request: InboxReviewRequest
     @State private var decisions: [String: InboxReviewDecision] = [:]
     @State private var editing: InboxReviewEditor?
-    @State private var headingMove: InboxHeadingMoveReview?
-    @State private var headingMoveFailure: String?
     @State private var failure: String?
     @State private var feedback: String?
     @State private var lastDecision: (String, [String: InboxReviewDecision], [UUID]?)?
@@ -81,11 +78,7 @@ struct InboxReviewView: View {
             .sheet(item: $editing) { editor in
                 let opening = editor.opening
                 #if os(iOS)
-                if let selection = editor.hierarchy {
-                    TaskEditor(task: opening.task, admission: opening.admission, embeddedSave: { draft in
-                        try store.commitHierarchy([TaskHierarchyIndex.Edit.editing(selection, draft: draft)])
-                    }, embeddedDepth: selection.item.path.count)
-                } else { TaskEditor(task:opening.task,admission:opening.admission) }
+                TaskEditor(task:opening.task,admission:opening.admission)
                 #else
                 NavigationStack {
                     TaskInspectorForm(taskID: opening.task.id,admission:opening.admission).id(opening.id)
@@ -94,8 +87,7 @@ struct InboxReviewView: View {
                 }.frame(minWidth: 460, idealWidth: 560, minHeight: 540)
                 #endif
             }
-            .sheet(item: $headingMove) { review in headingMoveSheet(review) }
-            .onChange(of: store.workspaceGeneration) { _, _ in editing = nil; headingMove = nil; dismiss() }
+            .onChange(of: store.workspaceGeneration) { _, _ in editing = nil; dismiss() }
             #if DEBUG
             .onAppear { if ProcessInfo.processInfo.arguments.contains("--inbox-review-fail-save") { store.inboxFixtureFailSave = true } }
             #endif
@@ -131,7 +123,7 @@ struct InboxReviewView: View {
         VStack(alignment: .leading, spacing: 10) {
             Menu {
                 if store.projects.isEmpty { Text("Create a project from Browse to organize tasks.") }
-                ForEach(store.projects.filter { SubtaskTree.referencePath(task.id) == nil || $0["team_id"] == .null }) { project in
+                ForEach(store.projects) { project in
                     Button(project.name) { move(task, to: project.id) }.accessibilityIdentifier("inboxReviewProject-" + project.id)
                 }
             } label: { actionLabel("Move to project", "folder", primary: true) }
@@ -180,65 +172,18 @@ struct InboxReviewView: View {
     private func move(_ shown: Record, to project: String) {
         guard let row = live(shown), store.record("projects", id: project) != nil else { return }
         do {
-            if SubtaskTree.referencePath(row.id) != nil {
-                headingMoveFailure = nil
-                headingMove = try InboxHeadingMoveReview(task: row, tasks: store.tasks, projects: store.projects, destination: project, workspace: request.workspace)
-                return
-            }
             guard save([try InboxReviewRequest.move(row, to: project)], name: "Move Inbox Task") else { return }
             finish(row, decision: .moved, message: "Moved to " + (store.record("projects", id: project)?.name ?? "project"), undo: undoIDs)
         } catch { failure = error.localizedDescription }
     }
     private func complete(_ shown: Record) {
         guard let row = live(shown) else { return }
-        do {
-            let changes: [Mutation]
-            if SubtaskTree.referencePath(row.id) != nil {
-                changes = try TaskSelectionPlan.changes([.init(task: row, action: .completion(true, Date()), workspace: request.workspace)], accessibleRoots: store.activeTasks, projects: store.projects, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
-            } else { changes = store.toggleChanges(row) }
-            guard save(changes, name: "Complete Inbox Task") else { return }
-            finish(row, decision: .completed, message: "Completed “\(row.title)”", undo: undoIDs)
-        } catch { failure = error.localizedDescription }
+        guard save(store.toggleChanges(row), name: "Complete Inbox Task") else { return }
+        finish(row, decision: .completed, message: "Completed “\(row.title)”", undo: undoIDs)
     }
     private func openEditor(_ task: Record) {
         guard let row = live(task) else { return }
-        do {
-            let selected = SubtaskTree.referencePath(row.id) != nil ? try store.hierarchySelection(for: row) : nil
-            editing = InboxReviewEditor(opening: TaskEditorOpening(task: row, admission: store.editorAdmission(row, workspace: request.workspace, root: selected?.item.root)), hierarchy: selected)
-        } catch { failure = error.localizedDescription }
-    }
-    private func headingMoveSheet(_ review: InboxHeadingMoveReview) -> some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    Text("Move “\(review.root.title)” and its \(review.taskCount) grouped \(review.taskCount == 1 ? "task" : "tasks")?").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("inboxHeadingMoveSummary")
-                    Label(review.destination.name, systemImage: "folder").font(.headline)
-                    Text("The heading and its tasks stay together. Dates, notes and task order are preserved.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    ForEach(Array(review.previewTasks.prefix(6).enumerated()), id: \.offset) { _, task in Label(task.title, systemImage: task.completed ? "checkmark.circle" : "circle").fixedSize(horizontal: false, vertical: true) }
-                    if review.taskCount > 6 { Text("And \(review.taskCount - 6) more tasks").foregroundStyle(.secondary) }
-                    if review.assignmentCount > 0 { Text("Assignments will be cleared when the group moves.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-                    if let headingMoveFailure { Text(headingMoveFailure).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxHeadingMoveFailure") }
-                }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
-            }.navigationTitle("Move heading")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { headingMove = nil }.accessibilityIdentifier("inboxHeadingMoveCancel") }
-                    ToolbarItem(placement: .confirmationAction) { Button("Move group") { confirmHeadingMove(review) }.accessibilityIdentifier("inboxHeadingMoveConfirm") }
-                }
-        }
-        #if os(macOS)
-        .frame(minWidth: 440, idealWidth: 520, minHeight: 440)
-        #endif
-    }
-    private func confirmHeadingMove(_ review: InboxHeadingMoveReview) {
-        do {
-            let changes = try review.changes(tasks: store.tasks, projects: store.projects, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
-            guard save(changes, name: "Move Inbox Heading") else { headingMoveFailure = failure; failure = nil; return }
-            lastDecision = (review.root.id, decisions, undoIDs)
-            for id in request.ids where review.contains(id) { decisions[id] = .moved }
-            feedback = "Moved \(review.taskCount) grouped tasks to \(review.destination.name)"
-            headingMove = nil
-        } catch { headingMoveFailure = error.localizedDescription }
+        editing = InboxReviewEditor(opening: TaskEditorOpening(task: row, admission: store.editorAdmission(row, workspace: request.workspace)))
     }
     private func keep(_ shown: Record) {
         guard let row = live(shown) else { return }

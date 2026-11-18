@@ -65,7 +65,7 @@ enum ChildRowTemplates {
         func visit(_ row: Record, parent: Record?, order: Int) {
             var row = row
             let kids = row["subtasks"].list
-            row["subtasks"] = .array([])
+            row.fields.removeValue(forKey: "subtasks")
             if let parent {
                 row["parent_id"] = .string(parent.id); row["child_order"] = .number(Double(order))
                 for field in ["user_id", "project_id", "section_id"] { row[field] = root[field] }
@@ -152,7 +152,7 @@ enum LocalChildRows {
     }
 
     /// nil when the marker is already present or nothing is in the old shape. Otherwise every root with JSON subtasks gains its child rows
-    /// (deterministic ids, parents first), keeps `subtasks = []`, and legacy references in list orders are remapped.
+    /// (deterministic ids, parents first), loses its `subtasks` value, and legacy references in list orders are remapped.
     static func convert(_ tables: [String: [Record]], now: Date = Date()) -> Outcome? {
         guard !converted(tables) else { return nil }
         var tasks = tables["tasks"] ?? []
@@ -161,18 +161,18 @@ enum LocalChildRows {
         var outcome = Outcome(tables: tables)
         for index in tasks.indices {
             let root = tasks[index]
-            guard SubtaskTree.referencePath(root.id) == nil, case .array(let top) = root["subtasks"], !top.isEmpty else { continue }
+            guard LegacySubtaskReference.path(root.id) == nil, case .array(let top) = root["subtasks"], !top.isEmpty else { continue }
             let result = LegacySubtaskConversion.convert(root: root)
             for row in result.rows where present.insert(TaskTree.key(row.id)).inserted { added.append(row); outcome.rows += 1 }
             outcome.skipped += result.skipped.count
             archive[root.id] = .object(["original": root["subtasks"], "skipped": result.skippedJSON])
-            tasks[index]["subtasks"] = .array([])
+            tasks[index].fields.removeValue(forKey: "subtasks")
             outcome.roots += 1
         }
         // Nothing saved in the old shape: leave the workspace untouched (no marker), so loading stays a no-op.
         let legacyOrders = (tables["view_orders"] ?? []).contains { $0["ids"].list.contains { $0.text.hasPrefix("subtask:") } }
         guard outcome.roots > 0 || legacyOrders else { return nil }
-        outcome.tables["tasks"] = tasks + added
+        outcome.tables["tasks"] = LegacySubtaskColumn.dropped(tasks) + added
         if let orders = outcome.tables["view_orders"] {
             outcome.tables["view_orders"] = orders.map { row in
                 var row = row

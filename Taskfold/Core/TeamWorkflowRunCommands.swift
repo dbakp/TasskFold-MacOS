@@ -72,7 +72,7 @@ struct TeamWorkflowRunCommand: ReviewedTeamCommand, ReviewedTeamFileCommand, Cus
         for row in tasks {
             let id = try TeamOrganizationValue.id(row["id"])
             _ = try TeamOrganizationValue.id(row["task_generation"])
-            guard Set(row.keys).isSubset(of: TeamTaskEditScope.fields.union(["id", "user_id", "project_id", "task_generation", "completion_version", "created_at", "completed_at", "attachments", "comments", "reminders", "recurrence_end_date"])),
+            guard Set(row.keys).isSubset(of: TeamTaskEditScope.fields.union(["id", "user_id", "project_id", "task_generation", "completion_version", "created_at", "completed_at", "attachments", "comments", "reminders", "recurrence_end_date", "subtasks"])),
                   case .string(let title)? = row["title"], !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, title.count <= 10000,
                   taskIDs.insert(id).inserted, row["user_id"] == .string(account), targets.contains(row["project_id"]?.text ?? ""),
                   row["completed"] == .bool(false), row["completion_version"] == .number(0),
@@ -83,12 +83,10 @@ struct TeamWorkflowRunCommand: ReviewedTeamCommand, ReviewedTeamFileCommand, Cus
             let scope = TeamTaskEditScope(account: account, origin: origin, team: body["team_id"]!.text, project: row["project_id"]!.text, taskTypesProtocol: definition.requiresHeadingSupport ? 1 : nil, taskTypeLifecycleProtocol: definition.requiresHeadingSupport ? 1 : nil)
             _ = try scope.lifecycleBody(for: Mutation(table: "tasks", recordID: id, method: "POST", fields: row, insertOnly: true, teamTaskScope: scope))
             let tree = row["subtasks"] ?? .array([])
-            try TeamChecklist.validate(tree)
-            for child in try TeamChecklist.indexed(tree).values {
-                guard Set(child.keys).isSubset(of: ["is_heading", "id", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "deadline_date", "duration_minutes", "time_zone", "labels", "subtasks", TeamChecklist.key]),
+            for child in try TeamWorkflowTree.nodes(tree) {
+                guard Set(child.keys).isSubset(of: ["is_heading", "id", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "deadline_date", "duration_minutes", "time_zone", "labels", "subtasks"]),
                       child["completed"] == .bool(false), child["completed_at"] == nil || child["completed_at"] == .null,
                       case .string(let title)? = child["title"], !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      let token = TeamChecklist.token(child[TeamChecklist.key]), token.version == 0,
                       TeamTaskLabelsDraft(child["labels"] ?? .null).supported else { throw Self.invalid }
             }
         }
@@ -308,6 +306,26 @@ extension Backend {
                 guard Set(names).count == names.count else { throw TeamWorkflowRunCommand.invalid }; result[row.id] = names
             }
         }
+        return result
+    }
+}
+
+/// A shared workflow run sends each template task's nested `subtasks` as the template tree; the server creates every
+/// node as a child row. Only the tree's shape is checked here: object nodes with unique ids, at most 24 levels.
+enum TeamWorkflowTree {
+    static func nodes(_ value: JSON) throws -> [[String: JSON]] {
+        var result: [[String: JSON]] = [], ids = Set<String>()
+        func walk(_ value: JSON, depth: Int) throws {
+            guard case .array(let rows) = value else { throw TeamTaskEditScope.invalid }
+            guard rows.isEmpty || depth <= 24 else { throw TeamTaskEditScope.invalid }
+            for row in rows {
+                guard case .object(let fields) = row, case .string(let id)? = fields["id"],
+                      !id.isEmpty, id.utf8.count <= 128, ids.insert(id).inserted, result.count < 1000 else { throw TeamTaskEditScope.invalid }
+                result.append(fields)
+                if let children = fields["subtasks"] { try walk(children, depth: depth + 1) }
+            }
+        }
+        try walk(value, depth: 1)
         return result
     }
 }

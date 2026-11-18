@@ -69,20 +69,6 @@ final class TaskAssignmentProvenanceTests: XCTestCase {
         let saved = try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(snapshot))
         XCTAssertEqual(Provenance.Catalog(saved.tables[Provenance.table]).resolution(root:saved.tables["tasks"]![0]),.unknown(.stale))
     }
-    func testNestedPathsAreCaseSensitiveAndOwnAssignmentDoesNotInherit() throws {
-        var task = task()
-        task["subtasks"] = .array([.object(["id":.string("A"),"title":.string("Upper"),"assigned_to":.string(member)]),.object(["id":.string("a"),"title":.string("Lower")])])
-        let index = try TaskHierarchyIndex(roots:[task],projects:[],workspace:WorkspaceBinding(account:owner,generation:UUID()))
-        let upper = try XCTUnwrap(index.items.first(where:{$0.path == ["A"]}))
-        let lower = try XCTUnwrap(index.items.first(where:{$0.path == ["a"]}))
-        let catalog = Provenance.Catalog([row(node:"A",path:["A"])])
-        XCTAssertEqual(catalog.resolution(item:upper),known)
-        XCTAssertEqual(catalog.resolution(item:lower),.unassigned)
-        var moved = row(node:"A",path:["branch","A"])
-        XCTAssertEqual(Provenance.Catalog([moved]).resolution(item:upper),.unknown(.stale))
-        moved["node_key"] = .string("a")
-        XCTAssertEqual(Provenance.Catalog([moved]).resolution(item:upper),.unknown(.legacy))
-    }
     @MainActor func testGenericWritesCannotForgeReadOnlyHistoryAndPortableFilesExcludeIt() async throws {
         let row = row(); let original = Snapshot(tables:["tasks":[task()],Provenance.table:[row]])
         let backend = Backend(configuration:["URL":"https://assignment.test","Key":"public"],session:nil,persistSession:{ _ in })
@@ -135,12 +121,6 @@ extension TaskAssignmentProvenanceTests {
         let pending = Provenance.Catalog(snapshot.tables[Provenance.table])
         XCTAssertEqual(pending.resolution(root:task()),.unknown(.pending))
         XCTAssertFalse(FilterRule.predicate("assigned_by","unknown").matches(task(),today:"2026-10-21",userID:owner,labels:[],timeZone:"UTC",assignments:pending))
-        var before = task(); before["assigned_to"] = .null
-        before["subtasks"] = .array([.object(["id":.string("child"),"title":.string("Child")])])
-        var after = before; after["subtasks"] = .array([.object(["id":.string("child"),"title":.string("Child"),"assigned_to":.string(member)])])
-        snapshot = Snapshot(tables:["tasks":[before],Provenance.table:[]])
-        snapshot.apply(Mutation(table:"tasks",recordID:taskID,method:"PATCH",fields:["subtasks":after["subtasks"]]))
-        XCTAssertEqual(snapshot.tables[Provenance.table]?.first?.string("origin"),"pending")
         snapshot = Snapshot(tables:[Provenance.table:[]]); snapshot.apply(create)
         Provenance.recordLocal(create,before:nil,after:task(),snapshot:&snapshot,account:"local")
         guard case .known(let actor,_,_) = Provenance.Catalog(snapshot.tables[Provenance.table],localAccount:"local").resolution(root:task()) else { return XCTFail("Local creation retained a cloud pending marker") }
@@ -181,27 +161,6 @@ extension TaskAssignmentProvenanceTests {
         XCTAssertEqual(currentActor,"local"); XCTAssertNotEqual(currentEvent,event)
         XCTAssertNil(WorkspaceBackup.make(saved,account:"local").tables[Provenance.table])
     }
-    func testLocalNestedMovesAndRemovalUndoPreserveEventButLegacyNormalizationDoesNotInventOne() throws {
-        var t = task(); t["assigned_to"] = .null
-        t["subtasks"] = .array([.object(["id":.string("child"),"title":.string("Child"),"assigned_to":.string("local")]),.object(["id":.string("branch"),"title":.string("Branch")])])
-        var snapshot = Snapshot(); let create = Mutation(table:"tasks",recordID:taskID,method:"POST",fields:t.fields)
-        Provenance.recordLocal(create,before:nil,after:t,snapshot:&snapshot,account:"local")
-        let original = try XCTUnwrap(snapshot.tables[Provenance.table]?.first { $0.string("node_key") == "child" })
-        var moved = t; moved["subtasks"] = .array([.object(["id":.string("branch"),"title":.string("Branch"),"subtasks":.array([t["subtasks"].list[0]])])])
-        let change = Mutation(table:"tasks",recordID:taskID,method:"PATCH",fields:["subtasks":moved["subtasks"]])
-        Provenance.recordLocal(change,before:t,after:moved,snapshot:&snapshot,account:"local")
-        var removed = moved; removed["subtasks"] = .array([])
-        Provenance.recordLocal(change,before:moved,after:removed,snapshot:&snapshot,account:"local")
-        Provenance.recordLocal(change,before:removed,after:moved,snapshot:&snapshot,account:"local")
-        let restored = try XCTUnwrap(snapshot.tables[Provenance.table]?.first { $0.string("node_key") == "child" })
-        XCTAssertEqual(restored["event_id"],original["event_id"]); XCTAssertEqual(restored["node_path"],.array([.string("branch"),.string("child")])); XCTAssertTrue(restored["active"].flag)
-        var legacy = t; legacy["subtasks"] = .array([.object(["title":.string("Legacy"),"assigned_to":.string("local")])])
-        snapshot = Snapshot(); Provenance.recordLocal(change,before:legacy,after:t,snapshot:&snapshot,account:"local")
-        XCTAssertEqual(snapshot.tables[Provenance.table]?.first { $0.string("node_key") == "child" }?.string("origin"),"legacy")
-        var recurring = t; recurring["recurrence_parent_id"] = .string(UUID().uuidString)
-        snapshot = Snapshot(); Provenance.recordLocal(create,before:nil,after:recurring,snapshot:&snapshot,account:"local")
-        XCTAssertEqual(snapshot.tables[Provenance.table]?.first { $0.string("node_key") == "child" }?.string("origin"),"recurrence")
-    }
     func testParserStrictRoundTripNamesAndNoCaptureAssigner() throws {
         let context = FilterContext(userID:owner,people:[Record(["id":.string(member),"display_name":.string("Morgan Lee")])],assignments:.init([row()]))
         for expression in ["assigned-by:me","assigned by:others","assigned-by:unknown","assigned-by:\"Morgan Lee\"","NOT assigned-by:me", "assigned-by:unknown OR assigned-by:me"] {
@@ -236,24 +195,6 @@ extension TaskAssignmentProvenanceTests {
         }
         var unassigned = task(); unassigned["assigned_to"] = .null
         XCTAssertTrue(FilterRule.not(me).matches(unassigned,today:"2026-10-21",userID:owner,labels:[],timeZone:"UTC",assignments:.init([])))
-    }
-    func testCatalogHashCacheAndNestedQueryGroupingUseCurrentEvidence() throws {
-        var childRoot = task(); childRoot["assigned_to"] = .null
-        childRoot["subtasks"] = .array([.object(["id":.string("child"),"title":.string("Nested handoff"),"assigned_to":.string(member)])])
-        let childRow = row(node:"child",path:["child"])
-        XCTAssertEqual(Provenance.Catalog([row(),childRow]),Provenance.Catalog([childRow,row()]))
-        XCTAssertEqual(Set([Provenance.Catalog([row(),childRow]),Provenance.Catalog([childRow,row()])]).count,1)
-        let rule = FilterRule.and([.predicate("subtask",""),.predicate("assigned_by","me")])
-        let cache = TaskCache(); cache.update([childRoot])
-        var query = TaskQuery(scope:.all,filter:rule,filterAssignments:.init([childRow]),userID:owner,timeZone:"UTC")
-        XCTAssertEqual(cache.matching(query).map(\.title),["Nested handoff"])
-        XCTAssertEqual(cache.matching(query).count,1); let computations = cache.computationCount
-        var changed = childRow; changed["actor_id"] = .string(member); changed["event_id"] = .string(UUID().uuidString)
-        query.filterAssignments = .init([changed]); XCTAssertTrue(cache.matching(query).isEmpty); XCTAssertEqual(cache.computationCount,computations+1)
-        let context = FilterContext(userID:owner,assignments:.init([childRow]))
-        let records = try cache.hierarchyCandidates(for:rule,projects:[],userID:owner)
-        let groups = TaskGrouping.queryGroups(records,rule:.sections([rule,.predicate("assigned_by","unknown")]),by:"none",context:context,today:"2026-10-21",timeZone:"UTC")
-        XCTAssertEqual(groups.first?.tasks.map(\.title),["Nested handoff"])
     }
     func testWidgetMembershipOmitsRawActorsAndBecomesUnavailableWithoutCatalog() throws {
         let viewID = "f01dcafe-8200-4000-8000-000000000050"

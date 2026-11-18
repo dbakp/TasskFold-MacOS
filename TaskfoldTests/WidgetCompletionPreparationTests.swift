@@ -74,21 +74,6 @@ final class WidgetCompletionPreparationTests: XCTestCase {
         row["created_at"] = .string("2026-10-27T12:34:56.001Z"); snapshot.tables["tasks"] = [row]
         WidgetCompletion.prepare(&snapshot); XCTAssertNotEqual(snapshot.widgetCompletion.states[row.id]?.token, original?.token)
     }
-    func testHeadingRootRetainsLegacySignatureAndExistingChildToken() throws {
-        var root = tasks(count: 1)[0]
-        root["is_heading"] = .bool(true); root["completed"] = .bool(false)
-        root["created_at"] = .string(dates[1]); root["completed_at"] = .null
-        root["subtasks"] = .array([.object(["id": .string("a7400000-0000-4000-8000-000000000001"), "title": .string("Review the layout"), "completed": .bool(false)])])
-        let expected = try signatures([root])
-        var snapshot = Snapshot(tables: ["tasks": [root]])
-        WidgetCompletion.prepare(&snapshot)
-        XCTAssertEqual(snapshot.widgetCompletion.states[root.id]?.signature, expected[root.id])
-        XCTAssertEqual(snapshot.widgetCompletion.states.count, 2, "The productive child must retain its own actionable token")
-        let original = snapshot.widgetCompletion.states
-        root["title"] = .string("Updated reference title"); snapshot.tables["tasks"] = [root]
-        WidgetCompletion.prepare(&snapshot)
-        XCTAssertEqual(snapshot.widgetCompletion.states, original)
-    }
     func testInvalidCanonicallyEquivalentStringsKeepExactSignatureBytes() throws {
         let composed = "bad-\u{00e9}", decomposed = "bad-e\u{0301}"
         XCTAssertEqual(composed, decomposed)

@@ -136,10 +136,7 @@ enum JSON: Codable, Equatable, Sendable {
 
 struct Record: Codable, Identifiable, Equatable, Sendable {
     private var sourceIdentity = RecordSourceIdentity()
-    private var widgetChildIdentity: RecordSourceIdentity?
-    private static let widgetChildContextFields = ["task_generation", "created_at", "project_id", "section_id"]
-    private static let widgetChildInputs = Set(["id", "subtasks"] + widgetChildContextFields)
-    var fields: [String: JSON] { didSet { sourceIdentity = RecordSourceIdentity(); widgetChildIdentity = nil } }
+    var fields: [String: JSON] { didSet { sourceIdentity = RecordSourceIdentity() } }
     /// Domain equality remains fields-only; source identity is only a fast proof
     /// that two immutable copies have exactly the same authored fields.
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.fields == rhs.fields }
@@ -151,18 +148,7 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
         static func == (lhs: Self, rhs: Self) -> Bool { lhs.identity === rhs.identity }
     }
     var authoredSourceToken: SourceToken { SourceToken(identity: sourceIdentity) }
-    /// Only a proof of the raw child tree plus the exact root inputs used by
-    /// widget child signatures. It carries no task fields or action authority.
-    var widgetChildSignatureSourceToken: SourceToken { SourceToken(identity: widgetChildIdentity ?? sourceIdentity) }
-    func appendWidgetChildSignatureContext(to values: inout [JSON]) {
-        values.reserveCapacity(values.count + Self.widgetChildContextFields.count)
-        for field in Self.widgetChildContextFields { values.append(self[field]) }
-    }
-    mutating func mergeFields(_ values: [String: JSON]) {
-        let childIdentity = widgetChildIdentity ?? sourceIdentity
-        fields.merge(values) { _, new in new }
-        if Self.widgetChildInputs.isDisjoint(with: values.keys) { widgetChildIdentity = childIdentity }
-    }
+    mutating func mergeFields(_ values: [String: JSON]) { fields.merge(values) { _, new in new } }
 
     var id: String { string("id") }
     init(_ fields: [String: JSON] = [:]) { self.fields = fields }
@@ -173,11 +159,7 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     func encode(to encoder: Encoder) throws { try fields.encode(to: encoder) }
     subscript(_ key: String) -> JSON {
         get { fields[key] ?? .null }
-        set {
-            let childIdentity = widgetChildIdentity ?? sourceIdentity
-            fields[key] = newValue
-            if !Self.widgetChildInputs.contains(key) { widgetChildIdentity = childIdentity }
-        }
+        set { fields[key] = newValue }
     }
     func string(_ key: String) -> String { self[key].text }
     var title: String { string("title") }
@@ -198,7 +180,7 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
                 "completion_version": .number(0), "task_generation": .string(UUID().uuidString.lowercased()), "priority": .number(4), "project_id": project.isEmpty ? .null : .string(project),
                 "due_date": date.map { .string(Dates.day($0)) } ?? .null,
                 "created_at": .string(createdAt), "labels": .array([]),
-                "subtasks": .array([]), "comments": .array([]), "attachments": .array([]),
+                "comments": .array([]), "attachments": .array([]),
                 "reminders": .array([]), "is_recurring": .bool(false)])
     }
 }
@@ -231,7 +213,7 @@ enum TaskKind: Equatable, Sendable {
 
     static func containsTypeMetadata(_ rows: [Record]) -> Bool {
         rows.contains { row in
-            row.fields["is_heading"] != nil || (checklistNodes(row["subtasks"]).map { $0.contains { $0.fields["is_heading"] != nil } } ?? true)
+            row.fields["is_heading"] != nil
         }
     }
     /// Existing headings can still be read/edited/deleted when authoring is off.
@@ -242,30 +224,11 @@ enum TaskKind: Equatable, Sendable {
             let next = Record((existing?.fields ?? [:]).merging(change.fields) { _, value in value })
             if Self(next) == .heading && existing == nil || existing.map({ Self($0) != Self(next) }) == true { return true }
         }
-        guard let children = change.fields["subtasks"] else { return false }
-        let old = Dictionary((checklistNodes(existing?["subtasks"] ?? .null) ?? []).map { ($0.id, Self($0)) }, uniquingKeysWith: { first, _ in first })
-        guard let next = checklistNodes(children) else { return true }
-        return next.contains { row in
-            Self(row) == .heading && old[row.id] != .heading || old[row.id] == .heading && Self(row) != .heading
-        }
+        return false
     }
 
     private static func validHeading(_ row: Record) -> Bool {
         Self(row) != .unsupported && (Self(row) != .heading || row["completed"] == .bool(false) && row["completed_at"] == .null)
-    }
-    /// Iterate only recognized checklist containment, never arbitrary metadata.
-    /// Normal legacy strings/containers are preserved rather than reinterpreted.
-    static func checklistNodes(_ value: JSON) -> [Record]? {
-        if value == .null { return [] }
-        guard case .array(let list) = value else { return [] }
-        var stack = list.map { ($0, 1) }, nodes: [Record] = []
-        while let (item, depth) = stack.popLast() {
-            guard depth <= 32, nodes.count < 100_000 else { return nil }
-            guard case .object(let fields) = item else { continue }
-            let row = Record(fields); nodes.append(row)
-            if case .array(let children) = row["subtasks"] { stack.append(contentsOf: children.map { ($0, depth + 1) }) }
-        }
-        return nodes
     }
     static func permits(_ change: Mutation, existing: Record?) -> Bool {
         guard change.table == "tasks", ["POST", "PATCH"].contains(change.method) else { return true }
@@ -275,20 +238,6 @@ enum TaskKind: Equatable, Sendable {
         if change.method == "POST" || change.fields["is_heading"] != nil || TaskCompletionRevision.touches(change.fields) {
             let resulting = Record((existing?.fields ?? [:]).merging(change.fields) { _, new in new })
             guard validHeading(resulting) else { return false }
-        }
-        if let children = change.fields["subtasks"], children != existing?["subtasks"] {
-            guard let next = checklistNodes(children) else { return false }
-            for child in next {
-                guard validHeading(child) else { return false }
-                if Self(child) == .heading { guard !child.id.isEmpty, child.id.count <= 400 else { return false } }
-            }
-            // An old checklist writer cannot erase the new behavior merely by
-            // dropping an unknown field from an otherwise identical child ID.
-            let old = checklistNodes(existing?["subtasks"] ?? .null) ?? []
-            let headings = Set(old.filter { Self($0) == .heading }.map(\.id))
-            for row in next where headings.contains(row.id) {
-                guard case .bool = row["is_heading"] else { return false }
-            }
         }
         return true
     }
@@ -404,8 +353,6 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var teamTaskScope: TeamTaskEditScope? = nil
     var teamTaskBatch: TeamTaskBatch? = nil
     var teamCompletion: TeamCompletion? = nil
-    /// Opt-in personal project moves retain their durable queue identity on retry.
-    var personalTaskMove: Bool? = nil
     /// Personal workflow provenance survives queued creation and history recreation.
     var workflowRun: UUID? = nil
 }
@@ -491,7 +438,7 @@ enum TaskEdit {
     }
     fileprivate static func collectionEdit(field: String, base: JSON, desired: JSON, remote: JSON) -> JSON? {
         if field == "labels" { return labelMembershipEdit(base: base, desired: desired, remote: remote) }
-        guard ["comments", "attachments", "subtasks"].contains(field) else { return nil }
+        guard ["comments", "attachments"].contains(field) else { return nil }
         // Supported legacy rows use null for an empty list. A captured null is
         // known-empty; an absent mutation baseline is still unknown and guarded.
         let values = [base, desired, remote].map { $0 == .null ? JSON.array([]) : $0 }
@@ -503,7 +450,6 @@ enum TaskEdit {
         // Keep exact representations when no merge is necessary.
         if desired == base { return remote }
         if remote == base || remote == desired { return desired }
-        if field == "subtasks", let merged = SubtaskTree.rebased(base: values[0], desired: values[1], remote: values[2]) { return merged }
         return keepingLocal(base: values[0], desired: values[1], remote: values[2])
     }
     fileprivate static func labelMembershipEdit(base: JSON, desired: JSON, remote: JSON) -> JSON? {
@@ -615,19 +561,6 @@ struct SyncConflict: Identifiable {
             if remote.completed, mutation.fields["completed"] == .bool(true) {
                 cancelUnacceptedSuccessors(in: &result)
             }
-            if mutation.personalTaskMove == true, mutation.teamTaskScope == nil,
-               let replacement = result.pending.firstIndex(where: { $0.id == mutation.id }) {
-                // Explicit review is a fresh decision, never a changed body
-                // under the original receipt identity. If it is already in the
-                // desired project, retain only the other authored root edits.
-                result.pending[replacement].id = UUID()
-                if result.pending[replacement].fields["project_id"] == remote["project_id"] {
-                    result.pending[replacement].fields.removeValue(forKey: "project_id")
-                    result.pending[replacement].baseline?.removeValue(forKey: "project_id")
-                    result.pending[replacement].personalTaskMove = nil
-                    if result.pending[replacement].fields.isEmpty { result.pending.remove(at: replacement) }
-                }
-            }
         } else {
             result.pending.remove(at: index)
             if let dependentAssignment { result.pending.removeAll { $0.id == dependentAssignment } }
@@ -658,7 +591,7 @@ struct SyncConflict: Identifiable {
             if laterMutationIDs.contains(local.id), local.method == "PATCH",
                let current = result.tables["tasks"]?.first(where: { $0.id.lowercased() == mutation.recordID.lowercased() }),
                TaskGeneration.permitsLocalAction(local, existing: current) {
-                for field in ["labels", "comments", "attachments", "subtasks"] {
+                for field in ["labels", "comments", "attachments"] {
                     guard let desired = local.fields[field], let baseline = local.baseline?[field],
                           let merged = TaskEdit.collectionEdit(field: field, base: baseline, desired: desired, remote: current[field]) else { continue }
                     // Reverse only this edit's delta to reconstruct its guard.
@@ -814,17 +747,17 @@ struct Snapshot: Codable, Equatable, Sendable {
         }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
-            guard var projected = try? PersonalTaskMove.projectedFields(change, onto: rows[i]) else { return }
+            guard var projected = try? TaskAssignment.projectedFields(change, onto: rows[i]) else { return }
             if change.table == "tasks", change.method == "PATCH" {
                 // Read projection preserves remote additions beside the queued delta.
                 // The original request/baseline remains unchanged for guarded delivery.
-                for field in ["subtasks", "attachments"] {
+                for field in ["attachments"] {
                     if let base = change.baseline?[field], let desired = projected[field] {
                         projected[field] = TaskEdit.keepingLocal(field: field, base: base, desired: desired, remote: rows[i][field])
                     }
                 }
             }
-            rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(projected, to: rows[i]) : Record(rows[i].fields.merging(projected) { _, new in new })
+            rows[i] = change.table == "tasks" ? LegacySubtaskColumn.dropped(TaskCompletionRevision.applying(LegacySubtaskColumn.dropped(projected), to: rows[i])) : Record(rows[i].fields.merging(projected) { _, new in new })
         } else {
             var fields = change.fields
             if change.table == WorkflowTemplate.table, change.method == "PATCH" {
@@ -832,8 +765,14 @@ struct Snapshot: Codable, Equatable, Sendable {
                 fields = (change.baseline ?? [:]).merging(fields) { _, desired in desired }
                 fields["id"] = .string(change.recordID)
             }
-            if change.table == "tasks", change.method == "POST" { fields["completion_version"] = .number(0) }
+            if change.table == "tasks", change.method == "POST" { fields["completion_version"] = .number(0); fields = LegacySubtaskColumn.dropped(fields) }
             rows.append(Record(fields))
+        }
+        // A team parent's section change moves its subtasks on the server in the same edit; show that here too.
+        if change.table == "tasks", change.method == "PATCH", change.teamTaskScope != nil, let section = change.fields["section_id"],
+           rows.contains(where: { TaskTree.parentKey(of: $0) == TaskTree.key(change.recordID) }) {
+            let moved = Set(TaskTree(rows).descendants(of: change.recordID).map { TaskTree.key($0.id) })
+            for index in rows.indices where moved.contains(TaskTree.key(rows[index].id)) { rows[index]["section_id"] = section }
         }
         tables[change.table] = rows
         if change.table == "tasks" { TaskAssignmentProvenance.invalidate(before:assignmentBefore,after:rows.first { $0.id == change.recordID },snapshot:&self) }
@@ -855,7 +794,8 @@ struct Snapshot: Codable, Equatable, Sendable {
             for queued in pending where queued.table == change.table { apply(queued) }
             return true
         }
-        guard let saved else { return true }
+        guard var saved else { return true }
+        if change.table == "tasks" { saved = LegacySubtaskColumn.dropped(saved) }
         var rows = tables[change.table] ?? []
         if let index = rows.firstIndex(where: { $0.id.lowercased() == change.recordID.lowercased() }) {
             var confirmed = saved; confirmed["id"] = .string(rows[index].id); rows[index] = confirmed
@@ -886,7 +826,7 @@ struct Snapshot: Codable, Equatable, Sendable {
         // actor, including an unobserved remote A→B→A assignment cycle.
         if remote["tasks"] != nil && remote[TaskAssignmentProvenance.table] == nil { tables.removeValue(forKey:TaskAssignmentProvenance.table) }
         for (name, rows) in remote {
-            tables[name] = AuthoredValueComparison.reusingExactRows(rows, from: tables[name] ?? [], identityField: name == "profiles" ? "user_id" : "id")
+            tables[name] = AuthoredValueComparison.reusingExactRows(name == "tasks" ? LegacySubtaskColumn.dropped(rows) : rows, from: tables[name] ?? [], identityField: name == "profiles" ? "user_id" : "id")
         }
         TaskNodeActivity.discardUnavailable(in: &tables, remote: remote)
         for change in pending { apply(change) }
@@ -954,6 +894,7 @@ extension Snapshot {
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
+        if let tasks = tables["tasks"] { tables["tasks"] = LegacySubtaskColumn.dropped(tasks) }
         pending = try row.decode([Mutation].self, forKey: .pending)
         teamWorkspace = try row.decodeIfPresent(TeamWorkspaceCache.self, forKey:.teamWorkspace)
         // Optional compatibility metadata is not a privacy boundary or authored work.
@@ -1547,15 +1488,12 @@ struct EditHistory: Sendable {
                 continue
             }
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
-                guard let projected = try? PersonalTaskMove.projectedFields(change, onto: old) else { undo = []; redo = []; return }
+                guard let projected = try? TaskAssignment.projectedFields(change, onto: old) else { undo = []; redo = []; return }
                 var fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
-                if change.personalTaskMove == true, change.method == "PATCH", change.fields["project_id"] != old["project_id"] {
-                    fields["assigned_to"] = old["assigned_to"]; fields["section_id"] = old["section_id"]
-                }
                 if change.table == "tasks", change.method == "PATCH", change.fields["is_heading"] != nil, old["is_heading"] == .null {
                     fields["is_heading"] = .bool(false) // An explicit ordinary task, not removal of an unknown field.
                 }
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(projected, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope, personalTaskMove: change.personalTaskMove))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(projected, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope))
                 var forward = change
                 if change.method == "PATCH" { forward.baseline = change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: change.fields, from: old) : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
                 if let scope = change.teamTaskScope { forward.baseline?["project_id"] = .string(scope.project) }
@@ -1567,10 +1505,6 @@ struct EditHistory: Sendable {
             }
             if var scope = change.teamTaskScope, change.method == "DELETE", !inverse.isEmpty {
                 scope.restoreRequest = change.id
-                inverse[inverse.count - 1].teamTaskScope = scope
-            }
-            if var scope = change.teamTaskScope, change.method == "PATCH", change.fields["subtasks"] != nil, !inverse.isEmpty {
-                scope.checklistRestoreRequest = change.id
                 inverse[inverse.count - 1].teamTaskScope = scope
             }
             if let scope = change.teamTaskScope, !inverse.isEmpty, inverse[inverse.count - 1].method == "PATCH" {
@@ -1955,10 +1889,15 @@ final class TaskCache {
         if key == hierarchyKey, let hierarchyResult { return try hierarchyResult.get() }
         let rows = projects.map { Record(["id": .string($0.id), "name": .string($0.name), "parent_id": $0.parentID.map(JSON.string) ?? .null, "is_archived": .bool($0.unavailable)]) }
         let result: Result<[Record], FilterFailure>
-        do {
-            let index = try TaskHierarchyIndex(roots: tasks, projects: rows, workspace: WorkspaceBinding(account: userID, generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
-            result = .success(index.records(in: .all, includeCompleted: true))
-        } catch { result = .failure(FilterFailure(message: error.localizedDescription)) }
+        // Subtasks are rows: every task in a readable project (or with none) is a candidate.
+        let groups = Dictionary(grouping: rows, by: \.id), hidden = ProjectOrganization.archivedIDs(in: rows)
+        if userID.isEmpty { result = .failure(FilterFailure(message: "Open a workspace before filtering subtasks.")) }
+        else {
+            result = .success(tasks.filter { task in
+                let project = task.string("project_id")
+                return project.isEmpty || (groups[project]?.count == 1 && !hidden.contains(project))
+            })
+        }
         hierarchyKey = key; hierarchyResult = result
         return try result.get()
     }
@@ -1966,11 +1905,6 @@ final class TaskCache {
         if rule.needsChildCandidates { return try hierarchyRecords(projects: projects, userID: userID) }
         let visible = Set(Dictionary(grouping: projects, by: \.id).filter { $0.value.count == 1 && !$0.value[0].unavailable }.keys)
         let roots = tasks.filter { $0.string("project_id").isEmpty || visible.contains($0.string("project_id")) }
-        if rule.usesParentPredicate {
-            for root in roots where root["subtasks"] != .null {
-                guard FilterRule.supportedParentShape(root) else { throw FilterFailure(message: "A checklist uses an unsupported format. Open its parent task to review it.") }
-            }
-        }
         return roots
     }
     @discardableResult func update(_ rows: [Record]) -> Bool {
@@ -2084,20 +2018,8 @@ enum DayPlacement {
         change.fields["user_id"] = .string(account)
         return change
     }
-    /// Existing project orders may contain only heading roots. Expand those
-    /// sparse anchors without overriding any child positions explicitly saved.
-    static func arrangedOutline(_ tasks: [Record], ids: [String]) -> [Record] {
-        let explicit = Set(ids)
-        let anchors = Set(tasks.compactMap { task -> String? in
-            if let root = SubtaskTree.referencePath(task.id)?.first { return root }
-            return TaskKind(task) == .heading ? task.id : nil
-        })
-        let groups = Dictionary(grouping: tasks) { SubtaskTree.referencePath($0.id)?.first ?? $0.id }
-        let expanded = ids.flatMap { id in
-            [id] + (anchors.contains(id) ? (groups[id] ?? []).filter { !explicit.contains($0.id) }.map(\.id) : [])
-        }
-        return arranged(tasks, ids: expanded)
-    }
+    /// Subtasks are rows with their own `child_order`, so a project order is arranged like any other.
+    static func arrangedOutline(_ tasks: [Record], ids: [String]) -> [Record] { arranged(tasks, ids: ids) }
     static let table = "view_orders"
     static func ordered(_ tasks: [Record], ids: [String]) -> [Record] {
         let ranks = Dictionary(ids.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
@@ -2119,14 +2041,6 @@ enum DayPlacement {
             if a.rank != b.rank { return a.rank < b.rank }
             return a.position < b.position
         }.map(\.row)
-    }
-    static func hierarchyChanges(task: Record, day: String, orderedIDs: [String], before: String?, roots: [Record], projects: [Record], workspace: WorkspaceBinding, calendar: Calendar = .current) throws -> [Mutation] {
-        guard SubtaskTree.referencePath(task.id) != nil, !task.completed, Dates.parse(day, calendar: calendar) != nil, before != task.id else { return [] }
-        let fields = TaskPlanner.dayFields(task: task, day: day, calendar: calendar)
-        let changes = try TaskSelectionPlan.changes([.init(task: task, action: .patch(fields), workspace: workspace)], accessibleRoots: roots, projects: projects, workspace: workspace, calendar: calendar)
-        var ids = orderedIDs.filter { $0 != task.id }
-        ids.insert(task.id, at: before.flatMap { ids.firstIndex(of: $0) } ?? ids.count)
-        return changes + [Mutation(table: table, recordID: day, method: "PATCH", fields: ["id": .string(day), "ids": .array(ids.map(JSON.string))])]
     }
     /// Keeps a drop inside the dragged task's priority band. A slot among other priorities snaps to the
     /// end of the task's own band (which is also where a newly re-prioritised task lands).
@@ -2237,7 +2151,7 @@ enum TaskAssignment {
     /// A no-op project field is a server-checked context fence, not a second move.
     /// Existing queues without this pair retain their original representation.
     static func scopedProject(_ change: Mutation) -> JSON? {
-        guard change.table == "tasks", change.method == "PATCH", change.personalTaskMove != true, change.teamTaskScope == nil,
+        guard change.table == "tasks", change.method == "PATCH", change.teamTaskScope == nil,
               change.fields["assigned_to"] != nil,
               let project = change.fields["project_id"], let baseline = change.baseline,
               let originalProject = baseline["project_id"], baseline["task_generation"] != nil,
@@ -2263,13 +2177,12 @@ enum TaskAssignment {
     static func normalizedChanges(_ changes: [Mutation], existing: (String) -> Record?, markMove: (Mutation, Record?) -> Mutation = { value, _ in value }) throws -> [Mutation] {
         guard changes.contains(where: { $0.table == "tasks" && $0.method == "PATCH" && ($0.fields["project_id"] != nil || $0.fields["assigned_to"] != nil) }) else { return changes }
         var rows: [String: Record] = [:], loaded = Set<String>(), result: [Mutation] = []
-        var budget = TaskAssignmentTree.Budget()
         for input in changes {
             guard input.table == "tasks" else { result.append(input); continue }
             if loaded.insert(input.recordID).inserted, let row = existing(input.recordID) { rows[input.recordID] = row }
             var current = rows[input.recordID]
             let change = markMove(input, current)
-            for output in try mutations(change, existing: current, budget: &budget) {
+            for output in try mutations(change, existing: current) {
                 result.append(output)
                 var projection = Snapshot(tables: ["tasks": current.map { [$0] } ?? []])
                 projection.apply(TaskCompletionRevision.capturing(output, existing: current))
@@ -2284,7 +2197,6 @@ enum TaskAssignment {
     static func replayingHistory(_ changes: [Mutation], existing: (String, String) -> Record?, markMove: (Mutation, Record?) -> Mutation = { value, _ in value }) throws -> [Mutation] {
         let projectRoots = Set(changes.filter { $0.table == "tasks" && $0.method == "PATCH" && $0.fields["project_id"] != nil }.map(\.recordID))
         var rows: [String: Record] = [:], loaded = Set<String>(), result: [Mutation] = []
-        var budget = TaskAssignmentTree.Budget()
         for change in changes {
             let tracksProject = change.table == "tasks" && projectRoots.contains(change.recordID)
             if tracksProject, loaded.insert(change.recordID).inserted, let row = existing("tasks", change.recordID) { rows[change.recordID] = row }
@@ -2306,7 +2218,7 @@ enum TaskAssignment {
             } else if tracksProject, change.method == "PATCH" { throw staleMove }
             guard tracksProject else { result.append(next); continue }
             var projected = current
-            for output in try mutations(markMove(next, current), existing: current, budget: &budget) {
+            for output in try mutations(markMove(next, current), existing: current) {
                 result.append(output)
                 var projection = Snapshot(tables: ["tasks": projected.map { [$0] } ?? []])
                 projection.apply(TaskCompletionRevision.capturing(output, existing: projected))
@@ -2316,31 +2228,25 @@ enum TaskAssignment {
         }
         return result
     }
-    static func clearChildren(_ value: JSON) throws -> JSON {
-        try TaskAssignmentTree.cleared(value, removing: false)
-    }
-    static func clearingAssignments(_ task: Record, budget: inout TaskAssignmentTree.Budget) throws -> Record {
-        var result = task
-        if let tree = task.fields["subtasks"] { result["subtasks"] = try TaskAssignmentTree.cleared(tree, removing: false, budget: &budget) }
-        result["assigned_to"] = .null
-        return result
-    }
-    static func movingDraft(_ task: Record, to project: JSON, budget: inout TaskAssignmentTree.Budget) throws -> Record {
-        guard project == .null || { if case .string(let id) = project { return !id.isEmpty }; return false }() else { throw TaskAssignmentTree.invalid }
-        guard !AuthoredValueComparison.exactJSON(task["project_id"], project) else { return task }
-        var result = try clearingAssignments(task, budget: &budget)
-        result["project_id"] = project; result["section_id"] = .null
-        return result
-    }
+    static var invalidProject: AppFailure { AppFailure(message: "Choose a valid project. Your task is unchanged.") }
+    /// A project-moved draft: the move clears the assignment and the section (subtasks are rows and move with it).
     static func movingDraft(_ task: Record, to project: JSON) throws -> Record {
-        var budget = TaskAssignmentTree.Budget(); return try movingDraft(task, to: project, budget: &budget)
+        guard project == .null || { if case .string(let id) = project { return !id.isEmpty }; return false }() else { throw invalidProject }
+        guard !AuthoredValueComparison.exactJSON(task["project_id"], project) else { return task }
+        var result = task
+        result["assigned_to"] = .null; result["project_id"] = project; result["section_id"] = .null
+        return result
+    }
+    /// What a change does to a row on screen: a scoped assignment keeps its project field as a fence only.
+    static func projectedFields(_ change: Mutation, onto old: Record) throws -> [String: JSON] {
+        guard permitsScope(change, current: old) else { throw staleMove }
+        var fields = change.fields
+        if scopedProject(change) != nil { fields.removeValue(forKey: "project_id") }
+        return fields
     }
     /// The server clears assignments on a project move. Send an explicit new
     /// assignment after the move so both writes obey the existing membership guard.
     static func mutations(_ change: Mutation, existing: Record?) throws -> [Mutation] {
-        var budget = TaskAssignmentTree.Budget(); return try mutations(change, existing: existing, budget: &budget)
-    }
-    static func mutations(_ change: Mutation, existing: Record?, budget: inout TaskAssignmentTree.Budget) throws -> [Mutation] {
         if scopedProject(change) != nil {
             guard let existing, permitsScope(change, current: existing) else { throw staleMove }
             return [change]
@@ -2359,28 +2265,11 @@ enum TaskAssignment {
             return [assignment]
         }
         var move = change
-        if change.personalTaskMove == true {
-            // The row-first server clears current assignments. Do not upload
-            // an old whole checklist just to move a root; predict it locally.
-            move.fields.removeValue(forKey: "assigned_to")
-            if let authored = change.fields["subtasks"] {
-                let cleared = try TaskAssignmentTree.cleared(authored, removing: true, budget: &budget)
-                let baseline = try TaskAssignmentTree.cleared(change.baseline?["subtasks"] ?? existing["subtasks"], removing: true, budget: &budget)
-                if AuthoredValueComparison.exactJSON(cleared, baseline) {
-                    // The editor only cleared assignments. Let the server clear its
-                    // current tree, including newer child edits absent from the draft.
-                    move.fields.removeValue(forKey: "subtasks")
-                    move.baseline?.removeValue(forKey: "subtasks")
-                    _ = try TaskAssignmentTree.cleared(existing["subtasks"], removing: true, budget: &budget)
-                } else { move.fields["subtasks"] = cleared }
-            } else { _ = try TaskAssignmentTree.cleared(existing["subtasks"], removing: true, budget: &budget) }
-        } else {
-            move.fields["assigned_to"] = .null
-            if move.fields["section_id"] == nil { move.fields["section_id"] = .null }
-            move.fields["subtasks"] = try TaskAssignmentTree.cleared(change.fields["subtasks"] ?? existing["subtasks"], removing: false, budget: &budget)
-        }
+        move.fields["assigned_to"] = .null
+        if move.fields["section_id"] == nil { move.fields["section_id"] = .null }
+        move.fields.removeValue(forKey: "subtasks"); move.baseline?.removeValue(forKey: "subtasks")
         if move.baseline != nil {
-            for field in ["assigned_to", "subtasks", "section_id"] where move.fields[field] != nil && move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
+            for field in ["assigned_to", "section_id"] where move.fields[field] != nil && move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
         }
         if let person = change.fields["assigned_to"], !person.text.isEmpty {
             guard project != .null || sameIdentity(person, existing["user_id"]) else { throw AppFailure(message: "Inbox tasks can only be assigned to the task’s owner. Your task is unchanged.") }
@@ -2539,31 +2428,10 @@ enum TaskCompletion {
         }
         if let count = pattern["count"]?.integer, count > 1 { pattern["count"] = .number(Double(count - 1)) }
         copy["recurrence_pattern"] = .object(pattern)
-        let old = Dates.parse(task.string("due_date"), calendar: calendar)
-        let delta = old.flatMap { calendar.dateComponents([.day], from: $0, to: next).day } ?? 0
-        copy["subtasks"] = .array(successorChildren(task["subtasks"].list, root: nextID, path: "", delta: delta, calendar: calendar))
+        // Subtask rows of the next occurrence are planned by `TaskTree.successorRows`.
+        copy.fields.removeValue(forKey: "subtasks")
         changes.append(Mutation(table: "tasks", recordID: nextID, method: "POST", fields: copy.fields, insertOnly: true))
         return changes
-    }
-    private static func successorChildren(_ values: [JSON], root: String, path: String, delta: Int, calendar input: Calendar, depth: Int = 0) -> [JSON] {
-        guard depth < 24 else { return values }
-        return values.enumerated().map { index, value in
-            guard case .object(let fields) = value else { return value }
-            var child = Record(fields)
-            let path = path + "/" + String(index) + ":" + child.id
-            child["id"] = .string(successorID(parent: root + path, day: "child"))
-            child.fields.removeValue(forKey: TeamChecklist.key)
-            child["completed"] = .bool(false); child["completed_at"] = .null; child["comments"] = .array([])
-            child["deadline_date"] = .null; child["notification_sent_at"] = .null
-            child["reminder_specs"] = .array(ReminderSpec.successorRows(ReminderSpec.rows(child)))
-            let calendar = calendar(for: child, input: input)
-            if let old = Dates.parse(child.string("due_date"), calendar: calendar), let next = calendar.date(byAdding: .day, value: delta, to: old) {
-                child["due_date"] = .string(TaskPlanner.dayKey(next, calendar: calendar)); child["scheduled_at"] = .null
-                child.fields = TaskPlanning.fields(child.fields, existing: nil, calendar: calendar)
-            }
-            if case .array(let nested) = child["subtasks"] { child["subtasks"] = .array(successorChildren(nested, root: root, path: path, delta: delta, calendar: calendar, depth: depth + 1)) }
-            return .object(child.fields)
-        }
     }
 }
 
@@ -2667,9 +2535,7 @@ enum WidgetProjection {
         try checking(.pulse)
         let pulse = try pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar, children: pulseChildren, checking: checking)
         try checking(.tasks)
-        let nested = WidgetCompletion.childItems(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account).filter { TaskKind.mayComplete($0.record) && !$0.record.completed }
         let reading = ProductiveTaskReading(tasks: tasks)
-        let nestedByID = Dictionary(nested.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         func projected(_ task: Record, parent: String? = nil, routeContext: String? = nil) -> JSON {
             let project = projects[task.string("project_id")]
@@ -2682,22 +2548,15 @@ enum WidgetProjection {
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        var incomplete = reading.incomplete
+        let incomplete = reading.incomplete
         let rowTree = tasks.contains(where: ChildRowFilterScope.isChildRow) ? TaskTree(tasks) : nil
         let rows = try reading.presentation.filter { TaskKind.mayComplete($0) && !$0.completed }.compactMap { task -> JSON? in
             try checking(.task)
-            if SubtaskTree.referencePath(task.id) != nil {
-                guard let item = nestedByID[task.id] else { incomplete = true; return nil }
-                return projected(task, parent: item.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext(item))
-            }
             // A child row is a plain widget row; its parent's title is the optional context line.
             return projected(task, parent: rowTree.flatMap { ChildRowDisplay.parentTitle(of: task, tree: $0) })
         }
-        let filterChildren = WidgetCompletion.hasChildFilter(Snapshot(tables: ["saved_views": savedViews])) ? nested : []
-        let nestedRows = try filterChildren.map { item in
-            try checking(.task)
-            return projected(item.record, parent: item.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext(item))
-        }
+        // Subtasks are rows, so they are in `tasks`; `nestedTasks` stays for older widget readers and is empty.
+        let nestedRows: [JSON] = []
         try checking(.capacity)
         let capacity = try capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar, checking: checking)
         var payload: [String: JSON] = ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacity]
@@ -3171,7 +3030,7 @@ enum WidgetRecordLink {
               url.pathComponents.count == 2, !url.lastPathComponent.isEmpty,
               items.filter({ $0.name == "account" }).map(\.value) == [account] else { return false }
         if child {
-            guard SubtaskTree.referencePath(url.lastPathComponent) != nil, items.count == 2,
+            guard LegacySubtaskReference.path(url.lastPathComponent) != nil, items.count == 2,
                   let context = items.first(where: { $0.name == "context" })?.value,
                   context.count == 64, context.allSatisfy({ "0123456789abcdef".contains($0) }) else { return false }
         } else if items.count != 1 { return false }
@@ -3182,21 +3041,11 @@ enum WidgetRecordLink {
 
 extension WidgetRecordLink {
     /// Completed children still belong in the list containing their actual root.
-    static func containingTask(_ task: Record, roots: [Record]) -> Record? {
-        guard let path = SubtaskTree.referencePath(task.id) else { return task }
-        let matches = roots.filter { $0.id == path[0] }
-        return matches.count == 1 ? matches[0] : nil
-    }
+    static func containingTask(_ task: Record, roots: [Record]) -> Record? { task }
     static func task(_ url: URL, roots: [Record], projects: [Record], workspace: WorkspaceBinding) throws -> Record {
         guard allows(url, account: workspace.account, available: true), url.scheme == "taskfold", url.host == "task" else { throw WidgetActionFailure("This task widget is unavailable in your current workspace.") }
-        let id = url.lastPathComponent
-        if let path = SubtaskTree.referencePath(id) {
-            let selectedRoots = roots.filter { $0.id == path[0] }
-            guard selectedRoots.count == 1 else { throw WidgetActionFailure("This subtask is no longer available.") }
-            let index = try TaskHierarchyIndex(roots: selectedRoots, projects: projects, workspace: workspace)
-            guard let item = index.item(id), WidgetCompletion.routeContext(item) == URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "context" })?.value else { throw WidgetActionFailure("This subtask moved or was replaced. Refresh its widget.") }
-            return item.record
-        }
+        // An older widget's subtask link names the converted row.
+        let id = LegacyTaskReference.resolve(url.lastPathComponent, enabled: true)
         let selectedRoots = roots.filter { $0.id == id }
         guard selectedRoots.count == 1, let task = selectedRoots.first,
               task.string("project_id").isEmpty || (projects.filter { $0.id == task.string("project_id") }.count == 1 && !ProjectOrganization.archived(task.string("project_id"), in: projects)) else { throw WidgetActionFailure("This task is no longer accessible.") }

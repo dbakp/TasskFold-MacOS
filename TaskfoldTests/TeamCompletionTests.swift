@@ -757,7 +757,6 @@ final class TeamCompletionTests: XCTestCase {
         XCTAssertTrue(created.recorded);XCTAssertFalse(created.replayed)
         XCTAssertEqual(created.task?["attachments"],draft.record["attachments"])
         XCTAssertEqual(created.task?["source_metadata"].object["future"],draft.record["source_metadata"].object["future"])
-        XCTAssertEqual(created.task?["subtasks"].list.first?.object["description"],draft.record["subtasks"].list.first?.object["description"])
         XCTAssertEqual(created.task?["recurrence_parent_id"],.null)
         let local=Snapshot(tables:["projects":[Record(["id":.string(draft.scope.project)])],"tasks":[draft.original.teamCompletion!.source]])
         let installed=try XCTUnwrap(created.installing(in:local))
@@ -789,10 +788,6 @@ final class TeamCompletionTests: XCTestCase {
             var bad=reply,task=reply["task"]!.object;task[key]=value;bad["task"] = .object(task)
             XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command),key)
         }
-        var bad=reply,task=reply["task"]!.object,child=task["subtasks"]!.list[0].object
-        child["taskfold_completion_v1"] = .object(["epoch":.string("wrong"),"version":.number(0)])
-        task["subtasks"] = .array([.object(child)]);bad["task"] = .object(task)
-        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
     }
     func testSavedDraftCopyRetryAcceptsCurrentEditedRowAndUnavailableDeletion() throws {
         let(draft,command,fixture)=try draftCopyFixture()
@@ -897,10 +892,6 @@ final class TeamCompletionTests: XCTestCase {
             var bad=reply,task=reply["task"]!.object;task[key]=value;bad["task"] = .object(task)
             XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
         }
-        var bad=reply,task=reply["task"]!.object,child=task["subtasks"]!.list[0].object
-        child["taskfold_completion_v1"] = .object(["epoch":.string(UUID().uuidString.lowercased()),"version":.number(0)])
-        task["subtasks"] = .array([.object(child)]);bad["task"] = .object(task)
-        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
     }
 
     func testAccountRemovalStopsDelayedSavedDraftCopyPreparation() throws {

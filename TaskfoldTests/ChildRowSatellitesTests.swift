@@ -24,7 +24,7 @@ final class ChildRowSatellitesTests: XCTestCase {
     // MARK: Legacy references (widgets, Spotlight, Handoff, list orders)
 
     func testLegacyReferenceResolvesToDeterministicRowID() {
-        let reference = SubtaskTree.reference(parent: SubtaskTree.reference(parent: root, key: "a"), key: "b")
+        let reference = LegacySubtaskReference.reference([root, "a", "b"])
         let expected = LegacySubtaskConversion.legacyChildID(root: root, path: ["a", "b"])
         XCTAssertEqual(LegacyTaskReference.resolve(reference, enabled: true), expected)
         XCTAssertEqual(LegacyTaskReference.resolve(reference, enabled: false), reference, "Flag off keeps the legacy id")
@@ -33,7 +33,7 @@ final class ChildRowSatellitesTests: XCTestCase {
     }
 
     func testLegacyWidgetLinkRemapsToRowLinkInSameAccount() throws {
-        let reference = SubtaskTree.reference(parent: root, key: "a")
+        let reference = LegacySubtaskReference.reference([root, "a"])
         var allowed = CharacterSet.urlPathAllowed; allowed.remove(charactersIn: "/?#%")
         let encoded = reference.addingPercentEncoding(withAllowedCharacters: allowed)!
         let url = URL(string: "taskfold://task/" + encoded + "?account=acct&context=" + String(repeating: "a", count: 64))!
@@ -46,7 +46,7 @@ final class ChildRowSatellitesTests: XCTestCase {
     }
 
     func testListOrderIDsRemapWithoutDuplicates() {
-        let reference = SubtaskTree.reference(parent: root, key: "a")
+        let reference = LegacySubtaskReference.reference([root, "a"])
         let mapped = LegacySubtaskConversion.legacyChildID(root: root, path: ["a"])
         XCTAssertEqual(LegacyTaskReference.remapIDs(.array([.string(root), .string(reference), .string(mapped)]), enabled: true),
                        .array([.string(root), .string(mapped)]))
@@ -67,7 +67,7 @@ final class ChildRowSatellitesTests: XCTestCase {
         XCTAssertEqual(top[0].object["subtasks"]?.list.first?.object["title"]?.text, "Deep")
         XCTAssertNil(top[0].object["parent_id"], "The template document keeps no row links")
 
-        let changes = try template.instantiate(account: "u", name: "", childRows: true, checkCancellation: {})
+        let changes = try template.instantiate(account: "u", name: "", checkCancellation: {})
         let created = changes.filter { $0.table == "tasks" }.map { Record($0.fields) }
         XCTAssertEqual(created.count, 4)
         let byTitle = Dictionary(uniqueKeysWithValues: created.map { ($0.title, $0) })
@@ -79,8 +79,8 @@ final class ChildRowSatellitesTests: XCTestCase {
         XCTAssertNoThrow(try TaskTree.validate(changes.filter { $0.table == "tasks" }, tasks: []))
         XCTAssertEqual(created.map(\.title), ["Launch", "First", "Deep", "Second"], "Parents are created before their children")
 
-        let legacy = try template.instantiate(account: "u", name: "", childRows: false, checkCancellation: {})
-        XCTAssertEqual(legacy.filter { $0.table == "tasks" }.count, 1, "Flag off keeps nested JSON subtasks")
+        let legacy = try template.instantiate(account: "u", name: "", nestSubtasks: true, checkCancellation: {})
+        XCTAssertEqual(legacy.filter { $0.table == "tasks" }.count, 1, "nestSubtasks keeps the nested tree on one row")
     }
 
     func testProjectTemplateDoesNotRepeatChildrenAtTopLevel() throws {
@@ -180,13 +180,13 @@ final class ChildRowSatellitesTests: XCTestCase {
 
     func testLocalWorkspaceConvertsOnceWithMarker() throws {
         let tree = JSON.array([node("a", "Alpha", [node("b", "Beta")]), .string("Plain item")])
-        let reference = SubtaskTree.reference(parent: root, key: "a")
+        let reference = LegacySubtaskReference.reference([root, "a"])
         let tables: [String: [Record]] = ["tasks": [row(root, title: "Root", subtasks: tree)],
                                          "view_orders": [Record(["id": .string("group:p:none"), "user_id": .string("u"), "ids": .array([.string(root), .string(reference)])])]]
         let outcome = try XCTUnwrap(LocalChildRows.convert(tables, now: Date(timeIntervalSince1970: 0)))
         XCTAssertEqual(outcome.roots, 1); XCTAssertEqual(outcome.rows, 3)
         let tasks = outcome.tables["tasks"]!
-        XCTAssertEqual(tasks.first { $0.id == root }?["subtasks"], .array([]))
+        XCTAssertNil(tasks.first { $0.id == root }?.fields["subtasks"], "The key is removed, not emptied")
         let alpha = LegacySubtaskConversion.legacyChildID(root: root, path: ["a"])
         XCTAssertEqual(tasks.first { $0.id == alpha }?.string("parent_id"), root)
         XCTAssertEqual(tasks.first { $0.title == "Beta" }?.string("parent_id"), alpha)

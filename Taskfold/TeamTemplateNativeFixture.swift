@@ -800,8 +800,7 @@ enum FullSchemaNativeFixture {
         let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:externalConfiguration ?? root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["restore-queue","restore-loss","restore-check","restore-verify","restore-undo","restore-undo-again","restore-redo","restore-finish","restore-final","audio-project-queue","audio-project-loss","audio-project-replay","audio-project-verify","step-ui","step-queue","step-loss","step-replay","step-verify","step-history","step-history-verify","step-close-queue","step-close","step-close-verify","audio-cleanup","audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
-              (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
+              ["audio-project-queue","audio-project-loss","audio-project-replay","audio-project-verify","audio-cleanup","audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify"].contains(phase) else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
         if protectedStorageRequested {
             guard c.protectedStorage == true, c.email == "native-audio-" + c.nonce.uuidString.lowercased() + "@example.invalid" else { throw AppFailure(message: "Invalid protected test scope") }
             if let externalConfiguration {
@@ -822,7 +821,7 @@ enum FullSchemaNativeFixture {
         return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
     }
     @MainActor static func backend()->Backend {
-        FullSchemaNativeNetwork.offline = !["restore-queue","step-ui","step-queue","capture","initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
+        FullSchemaNativeNetwork.offline = !["capture","initial"].contains(phase)
         let c=try? configuration()
         let saved=protectedStorageRequested ? nil : (try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
         let session=protectedStorageRequested ? SecureSession.read() : (saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil)
@@ -859,22 +858,12 @@ enum FullSchemaNativeNetwork {
         while lock.withLock({holdRead}) {try Task.checkCancellation();try await Task.sleep(for:.milliseconds(10))}
     }
 
-    private static var restoreAuthHTTP = 0, restoreDecisionHTTP = 0
-    static var restorationAuthResponses: Int { lock.withLock { restoreAuthHTTP } }
-    static var restorationDecisionResponses: Int { lock.withLock { restoreDecisionHTTP } }
-    static func recordRestorationHTTP(_ request: URLRequest, _ response: HTTPURLResponse) {
-        guard FullSchemaNativeFixture.phase.hasPrefix("restore-"), (200..<300).contains(response.statusCode) else { return }
-        lock.withLock {
-            if request.url?.path == "/auth/v1/token" { restoreAuthHTTP += 1 }
-            if request.url?.path == "/rest/v1/rpc/taskfold_restore_child_original" { restoreDecisionHTTP += 1 }
-        }
-    }
     static func armDrop(){lock.withLock{drop=true;drops=0}}
     static var dropped:Int {lock.withLock{drops}}
     static func consumeDrop(_ request:URLRequest,_ response:HTTPURLResponse, payload: Data? = nil)->Bool {
         let projectTransfer = FullSchemaNativeFixture.phase.hasPrefix("audio-project-")
         if projectTransfer { guard let payload, let body = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: payload), body["request_id"].flatMap({ UUID(uuidString: $0.text) }) != nil, case .bool? = body["replayed"] else { return false } }
-        let expected=projectTransfer ? "/rest/v1/rpc/taskfold_team_project_adoption":FullSchemaNativeFixture.phase.hasPrefix("restore-") ? "/rest/v1/rpc/taskfold_restore_child_original":FullSchemaNativeFixture.phase.hasPrefix("step-") ? "/rest/v1/rpc/taskfold_child_steps":FullSchemaNativeFixture.phase.hasPrefix("audio-") ? "/functions/v1/audio-comments":FullSchemaNativeFixture.phase.hasPrefix("adoption-") ? "/rest/v1/rpc/taskfold_adopt_child_records":FullSchemaNativeFixture.phase.hasPrefix("structure-") ? "/rest/v1/rpc/taskfold_edit_child_structure":FullSchemaNativeFixture.phase.hasPrefix("child-") ? "/rest/v1/rpc/taskfold_edit_child_task":"/rest/v1/rpc/taskfold_patch_task"
+        let expected=projectTransfer ? "/rest/v1/rpc/taskfold_team_project_adoption":FullSchemaNativeFixture.phase.hasPrefix("audio-") ? "/functions/v1/audio-comments":"/rest/v1/rpc/taskfold_patch_task"
         guard request.url?.path==expected,(!FullSchemaNativeFixture.phase.hasPrefix("audio-") || projectTransfer || URLComponents(url:request.url!,resolvingAgainstBaseURL:false)?.queryItems?.first(where:{$0.name=="action"})?.value=="publish"),request.httpMethod=="POST",(200..<300).contains(response.statusCode) else{return false}
         return lock.withLock{guard drop else{return false};drop=false;drops+=1;disconnected=true;return true}
     }
@@ -912,7 +901,6 @@ private final class FullSchemaNativeProtocol:URLProtocol,@unchecked Sendable {
                 var forwarded=request;forwarded.url=try target.url.unwrapFullSchema();forwarded.setValue(nil,forHTTPHeaderField:"Host")
                 let (data,response)=try await Self.forwarding.data(for:forwarded)
                 guard !Task.isCancelled,let http=response as? HTTPURLResponse else{throw CancellationError()}
-                FullSchemaNativeNetwork.recordRestorationHTTP(request, http)
                 try await FullSchemaNativeNetwork.waitForWorkspaceRead(request)
                 if FullSchemaNativeNetwork.consumeDrop(request,http,payload:data){client?.urlProtocol(self,didFailWithError:URLError(.networkConnectionLost));return}
                 let deliveredResponse=HTTPURLResponse(url:original,statusCode:http.statusCode,httpVersion:"HTTP/1.1",headerFields:http.allHeaderFields.reduce(into:[String:String]()){if let key=$1.key as? String{$0[key]=String(describing:$1.value)}})!

@@ -25,7 +25,7 @@ struct ProjectBoard: View {
     private var order: [(day: String, ids: [String])] { columns.map { ($0.id, $0.tasks.map(\.id)) } }
     private var selectedColumn: String? {
         guard workspace.selection.count == 1, let selected = workspace.selection.first else { return nil }
-        let root = Workspace.subtaskPath(selected)?.first ?? selected
+        let root = selected
         return columns.first { $0.tasks.contains(where: { $0.id == root }) }?.id
     }
     var body: some View {
@@ -120,15 +120,13 @@ private struct BoardColumn: View {
                 .contextMenu(forSelectionType: String.self) { ids in
                     if !ids.isEmpty {
                         Button("Complete / Reopen") { workspace.toggle(ids) }
-                        if ids.allSatisfy({ Workspace.subtaskPath($0) == nil }) {
-                            Menu(moveMenuTitle) {
-                                ForEach(destinations) { destination in
-                                    Button(destination.title + (destination.subtitle.map { " · " + $0 } ?? "")) {
-                                        workspace.drag.order = order
-                                        let ordered = order.flatMap(\.ids).filter { ids.contains($0) }
-                                        _ = workspace.move(ordered, to: DragSlot(day: destination.id, before: nil))
-                                        workspace.drag.end()
-                                    }
+                        Menu(moveMenuTitle) {
+                            ForEach(destinations) { destination in
+                                Button(destination.title + (destination.subtitle.map { " · " + $0 } ?? "")) {
+                                    workspace.drag.order = order
+                                    let ordered = order.flatMap(\.ids).filter { ids.contains($0) }
+                                    _ = workspace.move(ordered, to: DragSlot(day: destination.id, before: nil))
+                                    workspace.drag.end()
                                 }
                             }
                         }

@@ -8,37 +8,15 @@ import UIKit
 #endif
 
 extension Workspace {
-    func rootTask(_ id: String) -> Record? {
-        store.record("tasks", id: Self.subtaskPath(id)?.first ?? id)
-    }
+    func rootTask(_ id: String) -> Record? { store.record("tasks", id: id) }
+    /// The "↳ Parent" breadcrumb of a subtask row (or a heading's context), nil for a root.
     func parentTitle(_ id: String) -> String? {
         if let title = store.productiveReading.parents[id] { return title }
-        guard Self.subtaskPath(id) != nil else { return nil }
-        guard hierarchyPresentation, let path = Self.subtaskPath(id), var parent = rootTask(id) else { return rootTask(id)?.title }
-        var titles = [parent.title]
-        for key in path.dropFirst().dropLast() {
-            guard let child = parent["subtasks"].list.enumerated().first(where: { Self.childKey($0.element, index: $0.offset) == key }) else { return nil }
-            parent = Record(child.element.object); titles.append(parent.title)
-        }
-        return titles.joined(separator: " › ")
+        let trail = store.breadcrumb(of: id).map { $0.title.isEmpty ? "Untitled task" : $0.title }
+        return trail.isEmpty ? nil : trail.joined(separator: " › ")
     }
-    var assignedTasks: [Record] {
-        var result: [Record] = []
-        func visit(_ task: Record, depth: Int) {
-            if task.string("assigned_to").lowercased() == store.userID.lowercased() { result.append(task) }
-            guard depth < SubtaskTree.readableDepth else { return }
-            for (index, value) in task["subtasks"].list.enumerated() {
-                let id = childID(parent: task.id, value: value, index: index)
-                if let child = taskRecord(id) { visit(child, depth: depth + 1) }
-            }
-        }
-        for task in store.activeTasks { visit(task, depth: 0) }
-        return result
-    }
-    func assignmentProject(_ task: Record, contextID: String? = nil) -> String {
-        let id = contextID ?? task.id
-        return Self.subtaskPath(id) == nil ? task.string("project_id") : rootTask(id)?.string("project_id") ?? ""
-    }
+    var assignedTasks: [Record] { store.activeTasks.filter { $0.string("assigned_to").lowercased() == store.userID.lowercased() } }
+    func assignmentProject(_ task: Record, contextID: String? = nil) -> String { task.string("project_id") }
     func assignmentMembers(_ task: Record, contextID: String? = nil) -> [Record] {
         let project = assignmentProject(task, contextID: contextID)
         if project.isEmpty { return [store.accountIdentity] }
@@ -667,19 +645,8 @@ struct SavedTeamDraftCopyView: View {
                     if let task=review.task {
                         Text(task.title).font(.headline)
                         taskDetails(task)
-                        LabeledContent("Checklist items",value:String((try? TeamChecklist.indexed(task["subtasks"]).count) ?? 0))
                         LabeledContent("Task attachments",value:String(task["attachments"].list.count))
                     } else {Text(review.cancelled ? "The saved copy request was cancelled. You can review new choices." : "This copy was created, but it is no longer available here. Retrying will not recreate it. Your full draft is kept.").foregroundStyle(.secondary)}
-                }
-            }
-            if let task=review?.task,!task["subtasks"].list.isEmpty {
-                Section("Checklist preview") {
-                    ForEach(checklist(task["subtasks"])) {item in
-                        VStack(alignment:.leading,spacing:8) {
-                            Label(item.record.title,systemImage:item.record.completed ? "checkmark.circle.fill":"circle").font(.headline)
-                            taskDetails(item.record)
-                        }.padding(.leading,CGFloat(min(item.depth,6))*12)
-                    }
                 }
             }
             if let message {Section {Text(message).foregroundStyle(.secondary).accessibilityIdentifier("teamDraftCopyMessage")}}
@@ -699,14 +666,6 @@ struct SavedTeamDraftCopyView: View {
         .onChange(of:assignments){_,_ in if !requestSaved {review=nil;command=nil}}
         .onChange(of:reminders){_,_ in if !requestSaved {review=nil;command=nil}}
         .onChange(of:store.workspaceGeneration){_,_ in review=nil;dismiss()}
-    }
-    private struct ChecklistItem: Identifiable {let record:Record;let depth:Int;var id:String {record.id}}
-    private func checklist(_ value:JSON,depth:Int=0) -> [ChecklistItem] {
-        guard depth<24 else {return []}
-        return value.list.flatMap {item -> [ChecklistItem] in
-            var record=Record(item.object);record["project_id"] = .string(draft.scope.project)
-            return [ChecklistItem(record:record,depth:depth)]+checklist(record["subtasks"],depth:depth+1)
-        }
     }
     @ViewBuilder private func taskDetails(_ task:Record) -> some View {
         if !task.string("description").isEmpty {

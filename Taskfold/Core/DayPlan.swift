@@ -437,7 +437,7 @@ enum DayPlan {
     static func completedCount(_ tasks: [Record], on day: Date, calendar: Calendar = .current) -> Int {
         guard let bounds = calendar.dateInterval(of: .day, for: day) else { return 0 }
         return tasks.filter { task in
-            guard task.completed, SubtaskTree.referencePath(task.id) == nil, let at = TaskPlanning.instant(task.string("completed_at")) else { return false }
+            guard task.completed, LegacySubtaskReference.path(task.id) == nil, let at = TaskPlanning.instant(task.string("completed_at")) else { return false }
             return at >= bounds.start && at < bounds.end
         }.count
     }
@@ -548,7 +548,7 @@ extension DayPlan {
         let key = TaskPlanner.dayKey(day, calendar: calendar)
         let capacity = capacityRing(tasks, events: events, on: day, hours: hours, calendar: calendar)
         let todays = tasks.enumerated().filter { _, task in
-            !task.id.isEmpty && TaskKind.mayComplete(task) && SubtaskTree.referencePath(task.id) == nil && TaskPlanner.plannedDay(task, calendar: calendar) == key
+            !task.id.isEmpty && TaskKind.mayComplete(task) && LegacySubtaskReference.path(task.id) == nil && TaskPlanner.plannedDay(task, calendar: calendar) == key
         }
         let ordered = todays.sorted { a, b in
             let sa = TaskPlanning.start(a.element, calendar: calendar), sb = TaskPlanning.start(b.element, calendar: calendar)
@@ -678,7 +678,7 @@ extension DayPlan {
         let keys = days.map { TaskPlanner.dayKey($0, calendar: calendar) }
         let index = Dictionary(keys.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
         return tasks.enumerated().compactMap { offset, task -> (Int, Int, Record)? in
-            guard !task.id.isEmpty, task.durationMinutes != nil, TaskKind.mayComplete(task), SubtaskTree.referencePath(task.id) == nil,
+            guard !task.id.isEmpty, task.durationMinutes != nil, TaskKind.mayComplete(task), LegacySubtaskReference.path(task.id) == nil,
                   let day = index[TaskPlanner.plannedDay(task, calendar: calendar)] else { return nil }
             return (day, offset, task)
         }.sorted { ($0.0, $0.1) < ($1.0, $1.1) }.map { $0.2 }

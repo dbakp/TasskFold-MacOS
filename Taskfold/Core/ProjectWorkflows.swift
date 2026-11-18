@@ -511,7 +511,7 @@ struct WorkflowTemplate: Sendable {
         if headings { definition["capabilities"] = .array([.string("task_headings")]) }
         return try Self(document: .object(definition))
     }
-    func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID(), childRows: Bool = TaskTree.rowsEnabled, checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws -> [Mutation] {
+    func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID(), nestSubtasks: Bool = false, checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws -> [Mutation] {
         try checkCancellation()
         guard !account.isEmpty, kind != .project || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, kind != .section || !targetProject.isEmpty else { throw AppFailure(message: "Choose a project name or destination before using this template.") }
         func fresh(_ kind: String, _ id: String) -> String { WorkspaceBackup.stableID("template-run:" + run.uuidString + ":" + kind, id) }
@@ -567,8 +567,9 @@ struct WorkflowTemplate: Sendable {
         var taskChanges: [Mutation] = [], childChanges: [Mutation] = []
         for source in tasks {
             let row = try task(source, path: fresh("source", source.id))
-            guard childRows else { taskChanges.append(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields)); continue }
-            // Child rows: the nested template subtasks become task rows under the new task, parents first.
+            // A shared workflow run sends the nested template tree; the server creates the child rows.
+            guard !nestSubtasks else { taskChanges.append(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields)); continue }
+            // The nested template subtasks become task rows under the new task, parents first.
             let rows = ChildRowTemplates.flatten(row)
             taskChanges.append(Mutation(table: "tasks", recordID: rows[0].id, method: "POST", fields: rows[0].fields))
             childChanges += rows.dropFirst().map { Mutation(table: "tasks", recordID: $0.id, method: "POST", fields: $0.fields) }
@@ -857,7 +858,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         var roots = 0, checklist = 0, headings = 0
         for row in tasks {
             if TaskKind(row) == .heading { headings += 1 } else { roots += 1 }
-            for child in (try? TeamChecklist.indexed(row["subtasks"]))?.values ?? [:].values {
+            for child in (try? TeamWorkflowTree.nodes(row["subtasks"])) ?? [] {
                 if TaskKind(Record(child)) == .heading { headings += 1 } else { checklist += 1 }
             }
         }
@@ -906,7 +907,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
                   let hierarchy = access.hierarchy, !hierarchy.parentUnavailable else { throw Self.invalid }
             target = access.id
         }
-        let changes = try definition.instantiate(account: account, name: name, targetProject: target, start: start, run: run)
+        let changes = try definition.instantiate(account: account, name: name, targetProject: target, start: start, run: run, nestSubtasks: true)
         let stamp = ISO8601DateFormatter().string(from: createdAt)
         var projectRows: [Record] = [], sectionRows: [Record] = [], taskRows: [Record] = [], orderRows: [Order] = []
         func task(_ row: Record, source: Record, child: Bool = false) throws -> Record {
@@ -944,9 +945,10 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
                 let scope = TeamTaskEditScope(account: account, origin: origin, team: team.id, project: row.string("project_id"), taskTypesProtocol: supportsHeadings ? 1 : nil, taskTypeLifecycleProtocol: supportsHeadings ? 1 : nil)
                 let requestID = WorkspaceBackup.stableID("template-checklist:" + run.uuidString, row.id)
                 guard let nonce = UUID(uuidString: requestID) else { throw Self.invalid }
-                let mutation = try TeamChecklist.preparing(Mutation(id: nonce, table: "tasks", recordID: row.id, method: "POST", fields: row.fields, insertOnly: true, teamTaskScope: scope))
+                // Nested template subtasks travel as the template tree; the server creates them as child rows.
+                let mutation = Mutation(id: nonce, table: "tasks", recordID: row.id, method: "POST", fields: row.fields, insertOnly: true, teamTaskScope: scope)
                 _ = try scope.lifecycleBody(for: mutation)
-                try TeamChecklist.validate(mutation.fields["subtasks"] ?? .array([]))
+                _ = try TeamWorkflowTree.nodes(mutation.fields["subtasks"] ?? .array([]))
                 taskRows.append(Record(mutation.fields)); sourceIndex += 1
             case "view_orders":
                 let ids = row["ids"].list.map(\.text)
@@ -1871,7 +1873,7 @@ enum WorkflowStarter: String, CaseIterable, Identifiable, Sendable {
             sectionRows.append(.object(["id": .string(sectionID), "name": .string(section.name), "project_id": .string(project), "order_index": .number(Double(index))]))
             for (stepIndex, step) in section.steps.enumerated() {
                 taskRows.append(.object(["id": .string("starter-task-\(index)-\(stepIndex)"), "title": .string(step.title), "description": .string(step.note),
-                    "project_id": .string(project), "section_id": .string(sectionID), "priority": .number(4), "duration_minutes": .number(Double(step.minutes)), "labels": .array([]), "subtasks": .array([])]))
+                    "project_id": .string(project), "section_id": .string(sectionID), "priority": .number(4), "duration_minutes": .number(Double(step.minutes)), "labels": .array([]), "subtasks": .array([])])) // template document
             }
         }
         return try WorkflowTemplateFile(name: name, document: .object(["version": .number(1), "kind": .string("project"),

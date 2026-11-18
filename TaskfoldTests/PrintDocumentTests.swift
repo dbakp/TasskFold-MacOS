@@ -22,28 +22,6 @@ final class PrintDocumentTests: XCTestCase {
         let read = try XCTUnwrap(PDFDocument(data: pdf.data)?.string)
         XCTAssertFalse(read.contains("private-record")); XCTAssertFalse(read.contains("private-account")); XCTAssertFalse(read.contains("Never print this discussion"))
     }
-    func testChecklistsAreCompleteOrderedAndOptionalAndPinnedNotePrintsOnlyItsOwnText() throws {
-        var parent = task("p", "Parent", notes: "Parent note")
-        parent["subtasks"] = .array([.object(["id": .string("c"), "title": .string("Child"), "description": .string("Child note"), "completed": .bool(true), "subtasks": .array([.object(["id": .string("g"), "title": .string("Grandchild")])])])])
-        let doc = try PrintDocument.capture(title: "Checklist", subtitle: "", groups: [("", [parent])], projects: [], labels: [])
-        XCTAssertEqual(doc.groups[0].items.map(\.depth), [0, 1, 2]); XCTAssertTrue(doc.groups[0].items[1].completed)
-        let full = try XCTUnwrap(PDFDocument(data: TaskPrintRenderer.render(doc).data)?.string)
-        for text in ["Parent", "Child", "Grandchild", "Child note"] { XCTAssertTrue(full.contains(text), text) }
-        let compact = try XCTUnwrap(PDFDocument(data: TaskPrintRenderer.render(doc, options: .init(notes: false, checklists: false)).data)?.string)
-        XCTAssertFalse(compact.contains("Parent note")); XCTAssertFalse(compact.contains("Child"))
-        let note = try PrintDocument.capture(title: "Pinned", subtitle: "Note", groups: [("", [parent])], projects: [], labels: [], noteOnly: true)
-        XCTAssertEqual(note.groups[0].items.count, 1)
-        let noteText = try XCTUnwrap(PDFDocument(data: TaskPrintRenderer.render(note).data)?.string)
-        XCTAssertTrue(noteText.contains("Parent note")); XCTAssertFalse(noteText.contains("Child note"))
-    }
-    func testUnsupportedAndExcessivelyDeepChecklistsRefuseInsteadOfSilentlyDroppingContent() {
-        var invalid = task("one", "Invalid"); invalid["subtasks"] = .object(["unknown": .bool(true)])
-        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", [invalid])], projects: [], labels: []))
-        var nested: JSON = .object(["id": .string("leaf"), "title": .string("Final leaf")])
-        for index in 0...SubtaskTree.readableDepth { nested = .object(["id": .string("level-\(index)"), "title": .string("Nested"), "subtasks": .array([nested])]) }
-        var deep = task("root", "Deep"); deep["subtasks"] = .array([nested])
-        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", [deep])], projects: [], labels: []))
-    }
     func testLargeSelectionRefusesWithNoPartialExport() {
         let huge = task("huge", "Huge", notes: String(repeating: "a", count: 16_000_001))
         XCTAssertThrowsError(try PrintDocument.capture(title: "Review", subtitle: "", groups: [("", [huge])], projects: [], labels: []))
@@ -103,42 +81,6 @@ final class PrintDocumentTests: XCTestCase {
 private extension TaskPrintRenderer.Paper { var nameForTest: String { self == .a4 ? "a4" : "letter" } }
 
 extension PrintDocumentTests {
-    private func hierarchyFixture() throws -> (Record, [Record], [Record]) {
-        let leaf: JSON = .object(["id": .string("leaf"), "title": .string("Approve contrast"), "description": .string("Check **contrast**, keyboard focus and legible task titles."), "priority": .number(1), "completed": .bool(false)])
-        let nested: JSON = .object(["id": .string("branch"), "title": .string("Design review"), "subtasks": .array([leaf])])
-        var root = task("root", "Prepare release"); root["project_id"] = .string("p"); root["task_generation"] = .string("generation"); root["subtasks"] = .array([nested, .object(["id": .string("hidden"), "title": .string("UNMATCHED-TASK-SENTINEL")])])
-        let projects = [Record(["id": .string("p"), "name": .string("Widget workshop")])]
-        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: "test", generation: UUID()))
-        return (root, index.items.filter(\.isSubtask).map(\.record), projects)
-    }
-    func testHierarchyPrintAddsAncestorsAndDoesNotExpandUnmatchedChildren() throws {
-        let (root, children, projects) = try hierarchyFixture(), selected = children.filter { ["Design review", "Approve contrast"].contains($0.title) }
-        let document = try PrintDocument.capture(title: "Design review", subtitle: "Current filtered results", groups: [("Review", selected), ("Main task", [root])], projects: projects, labels: [], hierarchyRoots: [root])
-        XCTAssertTrue(document.hierarchyResults)
-        XCTAssertEqual(document.count, 3); XCTAssertEqual(document.groups[0].items.map(\.depth), [0, 0]); XCTAssertEqual(document.groups[1].items.count, 1)
-        XCTAssertTrue(document.groups[0].items[1].metadata.contains("Subtask of Prepare release › Design review"))
-        for paper in TaskPrintRenderer.Paper.allCases {
-            let output = try TaskPrintRenderer.render(document, options: .init(paper: paper))
-            let text = try XCTUnwrap(PDFDocument(data: output.data)?.string)
-            XCTAssertTrue(text.contains("Subtask of Prepare release")); XCTAssertTrue(text.contains("Approve contrast")); XCTAssertFalse(text.contains("UNMATCHED-TASK-SENTINEL"))
-            if let directory = ProcessInfo.processInfo.environment["TASKFOLD_HIERARCHY_PDF_DIR"] {
-                let folder = URL(fileURLWithPath: directory, isDirectory: true); try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-                try output.data.write(to: folder.appendingPathComponent(paper == .a4 ? "hierarchy-a4.pdf" : "hierarchy-letter.pdf"))
-            }
-        }
-    }
-    func testHierarchyPrintRefusesStaleMovedMissingAndMalformedReferences() throws {
-        let (root, children, projects) = try hierarchyFixture(); let selected = children.filter { $0.title == "Approve contrast" }
-        var changed = root; changed["task_generation"] = .string("replaced")
-        for roots in [[], [changed]] {
-            XCTAssertThrowsError(try PrintDocument.capture(title: "Review", subtitle: "", groups: [("", selected)], projects: projects, labels: [], hierarchyRoots: roots))
-        }
-        var stale = selected[0]; stale["title"] = .string("Old title")
-        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", [stale])], projects: projects, labels: [], hierarchyRoots: [root]))
-        var malformed = selected[0]; malformed["id"] = .string("subtask:invalid")
-        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", [malformed])], projects: projects, labels: [], hierarchyRoots: [root]))
-        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", selected)], projects: [], labels: [], hierarchyRoots: [root]))
-    }
 }
 
 
@@ -150,19 +92,6 @@ final class TaskRowCSVTests: XCTestCase {
         try PrintDocument.capture(title: "Review", subtitle: "", groups: [("Work",tasks)], projects: projects, labels: labels, assigneeName: { _ in "Sam" })
     }
 
-    func testDatedHeadingContextCountsAsARowAndNestedPathsRetainItsTitle() throws {
-        var child = task("child","First"), second = task("second","Second"), root = task("root","Context")
-        child["due_date"] = .string("2026-10-26"); second["due_date"] = .string("2026-10-26")
-        child["subtasks"] = .array([.object(task("detail","Checklist").fields)])
-        root["is_heading"] = .bool(true); root["due_date"] = .string("2026-10-26"); root["subtasks"] = .array([.object(child.fields),.object(second.fields)])
-        let cache = TaskCache(); cache.update([root])
-        let shown = cache.matching(TaskQuery(scope:.today,today:"2026-10-26"))
-        XCTAssertEqual(shown.count,3); XCTAssertEqual(shown.filter{TaskKind.mayComplete($0)}.count,2)
-        let captured = try PrintDocument.capture(title:"Today",subtitle:"",groups:[("Today",shown)],projects:[],labels:[],hierarchyRoots:[root],expandOrdinaryChecklists:true)
-        let full = try TaskRowCSV.make(captured); XCTAssertEqual(full.rows.count,4)
-        XCTAssertEqual(try TaskRowCSV.make(captured,options:.init(checklists:false)).rows.count,3)
-        XCTAssertEqual(full.rows.first{$0[6]=="Checklist"}?[4],"Context › First")
-    }
     func testArchivedProjectIsReadableForExportWithoutRestoringOrMutatingIt() throws {
         var root = task("root","Archived work"); root["project_id"] = .string("project")
         let project = Record(["id":.string("project"),"name":.string("Saved project"),"is_archived":.bool(true)])
@@ -180,14 +109,6 @@ final class TaskRowCSVTests: XCTestCase {
         XCTAssertEqual(cells[8], "true"); XCTAssertEqual(cells[9], "Studio"); XCTAssertEqual(cells[11], "2026-10-26"); XCTAssertEqual(cells[14], "2026-10-26T08:00:00Z"); XCTAssertEqual(cells[16], "45"); XCTAssertEqual(cells[18], "Sam")
         for secret in ["private-task","private-user","private-generation","private-project","private-person","private-label","PRIVATE-DISCUSSION","PRIVATE-ATTACHMENT"] { XCTAssertFalse(raw.contains(secret), secret) }
         XCTAssertEqual(row, before); XCTAssertEqual(try WorkflowTemplateCSV.rows(output.data).first, TaskRowCSVFormat.columns)
-    }
-    func testHierarchyReferencesAreScopedToPositionsEvenWhenLegacyChildKeysRepeat() throws {
-        var a = task("a", "First"), b = task("b", "Second")
-        let child = task("same", "Checklist"); a["subtasks"] = .array([.object(child.fields)]); b["subtasks"] = a["subtasks"]
-        let output = try TaskRowCSV.make(doc([a,b]))
-        XCTAssertEqual(output.rows.map { $0[1] }, ["row-1","row-2","row-3","row-4"])
-        XCTAssertEqual(output.rows.map { $0[2] }, ["","row-1","","row-3"])
-        XCTAssertEqual(output.rows.map { $0[4] }, ["","First","","Second"])
     }
     func testExplicitNotesAndChecklistExclusionsRemoveTheirActualContent() throws {
         var row = task("root", "Parent", notes: "SECRET-PARENT-NOTES")
@@ -213,33 +134,6 @@ final class TaskRowCSVTests: XCTestCase {
         var mapping = WorkflowCSVMapping(); mapping.columns = [.title:6,.labels:17]
         let template = try source.template(name:"Workflow",mapping:mapping,anchor:Date(),headings:false)
         XCTAssertEqual(template.template.tasks[0]["labels"].list.map{$0.object["name"]?.text},["Design; Review","Path\\Name"," Spaced "])
-    }
-    func testHeadingsAndChildrenRoundtripAsFreshReviewedWorkflowWithoutCompletionHistory() throws {
-        var root = task("private-root", "Context"), child = task("private-child", "Action")
-        root["is_heading"] = .bool(true); child["completed"] = .bool(true); root["subtasks"] = .array([.object(child.fields)])
-        let source = try WorkflowCSVSource(data: TaskRowCSV.make(doc([root])).data)
-        var mapping = WorkflowCSVMapping(); mapping.columns = [.identifier:1,.parent:2,.type:5,.title:6,.notes:7,.labels:17]
-        let file = try source.template(name:"Reusable",mapping:mapping,anchor:Date(),headings:true)
-        XCTAssertEqual(TaskKind(file.template.tasks[0]),.heading)
-        XCTAssertEqual(file.template.tasks[0]["subtasks"].list[0].object["title"],.string("Action"))
-        XCTAssertNil(file.template.tasks[0]["subtasks"].list[0].object["completed"])
-        XCTAssertThrowsError(try source.template(name:"Reusable",mapping:mapping,anchor:Date(),headings:false))
-    }
-    func testFilteredChildKeepsParentContextWithoutInventingNonmatchingRows() throws {
-        var root = task("root","Parent"); root["subtasks"] = .array([.object(task("leaf","Match").fields)])
-        let binding = WorkspaceBinding(account:"print-review",generation:UUID())
-        let index = try TaskHierarchyIndex(roots:[root],projects:[],workspace:binding)
-        let reference = SubtaskTree.reference(parent:root.id,key:"leaf"), child = try XCTUnwrap(index.item(reference)?.record)
-        let capture = try PrintDocument.capture(title:"Filtered",subtitle:"",groups:[("Matches",[child])],projects:[],labels:[],hierarchyRoots:[root])
-        let rows = try TaskRowCSV.make(capture).rows
-        XCTAssertEqual(rows.count,1); XCTAssertEqual(rows[0][2],""); XCTAssertEqual(rows[0][4],"Parent"); XCTAssertEqual(rows[0][6],"Match")
-    }
-    func testVisibleHeadingAndProjectedChildResolveLocalParentReference() throws {
-        var root = task("root","Context"); root["is_heading"] = .bool(true); root["subtasks"] = .array([.object(task("child","Action").fields)])
-        let work = ProductiveTaskReading(tasks:[root])
-        let capture = try PrintDocument.capture(title:"Project",subtitle:"",groups:[("Work",work.presentation)],projects:[],labels:[],hierarchyRoots:[root],expandOrdinaryChecklists:true)
-        let output = try TaskRowCSV.make(capture), heading = try XCTUnwrap(output.rows.first{$0[5]=="heading"}), child = try XCTUnwrap(output.rows.first{$0[6]=="Action"})
-        XCTAssertEqual(child[2],heading[1]); XCTAssertEqual(output.rows.count,2)
     }
     func testRepeatedQueryGroupsKeepSeparateRowsAndReferences() throws {
         let row = task("same","Task")

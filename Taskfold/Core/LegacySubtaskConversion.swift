@@ -1,11 +1,28 @@
 import Foundation
 import CryptoKit
 
+/// What is left of the JSON subtask era: the `subtask:<base64 path>` references older builds persisted (widget links,
+/// completion receipts, Spotlight items, list orders) and the sibling key their paths use. Nothing creates them now.
+enum LegacySubtaskReference {
+    static let prefix = "subtask:"
+    /// Trees nested deeper than this were never readable.
+    static let readableDepth = 32
+    /// A node's key among its siblings: its `id`, or `@index` when it has none.
+    static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
+    /// The root id followed by the child keys, or nil when `id` is not a legacy reference.
+    static func path(_ id: String) -> [String]? {
+        guard id.hasPrefix(prefix), let data = Data(base64Encoded: String(id.dropFirst(prefix.count))),
+              let path = try? TaskfoldJSONDecoder().decode([String].self, from: data), (2...readableDepth + 1).contains(path.count), path.allSatisfy({ !$0.isEmpty }) else { return nil }
+        return path
+    }
+    static func reference(_ path: [String]) -> String { prefix + (try! TaskfoldJSONEncoder().encode(path)).base64EncodedString() }
+}
+
 /// Converts the legacy JSON `subtasks` tree of a task into child rows (`parent_id`/`child_order`). The server's
 /// Migration B runs the same algorithm in SQL; both are proven equal by `TaskfoldTests/Fixtures/legacy_subtasks.json`.
 ///
 /// Identity: `legacy_child_id(root, path)` = `md5('taskfold.child-row.v1|' + lower(root) + '|' + path joined by U+001F)`
-/// formatted as a UUID. A path segment is `SubtaskTree.childKey` (the node's `id`), unless that key is shared by
+/// formatted as a UUID. A path segment is `LegacySubtaskReference.childKey` (the node's `id`), unless that key is shared by
 /// several siblings, in which case the segment is `@index` for each of them.
 ///
 /// Levels: a child of the root is at level 1. A node deeper than ten levels is re-parented to its level-9 ancestor
@@ -26,7 +43,7 @@ enum LegacySubtaskConversion {
 
     /// The path segment of every node in one sibling array.
     static func segments(_ siblings: [JSON]) -> [String] {
-        let keys = siblings.enumerated().map { SubtaskTree.childKey($1, index: $0) }
+        let keys = siblings.enumerated().map { LegacySubtaskReference.childKey($1, index: $0) }
         var counts: [String: Int] = [:]
         for key in keys { counts[key, default: 0] += 1 }
         return keys.enumerated().map { counts[$1] == 1 ? $1 : "@\($0)" }
@@ -96,7 +113,7 @@ enum LegacySubtaskConversion {
             row["id"] = .string(id); row["parent_id"] = .string(parent); row["child_order"] = .number(order)
             row["user_id"] = root["user_id"]; row["project_id"] = root["project_id"]; row["section_id"] = root["section_id"]
             if row.fields["created_at"] == nil { row["created_at"] = root["created_at"] }
-            row["is_recurring"] = .bool(false); row["reminders"] = .array([]); row["subtasks"] = .array([]); row["completion_version"] = .number(0)
+            row["is_recurring"] = .bool(false); row["reminders"] = .array([]); row["completion_version"] = .number(0)
             row["task_generation"] = .string(legacyChildID(root: rootID, path: path + ["generation"]))
             if case .string(let assignee)? = row.fields["assigned_to"], !canAssign(assignee, row.string("project_id")) { row["assigned_to"] = .null }
             row["source_metadata"] = .object(extra.isEmpty ? [:] : ["taskfold_legacy_child": .object(extra)])
@@ -133,9 +150,40 @@ enum LegacySubtaskConversion {
     /// Maps a persisted `subtask:<base64 path>` reference (path = root id, then keys) to the new row id. With the
     /// root record, the answer is checked against the conversion and is nil when the node was not converted.
     static func newID(forReference reference: String, root: Record? = nil) -> String? {
-        guard let path = SubtaskTree.referencePath(reference) else { return nil }
+        guard let path = LegacySubtaskReference.path(reference) else { return nil }
         let id = legacyChildID(root: path[0], path: Array(path.dropFirst()))
         if let root { return convert(root: root).rows.contains { $0.id == id } ? id : nil }
         return id
+    }
+}
+
+/// Migration C drops `tasks.subtasks`. A row cached, or a change queued, before then may still carry an empty value;
+/// it is removed wherever rows enter the workspace and wherever a change leaves for the server. A non-empty tree is
+/// kept: only signed-out data saved before the update holds one, and that is converted into rows on load.
+enum LegacySubtaskColumn {
+    static let key = "subtasks"
+    static func isEmpty(_ value: JSON?) -> Bool {
+        guard let value else { return false }
+        if value == .null { return true }
+        if case .array(let items) = value { return items.isEmpty }
+        return false
+    }
+    static func dropped(_ fields: [String: JSON]) -> [String: JSON] {
+        guard isEmpty(fields[key]) else { return fields }
+        var result = fields; result.removeValue(forKey: key); return result
+    }
+    static func dropped(_ row: Record) -> Record { isEmpty(row.fields[key]) ? Record(dropped(row.fields)) : row }
+    static func dropped(_ rows: [Record]) -> [Record] {
+        guard rows.contains(where: { isEmpty($0.fields[key]) }) else { return rows }
+        return rows.map(dropped)
+    }
+    /// The task-row writers (POST, PATCH, DELETE, team lifecycle and edits) never send an empty `subtasks`.
+    static func outbound(_ change: Mutation) -> Mutation {
+        guard change.table == "tasks", change.teamCompletion == nil, change.teamTaskBatch == nil, change.organizationOrder == nil,
+              isEmpty(change.fields[key]) || isEmpty(change.baseline?[key]) else { return change }
+        var result = change
+        result.fields = dropped(change.fields)
+        if let baseline = change.baseline { result.baseline = dropped(baseline) }
+        return result
     }
 }

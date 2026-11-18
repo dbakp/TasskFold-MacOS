@@ -35,7 +35,6 @@ extension Workspace {
 
     /// In a nested list a child is not a list root: it is never reordered by the list's own drag, only by its parent.
     func isListRoot(_ id: String) -> Bool {
-        guard Self.subtaskPath(id) == nil else { return false }
         return !(nestedRowsList && store.parent(of: id) != nil)
     }
 
@@ -66,7 +65,7 @@ extension Workspace {
             let edits = try plan(TaskTree(tasks))
             guard !edits.isEmpty else { return true }
             var saved = false
-            run(name) { withAnimation(layout) { saved = store.commit(TaskTree.mutations(edits, tasks: tasks)) } }
+            run(name) { withAnimation(layout) { saved = store.commitChildRows(TaskTree.mutations(edits, tasks: tasks)) } }
             if saved, let confirmation { confirm(confirmation) }
             return saved
         } catch { store.error = error.localizedDescription; return false }
@@ -77,7 +76,7 @@ extension Workspace {
         let project = task.string("project_id"), sectionID = task.string("section_id")
         let siblings = store.tasks.filter {
             $0.string("project_id") == project && $0.string("section_id") == sectionID && !$0.completed
-                && store.parent(of: $0.id) == nil && Self.subtaskPath($0.id) == nil
+                && store.parent(of: $0.id) == nil
         }
         let key = project.isEmpty ? Placement.scope(.inbox) : Placement.group(project: project, section: sectionID)
         let ordered = arranged(siblings, key: key).map(\.id)
@@ -130,19 +129,23 @@ extension Workspace {
     @discardableResult
     func addChild(to parentID: String, text input: String) -> String? {
         guard let parent = store.record("tasks", id: parentID) else { return nil }
-        var task = captureTask(project: parent.string("project_id"), date: nil, sectionID: parent.string("section_id"), scope: .inbox)
+        // A team subtask is created through the team RPCs; its labels, repeat, reminders and assignee use the team editors.
+        let team = store.isTeamTask(parent)
+        var task = team ? Record.task(user: store.userID, project: parent.string("project_id")) : captureTask(project: parent.string("project_id"), date: nil, sectionID: parent.string("section_id"), scope: .inbox)
+        task["section_id"] = parent["section_id"]
         task["parent_id"] = .string(parent.id)
         task["child_order"] = .number(TaskTree(store.tasks).nextOrder(under: parent.id))
-        let parsed = QuickEntry(input, disabled: ["project_id", "section_id", "planning"], context: quickEntryContext(project: task.string("project_id")), task: task)
+        let disabled: Set<String> = team ? ["project_id", "section_id", "planning", "labels", "recurrence", "reminder_specs", "assigned_to"] : ["project_id", "section_id", "planning"]
+        let parsed = QuickEntry(input, disabled: disabled, context: quickEntryContext(project: task.string("project_id")), task: task)
         guard !parsed.title.isEmpty else { return nil }
         task = parsed.applying(to: task)
         // Parsing never moves the child out of its parent's container.
         task["project_id"] = parent["project_id"]; task["section_id"] = parent["section_id"]; task["parent_id"] = .string(parent.id)
-        for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text || $0.id == value.text }) {
+        for value in parsed.updates["labels"]?.list ?? [] where !team && !store.labels.contains(where: { $0.name == value.text || $0.id == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
         }
         var created = false
-        run("Add Subtask") { withAnimation(layout) { created = store.save("tasks", task) } }
+        run("Add Subtask") { withAnimation(layout) { created = team ? store.commitChildRows([Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields, insertOnly: true)]) : store.save("tasks", task) } }
         guard created else { return nil }
         expandedTasks.insert(parent.id)
         return task.id
@@ -196,6 +199,10 @@ struct ChildRowsList: View {
 
     @ViewBuilder private func menu(_ child: Record) -> some View {
         Button("Open Details") { open(child) }
+        // A team viewer reads subtasks but cannot change them (`canAdd` is false for them).
+        if canAdd { changeMenu(child) }
+    }
+    @ViewBuilder private func changeMenu(_ child: Record) -> some View {
         Divider()
         Button("Move Up", systemImage: "arrow.up") { workspace.moveChild(child.id, by: -1) }.disabled(children.first?.id == child.id)
         Button("Move Down", systemImage: "arrow.down") { workspace.moveChild(child.id, by: 1) }.disabled(children.last?.id == child.id)

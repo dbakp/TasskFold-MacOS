@@ -42,22 +42,6 @@ final class PersonalHeadingCapabilityTests: XCTestCase {
         XCTAssertFalse(PersonalTaskTypes.requiresService(Mutation(table: "tasks", recordID: original.id, method: "PATCH", fields: ["description": .string("Keep the instructions")])))
         XCTAssertFalse(PersonalTaskTypes.requiresService(Mutation(table: "tasks", recordID: original.id, method: "DELETE", fields: [:], baseline: try TaskKind.setting(original, heading: true).fields)))
     }
-    func testNestedTypeChangesUseCapturedTreeRatherThanOptimisticState() throws {
-        var original = task()
-        let child: JSON = .object(["id": .string("child"), "title": .string("Keep context"), "completed": .bool(false), "subtasks": .array([])])
-        original["subtasks"] = .array([child])
-        var typed = child.object; typed["is_heading"] = .bool(true)
-        let edit = Mutation(table: "tasks", recordID: original.id, method: "PATCH", fields: ["subtasks": .array([.object(typed)])], baseline: original.fields)
-        XCTAssertTrue(PersonalTaskTypes.requiresService(edit))
-        typed["description"] = .string("Edited notes")
-        var existing = original; existing["subtasks"] = edit.fields["subtasks"]!
-        let notes = Mutation(table: "tasks", recordID: original.id, method: "PATCH", fields: ["subtasks": .array([.object(typed)])], baseline: existing.fields)
-        XCTAssertFalse(PersonalTaskTypes.requiresService(notes), "Metadata edits do not acquire type-changing authority")
-        let unbased = Mutation(table: "tasks", recordID: original.id, method: "PATCH", fields: edit.fields)
-        XCTAssertTrue(PersonalTaskTypes.requiresService(unbased))
-        typed["is_heading"] = .bool(false)
-        XCTAssertTrue(PersonalTaskTypes.requiresService(Mutation(table: "tasks", recordID: original.id, method: "PATCH", fields: ["subtasks": .array([.object(typed)])], baseline: existing.fields)))
-    }
     func testCompatibilityPauseDoesNotQuarantineOrEraseVisibleOfflineWork() throws {
         let original = task(), edit = typeEdit(original), supported = try boundary(), unavailable = try boundary(nil)
         var snapshot = Snapshot(tables: ["tasks": [original]])

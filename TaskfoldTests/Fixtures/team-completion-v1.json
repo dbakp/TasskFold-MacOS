@@ -19,42 +19,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -113,42 +77,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": true,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -201,40 +129,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "87dd68c9-552e-56b3-afd4-e2ed0d0450b9",
-          "title": "Nested review",
-          "comments": [],
-          "subtasks": [],
-          "completed": false,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": null,
-          "future_state": {
-            "keep": true
-          },
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "64aad458-7e77-53d6-a6f0-2fd00397ed05",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -306,42 +200,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -401,42 +259,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -513,42 +335,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -608,42 +394,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": true,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -696,40 +446,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "87dd68c9-552e-56b3-afd4-e2ed0d0450b9",
-          "title": "Nested review",
-          "comments": [],
-          "subtasks": [],
-          "completed": false,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": null,
-          "future_state": {
-            "keep": true
-          },
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "cb2270c6-266e-5501-a0ee-51227512aa97",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -801,42 +517,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -896,42 +576,6 @@
       "due_date": "2026-10-24",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "nested",
-          "title": "Nested review",
-          "comments": [
-            {
-              "body": "Previous nested discussion"
-            }
-          ],
-          "subtasks": [],
-          "completed": true,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": "2026-10-01T08:00:00Z",
-          "future_state": {
-            "keep": true
-          },
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "taskfold_completion_v1": {
-            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
-            "version": 3
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",
@@ -984,40 +628,6 @@
       "due_date": "2026-10-25",
       "due_time": "09:00:00",
       "priority": 2,
-      "subtasks": [
-        {
-          "id": "87dd68c9-552e-56b3-afd4-e2ed0d0450b9",
-          "title": "Nested review",
-          "comments": [],
-          "subtasks": [],
-          "completed": false,
-          "attachments": [
-            {
-              "id": "nested-file"
-            }
-          ],
-          "completed_at": null,
-          "future_state": {
-            "keep": true
-          },
-          "deadline_date": null,
-          "reminder_specs": [
-            {
-              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
-              "kind": "private-device-setting",
-              "opaque": {
-                "keep": true
-              },
-              "version": 99
-            }
-          ],
-          "notification_sent_at": null,
-          "taskfold_completion_v1": {
-            "epoch": "cb2270c6-266e-5501-a0ee-51227512aa97",
-            "version": 0
-          }
-        }
-      ],
       "completed": false,
       "reminders": [],
       "time_zone": "Europe/Copenhagen",

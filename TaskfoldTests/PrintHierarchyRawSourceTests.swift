@@ -5,14 +5,7 @@ import PDFKit
 final class PrintHierarchyRawSourceTests: XCTestCase {
     private func root() -> Record {
         Record(["id": .string("root"), "title": .string("Café"), "description": .string("Résumé"),
-                "opaque": .object(["Café": .number(-0.0)]), "priority": .number(4),
-                "subtasks": .array([.object(["id": .string("child"), "title": .string("Café"),
-                    "description": .string("Résumé"), "completed": .bool(false),
-                    "opaque": .object(["Café": .number(-0.0)])])])])
-    }
-    private func children(_ root: Record) throws -> [Record] {
-        let index = try TaskHierarchyIndex(roots: [root], projects: [], workspace: WorkspaceBinding(account: "print-test", generation: UUID()))
-        return index.items.filter(\.isSubtask).map(\.record)
+                "opaque": .object(["Café": .number(-0.0)]), "priority": .number(4)])
     }
     private func capture(_ shown: Record, _ live: Record) throws -> PrintDocument {
         try PrintDocument.capture(title: "Current filtered results", subtitle: "", groups: [("Matches", [shown])], projects: [], labels: [], hierarchyRoots: [live])
@@ -33,26 +26,10 @@ final class PrintHierarchyRawSourceTests: XCTestCase {
             XCTAssertThrowsError(try capture(edited, original), "A changed displayed row must not impersonate the live row")
         }
     }
-    func testChildFilteredOutputRefusesEveryRawSourceChangeBeforeRendering() throws {
-        let original = root(), shown = try XCTUnwrap(children(original).first)
-        for edited in rawEdits(shown) {
-            XCTAssertEqual(edited,shown)
-            XCTAssertThrowsError(try capture(edited, original), "A child with changed raw fields must require refresh")
-        }
-        var live = original
-        if case .array(var rows) = live["subtasks"], case .object(var fields) = rows[0] {
-            fields["title"] = .string("Cafe\u{301}"); rows[0] = .object(fields); live["subtasks"] = .array(rows)
-        }
-        XCTAssertThrowsError(try capture(shown,live),"A stale child cannot be exported after its source changed")
-    }
-    func testRefreshedRootAndChildExportCurrentSpellingAndKeepReadablePDF() throws {
+    func testRefreshedRootExportsCurrentSpellingAndKeepsReadablePDF() throws {
         var live = root(); live["title"] = .string("Cafe\u{301}")
-        if case .array(var rows) = live["subtasks"], case .object(var fields) = rows[0] {
-            fields["title"] = .string("Cafe\u{301}"); fields["description"] = .string("Re\u{301}sume\u{301}")
-            rows[0] = .object(fields); live["subtasks"] = .array(rows)
-        }
-        let child = try XCTUnwrap(children(live).first)
-        for shown in [live,child] {
+        live["description"] = .string("Re\u{301}sume\u{301}")
+        for shown in [live] {
             let document = try capture(shown,live), item = try XCTUnwrap(document.groups.first?.items.first)
             XCTAssertTrue(item.title.utf8.elementsEqual(shown.title.utf8))
             XCTAssertTrue(item.notes.utf8.elementsEqual(shown.string("description").utf8))

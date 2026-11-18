@@ -85,7 +85,7 @@ enum Planning {
 
     /// Open, ordinary, top-level work. Headings, unsupported kinds and checklist children never enter either state.
     static func eligible(_ task: Record) -> Bool {
-        !task.id.isEmpty && TaskKind.mayComplete(task) && !task.completed && SubtaskTree.referencePath(task.id) == nil
+        !task.id.isEmpty && TaskKind.mayComplete(task) && !task.completed && LegacySubtaskReference.path(task.id) == nil
     }
     static func isRepeating(_ task: Record) -> Bool { task["is_recurring"].flag }
 

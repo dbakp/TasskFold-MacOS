@@ -81,7 +81,7 @@ struct TaskInspectorForm: View {
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
     /// Planning words ("this evening", "someday") are capture tokens only; editing a title never moves a task.
-    private var quickExclusions: Set<String> { (isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : []).union(["planning"]) }
+    private var quickExclusions: Set<String> { (isTeamTask ? Set(["project_id", "section_id", "labels", "recurrence", "reminder_specs", "assigned_to"]) : []).union(["planning"]) }
     @State private var taskFiles: TaskFileUploadRequest?
     @State private var teamMove: TeamTaskMoveRequest?
     @State private var teamDeletion: TeamTaskDeletionRequest?
@@ -91,13 +91,6 @@ struct TaskInspectorForm: View {
     @State private var teamAssignee: TeamTaskAssigneeRequest?
     @State private var selectedTeamName: String?
     @State private var selectedTeamID: String?
-    @State private var subtaskOrganizing: SubtaskOrganizerRequest?
-    @State private var inlineSubtasks = SubtaskInlineDraft()
-    private var inlineSubtaskScope: SubtaskInlineDraft.Scope {
-        .init(root: Workspace.subtaskPath(taskID)?.first ?? taskID, parent: taskID, selection: sourceContext?.identity ?? .null,
-              workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration),
-              session: store.backend.reminderSessionIncarnation, generation: currentGeneration)
-    }
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
     @State private var sourceRoot: Record?
@@ -138,7 +131,7 @@ struct TaskInspectorForm: View {
     private var current: Record? { workspace.taskRecord(taskID) }
     private var currentGeneration: JSON {
         if isCreating { return admission!.source.record["task_generation"] }
-        let root = Workspace.subtaskPath(taskID)?.first ?? taskID
+        let root = taskID
         return store.record("tasks", id: root)?["task_generation"] ?? .null
     }
     private func projectFailure(_ error: Error) {
@@ -169,7 +162,7 @@ struct TaskInspectorForm: View {
         return true
     }
     private var readOnlyFiles: TaskFileUploadRequest? {
-        guard !isCreating, Workspace.subtaskPath(taskID) == nil else { return nil }
+        guard !isCreating else { return nil }
         if let admission { return store.fileUploadReadRequest(source: admission.source.record, workspace: admission.workspace) }
         guard let sourceRoot, let workspaceBinding else { return nil }
         return store.fileUploadReadRequest(source: sourceRoot, workspace: workspaceBinding)
@@ -240,18 +233,12 @@ struct TaskInspectorForm: View {
             })
         }
         .sheet(item: $breakdown) { request in
-            TaskBreakdownView(request: request, current: { editorAvailable ? draft : nil }, onApply: { children in
+            TaskBreakdownView(request: request, current: { editorAvailable ? draft : nil }, onApply: { titles in
                 guard editorAvailable, request.matches(draft, workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation) else { throw AppFailure(message: "This task or workspace changed. Reopen its current details.") }
                 saveTask?.cancel()
-                if rowsMode {
-                    guard saveNow(), store.addChildTasks(ChildRowSteps.addedTitles(children, previous: draft["subtasks"]), to: taskID) else { throw AppFailure(message: store.error ?? "These steps couldn’t be added. Your task is unchanged.") }
-                    return
-                }
-                draft["subtasks"] = children
-                _ = saveNow()
+                guard saveNow(), store.addChildTasks(titles, to: taskID) else { throw AppFailure(message: store.error ?? "These steps couldn’t be added. Your task is unchanged.") }
             })
         }
-        .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
         .onDisappear {checkpoint()}
@@ -398,14 +385,10 @@ struct TaskInspectorForm: View {
 
     // MARK: Menu
 
-    /// Child rows: suggested steps are added as subtasks of this saved task.
-    private var canSuggestSteps: Bool { rowsMode ? workspace.taskDepth(taskID) < TaskTree.maximumAncestors : canBreakDown }
-    /// Team checklists stay embedded JSON until they move to rows; personal subtasks are always rows.
-    private var canBreakDown: Bool { isTeamTask && (workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty) }
-    /// A legacy embedded subtask (virtual id). A child row is an ordinary task: it repeats, moves, has reminders and every other field.
-    private var isSubtask: Bool { Workspace.subtaskPath(taskID) != nil }
-    /// Child rows: this saved personal task owns real subtask rows.
-    private var rowsMode: Bool { !isCreating && !isTeamTask && Workspace.subtaskPath(taskID) == nil && store.record("tasks", id: taskID) != nil }
+    /// Suggested steps are added as subtasks (rows) of this saved task.
+    private var canSuggestSteps: Bool { rowsMode && workspace.taskDepth(taskID) < TaskTree.maximumAncestors && store.canEditSubtasks(of: taskID) }
+    /// A saved task owns real subtask rows (team ones go through the team RPCs).
+    private var rowsMode: Bool { !isCreating && store.record("tasks", id: taskID) != nil }
     private var moreMenu: some View {
         Menu {
             if store.canAuthorTaskHeadings(teamDraft: teamDraft) {
@@ -427,19 +410,19 @@ struct TaskInspectorForm: View {
                     guard saveNow() else { return }
                     do { breakdown = try TaskBreakdownRequest(workspace: .init(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, source: draft, depth: workspace.taskDepth(taskID)) }
                     catch { store.error = error.localizedDescription }
-                }.disabled(!editorAvailable || draft.completed || !TaskKind.mayComplete(draft) || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !SubtaskTree.hasListContainer(draft["subtasks"]) || workspace.taskDepth(taskID) >= (rowsMode ? TaskTree.maximumAncestors : SubtaskTree.maximumDepth))
+                }.disabled(!editorAvailable || draft.completed || !TaskKind.mayComplete(draft) || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || workspace.taskDepth(taskID) >= TaskTree.maximumAncestors)
                     .accessibilityIdentifier("suggestTaskSteps")
             }
-            if !isSubtask, store.conversationsAvailable, let saved = current, !saved.string("project_id").isEmpty {
+            if store.conversationsAvailable, let saved = current, !saved.string("project_id").isEmpty {
                 Button("Shared conversation", systemImage: "bubble.left.and.bubble.right") { conversation = ConversationRequest(task: saved, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) }.accessibilityIdentifier("openSharedConversation")
             }
-            if store.audioDraftsEnabled, !isSubtask, !isTeamTask || store.teamAudioPublishingEnabled {
+            if store.audioDraftsEnabled, !isTeamTask || store.teamAudioPublishingEnabled {
                 Button("Private audio recordings", systemImage: "waveform") {
                     guard editorAvailable, draft.string("project_id") == current?.string("project_id") else { return }
                     audioDraft = store.audioDraftRequest(taskID: taskID)
                 }.disabled(!editorAvailable || store.audioDraftScope(taskID: taskID) == nil).accessibilityIdentifier("openTaskAudioDrafts")
             }
-            if !isSubtask, !isCreating, let request = store.audioConversationRequest(taskID: taskID), draft.string("project_id") == current?.string("project_id") {
+            if !isCreating, let request = store.audioConversationRequest(taskID: taskID), draft.string("project_id") == current?.string("project_id") {
                 Button("Audio comments", systemImage: "waveform.bubble") { audioConversation = request }.accessibilityIdentifier("openAudioConversation")
             }
             if rowsMode {
@@ -449,16 +432,16 @@ struct TaskInspectorForm: View {
                 if workspace.canOutdent(taskID) { Button("Make it a Task", systemImage: "arrow.up.right.square") { if saveNow() { workspace.makeTask(taskID) } }.accessibilityIdentifier("taskMakeTask") }
             }
             Divider()
-            if !isTeamTask, !isCreating, !isSubtask {
+            if !isTeamTask, !isCreating {
                 Button("Duplicate", systemImage: "doc.on.doc") { workspace.duplicate([taskID]) }.accessibilityIdentifier("taskDuplicate")
             }
-            if !isSubtask, !isTeamTask {
+            if !isTeamTask {
                 Menu("Move to project", systemImage: "folder") {
                     Button("Inbox") { changeTaskProject("") }
                     ForEach(store.projects) { project in Button(project.name) { changeTaskProject(project.id) } }
                 }.accessibilityIdentifier("taskMoveToProject")
             }
-            if isTeamTask && !isCreating && !isSubtask {
+            if isTeamTask && !isCreating {
                 Button("Move shared task…", systemImage: "folder.badge.arrow.forward") {
                     guard editorAvailable, teamDeletionClean, let captured = teamDraft else { return }
                     saveTask?.cancel()
@@ -498,7 +481,7 @@ struct TaskInspectorForm: View {
             if let deadline = draft.deadline { deadlineChip(deadline) }
             priorityChip
             labelChips
-            if !isSubtask { remindersChip }
+            remindersChip
             if let minutes = draft.durationMinutes { estimateChip(minutes) }
             spentChip
             assigneeChip
@@ -511,7 +494,7 @@ struct TaskInspectorForm: View {
         return PropertyChip(icon: "calendar", text: set?.text ?? "Date", tint: set?.tint, trailingIcon: draft["is_recurring"].flag ? "repeat" : nil,
                             accessibility: set.map { "Date, \($0.text)" + (draft["is_recurring"].flag ? ", repeats" : "") } ?? "Add date", identifier: "taskDate") { openChip = .date }
             .popover(isPresented: chipOpen(.date), arrowEdge: .bottom) {
-                TaskDateEditor(draft: $draft, repeatExpanded: $repeatExpanded, canRepeat: !isSubtask, isTeamTask: isTeamTask, openTeamRepeat: openTeamRepeat, close: { openChip = nil })
+                TaskDateEditor(draft: $draft, repeatExpanded: $repeatExpanded, canRepeat: true, isTeamTask: isTeamTask, openTeamRepeat: openTeamRepeat, close: { openChip = nil })
             }
     }
     private func deadlineChip(_ day: Date) -> some View {
@@ -580,11 +563,11 @@ struct TaskInspectorForm: View {
     }
     @ViewBuilder private var addPropertyChip: some View {
         let canAssign = draft.string("assigned_to").isEmpty && !assigneeRequested
-        if draft.deadline == nil || draft.durationMinutes == nil || (!isSubtask && !draft["is_recurring"].flag) || canAssign {
+        if draft.deadline == nil || draft.durationMinutes == nil || !draft["is_recurring"].flag || canAssign {
             Menu {
                 if draft.deadline == nil { Button("Deadline", systemImage: "flag.checkered") { draft["deadline_date"] = .string(Dates.day(Date())); DispatchQueue.main.async { openChip = .deadline } } }
                 if draft.durationMinutes == nil { Button("Estimate", systemImage: "hourglass") { draft["duration_minutes"] = .number(30); DispatchQueue.main.async { openChip = .estimate } } }
-                if !isSubtask, !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; openChip = .date } }
+                if !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; openChip = .date } }
                 if canAssign { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
             } label: { ChipLabel(icon: "plus", iconLabel: "Add property") }
             // The button menu style keeps the outlined chip label; borderless would strip it to a bare glyph.
@@ -600,20 +583,13 @@ struct TaskInspectorForm: View {
         return "# " + [project, section].compactMap { $0 }.joined(separator: " / ")
     }
     @ViewBuilder private var destinationRow: some View {
-        if !isSubtask {
-            Button { openChip = .destination } label: {
-                Label { Text(destinationText).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading) } icon: { Image(systemName: draft.string("project_id").isEmpty ? "tray" : "folder").accessibilityHidden(true) }
-                    .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).contentShape(.rect)
-            }
-            .buttonStyle(.plain).pointerStyle(.link)
-            .accessibilityLabel("Project, \(destinationText.replacingOccurrences(of: "# ", with: ""))").accessibilityIdentifier("taskDestination")
-            .popover(isPresented: chipOpen(.destination), arrowEdge: .bottom) { TaskDestinationEditor(draft: $draft, projectLocked: isTeamTask, changeProject: changeTaskProject) }
-        } else {
-            VStack(alignment: .leading, spacing: DS.Space.xxs) {
-                Label(destinationText, systemImage: "folder").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
-                Text("Subtasks stay with the parent task. Manage repeating schedules and reminders on the parent task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary).fixedSize(horizontal: false, vertical: true)
-            }
+        Button { openChip = .destination } label: {
+            Label { Text(destinationText).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading) } icon: { Image(systemName: draft.string("project_id").isEmpty ? "tray" : "folder").accessibilityHidden(true) }
+                .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).contentShape(.rect)
         }
+        .buttonStyle(.plain).pointerStyle(.link)
+        .accessibilityLabel("Project, \(destinationText.replacingOccurrences(of: "# ", with: ""))").accessibilityIdentifier("taskDestination")
+        .popover(isPresented: chipOpen(.destination), arrowEdge: .bottom) { TaskDestinationEditor(draft: $draft, projectLocked: isTeamTask, changeProject: changeTaskProject) }
     }
 
     // MARK: Sections
@@ -666,79 +642,14 @@ struct TaskInspectorForm: View {
         if rowsMode {
             let progress = store.childProgress(of: taskID)
             block("subtasks", "Subtasks", summary: progress.total == 0 ? nil : "\(progress.completed)/\(progress.total)") {
-                ChildRowsList(parentID: taskID, flush: { saveTask?.cancel(); return saveNow() }, canAdd: true)
-            }
-        } else { teamChecklistSection }
-    }
-    /// A team task's embedded checklist (JSON `subtasks`).
-    @ViewBuilder private var teamChecklistSection: some View {
-        if canBreakDown {
-            let childRows = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope)
-            let done = childRows.filter { SubtaskTree.inlinePresentation($0.value).completed }.count
-            block("subtasks", "Subtasks", summary: childRows.isEmpty ? nil : "\(done)/\(childRows.count)") {
-                SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 })
-                ForEach(childRows) { row in subtaskRow(row) }
-                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(!SubtaskTree.hasListContainer(draft["subtasks"]) || subtask.trimmingCharacters(in: .whitespaces).isEmpty || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth) }
+                ChildRowsList(parentID: taskID, flush: { saveTask?.cancel(); return saveNow() }, canAdd: store.canEditSubtasks(of: taskID))
             }
         }
     }
 
-    private func subtaskRow(_ row: SubtaskInlineDraft.Row) -> some View {
-        let index = row.index, value = row.value
-        let preview = SubtaskTree.inlinePresentation(value)
-        let title = preview.title
-        let completed = preview.completed
-        let accessibleTitle = title.isEmpty ? "untitled subtask" : title
-        return HStack {
-            if TaskKind.mayComplete(preview) {
-            Button {
-                guard editorAvailable, let request = row.request,
-                      let changed = inlineSubtasks.toggle(request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
-                draft["subtasks"] = changed
-            } label: {
-                Image(systemName: completed ? "checkmark.circle.fill" : "circle").foregroundStyle(completed ? Color.taskfold : .secondary)
-            }.buttonStyle(.borderless)
-                .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
-                .accessibilityValue(completed ? "Completed" : "Not completed")
-                .accessibilityIdentifier("subtaskCompletion-\(index)")
-            } else {
-                Image(systemName: TaskKind(preview) == .heading ? "textformat" : "questionmark.square")
-                    .foregroundStyle(.secondary).accessibilityLabel(TaskKind(preview) == .heading ? "Heading, stays open" : "Task type unavailable")
-            }
-            if row.request != nil {
-            TextField("Subtask", text: Binding(get: {
-                row.request.flatMap { inlineSubtasks.value($0, children: draft["subtasks"], scope: inlineSubtaskScope) }.map(SubtaskTree.inlineTitle) ?? title
-            }, set: { text in
-                guard editorAvailable, let request = row.request,
-                      let changed = inlineSubtasks.title(text, request: request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
-                draft["subtasks"] = changed
-            }), prompt: Text("Subtask"), axis: .vertical)
-                .labelsHidden().textFieldStyle(.plain)
-            } else {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title.isEmpty ? "Subtask needs review" : title).accessibilityIdentifier("subtaskReadOnly-\(index)")
-                    Text("Review before editing").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            Button {
-                guard editorAvailable, let request = row.request, saveNow(),
-                      let current = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope).first(where: { $0.id == request.token && $0.request != nil }) else { return }
-                workspace.expandedTasks.insert(taskID)
-                workspace.open(workspace.childID(parent: taskID, value: current.value, index: current.index))
-            } label: { Image(systemName: "sidebar.trailing") }
-                .buttonStyle(.borderless).accessibilityLabel("Open details for " + accessibleTitle)
-                .disabled(isTeamTask || row.request == nil)
-            Button {
-                guard editorAvailable, let request = row.request,
-                      let changed = inlineSubtasks.remove([request], children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
-                draft["subtasks"] = changed
-            } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
-        }.disabled(row.request == nil)
-    }
-
     /// Blocked-by links and the "Waiting on" note. Only saved, non-team, top-level tasks offer them.
     @ViewBuilder private var dependenciesSection: some View {
-        if !isCreating, !isTeamTask, Workspace.subtaskPath(taskID) == nil, store.supportsDependencies(taskID: taskID) {
+        if !isCreating, !isTeamTask, store.supportsDependencies(taskID: taskID) {
             block("dependencies", "Blocked by", summary: store.blockerLines(for: taskID).isEmpty ? nil : "\(store.blockerLines(for: taskID).count)") {
                 TaskDependencyRows(taskID: taskID)
                 TaskWaitingOnField(task: draft)
@@ -819,8 +730,7 @@ struct TaskInspectorForm: View {
             if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) {
                 Text("Created " + created.formatted(date: .abbreviated, time: .shortened)).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
             }
-            if isTeamTask && !isCreating && !isSubtask && !teamDeletionClean { Text("Finish saving your edits before moving or deleting this task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
-            else if isTeamTask && !isCreating && isSubtask { Text("Manage this checklist item from its parent task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
+            if isTeamTask && !isCreating && !teamDeletionClean { Text("Finish saving your edits before moving or deleting this task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
             Text(isCreating ? "Added only when you choose Add Task" : "Changes save automatically")
                 .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary).accessibilityIdentifier("inspectorAutosaveHint")
         }
@@ -837,7 +747,7 @@ struct TaskInspectorForm: View {
             } catch { store.error = error.localizedDescription }
         }
         .quickLookPreview($preview)
-        .onAppear { workspaceBinding = admission?.workspace ?? WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=admission?.source.root ?? store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); if !teamDraftCaptured { teamDraftCaptured = true; if let admission { teamDraft = admission.teamDraft } else if Workspace.subtaskPath(taskID) == nil { teamDraft = sourceRoot.flatMap { try? store.captureTeamTaskEditor($0) } } }; load();sourceContext=admission?.source ?? TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
+        .onAppear { workspaceBinding = admission?.workspace ?? WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=admission?.source.root ?? store.record("tasks",id:taskID); if !teamDraftCaptured { teamDraftCaptured = true; if let admission { teamDraft = admission.teamDraft } else { teamDraft = sourceRoot.flatMap { try? store.captureTeamTaskEditor($0) } } }; load();sourceContext=admission?.source ?? TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { if !isTeamTask { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) } }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
@@ -956,7 +866,7 @@ struct TaskInspectorForm: View {
     }
     private var teamDeletionClean: Bool { draft == original && subtask.isEmpty && comment.isEmpty && notePin == nil }
     private func openTeamDeletion() {
-        guard !isCreating, Workspace.subtaskPath(taskID) == nil, editorAvailable, teamDeletionClean, let captured = teamDraft, taskID == captured.source.id else { return }
+        guard !isCreating, editorAvailable, teamDeletionClean, let captured = teamDraft, taskID == captured.source.id else { return }
         saveTask?.cancel()
         teamDeletion = TeamTaskDeletionRequest(draft: captured, current: { editorAvailable && teamDeletionClean }, perform: { requestID, audioReviews in
             guard editorAvailable, teamDeletionClean else { return false }
@@ -1050,8 +960,8 @@ struct TaskInspectorForm: View {
         for (key, value) in draft.fields where original.fields[key] != value { merged[key] = value }
         merged["title"] = .string(merged.title.trimmingCharacters(in: .whitespacesAndNewlines))
         if merged.title.isEmpty { merged["title"] = original["title"] }
-        if Workspace.subtaskPath(taskID) == nil && merged["is_recurring"].flag && merged.due == nil { merged["due_date"] = .string(Dates.day(Date())) }
-        if Workspace.subtaskPath(taskID) == nil { merged = store.applyingReminderDefault(merged, previous: original) }
+        if merged["is_recurring"].flag && merged.due == nil { merged["due_date"] = .string(Dates.day(Date())) }
+        merged = store.applyingReminderDefault(merged, previous: original)
         guard merged != current || notePin != nil else { original = merged; draft = merged; return true }
         var saved = false
         if let notePin {
@@ -1060,12 +970,6 @@ struct TaskInspectorForm: View {
         } else { saved = workspace.save("tasks", merged, name: "Edit Task", baseline: original) }
         if saved { original = merged; draft = merged; if subtask.isEmpty && comment.isEmpty {_=recoverySession?.finish()} }
         return saved
-    }
-    private func addSubtask() {
-        guard workspace.taskDepth(taskID) < SubtaskTree.maximumDepth else { return }
-        let title = subtask.trimmingCharacters(in: .whitespacesAndNewlines); guard !title.isEmpty else { return }
-        do { draft["subtasks"] = try SubtaskTree.adding(draft["subtasks"], title: title, baseDepth: workspace.taskDepth(taskID)); subtask = ""; saveNow(); workspace.expandedTasks.insert(taskID) }
-        catch { store.error = error.localizedDescription }
     }
     private func appendComment(text: String = "", attachment: Record? = nil) {
         var fields: [String: JSON] = ["id": .string(UUID().uuidString.lowercased()), "text": .string(text), "createdAt": .string(Dates.timestamp()), "authorId": .string(store.userID), "authorName": .string(store.profile.string("display_name").isEmpty ? (store.localMode ? "You" : store.email) : store.profile.string("display_name"))]
