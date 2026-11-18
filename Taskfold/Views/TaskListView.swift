@@ -940,12 +940,14 @@ struct QuickReferenceCompletionModifier: ViewModifier {
         result.options.removeAll { excluded.contains($0.group) }
         return result
     }
+    /// Event-time check (key presses, submit). `body` decides from the menu it already computed, so one render parses once.
     private var visible: Bool { focused && dismissedText != text && completion.range != nil }
     func body(content: Content) -> some View {
         let menu = completion
+        let isVisible = focused && dismissedText != text && menu.range != nil
         return VStack(alignment: .leading, spacing: DS.Space.s) {
             content
-            if visible {
+            if isVisible {
                 VStack(alignment: .leading, spacing: DS.Space.xs) {
                     HStack {
                         Text(menu.prompt).font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary)
@@ -975,7 +977,7 @@ struct QuickReferenceCompletionModifier: ViewModifier {
             }
         }
         .onSubmit {
-            if visible, menu.options.indices.contains(highlighted) { choose(menu.options[highlighted]) }
+            if isVisible, menu.options.indices.contains(highlighted) { choose(menu.options[highlighted]) }
             else { submit() }
         }
         .onChange(of: text) { old, new in
@@ -996,7 +998,7 @@ struct QuickReferenceCompletionModifier: ViewModifier {
         .onKeyPress(.downArrow) { move(1) }
         .onKeyPress(.upArrow) { move(-1) }
         .onKeyPress(.return) {
-            if visible, !menu.options.isEmpty { return acceptHighlighted() }
+            if isVisible, !menu.options.isEmpty { return acceptHighlighted() }
             if focused && submitsFromKeyboard { submit(); return .handled }
             return .ignored
         }

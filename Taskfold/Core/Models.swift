@@ -1018,6 +1018,13 @@ struct QuickEntry {
         var id: String { group + ":" + text }
     }
     static let groups = ["priority", "labels", "due_time", "recurrence", "due_date", "deadline_date", "duration_minutes", "project_id", "section_id", "assigned_to", "reminder_specs", "planning"]
+    /// A saved place written as "at Home", "arrive at Home" or "leave Home". It is only a draft choice:
+    /// it never enters `updates` or the title, and the caller reviews it with the place-reminder flow after Save.
+    struct PlaceChoice: Equatable {
+        enum Transition: String { case arrive, leave }
+        var name: String
+        var transition: Transition
+    }
     var title: String
     /// `this evening` or `someday`, when the entry asked for a planning state. The caller files the task after creating it.
     var planning: PlanningSlot?
@@ -1342,9 +1349,36 @@ struct QuickEntryContext {
     var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
     /// Only capture surfaces that can file a task under This Evening or Someday read those words as tokens.
     var planning = false
+    /// Names of saved places on this device, for completion only. Held in memory by a capture surface; never saved, synced or exported.
+    var places: [String] = []
     func choosingReferences(_ choices: [String: String]) -> Self { var copy = self; copy.referenceChoices = choices; return copy }
     static func key(_ name: String) -> String {
         name.trimmingCharacters(in: .whitespacesAndNewlines).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+    }
+}
+
+extension QuickEntry {
+    /// Finds the first "at / arrive at / leave" + saved place name phrase in an already cleaned `title` and
+    /// returns the title without it. Longer names win. Nothing is stored: the caller keeps the choice in memory
+    /// and reviews it with the place-reminder flow, so a place never reaches a task field, sync or backup.
+    static func place(in title: String, names: [String]) -> (title: String, raw: String, choice: PlaceChoice)? {
+        let cleaned = Set(names.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }).sorted { $0.count > $1.count }
+        guard !cleaned.isEmpty, title.utf16.count < 2_000 else { return nil }
+        let alternatives = cleaned.prefix(50).map { $0.split(whereSeparator: \.isWhitespace).map { NSRegularExpression.escapedPattern(for: String($0)) }.joined(separator: #"\s+"#) }.joined(separator: "|")
+        let pattern = #"(?<!\S)(?:(arrive|leave)(?:\s+at)?|(at))\s+("# + alternatives + #")(?![\p{L}\p{N}_])"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
+        let whole = NSRange(title.startIndex..., in: title)
+        // Quoted text, escaped words and links stay literal.
+        let literal = try? NSRegularExpression(pattern: #""[^"\n]*"|(?<!\S)(?:https?://|www\.)\S+|\\\S+"#)
+        let protected = literal?.matches(in: title, range: whole).map(\.range) ?? []
+        guard let match = regex.matches(in: title, range: whole).first(where: { m in !protected.contains { NSIntersectionRange($0, m.range).length > 0 } }),
+              let full = Range(match.range, in: title), let nameRange = Range(match.range(at: 3), in: title) else { return nil }
+        let typed = title[nameRange].split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        let name = cleaned.first { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ").caseInsensitiveCompare(typed) == .orderedSame } ?? typed
+        let leaves = Range(match.range(at: 1), in: title).map { title[$0].lowercased() == "leave" } ?? false
+        var rest = title
+        rest.replaceSubrange(full, with: " ")
+        return (rest.split(whereSeparator: \.isWhitespace).joined(separator: " "), String(title[full]), PlaceChoice(name: name, transition: leaves ? .leave : .arrive))
     }
 }
 

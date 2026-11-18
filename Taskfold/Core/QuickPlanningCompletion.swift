@@ -9,8 +9,23 @@ struct QuickPlanningCompletion {
     var options: [Option] = []
     var prompt = ""
     var literalGroups = Set<String>()
+    /// Test hook: how many full `QuickEntry` parses this completion ran. One keystroke must stay near ten.
+    private(set) var parseCount = 0
+    /// Options shown by one menu. Each shown option costs one parse, so this bounds the work per keystroke.
+    static let optionLimit = 8
+    /// Date words are few and cheap to order; "next " alone offers eleven.
+    static let dateOptionLimit = 12
     init(_ input: String, caretUTF16: Int? = nil, now: Date = Date(), calendar: Calendar = .current, task: Record = Record(), disabled: Set<String> = [], context: QuickEntryContext = QuickEntryContext()) {
         source = input
+        let places = Self.placeOptions(input, caretUTF16: caretUTF16, disabled: disabled, context: context)
+        plan(input, caretUTF16: caretUTF16, now: now, calendar: calendar, task: task, disabled: disabled, context: context)
+        guard let places else { return }
+        // Saved places go above the times when both edit the same words; otherwise only the place applies.
+        if range == places.range { options = places.options + options; literalGroups.insert("place") }
+        else { options = places.options; literalGroups = ["place"]; range = places.range }
+        prompt = "Choose a place"
+    }
+    private mutating func plan(_ input: String, caretUTF16: Int?, now: Date, calendar: Calendar, task: Record, disabled: Set<String>, context: QuickEntryContext) {
         let caret = caretUTF16 ?? input.utf16.count
         guard caret >= 0, let prefixRange = Range(NSRange(location: 0, length: caret), in: input) else { return }
         let prefix = String(input[prefixRange])
@@ -53,7 +68,8 @@ struct QuickPlanningCompletion {
             candidates = ["morning", "afternoon", "evening", "night"] + ["morning", "afternoon", "evening", "night"].map { "in the " + $0 }
         } else if fragment == "at" || fragment.hasPrefix("at ") {
             group = "due_time"; prompt = "Choose a planned time"
-            candidates = ["at 9am", "at noon", "at midnight", "at 12pm", "at 3pm", "at 6pm"]
+            // The first few are what most people mean, because only the first matching options are parsed and shown.
+            candidates = ["at 9am", "at noon", "at 3pm", "at 5pm", "at 6pm", "at 8am", "at 8pm", "at midnight", "at 12pm"]
             candidates += (1...12).flatMap { ["at \($0)am", "at \($0)pm"] }
             candidates += (0...23).flatMap { [String(format: "at %02d:00", $0), String(format: "at %02d:30", $0)] }
             if let h = Int(fragment.dropFirst(3)), (0...23).contains(h) { candidates.insert(String(format: "at %02d:00", h), at: 0) }
@@ -72,14 +88,23 @@ struct QuickPlanningCompletion {
         // Never replace a fragment inside a longer already recognised phrase. In
         // particular keep an existing repeat limit or a reminder clock intact.
         let before = String(input[..<start]), after = String(input[end...])
+        // Narrow by the typed prefix before any parse: most keystrokes leave a handful of candidates.
+        let query = fragment.trimmingCharacters(in: .whitespaces)
+        var seen = Set<String>()
+        let matching = candidates.filter { $0.hasPrefix(query) && seen.insert($0).inserted }
+        guard !matching.isEmpty else { return }
+        parseCount += 1
         let full = QuickEntry(input, now: now, calendar: calendar, context: context, task: task)
         if full.tokens.contains(where: { token in
             let same = token.group == group || (group == "reminder_specs" && token.group.hasPrefix("reminder_specs:"))
             return same && token.text.lowercased().hasPrefix(whole.lowercased()) && token.text.count > whole.count
         }) { return }
-        let query = fragment.trimmingCharacters(in: .whitespaces)
-        var seen = Set<String>()
-        for phrase in candidates where phrase.hasPrefix(query) && seen.insert(phrase).inserted {
+        let limit = group == "due_date" ? Self.dateOptionLimit : Self.optionLimit
+        var attempts = 0
+        for phrase in matching {
+            // One parse per shown option, plus one spare for a phrase the parser rejects.
+            guard options.count < limit, attempts <= limit else { break }
+            attempts += 1; parseCount += 1
             let parsed = QuickEntry(before + phrase + " " + after, now: now, calendar: calendar, context: context, task: task)
             guard let token = parsed.tokens.first(where: { $0.text.lowercased() == phrase && ($0.group == group || (group == "reminder_specs" && $0.group.hasPrefix("reminder_specs:"))) }) else { continue }
             let name = group == "reminder_specs" ? token.label : group == "due_date" ? token.label : group == "due_time" ? token.label : Recurrence.summary(Record(parsed.updates["recurrence_pattern"]?.object ?? [:]))
@@ -97,6 +122,41 @@ struct QuickPlanningCompletion {
             // earlier accepted reminders when dismissing only that fragment.
             literalGroups = Set(full.tokens.filter { $0.group.hasPrefix("reminder_specs:") && $0.text.lowercased() == whole.lowercased() }.map(\.group))
         }
+    }
+    private static let placeTrigger = try? NSRegularExpression(pattern: #"(?<!\S)(arrive\s+at|arrive|leave\s+at|leave|at)\s+"#, options: .caseInsensitive)
+    private static func fold(_ text: String) -> String { text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX")) }
+    /// "Arrive at <Place>" and "Leave <Place>" for saved places whose name starts with the words typed after
+    /// "at ", "arrive at " or "leave ". Names come from the context and are never stored. No parse runs here.
+    private static func placeOptions(_ input: String, caretUTF16: Int?, disabled: Set<String>, context: QuickEntryContext) -> (range: NSRange, options: [Option])? {
+        guard !context.places.isEmpty, !disabled.contains("place"), let trigger = placeTrigger else { return nil }
+        let caret = caretUTF16 ?? input.utf16.count
+        guard caret > 0, let prefixRange = Range(NSRange(location: 0, length: caret), in: input) else { return nil }
+        let prefix = String(input[prefixRange])
+        let found = trigger.matches(in: prefix, range: NSRange(prefix.startIndex..., in: prefix))
+        guard let match = found.last, let triggerRange = Range(match.range(at: 1), in: prefix), let restStart = Range(match.range, in: prefix)?.upperBound else { return nil }
+        let rest = String(prefix[restStart...])
+        // A place is a few plain words: no newline, quote, escape, reference or path, and nothing unfinished before it.
+        guard !rest.isEmpty, rest.count <= 60, !rest.contains(where: { $0.isNewline || "\"\\/@#".contains($0) }),
+              prefix[..<triggerRange.lowerBound].filter({ $0 == "\"" }).count % 2 == 0,
+              let startIndex = Range(NSRange(location: match.range(at: 1).location, length: 0), in: input)?.lowerBound,
+              var end = Range(NSRange(location: caret, length: 0), in: input)?.lowerBound else { return nil }
+        let typed = fold(rest)
+        // Typing a space after a finished name closes the choice; a name with spaces may still be unfinished.
+        let names = context.places.filter { fold($0).hasPrefix(typed) }.prefix(3)
+        guard !names.isEmpty else { return nil }
+        while end < input.endIndex, !input[end].isWhitespace { end = input.index(after: end) }
+        let word = prefix[triggerRange].lowercased().split(whereSeparator: \.isWhitespace).first.map(String.init) ?? "at"
+        let phrase = String(prefix[triggerRange])
+        var options: [Option] = []
+        for name in names {
+            if word == "at" || word == "arrive" {
+                options.append(Option(group: "place", recordID: "arrive:" + name, name: "Arrive at " + name, detail: "Place reminder · review after Save", reference: phrase + " " + name))
+            }
+            if word == "at" || word == "leave" {
+                options.append(Option(group: "place", recordID: "leave:" + name, name: "Leave " + name, detail: "Place reminder · review after Save", reference: (word == "leave" ? phrase : "leave") + " " + name))
+            }
+        }
+        return (NSRange(startIndex..<end, in: input), options)
     }
     func choosing(_ option: Option, in input: String) -> (text: String, caretUTF16: Int)? {
         guard input == source, options.contains(option), let range, let target = Range(range, in: input) else { return nil }
