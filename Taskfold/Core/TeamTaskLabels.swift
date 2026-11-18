@@ -45,23 +45,19 @@ struct TeamTaskLabelsDraft: Equatable {
     }
     mutating func remove(_ id: Int) { guard supported else { return }; entries.removeAll { $0.id == id } }
     /// Suggestions are only a convenience, never an authority or an account
-    /// catalog. Inspect bounded visible project data, including nested children.
+    /// catalog. Inspect bounded visible project data (subtasks are rows, so they are tasks here too).
     static func suggestions(project: String, roots: [Record]) -> [String] {
         var names = Set<String>(), visited = 0, inspectedValues = 0
-        func read(_ record: Record, depth: Int) {
-            guard depth <= SubtaskTree.maximumDepth, visited < 2048, inspectedValues < 4096, names.count < 200 else { return }; visited += 1
+        func read(_ record: Record) {
+            guard visited < 2048, inspectedValues < 4096, names.count < 200 else { return }; visited += 1
             for value in record["labels"].list.prefix(256) {
                 guard inspectedValues < 4096, names.count < 200 else { return }; inspectedValues += 1
                 guard case .string(let text) = value, let name = try? Self.name(text), name == text else { continue }
                 if names.count < 200 { names.insert(name) }
             }
-            for child in record["subtasks"].list.prefix(2048) {
-                if case .object(let fields) = child { read(Record(fields), depth: depth + 1) }
-                if visited >= 2048 || inspectedValues >= 4096 || names.count >= 200 { break }
-            }
         }
         for root in roots where root.string("project_id") == project {
-            read(root, depth: 0); if visited >= 2048 || inspectedValues >= 4096 || names.count >= 200 { break }
+            read(root); if visited >= 2048 || inspectedValues >= 4096 || names.count >= 200 { break }
         }
         return names.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }

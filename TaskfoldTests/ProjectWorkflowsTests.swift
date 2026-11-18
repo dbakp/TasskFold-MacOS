@@ -483,7 +483,7 @@ final class ProjectWorkflowsTests: XCTestCase {
         let first=try XCTUnwrap(tasks.first{$0.title=="Design review"})
         XCTAssertEqual(first.string("due_date"),"2026-11-01");XCTAssertEqual(first.string("deadline_date"),"2026-11-04")
         XCTAssertFalse(first.completed);XCTAssertTrue(first["comments"].list.isEmpty);XCTAssertTrue(first["attachments"].list.isEmpty);XCTAssertTrue(first.string("assigned_to").isEmpty)
-        XCTAssertFalse(Record(first["subtasks"].list[0].object).completed)
+        XCTAssertNil(first.fields["subtasks"]);XCTAssertFalse(try XCTUnwrap(tasks.first{$0.string("parent_id")==first.id}).completed)
         XCTAssertTrue(changes.allSatisfy{$0.fields["user_id"] == .string("recipient")})
         XCTAssertNotEqual(first.id,"source");XCTAssertFalse(first.string("task_generation").isEmpty)
         let retry=try template.instantiate(account:"recipient",name:"October launch",start:Dates.parse("2026-11-01"),run:run)
@@ -626,7 +626,7 @@ extension ProjectWorkflowsTests {
         let lines = try MultiLineCapture.preview("First task\r\nSecond task\r\n\r\nFourth line", account: owner)
         XCTAssertEqual(lines.map(\.number), [1, 2, 4])
     }
-    func testLegacyTemplateReferencesCannotAliasARootWithASubtask() throws {
+    func testLegacyTemplateReferencesCannotAliasARootWithAChildRow() throws {
         var source = fixture()
         source.tables["tasks"]![0]["id"] = .string("legacy")
         var another = source.tables["tasks"]![0]
@@ -634,9 +634,9 @@ extension ProjectWorkflowsTests {
         source.tables["tasks"]!.append(another)
         let definition = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: source)
         let tasks = try definition.instantiate(account: owner, name: "Legacy workflow").filter { $0.table == "tasks" }.map { Record($0.fields) }
-        let nested = tasks.flatMap { $0["subtasks"].list.map { Record($0.object).id } }
-        XCTAssertFalse(nested.isEmpty)
-        XCTAssertTrue(Set(tasks.map(\.id)).isDisjoint(with: Set(nested)))
+        let children = tasks.filter { !$0.string("parent_id").isEmpty }
+        XCTAssertFalse(children.isEmpty)
+        XCTAssertEqual(Set(tasks.map(\.id)).count, tasks.count, "A child row never reuses a root id")
     }
 }
 

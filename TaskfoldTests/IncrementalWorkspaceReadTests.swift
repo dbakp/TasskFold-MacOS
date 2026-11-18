@@ -158,7 +158,6 @@ final class IncrementalWorkspaceReadTests: XCTestCase {
         let plain = Mutation(table: "tasks", recordID: "a", method: "PATCH", fields: [:])
         let others: [Mutation] = [
             Mutation(table: "projects", recordID: "p", method: "PATCH", fields: [:]),
-            Mutation(table: "tasks", recordID: "m", method: "PATCH", fields: [:], personalTaskMove: true),
             Mutation(table: "tasks", recordID: "o", method: "ORDER", fields: [:]),
             Mutation(table: "sections", recordID: "s", method: "DELETE", fields: [:]),
             Mutation(table: "tasks", recordID: "w", method: "POST", fields: [:], workflowRun: UUID())]

@@ -40,15 +40,6 @@ final class DayOrderPreparationTests: XCTestCase {
         }
         XCTAssertTrue(DayPlacement.arranged([], ids: ["stale"]).isEmpty)
     }
-    func testSparseHeadingAnchorsRetainOutlineOrder() {
-        var heading = row("heading", priority: .number(2), marker: 0)
-        heading["is_heading"] = .bool(true)
-        let childID = SubtaskTree.reference(parent: "heading", key: "child")
-        let rows = [heading, row(childID, priority: .number(2), marker: 1), row("other", priority: .number(2), marker: 2)]
-        let ids = ["heading", "other"]
-        // The existing outline expansion still supplies the same explicit order.
-        XCTAssertEqual(DayPlacement.arrangedOutline(rows, ids: ids).map(\.id), ["heading", childID, "other"])
-    }
     func testPreparationDiagnosticWhenRequested() throws {
         guard let path = ProcessInfo.processInfo.environment["TASKFOLD_DAY_ORDER_REPORT"] else { return }
         var cases: [[String: Any]] = []

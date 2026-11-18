@@ -3,7 +3,7 @@ import SwiftUI
 struct TaskBreakdownView: View {
     let request: TaskBreakdownRequest
     let current: () -> Record?
-    let onApply: (JSON) throws -> Void
+    let onApply: ([String]) throws -> Void
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
@@ -27,7 +27,7 @@ struct TaskBreakdownView: View {
         })
     }
 
-    init(request: TaskBreakdownRequest, current: @escaping () -> Record?, onApply: @escaping (JSON) throws -> Void) {
+    init(request: TaskBreakdownRequest, current: @escaping () -> Record?, onApply: @escaping ([String]) throws -> Void) {
         self.request = request; self.current = current; self.onApply = onApply
         _generation = State(initialValue: TaskBreakdownSession(request: request))
         _goal = State(initialValue: request.source.title)
@@ -192,8 +192,8 @@ struct TaskBreakdownView: View {
     private func apply() {
         guard !busy, !applied, !generation.closed, let current = current() else { return }
         do {
-            let children = try request.applying(selected, to: current, workspace: workspace, session: session)
-            try onApply(children)
+            let titles = try request.applying(selected, to: current, workspace: workspace, session: session)
+            try onApply(titles)
             applied = true; close(); dismiss()
         } catch { self.error = error.localizedDescription }
     }

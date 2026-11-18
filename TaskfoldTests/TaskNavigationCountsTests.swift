@@ -27,18 +27,6 @@ final class TaskNavigationCountsTests: XCTestCase {
         XCTAssertEqual(counts.label("a"), 1); XCTAssertEqual(counts.label("b"), 2); XCTAssertEqual(counts.label("Urgent"), 1)
         XCTAssertEqual(counts.label("lower"), 1); XCTAssertEqual(counts.label("empty"), 1); XCTAssertEqual(counts.project(""), 1)
     }
-    func testHeadingDescendantsLegacyWorkAndOrdinaryChecklistsKeepExistingSemantics() {
-        let child = task("child", labels: [.string("a")]), done = task("done", done: true)
-        let heading = task("heading", labels: [.string("b")], heading: true, children: [.object(child.fields), .object(done.fields), .string("Legacy work")])
-        let ordinary = task("ordinary", labels: [.string("b")], children: [.object(child.fields)])
-        var unreadable = task("unreadable", project: "other", heading: true); unreadable["subtasks"] = .object(["future": .bool(true)])
-        let reading = ProductiveTaskReading(tasks: [heading, ordinary, unreadable]), labels = [label("a", "A"), label("b", "B")]
-        let counts = TaskNavigationCounts(reading: reading, labels: labels)
-        baseline(counts, reading: reading, labels: labels)
-        XCTAssertEqual(counts.total, 3); XCTAssertEqual(counts.project("p"), 3)
-        XCTAssertEqual(counts.label("a"), 1); XCTAssertEqual(counts.label("b"), 1)
-        XCTAssertEqual(reading.countLabel(counts.project("other"), project: "other"), "≥0")
-    }
     func testCacheReusesReadsButTracksCompletionMoveAndLabelCatalogChanges() {
         let cache = TaskCache(), labels = [label("a", "Old")]
         var row = task("one", labels: [.string("Old")]); cache.update([row])

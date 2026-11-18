@@ -125,7 +125,7 @@ final class TeamWorkspaceTests:XCTestCase {
     }
     func testTeamWidgetActionsAreWithheldWithoutDisablingPersonalChildActions() throws {
         let b=try boundary();var local=try snapshot();let team=local.tables["tasks"]![0],personal=local.tables["tasks"]![1]
-        let child=SubtaskTree.reference(parent:personal.id,key:"child"),teamChild=SubtaskTree.reference(parent:team.id,key:"child")
+        let child=LegacySubtaskReference.reference([personal.id, "child"]),teamChild=LegacySubtaskReference.reference([team.id, "child"])
         for id in [team.id,personal.id,child,teamChild] {local.widgetCompletion.states[id] = .init(token:UUID().uuidString.lowercased(),signature:"fixture")}
         let cache=try TeamWorkspaceCache(boundary:b,previous:nil,pending:[],tasks:local.tables["tasks"]!)
         XCTAssertEqual(Set(cache.widgetTokens(local).keys),Set([personal.id,child]))
@@ -535,13 +535,12 @@ extension TeamWorkspaceTests {
         proposed["labels"] = .array([.string("Design"), .string(UUID().uuidString.lowercased())])
         proposed["priority"] = .number(1); proposed["due_date"] = .string("2026-12-01")
         proposed["duration_minutes"] = .number(45)
-        proposed["subtasks"] = .array([.object(["id": .string(UUID().uuidString.lowercased()), "title": .string("Review contrast"), "completed": .bool(false)])])
         let id = UUID()
         let change = try XCTUnwrap(draft.mutation(desired: proposed, current: nil, workspace: workspace, session: session, cache: cache, enabled: true, requestID: id))
         XCTAssertEqual(change.id, id); XCTAssertEqual(change.method, "POST"); XCTAssertEqual(change.insertOnly, true)
         XCTAssertNil(change.baseline); XCTAssertEqual(change.teamTaskScope, draft.scope)
         for key in ["id", "user_id", "task_generation", "project_id", "description", "labels", "priority", "due_date", "duration_minutes"] { XCTAssertEqual(change.fields[key], proposed.fields[key], key) }
-        XCTAssertEqual(change.fields["subtasks"]?.list.count, 1)
+        XCTAssertNil(change.fields["subtasks"])
         XCTAssertEqual(try draft.scope.lifecycleAction(for: change), "create")
         XCTAssertEqual(try draft.scope.lifecycleBody(for: change)["request_id"], .string(id.uuidString.lowercased()))
         XCTAssertFalse(cache.canSend(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: proposed.fields), in: try snapshot()), "Ordinary writers stay closed")
@@ -724,24 +723,6 @@ extension TeamWorkspaceTests {
         let archived = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: workspace.account, origin: origin), previous: cache, pending: [], tasks: [row])
         XCTAssertThrowsError(try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: archived, enabled: true))
     }
-    func testNativeEditorChecklistIntentRetainsConcurrentOtherChildWithoutRewritingItsBaseline() throws {
-        let (_, cache, original, workspace, session) = try editorContext()
-        var source = original
-        let a: JSON = .object(["id": .string("alpha"), "title": .string("First"), "completed": .bool(false)])
-        let b: JSON = .object(["id": .string("beta"), "title": .string("Second"), "completed": .bool(false)])
-        source["subtasks"] = .array([a,b])
-        let draft = try TeamTaskEditorDraft(source: source, workspace: workspace, session: session, cache: cache, enabled: true)
-        var desired = source, current = source, local = a.object, remote = b.object
-        local["title"] = .string("My first child edit"); remote["title"] = .string("Their second child edit")
-        desired["subtasks"] = .array([.object(local),b]); current["subtasks"] = .array([a,.object(remote)])
-        let change = try XCTUnwrap(draft.mutation(desired: desired, current: current, workspace: workspace, session: session, cache: cache, enabled: true))
-        XCTAssertEqual(change.baseline?["subtasks"], source["subtasks"])
-        var state = Snapshot(tables: ["tasks": [current]]); state.apply(change)
-        let children = state.tables["tasks"]![0]["subtasks"].list.map(\.object)
-        XCTAssertEqual(children[0]["title"], .string("My first child edit")); XCTAssertEqual(children[1]["title"], .string("Their second child edit"))
-        XCTAssertEqual(change.teamTaskScope, draft.scope)
-    }
-
     func testNativeEditorUndoRestoresObservedStateWithFreshScopedRequest() throws {
         let (draft, cache, source, workspace, session) = try editorContext()
         var current = source; current["description"] = .string("Their observed notes")
@@ -955,33 +936,6 @@ extension TeamWorkspaceTests {
         let draft = try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true)
         XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: session, cache: cache, enabled: true))
         XCTAssertEqual(draft.source, row)
-    }
-    func testChildHistoryUsesSameScopeMaskAndPrunesActorsAfterRevocation() throws {
-        let b = try boundary(); var local = try snapshot(); var task = local.tables["tasks"]![0]
-        task["task_generation"] = .string(UUID().uuidString.lowercased())
-        task["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Synthetic child"), "completed": .bool(false)])])
-        local.tables["tasks"]![0] = task
-        let change = Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields)
-        var events = TaskNodeActivity.localRows(change, before: nil, after: task, account: b.account, recordedAt: Date())
-        XCTAssertEqual(events.count, 1)
-        let actor = UUID().uuidString.lowercased(); events[0]["actor_id"] = .string(actor)
-        local.tables[TaskNodeActivity.table] = events
-        local.tables[TaskNodeActivity.epochTable] = [Record(["id": .string("current"), "recorded_from": .string(Dates.timestamp())])]
-        local.tables["profiles", default: []].append(Record(["user_id": .string(actor), "display_name": .string("Synthetic actor")]))
-        let previous = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: local.tables["tasks"]!)
-        XCTAssertEqual(previous.filtering(local.tables)[TaskNodeActivity.table], events)
-        XCTAssertNotNil(previous.filtering(local.tables)["profiles"]?.first { $0.string("user_id") == actor })
-        let revoked = try TeamWorkspaceCache(boundary: boundary("left"), previous: previous, pending: [])
-        let hidden = revoked.presentation(local)
-        XCTAssertEqual(hidden[TaskNodeActivity.table], []); XCTAssertNil(hidden["profiles"]?.first { $0.string("user_id") == actor })
-        let merged = previous.merging(["tasks": local.tables["tasks"]!], into: local)
-        XCTAssertNil(merged.tables[TaskNodeActivity.table]); XCTAssertNil(merged.tables[TaskNodeActivity.epochTable])
-        // An event spanning an unavailable prior project must not disclose it,
-        // even if its current root is in a readable project.
-        var moved = events[0]; var before = moved["after_state"].object
-        before["project_id"] = .string(UUID().uuidString.lowercased()); moved["before_state"] = .object(before)
-        local.tables[TaskNodeActivity.table] = [moved]
-        XCTAssertEqual(previous.filtering(local.tables)[TaskNodeActivity.table], [])
     }
     @MainActor func testWorkspaceStillRefreshesTasksWhenOptionalChildHistoryFails() async throws {
         let f = try fixture(), b = try boundary(), api = try backend(b.account), local = try snapshot()

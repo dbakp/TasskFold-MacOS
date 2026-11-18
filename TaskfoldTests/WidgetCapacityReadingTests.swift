@@ -85,15 +85,6 @@ extension WidgetCapacityReadingTests {
         let rows = (0..<37).map { i in task("fraction-\(i)", day: "2026-10-24", time: "23:50", minutes: 25, zone: "Europe/Copenhagen", instant: String(format: "2026-10-24T21:50:00.%03dZ", i * 23)) }
         assertParity(rows, now: now, calendar: c)
     }
-    func testIncompleteHeadingAndUnaddressableWorkRetainTotalsAndFlag() {
-        let c = calendar(), now = Dates.parse("2026-10-24", calendar: c)!
-        var heading = task("heading", day: "2026-10-24", time: "09:00", minutes: 180)
-        heading["is_heading"] = .bool(true)
-        heading["subtasks"] = .array([.object(["title": .string("No identity"), "due_date": .string("2026-10-24"), "duration_minutes": .number(25)]), .string("Legacy instruction")])
-        assertParity([heading, task("regular", day: "2026-10-24")], now: now, calendar: c)
-        let value = WidgetProjection.capacityPayload(tasks: [heading], account: account, hours: WorkingHours(), window: nil, fallback: "off", now: now, calendar: c)
-        XCTAssertTrue(value.object["days"]!.object.values.allSatisfy { $0.object["workIncomplete"] == .bool(true) })
-    }
     func testHoursCalendarFreshnessAccountAndSettingsStayUnchanged() {
         let c = calendar(), now = TaskPlanning.instant("2026-10-24T10:00:00Z")!
         let rows = [task("timed", day: "2026-10-24", time: "09:00", minutes: 90), task("unknown", day: "2026-10-24", minutes: nil)]

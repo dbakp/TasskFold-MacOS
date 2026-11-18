@@ -85,7 +85,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
         }
         func body(for draft:TeamCompletionDraft) throws -> [String:JSON] {
             try draft.validate();try validate(for:draft)
-            let result:[String:JSON]=["original":.object(try draft.original.teamCompletion!.body(for:draft.original)),"record":.object(draft.record.fields),
+            let result:[String:JSON]=["original":.object(try draft.original.teamCompletion!.body(for:draft.original)),"record":.object(draft.record.fields.filter{$0.key != "subtasks"}),
              "request_id":.string(requestID.uuidString.lowercased()),"task_id":.string(taskID.uuidString.lowercased()),"task_generation":.string(generation.uuidString.lowercased()),
              "copy_assignments":.bool(assignments),"copy_reminders":.bool(reminders)]
             guard try TaskfoldJSONEncoder().encode(result).count<=900000 else {throw AppFailure(message:"This saved draft is too large to copy. The full draft remains on this device.")}
@@ -123,25 +123,18 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
                           fields["notification_sent_at"] == .null,fields["comments"] == .array([]),
                           fields["source_metadata"]?.object["taskfold_draft_copy_v1"]?.object["request_id"] == reply["request_id"] else {throw TeamCompletionDraft.invalid}
                 }
-                let children=fields["subtasks"] ?? .array([])
-                try TeamChecklist.validate(children)
                 if !replayed {
                     var metadata=draft.record["source_metadata"].object
                     metadata.removeValue(forKey:"taskfold_recurrence_v1")
                     metadata["taskfold_draft_copy_v1"] = .object(["original_request":.string(draft.original.id.uuidString.lowercased()),"provisional_id":.string(draft.record.id),"provisional_generation":draft.record["task_generation"],"request_id":reply["request_id"]!])
                     guard fields["source_metadata"] == .object(metadata),fields["completed"] == draft.record["completed"],
                           fields["attachments"] == (draft.record.fields["attachments"] ?? .array([])) else {throw TeamCompletionDraft.invalid}
-                    let rows=[fields]+Array(try TeamChecklist.indexed(children).values)
-                    for row in rows {
+                    for row in [fields] {
                         if !command.assignments {guard row["assigned_to"] == nil || row["assigned_to"] == .null else {throw TeamCompletionDraft.invalid}}
                         if !command.reminders {
                             let off=JSON.array([.object(ReminderSpec.relative(0,id:ReminderSpec.plannedID,enabled:false).raw)])
                             guard row["reminder_specs"] == off,(row["reminders"] ?? .array([])) == .array([]) else {throw TeamCompletionDraft.invalid}
                         }
-                    }
-                    for (id,row) in try TeamChecklist.indexed(children) {
-                        let epoch=TaskCompletion.successorID(parent:"team-checklist:"+command.requestID.uuidString.lowercased(),day:id)
-                        guard row[TeamChecklist.key] == .object(["epoch":.string(epoch),"version":.number(0)]) else {throw TeamCompletionDraft.invalid}
                     }
                 }
                 task=Record(fields)

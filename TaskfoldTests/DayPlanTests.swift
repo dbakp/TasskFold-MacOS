@@ -182,7 +182,7 @@ final class DayPlanTests: XCTestCase {
     func testCompletedHeadingsAndChecklistChildrenAreNeverPlaced() {
         let c = cal(), d = day(wed, c)
         var done = task("done", minutes: 30); done["completed"] = .bool(true)
-        let child = task(SubtaskTree.reference(parent: "parent", key: "k1"), minutes: 30)
+        let child = task(LegacySubtaskReference.reference(["parent", "k1"]), minutes: 30)
         let fit = DayPlan.fit(tasks: [done, child, task("a", minutes: 30)], events: [], on: d, hours: WorkingHours(), calendar: c)
         XCTAssertEqual(fit.placements.map(\.taskID), ["a"]); XCTAssertTrue(fit.didntFit.isEmpty)
     }
@@ -329,14 +329,14 @@ final class DayPlanTests: XCTestCase {
     func testCompletedTodayCountsRootTasksInTheLocalDay() {
         let c = cal(), d = day(wed, c)
         func done(_ id: String, _ stamp: String?) -> Record { var t = task(id); t["completed"] = .bool(true); if let stamp { t["completed_at"] = .string(stamp) }; return t }
-        let tasks = [done("a", "2026-11-11T08:00:00Z"), done("b", "2026-11-11T22:59:59Z"), done("midnight", "2026-11-11T23:00:00Z"), done("early", "2026-11-10T22:59:59Z"), done("nostamp", nil), done(SubtaskTree.reference(parent: "p", key: "k1"), "2026-11-11T09:00:00Z"), task("open")]
+        let tasks = [done("a", "2026-11-11T08:00:00Z"), done("b", "2026-11-11T22:59:59Z"), done("midnight", "2026-11-11T23:00:00Z"), done("early", "2026-11-10T22:59:59Z"), done("nostamp", nil), done(LegacySubtaskReference.reference(["p", "k1"]), "2026-11-11T09:00:00Z"), task("open")]
         XCTAssertEqual(DayPlan.completedCount(tasks, on: d, calendar: c), 2)
     }
 
     func testShutdownListsOpenWorkPlannedForTodayInOrder() {
         let c = cal()
         var done = task("done"); done["completed"] = .bool(true)
-        let tasks = [task("a"), done, task("tomorrow", date: "2026-11-12"), task("b"), task("overdue", date: "2026-11-09"), task("moved", date: "2026-11-12"), task(SubtaskTree.reference(parent: "p", key: "k1"))]
+        let tasks = [task("a"), done, task("tomorrow", date: "2026-11-12"), task("b"), task("overdue", date: "2026-11-09"), task("moved", date: "2026-11-12"), task(LegacySubtaskReference.reference(["p", "k1"]))]
         XCTAssertEqual(DayPlan.openForShutdown(tasks, plannedIDs: [], day: wed, calendar: c).map(\.id), ["a", "b"])
         XCTAssertEqual(DayPlan.openForShutdown(tasks, plannedIDs: ["overdue", "moved", "done"], day: wed, calendar: c).map(\.id), ["a", "b", "overdue"], "Planned and still open, but not moved to a later day")
     }

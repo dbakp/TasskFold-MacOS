@@ -88,27 +88,6 @@ final class TaskCompletionTests: XCTestCase {
         source["recurrence_pattern"] = .object(["type": .string("daily"), "endDate": .string("2026-10-25")])
         XCTAssertEqual(TaskCompletion.complete(source, tasks: [], at: now).count, 2)
     }
-    func testNestedChecklistIDsAreNewStableAndIndependentAcrossSuccessiveOccurrences() throws {
-        var source = task(); source["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Step"), "completed": .bool(true), "completed_at": .string("old"), "deadline_date": .string("2026-10-24"), "future": .number(99), "subtasks": .array([.object(["id": .string("grandchild"), "completed": .bool(true)])])])])
-        let first = Record(try XCTUnwrap(TaskCompletion.complete(source, tasks: [], at: now).last?.fields))
-        let retry = Record(try XCTUnwrap(TaskCompletion.complete(source, tasks: [], at: now).last?.fields))
-        let second = Record(try XCTUnwrap(TaskCompletion.complete(first, tasks: [], at: now).last?.fields))
-        let child = Record(try XCTUnwrap(first["subtasks"].list.first?.object)), grandchild = Record(try XCTUnwrap(child["subtasks"].list.first?.object))
-        XCTAssertNotEqual(child.id, "child"); XCTAssertNotEqual(grandchild.id, "grandchild")
-        XCTAssertEqual(first["subtasks"], retry["subtasks"]); XCTAssertNotEqual(first["subtasks"], second["subtasks"])
-        XCTAssertFalse(child.completed); XCTAssertFalse(grandchild.completed); XCTAssertEqual(child["completed_at"], .null)
-        XCTAssertEqual(child["deadline_date"], .null); XCTAssertEqual(child["future"], .number(99))
-        XCTAssertEqual(source["subtasks"].list.first?.object["id"], .string("child"))
-    }
-    func testChildPlansMoveByOccurrenceDaysAcrossDSTWhileUndatedChildrenStayUndated() throws {
-        var source = task(); source["time_zone"] = .string("Europe/Copenhagen")
-        source["subtasks"] = .array([.object(["id": .string("planned"), "due_date": .string("2026-10-24"), "due_time": .string("09:00"), "time_zone": .string("Europe/Copenhagen"), "scheduled_at": .string("2026-10-24T07:00:00Z"), "duration_minutes": .number(10)]), .object(["id": .string("undated"), "title": .string("Later")]), .string("future opaque child")])
-        let next = Record(try XCTUnwrap(TaskCompletion.complete(source, tasks: [], at: now, calendar: calendar("America/New_York")).last?.fields))
-        let children = next["subtasks"].list
-        XCTAssertEqual(children[0].object["due_date"], .string("2026-10-25")); XCTAssertEqual(children[0].object["scheduled_at"], .string("2026-10-25T08:00:00Z"))
-        XCTAssertEqual(children[0].object["duration_minutes"], .number(10)); XCTAssertNil(children[1].object["due_date"])
-        XCTAssertEqual(children[2], .string("future opaque child"))
-    }
     func testQueuedCompletionRetainsCreateOnlyMarkerAcrossPersistenceAndDoesNotReplaceUnrelatedWork() throws {
         let source = task(); var snapshot = Snapshot(); snapshot.tables["tasks"] = [source]
         snapshot.pending = TaskCompletion.complete(source, tasks: [source], at: now)

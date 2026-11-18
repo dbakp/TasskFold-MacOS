@@ -55,17 +55,9 @@ struct PrintDocument: Equatable, Sendable {
         var parentContext: [String: String] = [:]
         var parentTitlePaths: [String: [String]] = [:]
         if let hierarchyRoots {
-            let displayed = groups.flatMap { $0.1 }
-            let childRoots = Set(displayed.compactMap { SubtaskTree.referencePath($0.id)?.first })
-            let index = try TaskHierarchyIndex(roots: hierarchyRoots.filter { childRoots.contains($0.id) }, projects: projects, workspace: WorkspaceBinding(account: "print-review", generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
-            for task in displayed {
-                if task.id.hasPrefix("subtask:") {
-                    guard let item = index.item(task.id), matchesSource(item.record, task) else { throw AppFailure(message: "A filtered subtask changed. Refresh the list before printing.") }
-                    parentContext[task.id] = item.parentTitles.joined(separator: " › "); parentTitlePaths[task.id] = item.parentTitles
-                } else {
-                    let roots = hierarchyRoots.filter { $0.id == task.id }
-                    guard roots.count == 1, matchesSource(roots[0], task) else { throw AppFailure(message: "A filtered task changed. Refresh the list before printing.") }
-                }
+            for task in groups.flatMap({ $0.1 }) {
+                let roots = hierarchyRoots.filter { $0.id == task.id }
+                guard roots.count == 1, matchesSource(roots[0], task) else { throw AppFailure(message: "A filtered task changed. Refresh the list before printing.") }
             }
         }
         // Child rows: a project list prints a subtask under its parent when both are shown; anywhere else (and in
@@ -87,7 +79,7 @@ struct PrintDocument: Equatable, Sendable {
         }
         var count = 0, bytes = title.utf8.count + subtitle.utf8.count
         func item(_ task: Record, depth: Int, project: String, parentTitles: [String] = []) throws -> [Item] {
-            guard depth <= SubtaskTree.readableDepth else { throw AppFailure(message: "A checklist is too deeply nested to print completely. Export a smaller selection.") }
+            guard depth <= TaskTree.maximumAncestors else { throw AppFailure(message: "These subtasks are too deeply nested to print completely. Export a smaller selection.") }
             count += 1
             guard count <= 10_000 else { throw AppFailure(message: "Choose a smaller list to print. This selection has more than 10,000 items.") }
             let name = task.title.isEmpty ? "Untitled task" : task.title
@@ -106,7 +98,7 @@ struct PrintDocument: Equatable, Sendable {
             }
             let assigned = task.string("assigned_to").isEmpty ? "" : assigneeName(task)
             if !assigned.isEmpty { detail.append("Assigned to " + assigned) }
-            if depth > 6 { detail.append("Checklist level \(depth)") }
+            if depth > 6 { detail.append("Subtask level \(depth)") }
             let metadata = detail.joined(separator: " · ")
             bytes += name.utf8.count + notes.utf8.count + metadata.utf8.count
             guard bytes <= 16_000_000 else { throw AppFailure(message: "This selection is too large to print completely. Choose a smaller list.") }
@@ -126,22 +118,12 @@ struct PrintDocument: Equatable, Sendable {
                 if case .string(let id) = task["assigned_to"] { if !id.isEmpty && assigned.isEmpty { readable = false } }
                 else { readable = false }
             }
-            var parentSource = ""
-            if let path = SubtaskTree.referencePath(task.id) {
-                parentSource = path[0]
-                for key in path.dropFirst().dropLast() { parentSource = SubtaskTree.reference(parent: parentSource, key: key) }
-            }
+            let parentSource = depth == 0 ? "" : rowTree?.parentID(of: task.id) ?? ""
             let fields: Set<String> = ["title", "description", "completed", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes"]
             let csv = CSVSource(values: task.fields.filter { fields.contains($0.key) }, project: project, labels: namedLabels, assignee: assigned,
                 parentPath: depth == 0 ? parentContext[task.id] ?? "" : parentTitles.joined(separator: " › "), parentSource: parentSource, readable: readable)
             var result = [Item(sourceID: task.id, title: name, metadata: metadata, notes: notes, completed: task.completed, depth: depth, heading: TaskKind(task) == .heading, completable: TaskKind.mayComplete(task), csv: csv)]
             if noteOnly || (hierarchyRoots != nil && (!expandOrdinaryChecklists || TaskKind(task) != .task)) { return result }
-            guard task["subtasks"] == .null || { if case .array = task["subtasks"] { return true }; return false }() else { throw AppFailure(message: "A checklist uses an unsupported format. Its saved content is unchanged.") }
-            for value in task["subtasks"].list {
-                guard case .object = value else { throw AppFailure(message: "A checklist item uses an unsupported format. Its saved content is unchanged.") }
-                var child = Record(value.object); child["project_id"] = task["project_id"]
-                result += try item(child, depth: depth + 1, project: project, parentTitles: (depth == 0 ? parentTitlePaths[task.id] ?? [] : parentTitles) + [name])
-            }
             if nestRows, let rowTree {
                 // Shown descendants whose nearest shown ancestor is this task (a hidden level in between is skipped).
                 for child in rowTree.descendants(of: task.id) where shownRows.contains(TaskTree.key(child.id)) &&

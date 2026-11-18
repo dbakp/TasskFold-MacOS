@@ -485,11 +485,6 @@ indirect enum FilterRule: Hashable, Sendable {
         case .not(let rule): return rule.usesClockWindow
         }
     }
-    static func supportedParentShape(_ task: Record) -> Bool {
-        if task["subtasks"] == .null { return true }
-        guard case .array(let children) = task["subtasks"] else { return false }
-        return children.allSatisfy { if case .object(let fields) = $0, case .string? = fields["title"] { return true }; return false }
-    }
     var usesAssignmentHistory: Bool {
         switch self {
         case .predicate(let field, _): return field == "assigned_by"
@@ -571,7 +566,6 @@ indirect enum FilterRule: Hashable, Sendable {
         case .and(let rules), .or(let rules): return rules.allSatisfy { $0.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people, bindings: bindings) }
         case .not(let rule): return rule.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people, bindings: bindings)
         case .predicate(let field, let value):
-            if field == "parent", !Self.supportedParentShape(task) { return false }
             if ["shared", "personal"].contains(field) {
                 guard !userIdentityMissing, task["project_id"] == .null || { if case .string = task["project_id"] { return true }; return false }() else { return false }
                 let project = task.string("project_id")
@@ -614,9 +608,8 @@ indirect enum FilterRule: Hashable, Sendable {
         if !hasQuerySections, usesAssignmentHistory, !assignments.available || userID.isEmpty { return nil }
         if !hasQuerySections && !usesTaskHierarchy && productiveWork == false { return false }
         let hierarchyScope = hierarchyScope ?? (productiveWork == true || usesTaskHierarchy)
-        let childPath = SubtaskTree.referencePath(task.id)
-        guard !task.id.hasPrefix("subtask:") || childPath != nil else { return false }
-        if !hasQuerySections, !hierarchyScope, childPath != nil { return false }
+        // A legacy `subtask:` reference is never a task row (subtasks are rows with `parent_id`).
+        guard !task.id.hasPrefix(LegacySubtaskReference.prefix) else { return false }
         if !hasQuerySections, usesDatePreferences, datePreferences == nil { return false }
         // Independent query sections may still show safe results when the reader has no clock.
         if !hasQuerySections, usesClockWindow, now.map({ $0.timeIntervalSinceReferenceDate.isFinite }) != true { return false }
@@ -714,10 +707,10 @@ indirect enum FilterRule: Hashable, Sendable {
             case "shared", "personal":
                 let project = task.string("project_id")
                 return project.isEmpty ? field == "personal" : bindings.first { $0.field == field && $0.value == value }?.ids.contains(project) == true
-            // Child rows (`parent_id`) answer the same questions as the legacy JSON paths; with no rows nothing changes.
-            case "root": return childPath == nil && !ChildRowFilterScope.isChildRow(task)
-            case "subtask": return childPath != nil || ChildRowFilterScope.isChildRow(task)
-            case "parent": return !task["subtasks"].list.isEmpty || ChildRowFilterScope.hasChildRows(task)
+            // Subtasks are rows: `parent_id` answers root, subtask and parent.
+            case "root": return !ChildRowFilterScope.isChildRow(task)
+            case "subtask": return ChildRowFilterScope.isChildRow(task)
+            case "parent": return ChildRowFilterScope.hasChildRows(task)
             case "project": return task.string("project_id") == value
             case "project_tree": return bindings.first { $0.field == field && $0.value == value }?.ids.contains(task.string("project_id")) == true
             case "section": return task.string("section_id") == value

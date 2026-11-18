@@ -38,7 +38,6 @@ struct InboxReviewRequest: Identifiable, Sendable {
     func actionable(_ shown: Record, tasks: [Record], account: String, generation: UUID) -> Record? {
         guard workspace.matches(account: account, generation: generation), ids.contains(shown.id),
               let row = Self.candidates(tasks: tasks).first(where: { $0.id == shown.id }), Self.eligible(row),
-              SubtaskTree.referencePath(shown.id) == nil || row == shown,
               row["task_generation"] == shown["task_generation"],
               row["completion_version"].integer == shown["completion_version"].integer else { return nil }
         return row
@@ -61,42 +60,4 @@ struct InboxReviewLink: Equatable, Sendable {
               let value = items.first(where: { $0.name == "batch" })?.value, let batch = InboxReviewBatch(rawValue: value) else { return nil }
         return InboxReviewLink(account: account, batch: batch)
     }
-}
-
-
-/// A grouped child never silently detaches or moves its siblings. The native
-/// review captures the entire root/destination and revalidates both at Confirm.
-struct InboxHeadingMoveReview: Identifiable {
-    let id = UUID()
-    let workspace: WorkspaceBinding
-    let root: Record
-    let destination: Record
-    let previewTasks: [Record]
-    let assignmentCount: Int
-    var taskTitles: [String] { previewTasks.map(\.title) }
-    var taskCount: Int { previewTasks.count }
-    init(task: Record, tasks: [Record], projects: [Record], destination: String, workspace: WorkspaceBinding) throws {
-        guard let path = SubtaskTree.referencePath(task.id),
-              let root = tasks.first(where: { $0.id == path[0] }), tasks.filter({ $0.id == root.id }) == [root], TaskKind(root) == .heading,
-              root.string("project_id").isEmpty, !root.completed,
-              root.string("user_id").isEmpty || root.string("user_id") == workspace.account,
-              projects.filter({ $0.id == destination }).count == 1,
-              let target = projects.first(where: { $0.id == destination }), target["team_id"] == .null,
-              !ProjectOrganization.archivedIDs(in: projects).contains(destination) else { throw Self.changed }
-        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: workspace)
-        let reading = ProductiveTaskReading(tasks: [root])
-        guard index.item(task.id)?.record == task, !reading.incomplete,
-              reading.contains(task.id), InboxReviewRequest.eligible(task) else { throw Self.changed }
-        self.workspace = workspace; self.root = root; self.destination = target
-        previewTasks = ProjectWorkScope(tasks: [root]).items.map(\.task)
-        assignmentCount = index.items.filter { !$0.source.string("assigned_to").isEmpty }.count
-    }
-    static var changed: PlannerFailure { PlannerFailure(message: "This group or destination changed. Close this review and choose its current contents again.") }
-    func changes(tasks: [Record], projects: [Record], workspace: WorkspaceBinding) throws -> [Mutation] {
-        guard workspace == self.workspace, tasks.filter({ $0.id == root.id }) == [root],
-              projects.filter({ $0.id == destination.id }) == [destination],
-              !ProjectOrganization.archivedIDs(in: projects).contains(destination.id) else { throw Self.changed }
-        return try TaskSelectionPlan.changes([.init(task: root, action: .patch(["project_id": .string(destination.id), "section_id": .null]), workspace: workspace)], accessibleRoots: tasks, projects: projects, workspace: workspace)
-    }
-    func contains(_ reference: String) -> Bool { SubtaskTree.referencePath(reference)?.first == root.id }
 }

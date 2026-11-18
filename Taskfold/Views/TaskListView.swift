@@ -252,7 +252,7 @@ struct TaskListView: View {
         switch scope { case .project, .label, .all, .saved: return somedayListed; default: return [] }
     }
     private var boardRows: [Record] { let hidden = somedayListed; return hidden.isEmpty ? filtered : filtered.filter { !Planning.hides($0, listed: hidden) } }
-    private var calendarTasks: [Record] { filtered.filter { Workspace.subtaskPath($0.id) == nil && TaskKind.mayComplete($0) } }
+    private var calendarTasks: [Record] { filtered.filter { TaskKind.mayComplete($0) } }
     private var captureProjectID: String { captureProjectOverride ?? projectID }
     private func beginBoardAdd(_ column: ProjectColumn) {
         captureSection = ""; captureDateOverride = nil; captureProjectOverride = nil
@@ -690,7 +690,7 @@ struct TaskListView: View {
         rowSwipe.isAvailable = { store.signedIn && workspace.section.key == preferenceKey && workspace.selection.count <= 1 && !workspace.drag.active && !quickAddVisible }
     }
     private func rowGestureIntent(_ task: Record) -> RowGestureIntent? {
-        let rootID = SubtaskTree.referencePath(task.id)?.first ?? task.id
+        let rootID = task.id
         guard let root = store.activeTasks.first(where: { $0.id == rootID }) else { return nil }
         return RowGestureIntent(task: task, root: root, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
     }
@@ -770,11 +770,9 @@ struct TaskListView: View {
                 Button("Inbox", systemImage: "tray") { workspace.move(targets, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name, systemImage: "folder") { workspace.move(targets, toProject: project.id) } }
             }
-            .disabled(workspace.hierarchyPresentation && targets.contains { Workspace.subtaskPath($0) != nil })
-            .help("Subtasks stay in their parent's project")
             Menu("Priority") { ForEach(1...4, id: \.self) { n in Button(n == 4 ? "None" : "Priority \(n)", systemImage: "flag") { workspace.setPriority(targets, n) } } }
             Button("Duplicate", systemImage: "doc.on.doc") { workspace.duplicate(targets) }
-            if tasks.count == 1, let task = tasks.first, Workspace.subtaskPath(task.id) == nil {
+            if tasks.count == 1, let task = tasks.first {
                 Button("Save as Template…", systemImage: "square.stack.3d.up") { captureWorkflow(.task, task) }
                     .accessibilityIdentifier("captureTaskTemplate")
             }

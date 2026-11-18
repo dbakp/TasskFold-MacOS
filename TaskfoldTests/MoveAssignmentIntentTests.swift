@@ -13,14 +13,9 @@ final class MoveAssignmentIntentTests: XCTestCase {
         task["id"] = .string(taskID); task["task_generation"] = .string(generation)
         task["title"] = .string("Keep all project work"); task["assigned_to"] = .string(owner)
         task["section_id"] = inbox ? .null : .string("a6110000-0000-4000-8000-000000000007")
-        task["subtasks"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(#"[{"id":"child","title":"Keep child","assigned_to":"old-person","é":9007199254740993,"e\u0301":17,"future":{"keep":"exact"},"subtasks":null},"Legacy text"]"#.utf8))
         return task
     }
-    private func mark(_ value: Mutation, _ current: Record?) -> Mutation {
-        var value = value
-        if TaskAssignment.scopedProject(value) == nil, value.table == "tasks", value.method == "PATCH", let project = value.fields["project_id"], let current, project != current["project_id"] { value.personalTaskMove = true }
-        return value
-    }
+    private func mark(_ value: Mutation, _ current: Record?) -> Mutation { value }
     private func snapshot(_ row: Record) -> Snapshot { Snapshot(tables: ["tasks": [row]]) }
     private func row(_ snapshot: Snapshot) throws -> Record { try XCTUnwrap(snapshot.tables["tasks"]?.first) }
     private func execute(_ input: [Mutation], _ state: inout Snapshot, personal: Bool = true) throws -> [Mutation] {
@@ -33,28 +28,21 @@ final class MoveAssignmentIntentTests: XCTestCase {
         return committed
     }
     private func replay(_ changes: [Mutation], from state: Snapshot, personal: Bool = true) throws -> [Mutation] {
-        try TaskAssignment.replayingHistory(changes.map(PersonalTaskMove.historyAction), existing: { table, id in state.tables[table]?.first { $0.id == id } }, markMove: personal ? mark : { value, _ in value })
+        try TaskAssignment.replayingHistory(changes, existing: { table, id in state.tables[table]?.first { $0.id == id } }, markMove: personal ? mark : { value, _ in value })
     }
     private func move(_ original: Record, person: String? = nil) throws -> Mutation {
         var draft = try TaskAssignment.movingDraft(original, to: .string(target))
         if let person { draft["assigned_to"] = .string(person) }
         return try XCTUnwrap(PinnedNotes.edit(draft, existing: original, baseline: original))
     }
-    private func assertMetadata(_ value: JSON, file: StaticString = #filePath, line: UInt = #line) throws {
-        let encoded = try TaskfoldJSONEncoder().encode(value)
-        for token in [#""é":9007199254740993"#, #""e\u0301":17"#, #""future":{"keep":"exact"}"#] { XCTAssertNotNil(encoded.range(of: Data(token.utf8)), file: file, line: line) }
-        XCTAssertEqual(value.list[1], .string("Legacy text"), file: file, line: line)
-    }
     func testSameAssigneeRemainsAuthoredWhenTheProjectChanges() throws {
         let task = try original(), change = try move(task, person: owner)
         XCTAssertEqual(change.fields["assigned_to"], .string(owner)); XCTAssertEqual(change.baseline?["assigned_to"], .string(owner))
         var state = snapshot(task); let commands = try execute([change], &state)
         XCTAssertEqual(commands.count, 2); XCTAssertEqual(try row(state)["assigned_to"], .string(owner))
-        XCTAssertNil(commands[0].fields["assigned_to"]); XCTAssertNil(commands[0].fields["subtasks"])
+        XCTAssertEqual(commands[0].fields["assigned_to"], .null); XCTAssertNil(commands[0].fields["subtasks"])
         XCTAssertEqual(commands[1].fields, ["assigned_to": .string(owner), "project_id": .string(target)])
         XCTAssertEqual(TaskAssignment.scopedProject(commands[1]), .string(target))
-        _ = try PersonalTaskMove.body(commands[0], account: owner)
-        try assertMetadata(row(state)["subtasks"])
     }
     func testOrdinaryNoteEditDoesNotReauthorAnUntouchedAssignee() throws {
         let task = try original(); var edited = task; edited["description"] = .string("Only my note changed")
@@ -66,7 +54,7 @@ final class MoveAssignmentIntentTests: XCTestCase {
         let task = try original(); let change = try move(task, person: member)
         let first = try TaskAssignment.normalizedChanges([change], existing: { _ in task }, markMove: mark)
         let again = try TaskAssignment.normalizedChanges(first, existing: { _ in task }, markMove: mark)
-        XCTAssertEqual(first, again); XCTAssertEqual(again.count, 2); XCTAssertNil(again[1].personalTaskMove)
+        XCTAssertEqual(first, again); XCTAssertEqual(again.count, 2)
     }
     func testUndoRedoKeepsRootAssigneeSectionAndFreshMoveIdentities() throws {
         for personal in [true, false] {
@@ -74,19 +62,15 @@ final class MoveAssignmentIntentTests: XCTestCase {
                 let task = try original(); var state = snapshot(task)
                 let originalCommands = try execute([move(task, person: person)], &state, personal: personal)
                 var entry = EditHistory(changes: originalCommands, snapshot: snapshot(task))
-                var requests = Set(originalCommands.filter { $0.personalTaskMove == true }.map(\.id))
                 for _ in 0..<3 {
                     let beforeUndo = state, undo = try replay(entry.undo, from: state, personal: personal)
-                    let undoCommands = try execute(undo, &state, personal: personal)
+                    _ = try execute(undo, &state, personal: personal)
                     let undone = try row(state)
                     XCTAssertEqual(undone["project_id"], task["project_id"]); XCTAssertEqual(undone["assigned_to"], task["assigned_to"]); XCTAssertEqual(undone["section_id"], task["section_id"])
-                    try assertMetadata(undone["subtasks"])
-                    for command in undoCommands where command.personalTaskMove == true { XCTAssertTrue(requests.insert(command.id).inserted) }
                     let redoEntry = EditHistory(changes: undo, snapshot: beforeUndo, id: entry.id).reversed
                     let beforeRedo = state, redo = try replay(redoEntry.redo, from: state, personal: personal)
-                    let redoCommands = try execute(redo, &state, personal: personal)
+                    _ = try execute(redo, &state, personal: personal)
                     XCTAssertEqual(try row(state)["project_id"], .string(target)); XCTAssertEqual(try row(state)["assigned_to"], .string(person)); XCTAssertEqual(try row(state)["section_id"], .null)
-                    for command in redoCommands where command.personalTaskMove == true { XCTAssertTrue(requests.insert(command.id).inserted) }
                     entry = EditHistory(changes: redo, snapshot: beforeRedo, id: entry.id)
                 }
             }
@@ -100,7 +84,7 @@ final class MoveAssignmentIntentTests: XCTestCase {
         XCTAssertEqual(try row(state)["project_id"], .null); XCTAssertEqual(try row(state)["assigned_to"], .string(owner))
     }
     func testInboxRefusesAnotherPersonsAssignmentBeforeReturningCommands() throws {
-        let task = try original(); let change = Mutation(table: "tasks", recordID: taskID, method: "PATCH", fields: ["project_id": .null, "assigned_to": .string(member)], personalTaskMove: true)
+        let task = try original(); let change = Mutation(table: "tasks", recordID: taskID, method: "PATCH", fields: ["project_id": .null, "assigned_to": .string(member)])
         XCTAssertThrowsError(try TaskAssignment.normalizedChanges([change], existing: { _ in task }))
         XCTAssertEqual(task["project_id"], .string(source)); XCTAssertEqual(task["assigned_to"], .string(owner))
     }
@@ -137,16 +121,6 @@ final class MoveAssignmentIntentTests: XCTestCase {
         let resolved = try XCTUnwrap(SyncConflict(mutation: commands[0], remote: task).resolving(state, keepLocal: false))
         XCTAssertEqual(resolved.pending.map(\.id), [later.id]); XCTAssertEqual(try row(resolved)["project_id"], task["project_id"])
         XCTAssertEqual(try row(resolved)["assigned_to"], task["assigned_to"]); XCTAssertEqual(try row(resolved)["description"], .string("Keep later authored notes"))
-    }
-    func testUndoDoesNotReplayHistoricalChildNotes() throws {
-        let task = try original(); var state = snapshot(task)
-        let commands = try execute([move(task, person: member)], &state)
-        let history = EditHistory(changes: commands, snapshot: snapshot(task))
-        var current = try row(state), children = current["subtasks"].list
-        children[0] = try children[0].editingASCIIFields(["description": .string("Newer remote child note")]); current["subtasks"] = .array(children); state.tables["tasks"] = [current]
-        _ = try execute(replay(history.undo, from: state), &state)
-        XCTAssertEqual(try row(state)["subtasks"].list[0].fieldEditingProjection()["description"], .string("Newer remote child note"))
-        try assertMetadata(row(state)["subtasks"])
     }
     func testSelectionRetainsExplicitSameAssigneeButDoesNotInheritItForAPlainMove() throws {
         let task = try original(), workspace = WorkspaceBinding(account: owner, generation: UUID())
@@ -219,7 +193,6 @@ final class MoveAssignmentIntentTests: XCTestCase {
         let cold = try TaskfoldJSONDecoder().decode(Snapshot.self, from: bytes)
         XCTAssertEqual(cold.pending, state.pending)
         XCTAssertEqual(TaskAssignment.scopedProject(cold.pending[1]), .string(target))
-        try assertMetadata(row(cold)["subtasks"])
     }
 
 }

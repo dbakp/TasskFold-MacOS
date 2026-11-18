@@ -26,7 +26,6 @@
               {
                 "id": "nested",
                 "title": "Nested work",
-                "subtasks": null,
                 "assigned_to": "8fc81417-0ce2-49d0-bc98-58e49ae67fe3"
               }
             ],
@@ -109,8 +108,7 @@
             "subtasks": [
               {
                 "id": "nested",
-                "title": "Nested work",
-                "subtasks": null
+                "title": "Nested work"
               }
             ],
             "completed": false,
@@ -193,8 +191,7 @@
             "subtasks": [
               {
                 "id": "nested",
-                "title": "Nested work",
-                "subtasks": null
+                "title": "Nested work"
               }
             ],
             "completed": false,
@@ -269,7 +266,6 @@
               {
                 "id": "nested",
                 "title": "Nested work",
-                "subtasks": null,
                 "assigned_to": "8fc81417-0ce2-49d0-bc98-58e49ae67fe3"
               }
             ],

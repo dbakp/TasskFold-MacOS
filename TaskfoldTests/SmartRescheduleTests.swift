@@ -177,7 +177,7 @@ final class SmartRescheduleTests: XCTestCase {
     func testReadOnlyHeldAndNonTasksAreNeverTouched() {
         let shared = task("shared", minutes: 30)
         var heading = task("h"); heading["is_heading"] = .bool(true)
-        let child = task(SubtaskTree.reference(parent: "parent", key: "child"))
+        let child = task(LegacySubtaskReference.reference(["parent", "child"]))
         let p = plan([shared, task("mine"), task("evening"), task("done", extra: ["completed": .bool(true)]), heading, child], held: ["evening"], editable: { $0.id != "shared" })
         XCTAssertEqual(p.placements.map(\.taskID), ["mine"])
         XCTAssertEqual(p.readOnlyCount, 1); XCTAssertTrue(p.unplaced.isEmpty)

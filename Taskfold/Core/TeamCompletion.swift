@@ -32,7 +32,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
             var next=ordinary[1];next.id=id;next.teamTaskScope=scope
             var metadata=next.fields["source_metadata"]!.object
             metadata["taskfold_recurrence_v1"] = .object(["action_id":.string(id.uuidString.lowercased())]);next.fields["source_metadata"] = .object(metadata)
-            next=try TeamChecklist.preparing(next);proposed=Record(next.fields)
+            next.fields.removeValue(forKey:"subtasks");proposed=Record(next.fields)
         }
         let series=proposed == nil ? task.id : (task.string("recurrence_parent_id").isEmpty ? task.id : task.string("recurrence_parent_id"))
         let parent=series == task.id ? task : tasks.first{$0.id == series}
@@ -44,7 +44,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         guard header.teamCompletion == self,header.table == "tasks",header.method == "TEAM_COMPLETE",header.recordID == source.id,header.fields.isEmpty,header.baseline == source.fields,
               header.teamTaskScope == nil,header.teamTaskBatch == nil,header.organizationOrder == nil,header.orderRecovery == nil,
               [scope.account,scope.team,scope.project,source.id,source.string("user_id"),source.string("task_generation"),seriesID,seriesGeneration,seriesProject,nextGeneration].allSatisfy(TeamProjectValue.id),
-              scope.audioRestoration == nil,scope.restoreRequest == nil,scope.checklistRestoreRequest == nil,
+              scope.audioRestoration == nil,scope.restoreRequest == nil,
               source["project_id"] == .string(scope.project),source["completed"] == .bool(false),
               case .number(let version)=source["completion_version"],version.isFinite,version>=0,version<9_007_199_254_740_991,version.rounded(.down)==version,
               TimeZone(identifier:inputZone) != nil,TaskPlanning.instant(completedAt) != nil,
@@ -54,9 +54,9 @@ struct TeamCompletion: Codable, Equatable, Sendable {
             guard TeamProjectValue.id(proposed.id),proposed["task_generation"] == .string(nextGeneration),proposed["project_id"] == .string(scope.project),proposed["user_id"] == .string(scope.account),
                   proposed["recurrence_parent_id"] == .string(seriesID),proposed["completed"] == .bool(false),proposed["completion_version"] == .number(0),
                   proposed["source_metadata"].object["taskfold_recurrence_v1"]?.object["action_id"] == .string(owner) else { throw Self.invalid }
-            try TeamChecklist.validate(proposed["subtasks"])
+            guard proposed.fields["subtasks"] == nil else { throw Self.invalid }
         }
-        var result:[String:JSON] = ["team_id":.string(scope.team),"project_id":.string(scope.project),"task_id":.string(source.id),"task_generation":source["task_generation"],"request_id":.string(header.id.uuidString.lowercased()),"record":.object(source.fields),"completed_at":.string(completedAt),"input_zone":.string(inputZone),"next_generation":.string(nextGeneration),"planned_next_id":proposed.map{.string($0.id)} ?? .null,"series_id":.string(seriesID),"series_generation":.string(seriesGeneration),"series_project_id":.string(seriesProject)]
+        var result:[String:JSON] = ["team_id":.string(scope.team),"project_id":.string(scope.project),"task_id":.string(source.id),"task_generation":source["task_generation"],"request_id":.string(header.id.uuidString.lowercased()),"record":.object(source.fields.filter{$0.key != "subtasks"}),"completed_at":.string(completedAt),"input_zone":.string(inputZone),"next_generation":.string(nextGeneration),"planned_next_id":proposed.map{.string($0.id)} ?? .null,"series_id":.string(seriesID),"series_generation":.string(seriesGeneration),"series_project_id":.string(seriesProject)]
         if let related { result[operation == .undo ? "undoes":"redo_of"] = .string(related.uuidString.lowercased()) }
         guard try TaskfoldJSONEncoder().encode(result).count<=128000 else { throw Self.invalid }
         return result

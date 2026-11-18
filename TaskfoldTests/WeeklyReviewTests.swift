@@ -40,7 +40,7 @@ final class WeeklyReviewTests: XCTestCase {
     }
     func testSlippedCountsTimedTasksAndSkipsHeldReadOnlyAndChecklistChildren() {
         let timed = task("timed", date: "2026-11-08", extra: ["due_time": .string("10:00"), "time_zone": .string(zone)])
-        let child = task(SubtaskTree.reference(parent: "root", key: "child"), date: "2026-11-09")
+        let child = task(LegacySubtaskReference.reference(["root", "child"]), date: "2026-11-09")
         let rows = [timed, task("evening", date: "2026-11-09"), task("shared", date: "2026-11-09"), child]
         XCTAssertEqual(slipped(rows, held: ["evening"], editable: { $0.id != "shared" }), ["timed"])
     }

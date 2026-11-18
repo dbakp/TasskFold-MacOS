@@ -14,33 +14,6 @@ final class TaskWorkloadCacheTests: XCTestCase {
             XCTAssertEqual(actual.contains(id), expected.contains(id), file: file, line: line)
         }
     }
-    func testAlternatingAllAndActiveWorkRetainsIndependentBoundedReadings() {
-        let child: JSON = .object(["id": .string("child"), "title": .string("Design"), "completed": .bool(false)])
-        let heading = Record(["id": .string("heading"), "title": .string("Heading"), "project_id": .string("active"), "is_heading": .bool(true), "subtasks": .array([child, .string("Legacy")])])
-        let archived = Record(["id": .string("archived"), "project_id": .string("archived"), "title": .string("Private"), "is_heading": .bool(true), "subtasks": .object(["future": .bool(true)])])
-        let inbox = Record(["id": .string("inbox"), "title": .string("Inbox"), "opaque": .object(["keep": .string("Café 🪴")])])
-        let cache = TaskCache(), source = [heading, archived, inbox]
-        cache.update(source)
-        let all = ProductiveTaskReading(tasks: cache.tasks), active = ProductiveTaskReading(tasks: cache.tasks.filter { $0.string("project_id") != "archived" })
-        for project in 0..<24 {
-            assertReading(cache.productiveReading(), all)
-            _ = cache.matching(TaskQuery(scope: .project("project-\(project)")))
-            assertReading(cache.productiveReading(excluding: ["archived"]), active)
-        }
-        XCTAssertEqual(cache.productiveComputationCount, 2)
-        XCTAssertTrue(all.incompleteProjects.contains("archived"))
-        XCTAssertFalse(active.incompleteProjects.contains("archived"))
-        // A different visibility mask replaces only the one filtered slot.
-        assertReading(cache.productiveReading(excluding: ["active"]), ProductiveTaskReading(tasks: cache.tasks.filter { $0.string("project_id") != "active" }))
-        assertReading(cache.productiveReading(), all)
-        XCTAssertEqual(cache.productiveComputationCount, 3)
-        assertReading(cache.productiveReading(excluding: ["archived"]), active)
-        XCTAssertEqual(cache.productiveComputationCount, 4)
-        XCTAssertFalse(cache.update(source))
-        assertReading(cache.productiveReading(), all)
-        assertReading(cache.productiveReading(excluding: ["archived"]), active)
-        XCTAssertEqual(cache.productiveComputationCount, 4)
-    }
     func testBothReadingsInvalidateAfterTaskEditsWorkspaceClearAndReplacement() {
         var first = Record(["id": .string("first"), "project_id": .string("active"), "title": .string("Before"), "completed": .bool(false)])
         let other = Record(["id": .string("other"), "project_id": .string("archived"), "completed": .bool(false)])

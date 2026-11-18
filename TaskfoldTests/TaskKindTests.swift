@@ -54,25 +54,6 @@ final class TaskKindTests: XCTestCase {
         XCTAssertFalse(TaskKind.permits(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields), existing: nil))
         row = task(); row["subtasks"] = .object(["future_shape": .string("kept")]); XCTAssertTrue(TaskKind.permits(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields), existing: nil))
     }
-    func testNestedHeadingCannotCompleteAndAnOlderWriterCannotEraseItsType() {
-        var parent = task(); let child = heading(); parent["subtasks"] = .array([.object(child.fields)])
-        var changed = child; changed["completed"] = .bool(true)
-        XCTAssertFalse(TaskKind.permits(patch(parent, ["subtasks": .array([.object(changed.fields)])]), existing: parent))
-        changed = child; changed.fields.removeValue(forKey: "is_heading"); XCTAssertFalse(TaskKind.permits(patch(parent, ["subtasks": .array([.object(changed.fields)])]), existing: parent))
-        changed = child; changed["is_heading"] = .bool(false); XCTAssertTrue(TaskKind.permits(patch(parent, ["subtasks": .array([.object(changed.fields)])]), existing: parent))
-    }
-    func testNestedPreservationInspectsContainmentOnlyAndAllowsExplicitRemoval() {
-        var parent = task(), child = heading(); child["opaque_future"] = .object(["is_heading": .bool(true), "completed": .bool(true)])
-        parent["subtasks"] = .array([.object(child.fields)])
-        var changed = child; changed["description"] = .string("New note"); XCTAssertTrue(TaskKind.permits(patch(parent, ["subtasks": .array([.object(changed.fields)])]), existing: parent))
-        XCTAssertTrue(TaskKind.permits(patch(parent, ["subtasks": .array([])]), existing: parent))
-        XCTAssertTrue(TaskKind.permits(Mutation(table: "tasks", recordID: parent.id, method: "DELETE", fields: [:]), existing: parent))
-    }
-    func testMalformedNestedHeadingAndUnknownFlagAreRefusedWithoutPartialTreeChanges() {
-        let parent = task(); var child = heading(); child.fields.removeValue(forKey: "id")
-        XCTAssertFalse(TaskKind.permits(patch(parent, ["subtasks": .array([.object(child.fields)])]), existing: parent))
-        child = task(); child["is_heading"] = .array([]); XCTAssertFalse(TaskKind.permits(patch(parent, ["subtasks": .array([.object(child.fields)])]), existing: parent))
-    }
     func testKindHistoryAdvancesCompletionRevisionButOrdinaryNilToFalseDoesNot() {
         let row = task(); let same = TaskCompletionRevision.applying(["is_heading": .bool(false)], to: row); XCTAssertEqual(same["completion_version"], row["completion_version"])
         let heading = TaskCompletionRevision.applying(["is_heading": .bool(true)], to: row); XCTAssertEqual(heading["completion_version"], .number(1))
@@ -124,21 +105,6 @@ extension TaskKindTests {
         var changed = ordinary; changed["is_heading"] = .bool(true)
         XCTAssertThrowsError(try TaskSelectionPlan.changes([staleRequest], accessibleRoots: [changed], projects: [], workspace: workspace))
     }
-    func testMixedChildCompletionRefusesHeadingButItsOrdinaryChildRemainsActionable() throws {
-        let workspace = WorkspaceBinding(account: "owner", generation: UUID())
-        var root = task(), heading = heading(); let child = task()
-        heading["subtasks"] = .array([.object(child.fields)]); root["subtasks"] = .array([.object(heading.fields)])
-        let index = try TaskHierarchyIndex(roots: [root], projects: [], workspace: workspace)
-        let header = try XCTUnwrap(index.items.first { $0.source.id == heading.id && $0.isSubtask })
-        let leaf = try XCTUnwrap(index.items.first { $0.source.id == child.id && $0.isSubtask })
-        let selection = try XCTUnwrap(index.selection(header.id)), leafSelection = try XCTUnwrap(index.selection(leaf.id))
-        XCTAssertThrowsError(try TaskHierarchyIndex.changes([.completion(leafSelection, completed: true), .completion(selection, completed: true)], accessibleRoots: [root], projects: [], workspace: workspace))
-        let mutations = try TaskHierarchyIndex.changes([.completion(leafSelection, completed: true)], accessibleRoots: [root], projects: [], workspace: workspace)
-        XCTAssertEqual(mutations.count, 1); XCTAssertTrue(TaskKind.permits(mutations[0], existing: root))
-        let updated = mutations[0].fields["subtasks"]!.list[0].object
-        XCTAssertEqual(updated["completed"], .bool(false)); XCTAssertEqual(updated["is_heading"], .bool(true))
-        XCTAssertEqual(updated["subtasks"]!.list[0].object["completed"], .bool(true))
-    }
 }
 
 extension TaskKindTests {
@@ -171,26 +137,6 @@ extension TaskKindTests {
         let edited = try TaskKind.setting(original, heading: true)
         var current = original; current["completed_at"] = .string("unsupported-new-value")
         XCTAssertThrowsError(try TaskKind.validateTypeEdit(original: original, edited: edited, current: current))
-    }
-    func testEmbeddedTypeEditMergesCurrentNotesAndKeepsOrdinaryDescendants() throws {
-        var original = task(); let leaf = task(); original["subtasks"] = .array([.object(leaf.fields)])
-        let edited = try TaskKind.setting(original, heading: true)
-        var current = original; current["description"] = .string("Concurrent notes")
-        let result = try SubtaskTree.detailChanges(original: original, edited: edited, current: current)
-        XCTAssertEqual(result["is_heading"], .bool(true)); XCTAssertEqual(result["description"], current["description"]); XCTAssertEqual(result["subtasks"], original["subtasks"])
-        var completed = current; completed["completed"] = .bool(true)
-        XCTAssertThrowsError(try SubtaskTree.detailChanges(original: original, edited: edited, current: completed))
-    }
-    func testHierarchyDetailChoiceWritesOnlyTheExistingRootAndKeepsTheChildIdentity() throws {
-        let workspace = WorkspaceBinding(account: "owner", generation: UUID())
-        var root = task(); let child = task(); root["subtasks"] = .array([.object(child.fields)])
-        let index = try TaskHierarchyIndex(roots: [root], projects: [], workspace: workspace)
-        let item = try XCTUnwrap(index.items.first { $0.isSubtask }), selected = try XCTUnwrap(index.selection(item.id))
-        let draft = try TaskKind.setting(selected.item.record, heading: true)
-        let changes = try TaskHierarchyIndex.changes([.editing(selected, draft: draft)], accessibleRoots: [root], projects: [], workspace: workspace)
-        XCTAssertEqual(changes.count, 1); XCTAssertEqual(changes[0].recordID, root.id)
-        let saved = changes[0].fields["subtasks"]!.list[0].object
-        XCTAssertEqual(saved["id"], .string(child.id)); XCTAssertEqual(saved["is_heading"], .bool(true)); XCTAssertTrue(TaskKind.permits(changes[0], existing: root))
     }
     func testProductiveProjectionExcludesHeadingsWhileAppQueriesRetainDatedContext() throws {
         let now = Date(); var ordinary = task(), header = heading(), unsupported = task()

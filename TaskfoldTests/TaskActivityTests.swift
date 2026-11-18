@@ -430,19 +430,6 @@ final class PreparedInsightsTests: XCTestCase {
         let day = try XCTUnwrap(workspace.days.first { $0.count == 1 && $0.date < now.addingTimeInterval(-7*24*3600) })
         XCTAssertEqual(day.coverage, .partial); XCTAssertEqual(mine.days.first { $0.id == day.id }?.coverage, .untracked)
     }
-    func testChildCreditsGapsMissingEpochMalformedAndDuplicateHistoryMatch() throws {
-        let source = try input(), project = "22222222-2222-4222-8222-222222222222"
-        var before = Record.task(user: account, project: project); before["is_heading"] = .bool(true)
-        before["subtasks"] = .array([.object(["id": .string("33333333-3333-4333-8333-333333333333"), "title": .string("Child"), "completed": .bool(false), "completion_version": .number(0)])])
-        var after = before, node = before["subtasks"].list[0].object; node["completed"] = .bool(true); node["completed_at"] = .string(TaskActivity.stamp(now)); node["completion_version"] = .number(1); after["subtasks"] = .array([.object(node)])
-        let rows = TaskNodeActivity.localRows(.init(table: "tasks", recordID: before.id, method: "PATCH", fields: after.fields), before: before, after: after, account: account, recordedAt: now, afterSequence: 0)
-        XCTAssertFalse(rows.isEmpty)
-        for child in [ChildWorkHistory(rows: rows, epoch: source.epoch), .init(rows: rows + rows, epoch: source.epoch), .init(rows: nil, epoch: source.epoch), .init(rows: rows, epoch: nil), .init(rows: [Record(["id": .string("unreadable")])], epoch: source.epoch)] {
-            try assertEquivalent(.init(account: account, activity: source.activity, epoch: source.epoch, goals: source.goals, accessibleProjects: [project], children: child, now: now))
-        }
-        let value = try PreparedInsights(.init(account: account, activity: source.activity, epoch: source.epoch, goals: source.goals, accessibleProjects: [project], children: .init(rows: rows, epoch: source.epoch), now: now))
-        XCTAssertEqual(value.reading(scope: .mine, windowDays: 7).today, 3)
-    }
     func testTimeZonesDSTMidnightRestDaysAndUnreadableRootHistoryMatch() throws {
         for instant in ["2026-10-25T00:30:00Z", "2026-10-25T02:30:00Z", "2026-11-05T23:59:59Z", "2026-11-06T00:00:01Z"] {
             for zone in ["UTC", "Europe/Copenhagen", "America/Los_Angeles"] { try assertEquivalent(input(now: TaskPlanning.instant(instant)!, zone: zone)) }

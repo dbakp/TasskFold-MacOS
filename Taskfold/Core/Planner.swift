@@ -578,7 +578,7 @@ struct PlannerTaskSelection: Sendable {
     let workspace: WorkspaceBinding
     let session: UUID
     init(task: Record, roots: [Record], workspace: WorkspaceBinding, session: UUID) throws {
-        let rootID = SubtaskTree.referencePath(task.id)?.first ?? task.id
+        let rootID = LegacySubtaskReference.path(task.id)?.first ?? task.id
         let matches = Array(roots.lazy.filter { $0.id == rootID }.prefix(2))
         guard matches.count == 1, let root = matches.first, !task.completed, TaskKind(task) != .unsupported else { throw PlannerFailure(message: "This task changed. Choose it again before scheduling.") }
         let context = TaskEditorSourceContext(record: task, root: root)
@@ -593,7 +593,7 @@ struct PlannerTaskSelection: Sendable {
         guard roots.count == 1, context.matches(roots.first), matches.count == 1, let current = matches.first,
               !current.completed, TaskKind(current) != .unsupported, PlannerTaskCatalog.identity(current) == PlannerTaskCatalog.identity(task) else { return nil }
         // Nested writes keep the established exact-selection boundary.
-        if SubtaskTree.referencePath(task.id) != nil, current != task { return nil }
+        if LegacySubtaskReference.path(task.id) != nil, current != task { return nil }
         if let fields, !fields.allSatisfy({ current[$0.key] == task[$0.key] || current[$0.key] == $0.value }) { return nil }
         return current
     }

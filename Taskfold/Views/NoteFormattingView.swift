@@ -340,7 +340,7 @@ struct NoteFormattingView: View {
             guard recoverySession==nil,available else {return}
             var original=request.source ?? store.record("tasks",id:request.taskID) ?? Record(["id":.string(request.taskID),"title":.string("Recovered notes"),"description":.string(request.original),"task_generation":request.generation])
             original["description"] = .string(request.original)
-            sourceRecord=original;sourceContext=request.admission?.source ?? TaskEditorSourceContext(record:original,root:store.record("tasks",id:request.sourceRootID ?? SubtaskTree.referencePath(request.taskID)?.first ?? request.taskID))
+            sourceRecord=original;sourceContext=request.admission?.source ?? TaskEditorSourceContext(record:original,root:store.record("tasks",id:request.sourceRootID ?? request.taskID))
             do {recoverySession=try store.beginEditorSession(original)} catch {message="Your note could not be protected. Keep this editor open and retry."}
             if request.focusOnOpen, recoverySession != nil { focused = true }
         }

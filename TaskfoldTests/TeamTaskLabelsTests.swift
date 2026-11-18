@@ -31,9 +31,9 @@ final class TeamTaskLabelsTests: XCTestCase {
     func testSuggestionsUseOnlyBoundedVisibleProjectTaskTextIncludingChildren() throws {
         let project = "ec250000-0000-4000-8000-000000000003"
         var task = Record.task(user: "actor", project: project); task["labels"] = .array([.string("Design"), .string("Design"), .string("ec250000-0000-4000-8000-000000000009"), .string("Hidden\u{202e}name")])
-        task["subtasks"] = .array([.object(["labels": .array([.string("Review")])])])
-        var privateTask = task; privateTask["project_id"] = .string("other-project"); privateTask["labels"] = .array([.string("Private label")]); privateTask["subtasks"] = .array([])
-        XCTAssertEqual(TeamTaskLabelsDraft.suggestions(project: project, roots: [task, privateTask]), ["Design", "Review"])
+        var child = Record.task(user: "actor", project: project); child["parent_id"] = task["id"]; child["labels"] = .array([.string("Review")])
+        var privateTask = task; privateTask["project_id"] = .string("other-project"); privateTask["labels"] = .array([.string("Private label")])
+        XCTAssertEqual(TeamTaskLabelsDraft.suggestions(project: project, roots: [task, child, privateTask]), ["Design", "Review"])
         task["labels"] = .array((0..<256).map { .string("Name \($0)") }); XCTAssertEqual(TeamTaskLabelsDraft.suggestions(project: project, roots: [task]).count, 200)
     }
     private func scope() throws -> (Record, TeamTaskEditorDraft, TeamWorkspaceCache) {

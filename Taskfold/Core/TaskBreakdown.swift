@@ -16,8 +16,8 @@ struct TaskBreakdownRequest: Identifiable {
 
     init(workspace: WorkspaceBinding, session: UUID, source: Record, depth: Int) throws {
         guard !workspace.account.isEmpty, !source.id.isEmpty, !source.completed,
-              TaskKind.mayComplete(source), SubtaskTree.hasListContainer(source["subtasks"]),
-              depth >= 0, depth < SubtaskTree.maximumDepth else {
+              TaskKind.mayComplete(source),
+              depth >= 0, depth < TaskTree.maximumAncestors else {
             throw AppFailure(message: "Open an unfinished task with room for subtasks first.")
         }
         _ = try Self.goal(source.title)
@@ -54,17 +54,13 @@ struct TaskBreakdownRequest: Identifiable {
         }
     }
 
-    /// Build the complete new list before changing the caller's draft. The
-    /// ordinary editor remains responsible for permissions, saving and history.
-    func applying(_ titles: [String], to current: Record, workspace: WorkspaceBinding, session: UUID) throws -> JSON {
+    /// The checked titles of the subtasks to add, before anything changes. The caller adds them as
+    /// child rows; the ordinary store path remains responsible for permissions, saving and history.
+    func applying(_ titles: [String], to current: Record, workspace: WorkspaceBinding, session: UUID) throws -> [String] {
         guard matches(current, workspace: workspace, session: session) else {
             throw AppFailure(message: "This task or workspace changed. Reopen Suggest steps to review it again.")
         }
-        var children = current["subtasks"]
-        for title in try Self.titles(titles) {
-            children = try SubtaskTree.adding(children, title: title, baseDepth: depth)
-        }
-        return children
+        return try Self.titles(titles)
     }
 }
 

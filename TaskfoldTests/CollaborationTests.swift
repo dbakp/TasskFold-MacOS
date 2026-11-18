@@ -26,12 +26,12 @@ final class CollaborationTests: XCTestCase {
         XCTAssertEqual(member?.string("avatar_url"), "https://example.com/custom.jpg")
     }
     func testProjectMoveClearsOldAssignmentsAndQueuesNewMemberAfterMove() throws {
-        let old = Record(["id": .string("task"), "project_id": .string("a"), "assigned_to": .string("old-person"), "subtasks": .array([.object(["title": .string("Child"), "assigned_to": .string("old-person")])])])
+        let old = Record(["id": .string("task"), "project_id": .string("a"), "assigned_to": .string("old-person")]) 
         var change = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["project_id": .string("b"), "assigned_to": .string("new-person")])
         let mutations = try TaskAssignment.mutations(change, existing: old)
         XCTAssertEqual(mutations.count, 2)
         XCTAssertEqual(mutations[0].fields["assigned_to"], .null)
-        XCTAssertEqual(mutations[0].fields["subtasks"]?.list.first?.object["assigned_to"], .null)
+        XCTAssertNil(mutations[0].fields["subtasks"])
         XCTAssertEqual(mutations[1].fields, ["assigned_to": .string("new-person"), "project_id": .string("b")])
         XCTAssertEqual(mutations[1].baseline, ["assigned_to": .null, "project_id": .string("b"), "task_generation": .null])
         change.fields = ["project_id": .null]
@@ -310,7 +310,7 @@ extension CollaborationTests {
         XCTAssertEqual(server["deadline_date"], .string("2026-10-25"))
     }
     func testLaterCollectionAdditionRetainsRemoteWorkAndRespectsReviewedChoice() throws {
-        for field in ["comments", "attachments", "subtasks"] {
+        for field in ["comments", "attachments"] {
             let textKey = field == "comments" ? "text" : field == "attachments" ? "name" : "title"
             func item(_ id: String, _ text: String) -> JSON { .object(["id": .string(id), textKey: .string(text)]) }
             let base: JSON = .array([item("original", "Before")])
@@ -334,7 +334,7 @@ extension CollaborationTests {
     }
 
     func testLaterOverlappingCollectionEditRetainsItsOriginalGuard() throws {
-        for field in ["comments", "attachments", "subtasks"] {
+        for field in ["comments", "attachments"] {
             func item(_ id: String, _ text: String) -> JSON { .object(["id": .string(id), "text": .string(text)]) }
             let base: JSON = .array([item("a", "Before")])
             let first: JSON = .array([item("a", "First local edit")])
@@ -361,7 +361,7 @@ extension CollaborationTests {
         let session = try JSONDecoder().decode(Session.self, from: Data(#"{"access_token":"test","refresh_token":"refresh","expires_in":3600,"user":{"id":"one","email":"native@example.com"}}"#.utf8))
         let backend = Backend(configuration: ["URL": "https://native-auth.test", "Key": "public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
         defer { AuthTransportTests.Stub.handler = nil }
-        for field in ["comments", "attachments", "subtasks"] {
+        for field in ["comments", "attachments"] {
             for base in [JSON.array([]), JSON.null] {
                 for keepLocal in [false, true] {
                     func item(_ id: String) -> JSON { .object(["id": .string(id), "text": .string(id)]) }
@@ -409,7 +409,7 @@ extension CollaborationTests {
 
 extension CollaborationTests {
     func testLegacyEmptyCollectionsKeepIndependentRemoteItemsAfterReview() throws {
-        for field in ["comments", "attachments", "subtasks"] {
+        for field in ["comments", "attachments"] {
             let mine: JSON = .object(["id": .string("mine"), "text": .string("Local addition")])
             let theirs: JSON = .object(["id": .string("remote"), "text": .string("Remote addition")])
             for explicitlyNull in [false, true] {
@@ -431,7 +431,7 @@ extension CollaborationTests {
     }
 
     func testLaterLegacyEmptyCollectionAdditionSurvivesEitherTitleChoice() throws {
-        for field in ["comments", "attachments", "subtasks"] {
+        for field in ["comments", "attachments"] {
             let mine: JSON = .object(["id": .string("mine"), "text": .string("Later local addition")])
             let theirs: JSON = .object(["id": .string("remote"), "text": .string("Independent remote addition")])
             let legacy = Record(["id": .string("task"), "title": .string("Before"), field: .null])
@@ -451,7 +451,7 @@ extension CollaborationTests {
     }
 
     func testLaterLegacyNullClearRemovesOnlyObservedCollectionItems() throws {
-        for field in ["comments", "attachments", "subtasks"] {
+        for field in ["comments", "attachments"] {
             let mine: JSON = .object(["id": .string("mine"), "text": .string("Observed before clear")])
             let theirs: JSON = .object(["id": .string("remote"), "text": .string("Independent remote addition")])
             let legacy = Record(["id": .string("task"), "title": .string("Before"), field: .array([mine])])
@@ -473,7 +473,7 @@ extension CollaborationTests {
 
 extension CollaborationTests {
     func testUnknownOrMalformedLaterCollectionBaselinesStayGuarded() throws {
-        for field in ["comments", "attachments", "subtasks"] {
+        for field in ["comments", "attachments"] {
             let item: JSON = .object(["id": .string("mine"), "text": .string("Local")])
             let reviewed = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["title": .string("Local title")], baseline: ["title": .string("Before")])
             let invalid: [[String: JSON]?] = [nil, [:], [field: .object([:])], [field: .array([item, item])]]
@@ -490,33 +490,4 @@ extension CollaborationTests {
 
 
 extension CollaborationTests {
-    func testNestedKnownEmptyCollectionsRetainIndependentRemoteItems() throws {
-        for field in ["labels", "comments", "attachments", "subtasks"] {
-            let mine: JSON = field == "labels" ? .string("mine") : .object(["id": .string("mine"), "text": .string("My addition")])
-            let theirs: JSON = field == "labels" ? .string("remote") : .object(["id": .string("remote"), "text": .string("Remote addition")])
-            for explicitlyNull in [false, true] {
-                var child: [String: JSON] = ["id": .string("child"), "title": .string("Child")]
-                if explicitlyNull { child[field] = .null }
-                let base: JSON = .array([.object(child)])
-                var edited = child; edited[field] = .array([mine])
-                var shared = child; shared[field] = .array([theirs]); shared["future_metadata"] = .string("Remote metadata")
-                let remoteValue: JSON = .array([.object(shared)])
-                let original = Record(["id": .string("task"), "title": .string("Before"), "subtasks": base])
-                let change = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["subtasks": .array([.object(edited)])]), existing: original)
-                let remote = Record(["id": .string("task"), "title": .string("Remote title"), "subtasks": remoteValue])
-                var expected = shared; expected[field] = .array([theirs, mine])
-                let expectedValue: JSON = .array([.object(expected)])
-                let direct = try XCTUnwrap(SyncConflict(mutation: change, remote: remote).resolving(Snapshot(tables: ["tasks": [original]], pending: [change]), keepLocal: true))
-                XCTAssertEqual(direct.tables["tasks"]?.first?["subtasks"], expectedValue, "Nested \(field) must retain remote work")
-                let title = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["title": .string("My title")]), existing: original)
-                for keepLocal in [false, true] {
-                    let resolved = try XCTUnwrap(SyncConflict(mutation: title, remote: remote).resolving(Snapshot(tables: ["tasks": [original]], pending: [title, change]), keepLocal: keepLocal))
-                    XCTAssertEqual(resolved.tables["tasks"]?.first?["subtasks"], expectedValue)
-                    XCTAssertEqual(resolved.pending.last?.fields["subtasks"], expectedValue)
-                    XCTAssertEqual(resolved.pending.last?.baseline?["subtasks"], remoteValue, "Reverse only the nested addition; retain the remote-only baseline item and metadata")
-                    XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(resolved)), resolved)
-                }
-            }
-        }
-    }
 }

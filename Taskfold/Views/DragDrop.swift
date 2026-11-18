@@ -27,7 +27,6 @@ struct DayDragRow: ViewModifier {
     let orderProvider: () -> [(day: String, ids: [String])]
     func body(content: Content) -> some View {
         let drag = workspace.drag
-        if Workspace.subtaskPath(task.id) != nil { content } else {
         content
             .overlay(alignment: .top) { if drag.indicatorBefore(task.id, day: day) { InsertionIndicator(hint: drag.bandHint).offset(y: -5) } }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { drag.rowHeights[task.id] = $0 }
@@ -44,7 +43,6 @@ struct DayDragRow: ViewModifier {
                 drag.begin(tasks.map(\.id), order: groups, priorities: priorities)
                 return taskItemProvider(for: tasks)
             }
-        }
     }
 }
 
@@ -98,7 +96,7 @@ struct RowDropDelegate: DropDelegate {
     }
     func insert(at index: Int, providers: [NSItemProvider]) {
         let visible = workspace.visibleTasks(tasks)
-        let before = visible.indices.contains(index) ? (workspace.nestedRowsList ? visible[index...].first { workspace.isListRoot($0.id) }?.id : Workspace.subtaskPath(visible[index].id)?.first ?? visible[index].id) : nil
+        let before = visible.indices.contains(index) ? (workspace.nestedRowsList ? visible[index...].first { workspace.isListRoot($0.id) }?.id : visible[index].id) : nil
         let ids = workspace.drag.ids
         if !ids.isEmpty {
             workspace.move(ids, to: DragSlot(day: day, before: before)); workspace.drag.end(); return

@@ -544,3 +544,155 @@ enum TaskTreeDisplay {
         return count
     }
 }
+
+/// List actions use the same captured rows on both platforms. Every selected row is a task row (subtasks are rows
+/// too): a row that changed or moved since it was selected is refused, and recurrence keeps its existing engine.
+enum TaskSelectionPlan {
+    enum Action {
+        case patch([String: JSON]), completion(Bool, Date), delete
+    }
+    struct Request {
+        var task: Record
+        var action: Action
+        var workspace: WorkspaceBinding
+    }
+    struct Failure: LocalizedError, Sendable {
+        let message: String
+        var errorDescription: String? { message }
+    }
+    static let maximumRequests = 1_000
+    private static func failure(_ message: String) -> Failure { Failure(message: message) }
+    private static let patchable: Set<String> = ["title", "description", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "project_id", "section_id"]
+
+    /// The checks a detail editor applies to the common planning fields.
+    static func validated(_ fields: [String: JSON], current: Record) throws -> [String: JSON] {
+        var fields = fields
+        if let title = fields["title"] {
+            let value = title.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else { throw failure("Give the task a name.") }
+            fields["title"] = .string(value)
+        }
+        for key in ["due_date", "deadline_date"] {
+            if let value = fields[key], value != .null, !value.text.isEmpty {
+                guard case .string = value, Dates.parse(value.text) != nil else { throw failure("Choose a valid date for the task.") }
+            }
+        }
+        if let estimate = fields["duration_minutes"], estimate != .null {
+            guard case .number(let minutes) = estimate, minutes.rounded() == minutes, (1...10080).contains(minutes) else { throw failure("Choose an estimate between 1 minute and 7 days.") }
+        }
+        if let priority = fields["priority"], priority != .null {
+            guard case .number(let value) = priority, value.rounded() == value, (1...4).contains(value) else { throw failure("Choose a priority between 1 and 4.") }
+        }
+        if let time = fields["due_time"], time != .null, !time.text.isEmpty {
+            let parts = time.text.split(separator: ":", omittingEmptySubsequences: false)
+            guard case .string = time, parts.count == 2, parts.allSatisfy({ $0.count == 2 }), let hour = Int(parts[0]), let minute = Int(parts[1]), (0...23).contains(hour), (0...59).contains(minute) else { throw failure("Choose a valid time for the task.") }
+        }
+        if let zone = fields["time_zone"], zone != .null, !zone.text.isEmpty {
+            guard case .string = zone, TimeZone(identifier: zone.text) != nil else { throw failure("Choose a valid time zone for the task.") }
+        }
+        guard TaskKind.permits(Mutation(table: "tasks", recordID: current.id, method: "PATCH", fields: fields), existing: current) else {
+            throw failure("Headings stay open. Your task is unchanged.")
+        }
+        return TaskPlanning.fields(fields, existing: current)
+    }
+
+    static func changes(_ requests: [Request], accessibleRoots: [Record], projects: [Record], workspace: WorkspaceBinding, calendar: Calendar = .current) throws -> [Mutation] {
+        guard !requests.isEmpty else { return [] }
+        guard requests.count <= maximumRequests else { throw failure("Select up to 1,000 tasks at a time.") }
+        guard !workspace.account.isEmpty, requests.allSatisfy({ $0.workspace == workspace }), Set(requests.map { $0.task.id }).count == requests.count else {
+            throw failure("This selection or workspace changed. Select the tasks again.")
+        }
+        let grouped = Dictionary(grouping: accessibleRoots, by: \.id)
+        let projectGroups = Dictionary(grouping: projects, by: \.id)
+        let archived = ProjectOrganization.archivedIDs(in: projects)
+        var rows: [String: Record] = [:], selected: [String: Request] = [:]
+        for request in requests {
+            let row = request.task
+            guard !row.id.isEmpty, !row.id.hasPrefix(LegacySubtaskReference.prefix) else { throw failure("This task reference is unavailable. Refresh the list.") }
+            guard let matches = grouped[row.id], matches.count == 1, let current = matches.first,
+                  current["task_generation"] == row["task_generation"] else { throw failure("A selected task was replaced or is no longer accessible. Select it again.") }
+            let project = current.string("project_id")
+            guard project.isEmpty || (projectGroups[project]?.count == 1 && !archived.contains(project)) else { throw failure("A selected project is no longer accessible. Refresh the list.") }
+            guard current["created_at"] == row["created_at"], current["project_id"] == row["project_id"], current["section_id"] == row["section_id"] else { throw failure("A selected task moved. Select its current row again.") }
+            switch request.action {
+            case .delete:
+                if current != row { throw failure("A selected task changed. Review its current content before deleting it.") }
+            case .completion(let completed, _):
+                guard TaskKind.mayComplete(current) else { throw failure("Headings stay open. Select tasks to complete.") }
+                if current.completed != completed, current.completed != row.completed || current["completion_version"].integer != row["completion_version"].integer {
+                    throw failure("Task completion changed. Select its current row again.")
+                }
+            case .patch: break
+            }
+            rows[row.id] = current; selected[row.id] = request
+        }
+        var working = rows, deleted = Set<String>(), extras: [Mutation] = []
+        var completionIDs: [String: UUID] = [:]
+        var prospective = accessibleRoots
+        for id in selected.keys.sorted() {
+            guard let request = selected[id], let original = rows[id], var value = working[id] else { continue }
+            switch request.action {
+            case .delete: deleted.insert(id)
+            case .patch(let fields):
+                guard Set(fields.keys).isSubset(of: patchable) else { throw failure("This list action needs the task's detail editor.") }
+                for (key, desired) in fields where original[key] != request.task[key] && original[key] != desired { throw failure("A selected field changed. Review the current task before applying this action.") }
+                for key in ["project_id", "section_id"] {
+                    if let field = fields[key], field != .null {
+                        guard case .string(let id) = field, !id.isEmpty else { throw failure("Choose a valid project or section.") }
+                    }
+                }
+                let changed = try validated(fields.filter { original.fields[$0.key] != $0.value }, current: value)
+                for (key, field) in changed { value[key] = field }
+                let target = value.string("project_id")
+                guard target.isEmpty || (projectGroups[target]?.count == 1 && !archived.contains(target)) else { throw failure("Choose an accessible project.") }
+                working[id] = value
+            case .completion(let completed, let date):
+                if value.completed != completed {
+                    for change in TaskCompletion.toggle(value, tasks: prospective, at: date, calendar: calendar, account: workspace.account) {
+                        if change.recordID == id, change.method == "PATCH" { completionIDs[id] = change.id; for (key, field) in change.fields { value[key] = field } }
+                        else { extras.append(change); if change.method == "POST" { prospective.append(Record(change.fields)) } }
+                    }
+                    working[id] = value
+                }
+            }
+            if let position = prospective.firstIndex(where: { $0.id == id }), let value = working[id] { prospective[position] = value }
+        }
+        var result: [Mutation] = []
+        for id in rows.keys.sorted() {
+            guard let before = rows[id], let after = working[id] else { continue }
+            if deleted.contains(id) { result.append(Mutation(table: "tasks", recordID: id, method: "DELETE", fields: [:], baseline: before.fields)); continue }
+            var fields = after.fields.filter { before.fields[$0.key] != $0.value }
+            if let request = selected[id], case .patch(let authored) = request.action { fields = TaskAssignment.preservingAssignmentIntent(fields, authored: authored) }
+            if !fields.isEmpty {
+                var mutation = Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: before))
+                if let identity = completionIDs[id] { mutation.id = identity }
+                result.append(mutation)
+            }
+        }
+        return result + extras
+    }
+
+    /// Each selected task is copied once as a fresh, open task beside its source (a subtask's copy keeps its parent).
+    static func duplicateChanges(_ tasks: [Record], accessibleRoots: [Record], projects: [Record], workspace: WorkspaceBinding, at date: Date = Date()) throws -> [Mutation] {
+        let requests = tasks.map { Request(task: $0, action: .patch([:]), workspace: workspace) }
+        _ = try changes(requests, accessibleRoots: accessibleRoots, projects: projects, workspace: workspace)
+        let current = Dictionary(accessibleRoots.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }), tree = TaskTree(accessibleRoots)
+        return try tasks.map { task in
+            guard let original = current[task.id], original == task else { throw failure("A selected task changed. Review its current content before duplicating it.") }
+            guard TaskKind(original) != .unsupported else { throw failure("This task type cannot be duplicated yet. Its source is unchanged.") }
+            var copy = original
+            copy["id"] = .string(UUID().uuidString.lowercased()); copy["task_generation"] = .string(UUID().uuidString.lowercased())
+            copy["user_id"] = .string(workspace.account); copy["completion_version"] = .number(0)
+            copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["created_at"] = .string(ISO8601DateFormatter().string(from: date))
+            copy["notification_sent_at"] = .null; copy["recurrence_parent_id"] = .null; copy.fields.removeValue(forKey: "updated_at")
+            copy.fields.removeValue(forKey: "subtasks")
+            if let parent = TaskTree.parentKey(of: original) {
+                let siblings = tree.children(of: parent), position = siblings.firstIndex { TaskTree.key($0.id) == TaskTree.key(original.id) }
+                let next = position.flatMap { siblings.indices.contains($0 + 1) ? siblings[$0 + 1] : nil }
+                copy["child_order"] = .number(TaskTree.midpoint(TaskTree.childOrder(of: original), next.flatMap(TaskTree.childOrder(of:))))
+            }
+            if case .object(var metadata) = copy["source_metadata"] { metadata.removeValue(forKey: "taskfold_recurrence_v1"); copy["source_metadata"] = .object(metadata) }
+            return Mutation(table: "tasks", recordID: copy.id, method: "POST", fields: copy.fields, insertOnly: true)
+        }
+    }
+}

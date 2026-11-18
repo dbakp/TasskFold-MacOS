@@ -129,6 +129,8 @@ Unchanged for clients. A JSON tree inside a saved draft becomes child rows under
 
 ## Before C
 
+**Status (app PR `team-child-rows-apps`):** every item below is cleared in both apps. Team subtasks are child rows through the team RPCs, the team JSON checklist path is deleted, no task write sends `subtasks` (rows cached before C lose an empty value on load, and outbound changes drop it), backup restore turns v1/v2 JSON subtasks into rows client-side, `taskfold_move_personal_task` is no longer called, and the UI-test fixture no longer stubs the dropped RPCs. Install builds from that PR on every device before deploying C.
+
 `supabase/migrations/20261117110000_child_task_rows_c.sql` (Migration C) drops `public.tasks.subtasks`, the 34 legacy child RPCs, the `taskfold_private.child_*` tables and the legacy triggers. **Do not deploy C until a build without the items below is installed on every device.** The inventory below is from `origin/main` of both repos (iOS 48ed6156, Mac 8dc8935a).
 
 ### 1. Hard failures after C (PostgREST rejects the unknown column, or the RPC rejects the key)

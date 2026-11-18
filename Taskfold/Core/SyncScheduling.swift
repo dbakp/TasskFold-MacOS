@@ -278,7 +278,7 @@ enum SentChanges: Equatable, Sendable {
     /// moves, ordering, projects, sections, preferences) is `unknown`, which forces a full read.
     static func effects(of change: Mutation) -> SentChanges {
         guard change.teamTaskScope == nil, change.teamCompletion == nil, change.teamTaskBatch == nil,
-              change.organizationOrder == nil, change.personalTaskMove != true, change.workflowRun == nil,
+              change.organizationOrder == nil, change.workflowRun == nil,
               !WorkflowUndo.matches(change), change.reminderPreferenceField == nil,
               ["POST", "PATCH", "DELETE"].contains(change.method) else { return .unknown }
         switch change.table {

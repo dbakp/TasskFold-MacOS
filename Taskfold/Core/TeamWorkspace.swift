@@ -68,11 +68,7 @@ enum PersonalTaskTypes {
     static func requiresService(_ change: Mutation) -> Bool {
         guard change.table == "tasks", ["POST", "PATCH"].contains(change.method),
               change.teamTaskScope == nil, change.teamCompletion == nil, change.teamTaskBatch == nil else { return false }
-        if change.fields["is_heading"] != nil { return true }
-        guard change.fields["subtasks"] != nil else { return false }
-        let original = change.baseline.map { Record($0) }
-        if TaskKind.requiresAuthoring(change, existing: original) { return true }
-        return change.baseline?["subtasks"] == nil && TaskKind.containsTypeMetadata([Record(change.fields)])
+        return change.fields["is_heading"] != nil
     }
     static func canSend(_ change: Mutation, boundary: TeamWorkspaceBoundary?) -> Bool {
         !requiresService(change) || boundary?.raw["personal_task_types_protocol"] == .number(1)
@@ -230,7 +226,7 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
     func widgetTokens(_ snapshot:Snapshot)->[String:String] {
         let tasks=Dictionary((snapshot.tables["tasks"] ?? []).map{($0.id,$0)},uniquingKeysWith:{first,_ in first})
         return WidgetCompletion.tokens(snapshot).filter {key,_ in
-            let root=SubtaskTree.referencePath(key)?.first ?? key
+            let root=LegacySubtaskReference.path(key)?.first ?? key
             guard let task=tasks[root] else {return false}
             return !knownTasks.contains(root) && knownTeams[task.string("project_id")]==nil
         }

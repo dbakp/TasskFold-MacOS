@@ -281,7 +281,7 @@ struct TaskRowView: View {
     private var rowChildProgress: (completed: Int, total: Int) { store.childProgress(of: task.id) }
     private var labelNames: [String] { task["labels"].list.map(\.text).filter { !$0.isEmpty }.map { store.record("labels", id: $0)?.name ?? $0 } }
     private func hasMetadata(_ planning: TaskRowPlanningRead) -> Bool {
-        cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || !task["subtasks"].list.isEmpty || rowChildProgress.total > 0 || !task["comments"].list.isEmpty
+        cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || rowChildProgress.total > 0 || !task["comments"].list.isEmpty
             || !labelNames.isEmpty || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || store.dependencyIndicator(for: task) != nil
     }
     private enum DateRole { case overdue, today, tomorrow, thisWeek, later }
@@ -351,14 +351,6 @@ struct TaskRowView: View {
         if let marker = store.dependencyIndicator(for: task) {
             Image(systemName: marker.symbol).accessibilityLabel(marker.label).help(marker.label).accessibilityIdentifier("dependency-" + task.id)
         }
-        if !task["subtasks"].list.isEmpty {
-            let progress = store.subtaskProgress(task)
-            if progress.total > 0 {
-                Label("\(progress.completed)/\(progress.total)", systemImage: "list.bullet")
-                    .accessibilityLabel("\(progress.completed) of \(progress.total) subtasks completed")
-                    .accessibilityIdentifier("subtaskSummary-" + task.id)
-            }
-        }
         if rowChildProgress.total > 0 {
             let progress = rowChildProgress
             Label("\(progress.completed)/\(progress.total)", systemImage: "list.bullet")
@@ -394,7 +386,7 @@ struct TaskRowView: View {
         if let marker = store.dependencyIndicator(for: task) { parts.append(marker.label) }
         let labels = labelNames
         if !labels.isEmpty { parts.append("labels " + labels.joined(separator: ", ")) }
-        let progress = rowChildProgress.total > 0 ? rowChildProgress : store.subtaskProgress(task)
+        let progress = rowChildProgress
         if progress.total > 0 { parts.append("\(progress.completed) of \(progress.total) subtasks done") }
         else if !store.taskNotePreview(task).isEmpty { parts.append("has note") }
         if workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) { parts.append("Subtask of " + parent) }

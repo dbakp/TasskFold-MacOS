@@ -15,12 +15,6 @@ final class HeadingPortabilityTests: XCTestCase {
         root["subtasks"] = .array([.object(child.fields), .object(row("Next action").fields)]); return root
     }
     func template(_ root: Record) throws -> WorkflowTemplate { try .capture(kind: .task, id: root.id, snapshot: Snapshot(tables: ["tasks": [root]])) }
-    func testChecklistProgressExcludesHeadingsAndUnknownKindsButKeepsTheirDescendants() {
-        let source = tree(); var unknown = row("Future"); unknown["is_heading"] = .string("future")
-        let children = source["subtasks"].list + [.object(unknown.fields)]
-        let progress = SubtaskTree.progress(.array(children)); XCTAssertEqual(progress.completed, 1); XCTAssertEqual(progress.total, 2)
-        XCTAssertEqual(SubtaskTree.outline(.array(children)).count, 4)
-    }
     func testHeadingTemplateUsesExplicitCapabilityWhileOrdinaryFilesStayVersionOne() throws {
         let normal = try template(row("* Literal ordinary title")); XCTAssertEqual(normal.document.object["version"], .number(1)); XCTAssertFalse(normal.requiresHeadingSupport)
         let captured = try template(tree()); XCTAssertTrue(captured.requiresHeadingSupport)
@@ -53,8 +47,11 @@ final class HeadingPortabilityTests: XCTestCase {
         let change = try XCTUnwrap(changes.first { $0.table == "tasks" }), created = Record(change.fields)
         XCTAssertNotEqual(created.id, source.id); XCTAssertEqual(created["is_heading"], .bool(true)); XCTAssertFalse(created.completed)
         XCTAssertEqual(created.string("due_date"), "2026-12-01"); XCTAssertEqual(created.string("description"), source.string("description"))
-        let nodes = try XCTUnwrap(TaskKind.checklistNodes(created["subtasks"]))
-        XCTAssertEqual(nodes.filter { TaskKind($0) == .heading }.count, 1); XCTAssertTrue(nodes.allSatisfy { !$0.completed })
+        let rows = changes.filter { $0.table == "tasks" }.map { Record($0.fields) }
+        XCTAssertEqual(rows.count, 4, "The nested template tree becomes child rows")
+        XCTAssertTrue(rows.allSatisfy { $0.fields["subtasks"] == nil })
+        XCTAssertEqual(rows.filter { TaskKind($0) == .heading }.count, 2); XCTAssertTrue(rows.allSatisfy { !$0.completed })
+        XCTAssertEqual(Set(rows.map(\.id)).count, 4); XCTAssertEqual(rows.filter { !$0.string("parent_id").isEmpty }.count, 3)
         XCTAssertTrue(TaskKind.permits(change, existing: nil)); XCTAssertTrue(TaskKind.requiresAuthoring(change, existing: nil))
     }
     func testTemplateMetadataEditsKeepHeadingCapabilityAndFlags() throws {
@@ -69,32 +66,33 @@ final class HeadingPortabilityTests: XCTestCase {
         let read = try WorkspaceBackup.read(file.data()); XCTAssertEqual(read.tables["tasks"]?[0], source)
         var downgraded = file; downgraded.version = 1; downgraded.capabilities = nil
         XCTAssertThrowsError(try WorkspaceBackup.read(downgraded.data()))
-        let plan = try read.plan(current: Snapshot(), account: other), copied = Record(try XCTUnwrap(plan.changes.first { $0.table == "tasks" }).fields)
-        XCTAssertEqual(copied["is_heading"], .bool(true)); XCTAssertEqual(copied["subtasks"].list[0].object["is_heading"], .bool(true)); XCTAssertNotEqual(copied.id, source.id)
+        let plan = try read.plan(current: Snapshot(), account: other), restored = plan.changes.filter { $0.table == "tasks" }.map { Record($0.fields) }, copied = try XCTUnwrap(restored.first)
+        XCTAssertEqual(copied["is_heading"], .bool(true)); XCTAssertNil(copied.fields["subtasks"]); XCTAssertNotEqual(copied.id, source.id)
+        XCTAssertEqual(restored.count, 4, "The nested tree is restored as child rows"); XCTAssertEqual(restored.filter { TaskKind($0) == .heading }.count, 2)
     }
     func testNestedOnlyTypeAndExplicitOrdinaryTypeRequireWorkspaceCapabilityToo() throws {
         var source = row("Ordinary parent"); source["subtasks"] = .array([.object(row("Nested reference", heading: true).fields)])
-        let file = WorkspaceBackup.make(Snapshot(tables: ["tasks": [source]]), account: owner); XCTAssertEqual(file.version, 2)
+        // A heading that exists only inside the legacy JSON column is no longer inspected by the backup header: restore turns it into a row.
+        let file = WorkspaceBackup.make(Snapshot(tables: ["tasks": [source]]), account: owner); XCTAssertEqual(file.version, 1)
         XCTAssertNoThrow(try WorkspaceBackup.read(file.data()))
         source = row("Explicit ordinary"); source["is_heading"] = .bool(false)
         XCTAssertEqual(WorkspaceBackup.make(Snapshot(tables: ["tasks": [source]]), account: owner).version, 2)
         source["is_heading"] = .null; XCTAssertNoThrow(try WorkspaceBackup.read(WorkspaceBackup.make(Snapshot(tables: ["tasks": [source]]), account: owner).data()))
         XCTAssertEqual(WorkspaceBackup.make(Snapshot(tables: ["tasks": [row("Legacy")]]), account: owner).version, 1)
     }
-    func testInvalidRootOrNestedHeadingCannotBeRestored() throws {
+    func testInvalidRootOrConvertedChildHeadingCannotBeRestoredCompleted() throws {
         var source = tree(); source["completed"] = .bool(true)
         XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(Snapshot(tables: ["tasks": [source]]), account: owner).data()))
         source = row("Root"); var bad = row("Invalid child", heading: true); bad["completed_at"] = .string("2026-11-01T12:00:00Z"); source["subtasks"] = .array([.object(bad.fields)])
-        XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(Snapshot(tables: ["tasks": [source]]), account: owner).data()))
+        // The JSON child becomes a heading row on restore; a completed heading row is refused, as for any heading.
+        XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(Snapshot(tables: ["tasks": [source]]), account: owner).data()).plan(current: Snapshot(), account: other))
     }
-    func testDuplicationKeepsTypesButUsesFreshRootAndChildIdentities() throws {
-        let source = tree(), workspace = WorkspaceBinding(account: owner, generation: UUID())
+    func testDuplicationKeepsTypesButUsesFreshIdentity() throws {
+        let source = row("Project reference", heading: true), workspace = WorkspaceBinding(account: owner, generation: UUID())
         let changes = try TaskSelectionPlan.duplicateChanges([source], accessibleRoots: [source], projects: [], workspace: workspace)
         let change = try XCTUnwrap(changes.first), copy = Record(change.fields)
-        XCTAssertEqual(copy["is_heading"], .bool(true)); XCTAssertNotEqual(copy.id, source.id)
-        let old = try XCTUnwrap(TaskKind.checklistNodes(source["subtasks"])), next = try XCTUnwrap(TaskKind.checklistNodes(copy["subtasks"]))
-        XCTAssertTrue(Set(old.map(\.id)).isDisjoint(with: Set(next.map(\.id)))); XCTAssertEqual(next.filter { TaskKind($0) == .heading }.count, 1)
-        XCTAssertTrue(TaskKind.permits(change, existing: nil)); XCTAssertEqual(old.map { $0.string("description") }, next.map { $0.string("description") })
+        XCTAssertEqual(copy["is_heading"], .bool(true)); XCTAssertNotEqual(copy.id, source.id); XCTAssertNil(copy.fields["subtasks"])
+        XCTAssertTrue(TaskKind.permits(change, existing: nil)); XCTAssertEqual(copy.string("description"), source.string("description"))
     }
     func testUnsupportedDuplicateRefusesWholeSelection() {
         let ordinary = row("Ordinary"); var future = row("Future"); future["is_heading"] = .string("future")
@@ -111,9 +109,6 @@ final class HeadingPortabilityTests: XCTestCase {
         XCTAssertFalse(TaskKind.requiresAuthoring(metadata, existing: source))
         let change = try XCTUnwrap(TaskKind.change(source, heading: false)); XCTAssertTrue(TaskKind.requiresAuthoring(change, existing: source))
         let removed = Mutation(table: "tasks", recordID: source.id, method: "DELETE", fields: [:]); XCTAssertFalse(TaskKind.requiresAuthoring(removed, existing: source))
-        var parent = row("Parent"); let before = parent; parent["subtasks"] = .array([.object(source.fields)])
-        XCTAssertTrue(TaskKind.requiresAuthoring(Mutation(table: "tasks", recordID: parent.id, method: "PATCH", fields: ["subtasks": parent["subtasks"]]), existing: before))
-        let changed = source["subtasks"]; XCTAssertFalse(TaskKind.requiresAuthoring(Mutation(table: "tasks", recordID: source.id, method: "PATCH", fields: ["subtasks": changed]), existing: source))
     }
     func testSharedTemplatePublicationDoesNotSendUnsupportedVersionTwoToOldService() throws {
         let captured = try template(tree())

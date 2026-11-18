@@ -160,100 +160,11 @@ final class PreservingJSONTests: XCTestCase {
 }
 
 extension PreservingJSONTests {
-    func testInlinePreviewReadsTitleAndStatusWithoutFlatteningExactMetadata() throws {
-        let raw = #"{"title":"Review the exact design","completed":true,"is_heading":false,"é":9007199254740993,"e\u0301":17,"future":{"large":1e1000,"subtasks":{"unknown":"Keep every detail"}}}"#
-        let value = try decode(raw), before = try encode(value)
-        let preview = SubtaskTree.inlinePresentation(value)
-        XCTAssertEqual(preview.title, "Review the exact design"); XCTAssertTrue(preview.completed)
-        XCTAssertEqual(TaskKind(preview), .task)
-        XCTAssertEqual(Set(preview.fields.keys), ["title", "completed", "is_heading"])
-        XCTAssertFalse(SubtaskTree.inlineEditable(value), "Reading known fields must not authorize a full-object replacement")
-        XCTAssertEqual(SubtaskTree.inlineTitle(value), preview.title)
-        XCTAssertEqual(try encode(value), before); XCTAssertEqual(before, Data(raw.utf8))
-    }
-    func testInlinePreviewRetainsHeadingAndUnknownTypeSemantics() throws {
-        for (kind, expected) in [("true", TaskKind.heading), (#""future-kind""#, TaskKind.unsupported)] {
-            let value = try decode("{\"title\":\"Keep the context\",\"is_heading\":" + kind + ",\"é\":1,\"e\\u0301\":2}")
-            let preview = SubtaskTree.inlinePresentation(value)
-            XCTAssertEqual(TaskKind(preview), expected); XCTAssertFalse(TaskKind.mayComplete(preview))
-            XCTAssertEqual(preview.title, "Keep the context"); XCTAssertFalse(SubtaskTree.inlineEditable(value))
-        }
-    }
-    func testSelectedDisplayFieldsExcludeUnknownAndNonASCIIFields() throws {
-        let value = try decode(#"{"title":"Visible","completed":false,"é":1,"e\u0301":2,"future":[1e1000,9007199254740993]}"#)
-        let selected = try value.readingASCIIFields(["title", "completed"])
-        XCTAssertEqual(selected, ["title": .string("Visible"), "completed": .bool(false)])
-        XCTAssertThrowsError(try value.readingASCIIFields(["é"]))
-        XCTAssertThrowsError(try JSON.array([]).readingASCIIFields(["title"]))
-        XCTAssertEqual(SubtaskTree.inlinePresentation(.number(7)).title, "")
-    }
-    func testAmbiguousDisplayFieldNamesRefuseInsteadOfChoosingOneTitle() throws {
-        let raw = #"{"title":"First","ti\u0074le":"Second","é":1,"e\u0301":2}"#
-        XCTAssertThrowsError(try decode(raw), "Ambiguous known fields must be rejected at the decoding boundary")
-        let value = try decode(#"{"title":7,"é":1,"e\u0301":2}"#)
-        XCTAssertEqual(SubtaskTree.inlinePresentation(value).title, "")
-        XCTAssertFalse(SubtaskTree.inlineEditable(value))
-    }
-    func testInlineReadOnlyPreviewSurvivesColdDecodeWithOriginalBytes() throws {
-        let raw = #"{"title":"Cold preview","completed":true,"é":9007199254740993,"e\u0301":17,"subtasks":null}"#
-        let value = try decode(raw), cold = try decode(String(decoding: encode(value), as: UTF8.self))
-        XCTAssertEqual(SubtaskTree.inlinePresentation(cold), SubtaskTree.inlinePresentation(value))
-        XCTAssertFalse(SubtaskTree.inlineEditable(cold)); XCTAssertEqual(try encode(cold), Data(raw.utf8))
-        XCTAssertEqual(SubtaskTree.inlineTitle(.string("Legacy text")), "Legacy text")
-    }
 }
 
 extension PreservingJSONTests {
     private func insertionBytes(_ value: JSON) throws -> Data {
         let writer = TaskfoldJSONEncoder(); writer.outputFormatting = [.sortedKeys]
         return try writer.encode(value)
-    }
-    func testNestedInsertionRefusesAnIncompleteIdentityScan() throws {
-        var hidden: JSON = .object(["id": .string("parent"), "title": .string("Hidden duplicate")])
-        for level in 0...SubtaskTree.readableDepth {
-            hidden = .object(["id": .string("level-\(level)"), "title": .string("Deep branch"), "subtasks": .array([hidden])])
-        }
-        let source: JSON = .array([.object(["id": .string("parent"), "title": .string("Visible parent")]), hidden])
-        let before = try insertionBytes(source)
-        XCTAssertThrowsError(try SubtaskTree.adding(source, title: "New child", parent: "parent"))
-        XCTAssertEqual(try insertionBytes(source), before)
-    }
-    func testNestedInsertionRefusesUnsupportedParentWithoutReplacingOriginal() throws {
-        for children in [#"{"keep":1e1000,"precise":9007199254740993}"#, #""Keep legacy text""#, "7", "true"] {
-            let source = try decode("[{\"id\":\"parent\",\"title\":\"Saved parent\",\"subtasks\":" + children + "}]")
-            let before = try insertionBytes(source)
-            XCTAssertThrowsError(try SubtaskTree.adding(source, title: "New child", parent: "parent"))
-            XCTAssertEqual(try insertionBytes(source), before)
-            let cold = try TaskfoldJSONDecoder().decode(JSON.self, from: before)
-            XCTAssertThrowsError(try SubtaskTree.adding(cold, title: "New child", parent: "parent"))
-            XCTAssertEqual(try insertionBytes(cold), before)
-        }
-    }
-    func testNestedInsertionRefusesAmbiguousOrUnnamedParent() throws {
-        for raw in [
-            #"[{"id":"parent","title":"First"},{"id":"outer","title":"Outer","subtasks":[{"id":"parent","title":"Second"}]}]"#,
-            #"[{"id":"parent","title":7,"subtasks":[]}]"#,
-            #"[{"id":"parent","subtasks":[]}]"#,
-            #"[{"id":"parent","title":"Opaque parent","é":1,"e\u0301":2,"subtasks":[]}]"#
-        ] {
-            let source = try decode(raw), before = try insertionBytes(source)
-            XCTAssertThrowsError(try SubtaskTree.adding(source, title: "New child", parent: "parent"))
-            XCTAssertEqual(try insertionBytes(source), before)
-        }
-    }
-    func testNestedInsertionRetainsOpaqueSiblingsAndSupportedParentMetadata() throws {
-        for container in ["", ",\"subtasks\":null", ",\"subtasks\":[]", #","subtasks":[{"id":"existing","title":"Keep child","future":9007199254740993}]"#] {
-            let source = try decode("[{\"id\":\"parent\",\"title\":\"Parent\",\"future\":1e1000" + container + "},{\"title\":\"Opaque sibling\",\"é\":1,\"e\\u0301\":2},\"Legacy text\"]")
-            let added = try SubtaskTree.adding(source, title: " New child ", parent: "parent")
-            let parent = added.list[0].object, children = try XCTUnwrap(parent["subtasks"]?.list)
-            XCTAssertEqual(children.count, (source.list[0].object["subtasks"]?.list.count ?? 0) + 1)
-            XCTAssertEqual(Array(children.dropLast()), source.list[0].object["subtasks"]?.list ?? [])
-            XCTAssertEqual(children.last?.object["title"], .string("New child"))
-            XCTAssertNotNil(UUID(uuidString: children.last?.object["id"]?.text ?? ""))
-            XCTAssertEqual(parent["future"], source.list[0].object["future"])
-            XCTAssertEqual(Array(added.list.dropFirst()), Array(source.list.dropFirst()))
-            XCTAssertEqual(try insertionBytes(added.list[1]), try insertionBytes(source.list[1]))
-            XCTAssertEqual(try TaskfoldJSONDecoder().decode(JSON.self, from: insertionBytes(added)), added)
-        }
     }
 }

@@ -115,7 +115,7 @@ enum Habits {
     /// Recurring, ordinary, top-level work the account owns. Shared (team) tasks are excluded by the caller.
     static func eligible(_ task: Record, account: String) -> Bool {
         guard !account.isEmpty, !task.id.isEmpty, task["is_recurring"].flag, TaskKind.mayComplete(task),
-              SubtaskTree.referencePath(task.id) == nil, task.string("user_id").lowercased() == account.lowercased(),
+              LegacySubtaskReference.path(task.id) == nil, task.string("user_id").lowercased() == account.lowercased(),
               Recurrence.valid(Recurrence.effective(task)) else { return false }
         return true
     }

@@ -149,17 +149,24 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     let project: String
     var restoreRequest: UUID? = nil
     var parentGeneration: String? = nil
-    var checklistRestoreRequest: UUID? = nil
     var taskTypesProtocol: Int? = nil
     var taskTypeLifecycleProtocol: Int? = nil
     var audioRestoration: TeamAudioRestorationAcknowledgement? = nil
 
-    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks", "is_recurring", "recurrence_pattern", "recurrence_end_date", "is_heading"]
+    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "is_recurring", "recurrence_pattern", "recurrence_end_date", "is_heading", "parent_id", "child_order"]
+    /// Columns a lifecycle `record` never carries: `waiting_on` is not a lifecycle key, the JSON `subtasks` column is
+    /// gone (subtasks are rows), and a NULL `is_heading` is left out as before.
+    static func lifecycleRecord(_ record: [String: JSON]) -> [String: JSON] {
+        var result = record
+        result.removeValue(forKey: "waiting_on"); result.removeValue(forKey: "subtasks")
+        if result["is_heading"] == .null { result.removeValue(forKey: "is_heading") }
+        return result
+    }
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
     static var conflict: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: This team task changed. Review the synced task and your saved edit.") }
 
     func capturing(_ original: Mutation, existing: Record?) throws -> Mutation {
-        let change = try TeamChecklist.preparing(original)
+        let change = original
         if change.method != "PATCH" {
             if change.method == "DELETE" {
                 guard let existing, existing.id == change.recordID, existing["project_id"] == .string(project),
@@ -187,10 +194,13 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
               let base = change.baseline, base["project_id"] == .string(project),
               case .string(let generation)? = base["task_generation"], TeamProjectValue.id(generation),
               change.fields.keys.allSatisfy({ base[$0] != nil }) else { throw Self.invalid }
-        for key in ["assigned_to", "section_id"] {
+        for key in ["assigned_to", "section_id", "parent_id"] {
             if let value = change.fields[key], value != .null {
                 guard case .string(let id) = value, TeamProjectValue.id(id) else { throw Self.invalid }
             }
+        }
+        if let value = change.fields["child_order"], value != .null {
+            guard case .number(let order) = value, order.isFinite else { throw Self.invalid }
         }
         if let value = change.fields["labels"] {
             guard case .array(let labels) = value, labels.count <= 256,
@@ -206,8 +216,6 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
         }
         try TeamTaskTypes.validate(change, protocolVersion: taskTypesProtocol)
         try TeamTaskRecurrence.validate(base: base, changes: change.fields)
-        if let tree = change.fields["subtasks"] { try TeamChecklist.validate(tree) }
-        if checklistRestoreRequest != nil, change.fields["subtasks"] == nil { throw Self.invalid }
         if TaskCompletionRevision.touches(change.fields) {
             guard case .number(let version)? = base["completion_version"], version.isFinite,
                   version >= 0, version <= 9_007_199_254_740_991, version.rounded(.down) == version else { throw Self.conflict }
@@ -215,7 +223,6 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
         var body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "task_id": .string(change.recordID),
             "request_id": .string(change.id.uuidString.lowercased()), "task_generation": .string(generation), "base": .object(base), "changes": .object(change.fields)]
         if TeamTaskTypes.requiresProtocol(change) { body["task_types_protocol"] = .number(1) }
-        if let checklistRestoreRequest { body["checklist_restore_from"] = .string(checklistRestoreRequest.uuidString.lowercased()) }
         guard try TaskfoldJSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
         return body
     }
@@ -258,7 +265,7 @@ extension TeamTaskEditScope {
     func lifecycleBody(for change: Mutation) throws -> [String: JSON] {
         let action = try lifecycleAction(for: change)
         guard [account,team,project,change.recordID].allSatisfy(TeamProjectValue.id) else { throw Self.invalid }
-        let record = action == "delete" ? change.baseline : change.fields
+        let record = (action == "delete" ? change.baseline : change.fields).map(Self.lifecycleRecord)
         guard let record, record["id"] == .string(change.recordID), record["project_id"] == .string(project),
               case .string(let creator)? = record["user_id"], TeamProjectValue.id(creator),
               case .string? = record["title"], case .string(let generation)? = record["task_generation"],
@@ -460,5 +467,41 @@ extension Snapshot {
         guard pending.first == receipt.command.original, !pending.contains(where: { $0.id == requestID }) else { throw TeamAudioRestoreRecoveryCommand.unavailable }
         let replacement = try receipt.replacingWithTaskOnlyRecovery(review: review, requestID: requestID, now: now)
         pending[0] = replacement
+    }
+}
+
+
+/// Versioned team task-type (heading) editing capability. It does not authorize creation, import or rollout.
+enum TeamTaskTypes {
+    static let maximumVersion = 9_007_199_254_740_990.0
+    static func requiresProtocol(_ change: Mutation) -> Bool { change.fields["is_heading"] != nil }
+    static func validate(_ change: Mutation, protocolVersion: Int?) throws {
+        guard requiresProtocol(change) else { return }
+        guard protocolVersion == 1, change.method == "PATCH", let base = change.baseline else { throw unavailable }
+        if let type = change.fields["is_heading"] {
+            guard case .bool = type, base["is_heading"] != nil,
+                  base["completed"] == .bool(false), base["completed_at"] == .null,
+                  change.fields["completed"] == nil, change.fields["completed_at"] == nil,
+                  TaskKind(Record(base)) != .unsupported,
+                  case .number(let version)? = base["completion_version"], version.isFinite,
+                  version >= 0, version <= maximumVersion, version.rounded(.down) == version else { throw TeamTaskEditScope.invalid }
+        }
+        guard TaskKind.permits(change, existing: Record(base)) else { throw TeamTaskEditScope.invalid }
+    }
+    static func requireCurrent(_ change: Mutation, current: Record) throws {
+        guard requiresProtocol(change), let base = change.baseline else { return }
+        guard ["is_heading", "completed", "completed_at", "completion_version"].allSatisfy({ (base[$0] ?? .null) == current[$0] }) else { throw TeamTaskEditScope.conflict }
+    }
+    static var unavailable: AppFailure { AppFailure(message: "Heading editing is not available for this team workspace yet. Your draft is kept on this device.") }
+    /// Current capability and custody, separate from the editor's frozen source/session admission.
+    static func authoringAvailable(scope: TeamTaskEditScope, cache: TeamWorkspaceCache, enabled: Bool) -> Bool {
+        guard enabled, scope.taskTypesProtocol == 1, scope.taskTypeLifecycleProtocol == 1,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin),
+              cache.boundary.raw["task_types_protocol"] == .number(1), cache.boundary.raw["task_type_lifecycle_protocol"] == .number(1),
+              cache.knownTeams[scope.project] == scope.team,
+              let project = cache.boundary.projects[scope.project], project.team == scope.team,
+              project.canSend, !project.archived, ["manager", "editor"].contains(project.role),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(scope.team) && $0.object["state"] == .string("active") }) == true else { return false }
+        return true
     }
 }

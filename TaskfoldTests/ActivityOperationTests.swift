@@ -3,9 +3,6 @@ import XCTest
 
 final class ActivityOperationTests: XCTestCase {
     let h = TaskNodeActivityTests()
-    func nodeRow() throws -> Record {
-        let before=h.root([h.node("child")]);return try XCTUnwrap(h.rows(before,h.complete(before,"child")).first)
-    }
     func rootRow() throws -> Record {
         var before=Record.task(user:h.owner,project:h.project)
         before["id"] = .string(UUID().uuidString.lowercased());before["task_generation"] = .string(UUID().uuidString.lowercased())
@@ -13,31 +10,6 @@ final class ActivityOperationTests: XCTestCase {
         let mutation=Mutation(table:"tasks",recordID:before.id,method:"PATCH",fields:after.fields)
         var snapshot=Snapshot();TaskActivity.recordLocal(mutation,before:before,after:after,snapshot:&snapshot,account:h.owner,now:h.now)
         return try XCTUnwrap(snapshot.tables[TaskActivity.table]?.first)
-    }
-    func testStrictMetadataIsDisplayOnlyAndUnknownShapesDoNotEraseWork() throws {
-        let valid=ActivityOperation(id:UUID(),origin:.server_transaction)
-        XCTAssertEqual(ActivityOperation(valid.document),valid)
-        for value:JSON in [.null,.bool(false),.object([:]),.object(["version":.number(2),"id":.string(valid.id.uuidString),"origin":.string("server_transaction")]),.object(["version":.number(1),"id":.string("bad"),"origin":.string("server_transaction")]),.object(["version":.number(1),"id":.string(valid.id.uuidString),"origin":.string("unknown_future_origin")]),.object(valid.document.object.merging(["private_note":.string("Not grouping authority")]){_,new in new})] {
-            XCTAssertNil(ActivityOperation(value))
-            var row=try nodeRow();row["operation_context"]=value
-            let event=try XCTUnwrap(TaskNodeActivity(row:row));XCTAssertNil(event.operation);XCTAssertEqual(event.kinds,[.completed])
-            let history=ChildWorkHistory(rows:[row],epoch:[Record(["id":.string("current"),"recorded_from":.string("2026-10-01T00:00:00Z")])])
-            XCTAssertEqual(ChildWorkReading(history,now:h.now).credits().count,1)
-        }
-    }
-    func testRealProvenanceCombinesRootAndChildWithoutChangingEitherEntry() throws {
-        let operation=ActivityOperation(id:UUID(),origin:.server_transaction)
-        var root=try rootRow(),child=try nodeRow();root["operation_context"]=operation.document;child["operation_context"]=operation.document
-        let r=try XCTUnwrap(TaskActivity(row:root)),c=try XCTUnwrap(TaskNodeActivity(row:child))
-        let groups=WorkActivityGroup.reading([.root(r),.child(c)])
-        XCTAssertEqual(groups.count,1);XCTAssertEqual(groups[0].events.count,2);XCTAssertEqual(groups[0].title,"Completed together")
-        XCTAssertEqual(Set(groups[0].events.map(\.id)),Set(["root:"+r.id,"child:"+c.id]))
-        XCTAssertEqual(groups[0].events.map(\.effectiveAt),[r.effectiveAt,c.effectiveAt])
-    }
-    func testEqualTimestampsNeverInferARelationship() throws {
-        let r=try XCTUnwrap(TaskActivity(row:rootRow())),c=try XCTUnwrap(TaskNodeActivity(row:nodeRow()))
-        XCTAssertEqual(r.recordedAt,c.recordedAt)
-        XCTAssertEqual(WorkActivityGroup.reading([.root(r),.child(c)]).count,2)
     }
     func testDistinctActorOriginAndOperationRemainSeparate() throws {
         let id=UUID(),operation=ActivityOperation(id:id,origin:.server_transaction)

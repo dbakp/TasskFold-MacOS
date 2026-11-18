@@ -86,7 +86,7 @@ final class TeamWorkflowRunTests: XCTestCase {
         row.fields.removeValue(forKey: "team_id"); row["document"] = .object(["version": .number(2)])
         XCTAssertThrowsError(try plan(source: .personal(row)))
     }
-    func testInlineLabelsKeepCaseAndChildContextWithStableChecklistTokens() throws {
+    func testInlineLabelsKeepCaseAndChildContext() throws {
         guard case .personal(var row) = try source(kind: .task) else { return XCTFail() }
         var doc = row["document"].object, tasks = doc["tasks"]!.list
         var task = tasks[0].object, children = task["subtasks"]!.list
@@ -100,9 +100,8 @@ final class TeamWorkflowRunTests: XCTestCase {
         let savedChild = Record(a.tasks[0]["subtasks"].list[0].object)
         XCTAssertEqual(savedChild["labels"], .array([.string("Child only")]))
         XCTAssertFalse(savedChild.completed)
-        XCTAssertEqual(TeamChecklist.token(savedChild[TeamChecklist.key])?.version, 0)
         XCTAssertNotEqual(savedChild.id, child["id"]?.text)
-        XCTAssertNoThrow(try TeamChecklist.validate(a.tasks[0]["subtasks"]))
+        XCTAssertNoThrow(try TeamWorkflowTree.nodes(a.tasks[0]["subtasks"]))
         XCTAssertNotNil(a.tasks[0].fields["created_at"])
         for field in ["user_id", "project_id", "task_generation", "created_at", "is_recurring"] { XCTAssertNil(savedChild.fields[field], field) }
         task["labels"] = .array([.object(["name": .string(String(repeating: "x", count: 1025))])])
@@ -207,7 +206,6 @@ extension TeamWorkflowRunTests {
         let work = Record(try XCTUnwrap(nested["subtasks"].list.first).object)
         XCTAssertEqual(TaskKind(work), .task); XCTAssertEqual(work.title, "* Literal task")
         XCTAssertFalse(row.completed); XCTAssertFalse(nested.completed); XCTAssertFalse(work.completed)
-        XCTAssertEqual(TeamChecklist.token(nested[TeamChecklist.key])?.version, 0)
         let bases = Dictionary(uniqueKeysWithValues: p.orders.map { ("group:" + $0.project + ":" + ($0.section ?? "none"), [String]()) })
         let c = try TeamWorkflowRunCommand(plan: p, baseOrders: bases)
         XCTAssertEqual(c.body["workflow_types_protocol"], .number(1))
@@ -243,16 +241,5 @@ extension TeamWorkflowRunTests {
             var body = c.body; body.removeValue(forKey: "workflow_types_protocol")
             XCTAssertThrowsError(try TeamTemplateCommand(account: account, origin: origin, action: action, body: body))
         }
-    }
-    func testSharedOrganizerReopenMustBeSavedBeforeTypeChange() throws {
-        let row = Record(["id": .string("item"), "completed": .bool(false)])
-        XCTAssertFalse(TeamTaskTypes.needsSavedReopen(row, originalTree: nil))
-        XCTAssertFalse(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([])))
-        XCTAssertFalse(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([.object(row.fields)])))
-        var completed = row; completed["completed"] = .bool(true)
-        XCTAssertTrue(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([.object(completed.fields)])))
-        completed["completed"] = .bool(false); completed["completed_at"] = .string("2026-10-26T10:00:00Z")
-        XCTAssertTrue(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([.object(completed.fields)])))
-        XCTAssertTrue(TeamTaskTypes.needsSavedReopen(row, originalTree: .string("unknown")))
     }
 }

@@ -110,13 +110,25 @@ final class BackupTests: XCTestCase {
     let labelID = "55555555-5555-4555-8555-555555555555"
     let sectionID = "66666666-6666-4666-8666-666666666666"
     let filterID = "77777777-7777-4777-8777-777777777777"
+    /// The owner's task as an older backup stores it: the child lives in the legacy JSON `subtasks` column.
+    func fixtureRoot() -> Record {
+        return Record(["id": .string(taskID), "user_id": .string(owner), "title": .string("Read a paper"), "project_id": .string(projectID), "section_id": .string(sectionID), "labels": .array([.string("Deep work")]), "deadline_date": .string("2026-10-25"), "duration_minutes": .number(25), "due_date": .string("2026-10-25"), "due_time": .string("02:30:00"), "time_zone": .string("Europe/Copenhagen"), "scheduled_at": .string("2026-10-25T01:30:00Z"), "assigned_to": .string(owner), "subtasks": .array([.object(["id": .string("child"), "title": .string("Annotate"), "completed": .bool(false), "assigned_to": .string(owner)])])])
+    }
+    /// The same workspace as the app stores it now: a plain root row and the child row the JSON converts to.
+    func convertedFixture() -> Snapshot {
+        var root = fixtureRoot(), snapshot = fixture()
+        let children = LegacySubtaskConversion.convert(root: root).rows
+        root.fields.removeValue(forKey: "subtasks")
+        snapshot.tables["tasks"] = [root] + children
+        return snapshot
+    }
     func fixture() -> Snapshot {
         var snapshot = Snapshot()
         snapshot.tables = [
             "projects": [Record(["id": .string(projectID), "user_id": .string(owner), "name": .string("Research"), "color": .string("#e31e4b")])],
             "labels": [Record(["id": .string(labelID), "user_id": .string(owner), "name": .string("Deep work"), "color": .string("#e31e4b")])],
             "sections": [Record(["id": .string(sectionID), "user_id": .string(owner), "name": .string("Reading"), "project_id": .string(projectID)])],
-            "tasks": [Record(["id": .string(taskID), "user_id": .string(owner), "title": .string("Read a paper"), "project_id": .string(projectID), "section_id": .string(sectionID), "labels": .array([.string("Deep work")]), "deadline_date": .string("2026-10-25"), "duration_minutes": .number(25), "due_date": .string("2026-10-25"), "due_time": .string("02:30:00"), "time_zone": .string("Europe/Copenhagen"), "scheduled_at": .string("2026-10-25T01:30:00Z"), "assigned_to": .string(owner), "subtasks": .array([.object(["id": .string("child"), "title": .string("Annotate"), "completed": .bool(false), "assigned_to": .string(owner)])])])],
+            "tasks": [fixtureRoot()],
             "saved_views": [Record(["id": .string(filterID), "user_id": .string(owner), "name": .string("Focused"), "query_ast": FilterRule.and([.predicate("project", projectID), .not(.predicate("label", labelID))]).document])],
             "favorites": [Record(["id": .string("view:" + filterID), "user_id": .string(owner)])],
             "view_preferences": [Record(["id": .string("project:" + projectID), "user_id": .string(owner), "layout": .string("board")])],
@@ -135,7 +147,7 @@ final class BackupTests: XCTestCase {
         let data = try JSONEncoder().encode(fixture().tables)
         let read = try WorkspaceBackup.read(data); XCTAssertTrue(read.legacy)
         let plan = try read.plan(current: Snapshot(), account: owner)
-        XCTAssertEqual(plan.mappedIDs["tasks"]?[taskID], taskID); XCTAssertEqual(plan.added, 8)
+        XCTAssertEqual(plan.mappedIDs["tasks"]?[taskID], taskID); XCTAssertEqual(plan.added, 9)
     }
     func testFutureVersionsUnknownColumnsAndMalformedRootsFailClosed() throws {
         var newer = backup(); newer.version = 2
@@ -165,7 +177,9 @@ final class BackupTests: XCTestCase {
         XCTAssertNotEqual(project, projectID)
         let row = Record(plan.changes.first { $0.table == "tasks" }!.fields)
         XCTAssertEqual(row.string("project_id"), project); XCTAssertEqual(row.string("section_id"), section); XCTAssertEqual(row["labels"], .array([.string(label)])); XCTAssertEqual(row.string("assigned_to"), other)
-        let child = Record(row["subtasks"].list[0].object); XCTAssertNotEqual(child.id, "child"); XCTAssertEqual(child.string("assigned_to"), other)
+        XCTAssertNil(row.fields["subtasks"], "The JSON column never reaches a restored row")
+        let taskRows = plan.changes.filter { $0.table == "tasks" }.map { Record($0.fields) }
+        let child = try XCTUnwrap(taskRows.first { $0.string("parent_id") == row.id }); XCTAssertNotEqual(child.id, "child"); XCTAssertEqual(child.string("assigned_to"), other)
         let rule = try FilterRule(document: plan.changes.first { $0.table == "saved_views" }!.fields["query_ast"]!)
         XCTAssertEqual(rule, .and([.predicate("project",project), .not(.predicate("label",label))]))
         let order = plan.changes.first { $0.table == "view_orders" }!
@@ -180,12 +194,12 @@ final class BackupTests: XCTestCase {
         XCTAssertNotEqual(try file.plan(current: Snapshot(), account: other).mappedIDs, a.mappedIDs)
         var restored = Snapshot(); a.changes.forEach { restored.apply($0) }
         let repeated = try backup().plan(current: restored, account: other)
-        XCTAssertEqual(repeated.added, 0); XCTAssertEqual(repeated.updated, 0); XCTAssertEqual(repeated.kept, 8)
+        XCTAssertEqual(repeated.added, 0); XCTAssertEqual(repeated.updated, 0); XCTAssertEqual(repeated.kept, 9)
     }
     func testMatchingPolicyPreservesEditsOrExplicitlyRestoresWithBaseline() throws {
-        var current = fixture(); current.tables["tasks"]![0]["title"] = .string("Newer edit")
+        var current = convertedFixture(); current.tables["tasks"]![0]["title"] = .string("Newer edit")
         let kept = try backup().plan(current: current, account: owner)
-        XCTAssertEqual(kept.total, 0); XCTAssertEqual(kept.kept, 8)
+        XCTAssertEqual(kept.total, 0); XCTAssertEqual(kept.kept, 9)
         let overwrite = try backup().plan(current: current, account: owner, policy: .backupValues)
         let update = overwrite.changes.first { $0.table == "tasks" }!
         XCTAssertEqual(update.method, "PATCH"); XCTAssertEqual(update.fields["title"], .string("Read a paper")); XCTAssertEqual(update.baseline?["title"], .string("Newer edit"))
@@ -199,26 +213,23 @@ final class BackupTests: XCTestCase {
         XCTAssertNotEqual(plan.mappedIDs["projects"]?[projectID], projectID); XCTAssertNotEqual(plan.mappedIDs["tasks"]?[taskID], taskID)
     }
     func testProjectMoveRestoresValidatedAssignmentsAfterClearing() throws {
-        var current = fixture(); current.tables["tasks"]![0]["project_id"] = .null; current.tables["tasks"]![0]["section_id"] = .null
+        var current = convertedFixture(); current.tables["tasks"]![0]["project_id"] = .null; current.tables["tasks"]![0]["section_id"] = .null
         let plan = try backup().plan(current: current, account: owner, policy: .backupValues)
-        let updates = plan.changes.filter { $0.table == "tasks" }
+        let updates = plan.changes.filter { $0.table == "tasks" && $0.recordID == taskID }
         XCTAssertEqual(updates.count, 2)
         let moves = try TaskAssignment.mutations(updates[0], existing: current.tables["tasks"]![0])
         XCTAssertEqual(moves[0].fields["assigned_to"], .null)
         XCTAssertEqual(moves.count, 1)
         XCTAssertEqual(updates[1].fields["assigned_to"], .string(owner))
         XCTAssertEqual(moves[0].baseline?["assigned_to"], .string(owner))
-        XCTAssertEqual(moves[0].baseline?["subtasks"], current.tables["tasks"]![0]["subtasks"])
-        XCTAssertEqual(updates[1].fields["subtasks"], fixture().tables["tasks"]![0]["subtasks"])
-        XCTAssertEqual(updates[1].baseline?["subtasks"], try TaskAssignment.clearChildren(fixture().tables["tasks"]![0]["subtasks"]))
     }
 
     func testProjectMoveDoesNotRepeatAnAlreadyRestoredRootAssignment() throws {
-        var current = fixture(); current.tables["tasks"]![0]["project_id"] = .string("88888888-8888-4888-8888-888888888888"); current.tables["tasks"]![0]["assigned_to"] = .string(other)
+        var current = convertedFixture(); current.tables["tasks"]![0]["project_id"] = .string("88888888-8888-4888-8888-888888888888"); current.tables["tasks"]![0]["assigned_to"] = .string(other)
         let updates = try backup().plan(current: current, account: owner, policy: .backupValues).changes.filter { $0.table == "tasks" }
         let moves = try TaskAssignment.mutations(updates[0], existing: current.tables["tasks"]![0])
         XCTAssertEqual(moves.count, 2); XCTAssertEqual(moves[1].fields["assigned_to"], .string(owner))
-        XCTAssertNil(updates[1].fields["assigned_to"]); XCTAssertNotNil(updates[1].fields["subtasks"])
+        XCTAssertNil(updates[1].fields["assigned_to"])
     }
     func testProjectSectionOrdersAndInboxBucketKeepTheirMeaning() throws {
         var file = backup(); file.tables["view_orders"] = [Record(["id": .string("group:" + projectID + ":" + sectionID), "ids": .array([.string(taskID)])]), Record(["id": .string("scope:today:group:project:none"), "ids": .array([])])]
@@ -240,20 +251,24 @@ final class BackupTests: XCTestCase {
         let plan = try file.plan(current: Snapshot(), account: owner)
         let row = Record(plan.changes.first { $0.table == "tasks" }!.fields)
         XCTAssertEqual(row["assigned_to"], .null)
-        let child = Record(row["subtasks"].list[0].object); XCTAssertEqual(child["assigned_to"], .null); XCTAssertEqual(child["subtasks"].list[0].object["assigned_to"], .null)
+        let rows = Dictionary(plan.changes.filter { $0.table == "tasks" }.map { ($0.recordID, Record($0.fields)) }, uniquingKeysWith: { first, _ in first })
+        let one = try XCTUnwrap(rows[LegacySubtaskConversion.legacyChildID(root: taskID, path: ["one"])]), two = try XCTUnwrap(rows[LegacySubtaskConversion.legacyChildID(root: taskID, path: ["one", "two"])])
+        XCTAssertEqual(one["assigned_to"], .null); XCTAssertEqual(two["assigned_to"], .null); XCTAssertEqual(two.string("parent_id"), one.id); XCTAssertNil(row.fields["subtasks"])
         XCTAssertTrue(plan.warnings.contains { $0.contains("3 assignments") })
     }
-    func testDuplicateSubtasksMalformedCollectionsAndRecurrenceRejected() throws {
+    func testDuplicateSubtaskIDsAreDisambiguatedAndRecurrenceRejected() throws {
         var file = backup(); let child = JSON.object(["id": .string("duplicate"), "title": .string("Subtask")]); file.tables["tasks"]![0]["subtasks"] = .array([child,child])
-        XCTAssertThrowsError(try file.plan(current: Snapshot(), account: owner))
-        file = backup(); file.tables["tasks"]![0]["subtasks"] = .array([.object(["title": .string("Bad"), "completed": .string("yes")])]); XCTAssertThrowsError(try file.plan(current: Snapshot(), account: owner))
+        let plan = try file.plan(current: Snapshot(), account: owner)
+        let children = plan.changes.filter { $0.table == "tasks" && $0.fields["parent_id"] == .string(taskID) }
+        XCTAssertEqual(children.count, 2); XCTAssertEqual(Set(children.map(\.recordID)).count, 2, "Siblings sharing an id get distinct @index ids")
+        XCTAssertTrue(plan.changes.allSatisfy { $0.fields["subtasks"] == nil })
         file = backup(); file.tables["tasks"]![0]["is_recurring"] = .bool(true); file.tables["tasks"]![0]["recurrence_pattern"] = .object(["type": .string("weekly"),"interval": .number(1),"daysOfWeek": .array([.number(7)])]); XCTAssertThrowsError(try file.validate())
     }
     func testRecurrenceParentsAreInsertedBeforeChildrenAndCyclesFail() throws {
         var file = backup(); var child = file.tables["tasks"]![0]; child["id"] = .string(UUID().uuidString.lowercased()); child["recurrence_parent_id"] = .string(taskID)
         file.tables["tasks"]!.insert(child, at: 0)
         let plan = try file.plan(current: Snapshot(), account: owner)
-        XCTAssertEqual(plan.changes.filter { $0.table == "tasks" }.map(\.recordID), [taskID,child.id])
+        XCTAssertEqual(plan.changes.filter { $0.table == "tasks" && [taskID, child.id].contains($0.recordID) }.map(\.recordID), [taskID,child.id])
         file.tables["tasks"]![1]["recurrence_parent_id"] = .string(child.id)
         XCTAssertThrowsError(try file.plan(current: Snapshot(), account: owner))
     }
@@ -266,7 +281,7 @@ final class BackupTests: XCTestCase {
     func testUUIDCaseIsCanonicalAndDuplicateSpellingsFail() throws {
         let id = "abcdefab-cdef-4abc-8def-abcdefabcdef"
         var file = backup(); var task = file.tables["tasks"]![0]
-        task["id"] = .string(id.uppercased()); file.tables["tasks"] = [task]
+        task["id"] = .string(id.uppercased()); task.fields.removeValue(forKey: "subtasks"); file.tables["tasks"] = [task]
         var current = Snapshot(); var existing = task; existing["id"] = .string(id); current.tables["tasks"] = [existing]
         let plan = try file.plan(current: current, account: owner)
         XCTAssertEqual(plan.mappedIDs["tasks"]?[id.uppercased()], id)
@@ -461,9 +476,8 @@ extension BackupTests {
                 let plan = try file.plan(current: Snapshot(), account: other)
                 let restored = try XCTUnwrap(plan.changes.first { $0.table == "tasks" })
                 if field == "subtasks" {
-                    // Restore already remaps child identities/assignments and
-                    // canonicalizes an empty child graph to an empty array.
-                    XCTAssertEqual(restored.fields[field], .array([]))
+                    // The JSON column never reaches a restored row.
+                    XCTAssertNil(restored.fields[field])
                 } else { XCTAssertEqual(restored.fields[field], explicitlyNull ? .null : nil) }
                 XCTAssertTrue((restored.fields[field] ?? .null).list.isEmpty, "Restore must not invent collection items")
             }
@@ -658,8 +672,11 @@ extension BackupTests {
         try TaskEditorRecovery.requireNewTaskPlan(plan)
         XCTAssertThrowsError(try TaskEditorRecovery.requireNewTaskPlan(RestorePlan()))
         var unsafe=plan;unsafe.changes[0].method="PATCH";XCTAssertThrowsError(try TaskEditorRecovery.requireNewTaskPlan(unsafe))
-        XCTAssertEqual(plan.changes.count,1);XCTAssertEqual(plan.changes[0].method,"POST");XCTAssertEqual(plan.changes[0].insertOnly,true)
+        // The new Inbox task plus its two checklist items as subtask rows, parents first, never a `subtasks` column.
+        XCTAssertEqual(plan.changes.count,3);XCTAssertTrue(plan.changes.allSatisfy { $0.method=="POST" && $0.insertOnly==true && $0.fields["subtasks"]==nil })
+        XCTAssertEqual(plan.changes[0].fields["parent_id"] ?? .null,.null);XCTAssertEqual(plan.changes[1].fields["parent_id"],.string(plan.changes[0].recordID))
         XCTAssertNotEqual(plan.changes[0].recordID,value.original.id)
+        var orphan=plan;orphan.changes[2].fields["parent_id"] = .string(UUID().uuidString.lowercased());XCTAssertThrowsError(try TaskEditorRecovery.requireNewTaskPlan(orphan))
         XCTAssertEqual(try value.copyBackup(current:current).tables,backup.tables)
         XCTAssertThrowsError(try value.copyBackup(current:Snapshot(tables:["tasks":[task]])))
     }
@@ -730,54 +747,6 @@ extension BackupTests {
 }
 
 extension BackupTests {
-    private func nestedEditorSource() -> (Record,Record,String) {
-        let child=Record(["id":.string("ec190000-0000-4000-8000-000000000002"),"title":.string("Child design notes"),"description":.string("Child-only text"),"created_at":.string("2026-10-24T12:00:00Z"),"subtasks":.array([.object(["id":.string("ec190000-0000-4000-8000-000000000003"),"title":.string("Child checklist item")])])])
-        var root=Record.task(user:owner,project:projectID);root["id"] = .string(taskID);root["title"] = .string("Root title stays separate");root["description"] = .string("Root-only text")
-        root["subtasks"] = .array([.object(child.fields),.object(["id":.string("ec190000-0000-4000-8000-000000000004"),"title":.string("Independent sibling")])])
-        return (root,child,SubtaskTree.reference(parent:root.id,key:child.id))
-    }
-    func testNestedEditorProjectionKeepsChildTitleNotesAndChecklistSeparateFromRoot() throws {
-        let (root,child,reference)=nestedEditorSource()
-        let projected=try XCTUnwrap(TaskEditorSourceContext.projection(root,reference:reference))
-        XCTAssertEqual(projected.title,child.title);XCTAssertEqual(projected["description"],child["description"]);XCTAssertEqual(projected["subtasks"],child["subtasks"])
-        XCTAssertEqual(projected["project_id"],root["project_id"]);XCTAssertEqual(projected["task_generation"],root["task_generation"])
-        let value=try TaskEditorRecovery(account:owner,origin:nil,original:projected,draft:projected,extras:["source_identity":TaskEditorSourceContext(record:projected,root:root).identity])
-        let copy=try XCTUnwrap(value.copyBackup(current:Snapshot()).tables["tasks"]?.first)
-        XCTAssertEqual(copy.title,child.title);XCTAssertEqual(copy.string("description"),"Child-only text");XCTAssertEqual(copy["subtasks"].list.count,1)
-        XCTAssertFalse(String(decoding:try JSONEncoder().encode(value),as:UTF8.self).contains("Root-only text"))
-    }
-    func testNestedEditorAllowsOrdinarySyncAndSiblingReorderWithoutRetargeting() throws {
-        let (root,child,reference)=nestedEditorSource(),projection=try XCTUnwrap(TaskEditorSourceContext.projection(root,reference:reference))
-        let context=TaskEditorSourceContext(record:projection,root:root)
-        var changed=root,updated=child;updated["title"] = .string("Teammate changed title")
-        changed["subtasks"] = .array([root["subtasks"].list[1],.object(updated.fields)])
-        XCTAssertTrue(context.matches(changed));XCTAssertTrue(context.matches(root))
-        XCTAssertTrue(TaskEditorSourceContext(record:child,root:root).matches(changed))
-    }
-    func testNestedEditorRefusesDeletedMovedAmbiguousAndRecreatedChild() throws {
-        let (root,child,reference)=nestedEditorSource(),projection=try XCTUnwrap(TaskEditorSourceContext.projection(root,reference:reference))
-        let context=TaskEditorSourceContext(record:projection,root:root)
-        var changed=root;changed["subtasks"] = .array([]);XCTAssertFalse(context.matches(changed))
-        changed["subtasks"] = .array([.object(["id":.string("ec190000-0000-4000-8000-000000000005"),"title":.string("New parent"),"subtasks":.array([.object(child.fields)])])]);XCTAssertFalse(context.matches(changed))
-        changed=root;var replacement=child;replacement["created_at"] = .string("2026-10-24T13:00:00Z");changed["subtasks"] = .array([.object(replacement.fields)])
-        XCTAssertFalse(context.matches(changed))
-        changed["subtasks"] = .array([.object(child.fields),.object(child.fields)])
-        XCTAssertNil(TaskEditorSourceContext.projection(changed,reference:child.id));XCTAssertFalse(TaskEditorSourceContext(record:child,root:changed).matches(changed))
-        XCTAssertFalse(context.matches(changed))
-    }
-    func testNestedEditorRootIncarnationOwnershipAndProjectMustStayBound() throws {
-        let (root,child,_)=nestedEditorSource(),context=TaskEditorSourceContext(record:child,root:root)
-        XCTAssertFalse(context.matches(nil))
-        for (key,value) in [("task_generation",JSON.string(UUID().uuidString.lowercased())),("project_id",.null),("user_id",.string(other))] {
-            var changed=root;changed[key]=value;XCTAssertFalse(context.matches(changed))
-        }
-        var new=child;new["id"] = .string(UUID().uuidString.lowercased())
-        let pending=TaskEditorSourceContext(record:new,root:root)
-        XCTAssertTrue(pending.matches(root));XCTAssertFalse(pending.matches(nil))
-        var collision=root;collision["subtasks"] = .array([.object(new.fields)])
-        XCTAssertFalse(pending.matches(collision),"A new child must never retarget an independently persisted matching UUID")
-        XCTAssertTrue(TaskEditorSourceContext(record:new,root:nil).matches(nil))
-    }
 }
 
 extension BackupTests {
@@ -809,16 +778,6 @@ extension BackupTests {
         XCTAssertFalse(wrong.matches(account:other,generation:scope.generation,currentRoot:nil))
         let collision=TaskEditorAdmission(workspace:scope,record:draft,root:draft,kind:.new)
         XCTAssertFalse(collision.matches(account:owner,generation:scope.generation,currentRoot:draft))
-    }
-    func testNestedAdmissionKeepsCapturedRootWhenSheetLoadsLater() throws {
-        let (root,child,_)=nestedEditorSource(),scope=WorkspaceBinding(account:owner,generation:UUID())
-        let opening=TaskEditorAdmission(workspace:scope,record:child,root:root,kind:.nested)
-        XCTAssertTrue(opening.matches(account:owner,generation:scope.generation,currentRoot:root))
-        XCTAssertFalse(opening.matches(account:other,generation:scope.generation,currentRoot:root))
-        var moved=root;moved["project_id"] = .null
-        XCTAssertFalse(opening.matches(account:owner,generation:scope.generation,currentRoot:moved))
-        XCTAssertFalse(opening.matches(account:owner,generation:scope.generation,currentRoot:nil))
-        XCTAssertEqual(opening.source.record,child);XCTAssertEqual(opening.source.root,root)
     }
     @MainActor func testQueuedNewDraftCheckpointRemainsInOriginalVaultAcrossAccountSwitch() throws {
         let folder=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:folder)}

@@ -94,7 +94,7 @@ final class Store {
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
     @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif
-    private(set) var workspaceReadRevision = UUID() { didSet { datedReadRevision = UUID(); subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear(); invalidateStartupPublication(privacy: !initializingStore && !startupSharedStorageReady) } }
+    private(set) var workspaceReadRevision = UUID() { didSet { datedReadRevision = UUID(); taskNotePreviewReadCache.clear(); invalidateStartupPublication(privacy: !initializingStore && !startupSharedStorageReady) } }
     var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
     var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
     @ObservationIgnored private var workflowPresentationDeferred = false
@@ -133,7 +133,7 @@ final class Store {
         didSet {
             presentationAccessEpoch = UUID()
             widgetCompletionSignatures.clear()
-            subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
+            taskNotePreviewReadCache.clear()
             presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear()
             assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
             if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
@@ -154,7 +154,6 @@ final class Store {
     @ObservationIgnored private let recordReadCache = WorkspaceRecordReadCache()
     @ObservationIgnored private let assigneeDisplayCache = AssigneeDisplayReadCache()
     @ObservationIgnored private let projectCatalogReadCache = WorkspaceProjectCatalogReadCache()
-    @ObservationIgnored private let subtaskProgressReadCache = SubtaskProgressReadCache()
     @ObservationIgnored private let taskNotePreviewReadCache = TaskNotePreviewReadCache()
     func taskNotePreview(_ task: Record) -> String {
         taskNotePreviewReadCache.read(task.string("description"), id: task.id, fullText: false,
@@ -179,18 +178,11 @@ final class Store {
         return text
     }
 
-    func subtaskProgress(_ task: Record) -> (completed: Int, total: Int) {
-        subtaskProgressReadCache.read(task["subtasks"], id: task.id,
-            context: .init(workspace: .init(account: userID, generation: workspaceGeneration),
-                           session: backend.reminderSessionIncarnation, access: presentationAccessEpoch))
-    }
-
     // MARK: Child rows (`parent_id`), behind Info.plist `TaskfoldChildRowsEnabled` (absent = off).
     // Each read observes `taskRevision` so a view that shows children refreshes when any task changes.
     func children(of id: String) -> [Record] { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.children(of: id) : [] }
     func parent(of id: String) -> Record? { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.parent(of: id) : nil }
     func breadcrumb(of id: String) -> [Record] { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.breadcrumb(of: id) : [] }
-    /// Replaces `subtaskProgress` once subtasks are rows: counts every descendant task.
     func childProgress(of id: String) -> (completed: Int, total: Int) { _ = taskRevision; return TaskTree.rowsEnabled ? taskCache.tree.childProgress(of: id) : (0, 0) }
 
     @ObservationIgnored private var presentationAccessEpoch = UUID()
@@ -518,7 +510,7 @@ final class Store {
         widgetCompletionSignatures.clear()
         spotlight.suspend()
         recordReadCache.clear()
-        subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear()
+        taskNotePreviewReadCache.clear()
         projectMemberReads.cancelAll()
         sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0
         snapshotRevision = UUID()
@@ -554,7 +546,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {if !workspaceCacheReadable {widgetCompletionSignatures.clear(); sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};subtaskProgressReadCache.clear(); taskNotePreviewReadCache.clear();presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {if !workspaceCacheReadable {widgetCompletionSignatures.clear(); sharedCaptureCountReader.invalidate(); sharedCaptureDraftCount = 0};taskNotePreviewReadCache.clear();presentationReadCache.clear(); recordReadCache.clear(); dayGroupsReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -640,7 +632,7 @@ final class Store {
     }
     @ObservationIgnored private var editorSessions: [UUID:TaskEditorSession] = [:]
     func editorAdmission(_ record: Record, kind: TaskEditorAdmission.Kind = .existing, workspace: WorkspaceBinding? = nil, root: Record? = nil) -> TaskEditorAdmission {
-        let capturedRoot = root ?? self.record("tasks", id: SubtaskTree.referencePath(record.id)?.first ?? record.id)
+        let capturedRoot = root ?? self.record("tasks", id: record.id)
         let team = kind == .existing && capturedRoot?.id == record.id ? capturedRoot.flatMap { try? captureTeamTaskEditor($0) } : nil
         return TaskEditorAdmission(workspace:workspace ?? WorkspaceBinding(account:userID,generation:workspaceGeneration),record:record,root:capturedRoot,kind:kind,teamDraft:team)
     }
@@ -677,7 +669,7 @@ final class Store {
     }
     /// This explicit path never infers team scope for an ordinary personal save.
     /// Organization rollout and the service's task capability both stay required.
-    private var nativeTeamEditorEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true }
+    var nativeTeamEditorEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true }
     /// Local client support is distinct from live shared-workspace admission.
     var teamWorkflowHeadingClientEnabled: Bool { nativeTeamEditorEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true }
     var teamWorkflowCreationAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked && online && !syncing && snapshot.pending.isEmpty }
@@ -739,10 +731,10 @@ final class Store {
         } catch { self.error = error.localizedDescription; return false }
     }
     func reviewedPersonalTaskPlanning(_ records: [Record], workspace: WorkspaceBinding, session: UUID, origin: String?) throws {
-        guard (1...TaskHierarchyIndex.maximumEdits).contains(records.count) else { throw AppFailure(message: "Select up to 1,000 tasks at a time.") }
+        guard (1...TaskSelectionPlan.maximumRequests).contains(records.count) else { throw AppFailure(message: "Select up to 1,000 tasks at a time.") }
         guard Set(records.map(\.id)).count == records.count, workspace.matches(account: userID, generation: workspaceGeneration), session == backend.reminderSessionIncarnation, origin == (try? backend.accountRemovalOrigin), signedIn, !signingOut, !accountRemovalBlocked, workspaceCacheReadable else { throw TeamTaskBatch.conflict }
         for source in records {
-            let root = SubtaskTree.referencePath(source.id)?.first ?? source.id
+            let root = source.id
             if let cache = nativeConversationTeamCache {
                 guard let origin, cache.boundary.belongs(account: workspace.account, origin: origin), cache.knownTeams[source.string("project_id")] == nil, !cache.knownTasks.contains(root) else { throw TeamTaskBatch.conflict }
             }
@@ -751,11 +743,12 @@ final class Store {
     }
     func hasSharedTaskSelection(_ ids: Set<String>) -> Bool {
         ids.contains { id in
-            let root = SubtaskTree.referencePath(id)?.first ?? id
+            let root = id
             return nativeConversationTeamCache?.knownTasks.contains(root) == true || record("tasks", id: root).map { nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
         }
     }
     func captureTeamTaskCompletionSelection(_ records: [Record]) throws -> TeamTaskCompletionSelection {
+        let records = withTeamSubtasks(records, openOnly: true)
         let selection = try TeamTaskCompletionSelection(drafts: records.map { try captureTeamTaskEditor($0) }, tasks: snapshot.tables["tasks"] ?? [])
         _ = try reviewedTeamTaskCompletionSelection(selection); return selection
     }
@@ -965,6 +958,7 @@ final class Store {
         Task { await sync() }
     }
     func captureTeamTaskDeletionSelection(_ records: [Record]) throws -> TeamTaskDeletionSelection {
+        let records = withTeamSubtasks(records)
         guard (2...100).contains(records.count), Set(records.map(\.id)).count == records.count,
               records.allSatisfy({ nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil }) else {
             throw AppFailure(message: "Choose between 2 and 100 tasks from one shared team. Nothing has been removed.")
@@ -2313,6 +2307,16 @@ final class Store {
     }
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil, localHistory: LocalActivityCreation.Preparation? = nil) -> Bool {
+        var changes = changes
+        // A team parent's deletion takes its subtasks with it (each its own certified team deletion, deepest first).
+        if TaskTree.rowsEnabled, remember, changes.contains(where: { $0.table == "tasks" && $0.method == "DELETE" && $0.teamTaskScope != nil }) {
+            do { if let expanded = try teamSubtaskDeletions(for: changes) { changes = expanded } }
+            catch { self.error = error.localizedDescription; return false }
+        }
+        return commitExpanded(changes, remember: remember, widgetReceipt: widgetReceipt, widgetFeedback: widgetFeedback, sharedCaptureReceipt: sharedCaptureReceipt, localHistory: localHistory)
+    }
+    @discardableResult
+    private func commitExpanded(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil, localHistory: LocalActivityCreation.Preparation? = nil) -> Bool {
         noteLocalTaskEdits(changes)
         let historySourceRevision = snapshotRevision
         let admittedHistory = localMode ? localHistory?.admit(changes, source: historySourceRevision, account: userID, cache: nativeConversationTeamCache) : nil
@@ -2414,7 +2418,7 @@ final class Store {
             let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
             let normalizationCache = nativeConversationTeamCache
             do {
-            changes = try TaskAssignment.normalizedChanges(orderingCommands, existing: { normalizationRecord("tasks", id: $0) }, markMove: markPersonalTaskMove).map { change in
+            changes = try TaskAssignment.normalizedChanges(orderingCommands, existing: { normalizationRecord("tasks", id: $0) }).map { change in
                 var change = change
                 if change.table == "tasks", change.method != "DELETE" {
                     change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
@@ -2747,6 +2751,7 @@ final class Store {
         guard TaskKind.mayComplete(task) else { error = "Headings stay open. Open the heading to edit its details."; return false }
         do {
             if hasSharedTaskSelection([task.id]) {
+                if let tree = try teamTreeCompletion(task) { return commit(tree) }
                 let draft = try captureTeamTaskEditor(task)
                 guard let cache = nativeConversationTeamCache else { throw TeamTaskEditorDraft.unavailable }
                 let change = try draft.completionMutation(current: record("tasks", id: task.id), tasks: tasks,
@@ -2783,18 +2788,16 @@ final class Store {
         if TaskTree.rowsEnabled, let plan = TaskTree.completion(of: task, tasks: tasks, account: userID) { return plan.mutations }
         return TaskCompletion.toggle(task, tasks: tasks, account: userID)
     }
-    /// Personal moves stay ordinary edits: the reviewed move belonged to the retired JSON child-record system.
-    private func markPersonalTaskMove(_ input: Mutation, existing: Record?) -> Mutation { input }
     private func historyChanges(_ changes: [Mutation]) throws -> [Mutation] {
         let actions = changes.map { original in
-            var change = PersonalTaskMove.historyAction(TeamCompletion.historyAction(original,snapshot:snapshot))
+            var change = TeamCompletion.historyAction(original,snapshot:snapshot)
             if change.table == "view_orders" { change.id = UUID(); change.orderRecovery = nil }
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
             }
             return change
         }
-        return try TaskAssignment.replayingHistory(actions, existing: { record($0, id: $1) }, markMove: markPersonalTaskMove)
+        return try TaskAssignment.replayingHistory(actions, existing: { record($0, id: $1) })
     }
     func captureHistoryRequest(_ direction: EditHistoryRequest.Direction = .undo) -> EditHistoryRequest? {
         guard (signedIn || localMode), !signingOut, !accountRemovalBlocked else { return nil }
@@ -2831,7 +2834,7 @@ final class Store {
     /// A denied queued change must not block the refresh that removes revoked shared work.
     /// Keep its complete local snapshot in the encrypted vault before changing the live cache.
     private func recoverUnavailableProject(_ mutation: Mutation, generation: UUID, account: String) async -> Bool {
-        guard mutation.personalTaskMove != true, mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
+        guard mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
         let reviewed = snapshot
         let projectIDs = reviewed.recoveryProjectIDs(for: mutation)
         guard !projectIDs.isEmpty else { return false }
@@ -3076,16 +3079,6 @@ final class Store {
             let initialRequests=Set(snapshot.pending.map(\.id)),blockedRequests=access?.blocked(snapshot) ?? []
             while !hadConflict,let mutation = snapshot.pending.first {
                 if blockedRequests.contains(mutation.id) || (!initialRequests.contains(mutation.id) && access?.canSend(mutation,in:snapshot)==false) {
-                    if mutation.personalTaskMove == true {
-                        let confirmed = try await backend.confirmPersonalTaskMove(mutation, expectedAccount: account)
-                        guard generation == accountGeneration, snapshot.pending.first == mutation else { return }
-                        if confirmed {
-                            sent = .unknown
-                            guard snapshot.acknowledge(mutation, saved: nil) else { throw PersonalTaskMove.invalid }
-                            try persist(backgroundWidgets: true); continue
-                        }
-                        notice = "Your original project move is saved. Its result is not confirmed; review access before trying it again."
-                    }
                     if let access, try await discoverBlockedTeamCompletion(access: access) { return }
                     break
                 }
@@ -4265,33 +4258,6 @@ extension Store {
                 snapshot.apply(change); TaskActivity.recordLocal(change, before: task, after: record("tasks", id: task.id), snapshot: &snapshot, account: userID, now: now.addingTimeInterval(interval))
             }
         }
-        if ProcessInfo.processInfo.arguments.contains("--project-pulse-field-details") || ProcessInfo.processInfo.arguments.contains("--project-pulse-order-details") {
-            var parent = Record.task(user: userID, project: project)
-            parent["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa75")
-            parent["task_generation"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa90")
-            parent["title"] = .string("Workshop"); parent["is_heading"] = .bool(true)
-            parent["subtasks"] = .array([.object(["id": .string("concept"), "title": .string("Prepare the concept"), "description": .string("Keep these original instructions private"), "priority": .number(4), "completed": .bool(false)])])
-            if ProcessInfo.processInfo.arguments.contains("--project-pulse-order-details") {
-                parent["subtasks"] = .array(parent["subtasks"].list + [.object(["id": .string("companion"), "title": .string("Review the companion sketch"), "completed": .bool(false)])])
-            }
-            let creation = Mutation(table: "tasks", recordID: parent.id, method: "POST", fields: parent.fields)
-            snapshot.apply(creation)
-            TaskActivity.recordLocal(creation, before: nil, after: parent, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
-            TaskNodeActivity.recordLocal(creation, before: nil, after: parent, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
-            var edited = parent
-            edited["subtasks"] = SubtaskTree.changing(parent["subtasks"], id: "concept", fields: ["description": .string("Keep these revised instructions private"), "priority": .number(1)])
-            let change = Mutation(id: UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa91")!, table: "tasks", recordID: parent.id, method: "PATCH", fields: edited.fields)
-            snapshot.apply(change)
-            TaskNodeActivity.recordLocal(change, before: parent, after: edited, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-60))
-            if ProcessInfo.processInfo.arguments.contains("--project-pulse-order-details") {
-                var reordered = edited
-                reordered["subtasks"] = .array(Array(edited["subtasks"].list.reversed()))
-                let reorder = Mutation(id: UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa92")!, table: "tasks", recordID: parent.id, method: "PATCH", fields: reordered.fields)
-                snapshot.apply(reorder)
-                TaskNodeActivity.recordLocal(reorder, before: edited, after: reordered, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-30))
-            }
-
-        }
         if ProcessInfo.processInfo.arguments.contains("--project-pulse-group-details") {
             var selected: [Record] = []
             for (id, title) in [("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa93", "Prepare the study"), ("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa94", "Send the summary")] {
@@ -4569,13 +4535,6 @@ extension Store {
                 "## Design section \(index)\nRésumé, København, 東京, العربية, 🙂. Review **contrast** and _spacing_, then read the [guide](https://example.com/guide).\n- Keep every instruction\n- Check the complete exported document\n```text\nLiteral **code** \(index)\n```"
             }.joined(separator: "\n\n") + "\nFINAL-NATIVE-PRINT-INSTRUCTION")
         }
-        if ProcessInfo.processInfo.arguments.contains("--subtask-organizer-fixture") {
-            func child(_ suffix: String, _ title: String, _ children: [JSON] = []) -> JSON {
-                .object(["id": .string("f1710000-0000-4000-8000-" + suffix), "title": .string(title), "completed": .bool(false),
-                         "description": .string("Keep these checklist notes."), "due_date": .string("2027-01-04"), "subtasks": .array(children)])
-            }
-            task["subtasks"] = .array([child("000000000001", "Planning", [child("000000000002", "Research", [child("000000000004", "Collect references")])]), child("000000000003", "Review")])
-        }
         snapshot = Snapshot(tables: ["projects": projects, "tasks": [task]])
         if ProcessInfo.processInfo.arguments.contains("--pinned-output-fixture"),
            ["com.dbakp.taskfold.mac.workflowteststeameditbridge", "com.dbakp.taskfold.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") {
@@ -4603,85 +4562,16 @@ extension Store {
             TaskAssignmentProvenance.recordLocal(Mutation(table:"tasks",recordID:mine.id,method:"POST",fields:mine.fields),before:nil,after:mine,snapshot:&snapshot,account:userID)
             snapshot.tables[TaskAssignmentProvenance.table,default:[]].append(Record(["id":.string(UUID().uuidString.lowercased()),"task_id":.string(other.id),"task_generation":other["task_generation"],"node_key":.string(""),"node_path":.array([]),"assignee_id":.string(member),"actor_id":.string(member),"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":.string(TaskActivity.stamp(Date())),"origin":.string("recorded"),"active":.bool(true)]))
         }
-        if ProcessInfo.processInfo.arguments.contains("--heading-portability-template-fixture"),
-           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
-            do {
-                guard let current = record("tasks", id: "f1810000-0000-4000-8000-000000000001") else { throw AppFailure(message: "The heading fixture is unavailable.") }
-                var heading = try TaskKind.setting(current, heading: true)
-                heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f1710000-0000-4000-8000-000000000002", fields: ["is_heading": .bool(true)])
-                snapshot.tables["tasks"] = [heading]
-                let definition = try WorkflowTemplate.capture(kind: .task, id: heading.id, snapshot: snapshot)
-                let file = try WorkflowTemplateFile(name: "Reference workflow", document: definition.document)
-                let decoded = try WorkflowTemplateFile(data: file.encoded())
-                snapshot.tables[WorkflowTemplate.table] = [Record(["id": .string("f2810000-0000-4000-8000-000000000003"), "user_id": .string(userID), "name": .string(decoded.name), "document": decoded.template.document])]
-            } catch { self.error = error.localizedDescription }
-        }
-        if ProcessInfo.processInfo.arguments.contains("--heading-progress-fixture"),
-           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
-            func item(_ suffix: String, _ title: String, heading: Bool = false, done: Bool = false, children: [JSON] = []) -> JSON {
-                .object(["id": .string("f5810000-0000-4000-8000-" + suffix), "title": .string(title), "description": .string("Keep the work’s own notes."), "is_heading": .bool(heading), "completed": .bool(done), "subtasks": .array(children)])
-            }
-            var heading = try! TaskKind.setting(task, heading: true)
-            heading["project_id"] = .string(parent); heading["title"] = .string("Launch context")
-            heading["due_date"] = .string(Dates.day(Date()))
-            var attention = item("000000000001", "Draft the launch note", children: [item("000000000005", "Checklist detail")]).object
-            attention["deadline_date"] = .string("2026-01-01")
-            heading["subtasks"] = .array([.object(attention), item("000000000002", "Choose the palette", done: true), item("000000000003", "Second phase", heading: true, children: [item("000000000004", "Check the layout")])])
-            snapshot.tables["tasks"] = [heading]
-        }
-        if ProcessInfo.processInfo.arguments.contains("--heading-planner-fixture"),
-           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
-           var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
-            let today = Dates.day(Date())
-            heading["duration_minutes"] = .number(999)
-            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000001", fields: ["due_date": .string(today), "duration_minutes": .number(45)])
-            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000004", fields: ["due_date": .string(today), "due_time": .string("09:00"), "duration_minutes": .number(30)])
-            snapshot.tables["tasks"] = [heading]
-        }
         if ProcessInfo.processInfo.arguments.contains("--heading-inbox-work-fixture"),
            Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
            var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
             heading["project_id"] = .null; heading["section_id"] = .null
             snapshot.tables["tasks"] = [heading]
         }
-        if ProcessInfo.processInfo.arguments.contains("--heading-list-work-fixture"),
-           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
-           var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
-            let label = "f6820000-0000-4000-8000-000000000001", view = "f6820000-0000-4000-8000-000000000002"
-            heading["priority"] = .number(3)
-            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000001", fields: ["priority": .number(1), "labels": .array([.string(label)])])
-            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000004", fields: ["priority": .number(2)])
-            snapshot.tables["tasks"] = [heading]
-            snapshot.tables["labels"] = [Record(["id": .string(label), "user_id": .string(userID), "name": .string("Design work"), "color": .string("#7c5cbf")])]
-            snapshot.tables["saved_views"] = [Record(["id": .string(view), "user_id": .string(userID), "name": .string("Priority work"), "query_ast": FilterRule.predicate("priority", "1").document, "sort_by": .string("priority"), "grouping": .string("none")])]
-        }
         do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
     }
 }
 #endif
-
-
-extension Store {
-    /// Resolve the displayed incarnation before an action; selection captures its
-    /// workspace and raw source so later Save cannot retarget another child.
-    func hierarchySelection(for displayed: Record) throws -> TaskHierarchyIndex.Selection {
-        guard let path = SubtaskTree.referencePath(displayed.id), let root = activeTasks.first(where: { $0.id == path[0] }) else {
-            throw SubtaskTree.Failure(message: "This subtask is no longer accessible. Reopen its parent task.")
-        }
-        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
-        guard let selection = index.selection(displayed.id), selection.item.record == displayed else {
-            throw SubtaskTree.Failure(message: "This subtask changed. Reopen its current details before editing it.")
-        }
-        return selection
-    }
-    @discardableResult
-    func commitHierarchy(_ edits: [TaskHierarchyIndex.Edit]) throws -> Bool {
-        let changes = try TaskHierarchyIndex.changes(edits, accessibleRoots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
-        guard !changes.isEmpty else { return true }
-        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The subtask could not be saved. Your draft is still open.") }
-        return true
-    }
-}
 
 
 extension Store {
@@ -4691,17 +4581,11 @@ extension Store {
         let requests = tasks.map { TaskSelectionPlan.Request(task: $0, action: action($0), workspace: workspace) }
         let changes = try TaskTree.rowsEnabled ? childRowsSelectionChanges(requests, workspace: workspace) : TaskSelectionPlan.changes(requests, accessibleRoots: activeTasks, projects: projects, workspace: workspace)
         guard !changes.isEmpty else { return true }
-        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The selection could not be saved. Try again.") }
+        guard commit(changes) else { throw TaskSelectionPlan.Failure(message: error ?? "The selection could not be saved. Try again.") }
         return true
     }
     func selectionRecord(_ id: String) throws -> Record {
-        guard let path = SubtaskTree.referencePath(id) else {
-            guard let task = activeTasks.first(where: { $0.id == id }) else { throw SubtaskTree.Failure(message: "This task is no longer accessible.") }
-            return task
-        }
-        guard let root = activeTasks.first(where: { $0.id == path[0] }) else { throw SubtaskTree.Failure(message: "This subtask is no longer accessible.") }
-        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
-        guard let task = index.item(id)?.record else { throw SubtaskTree.Failure(message: "This subtask moved. Select its current row again.") }
+        guard let task = activeTasks.first(where: { $0.id == id }) else { throw TaskSelectionPlan.Failure(message: "This task is no longer accessible.") }
         return task
     }
 }
@@ -4721,7 +4605,7 @@ extension Store {
     func duplicateSelection(_ tasks: [Record]) throws -> Bool {
         let changes = try TaskSelectionPlan.duplicateChanges(tasks, accessibleRoots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
         guard !changes.isEmpty else { return true }
-        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The copies could not be saved. Try again.") }
+        guard commit(changes) else { throw TaskSelectionPlan.Failure(message: error ?? "The copies could not be saved. Try again.") }
         return true
     }
 }
@@ -4746,9 +4630,7 @@ extension Store {
     }
     private func widgetFeedbackIsCurrent(_ feedback: WidgetCompletionFeedback) -> Bool {
         guard let task = try? selectionRecord(feedback.taskID), task.completed else { return false }
-        guard SubtaskTree.referencePath(feedback.taskID) != nil else { return true }
-        guard let selection = try? hierarchySelection(for: task) else { return false }
-        return WidgetCompletion.routeContext(selection.item) == feedback.routeContext
+        return true
     }
 }
 
@@ -5104,6 +4986,9 @@ extension Store {
     }
     static let projectID = "ec240000-0000-4000-8000-000000000003"
     static let teamID = "ec240000-0000-4000-8000-000000000004"
+    /// `--team-child-rows-testing`: the proof task has two subtask rows; `--team-viewer-testing` opens it as a viewer.
+    static var childRows: Bool { ProcessInfo.processInfo.arguments.contains("--team-child-rows-testing") }
+    static var viewer: Bool { ProcessInfo.processInfo.arguments.contains("--team-viewer-testing") }
     static let personalPlanningProject = "ec240000-0000-4000-8000-000000000041"
     static func backend() -> Backend {
         let account = Self.account
@@ -5213,16 +5098,10 @@ extension Store {
             var row = Record.task(user: "ec240000-0000-4000-8000-000000000099", project: TeamEditorNativeFixture.projectID)
             row["id"] = .string(TeamEditorNativeFixture.taskID); row["title"] = .string("Team editor proof"); row["description"] = .string("Original team notes")
             row["opaque_future"] = .object(["preserved": .bool(true)])
-            row["subtasks"] = .array([
-                .object(["id": .string(TeamEditorNativeFixture.childID), "title": .string("Review the layout"), "description": .string("Original child notes"), "completed": .bool(false), "priority": .number(4), "subtasks": .array([]), "opaque_child": .bool(true)]),
-                .object(["id": .string(TeamEditorNativeFixture.siblingID), "title": .string("Keep the workshop notes"), "description": .string("Unchanged sibling notes"), "completed": .bool(false), "subtasks": .array([])])
-            ])
             let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": row["user_id"], "name": .string("Design workshop")])
             var tasks = [row], projects = [project], labels: [Record] = []
             if ProcessInfo.processInfo.arguments.contains("--team-label-testing") {
                 row["labels"] = .array([.string("Design"), .string("ec240000-0000-4000-8000-000000000009")])
-                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["labels": .array([.string("Child design")])])
-                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.siblingID, fields: ["labels": .array([.string("Review")])])
                 labels = [Record(["id": .string("ec240000-0000-4000-8000-000000000008"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Design")]),
                           Record(["id": .string("ec240000-0000-4000-8000-000000000010"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Personal only")])]
                 let privateProject = Record(["id": .string("ec240000-0000-4000-8000-000000000012"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private test project")])
@@ -5256,13 +5135,22 @@ extension Store {
                 row["recurrence_end_date"] = .string("2027-10-25")
                 var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: "Europe/Copenhagen")!
                 row["scheduled_at"] = .string(ISO8601DateFormatter().string(from: calendar.date(from: DateComponents(year: 2026, month: 10, day: 25, hour: 9))!))
-                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["completed": .bool(true)])
             }
             if TaskFileViewerFixture.enabled {
                 row["task_generation"] = .string(TaskFileViewerFixture.generation)
                 row["attachments"] = .array([.object(TaskFileViewerFixture.attachment.fields)])
             }
             tasks[0] = row
+            if TeamEditorNativeFixture.childRows {
+                // Team subtasks are rows (Migration T): two children of the proof task, in order.
+                for (index, (id, title)) in [(TeamEditorNativeFixture.childID, "Review the layout"), (TeamEditorNativeFixture.siblingID, "Keep the workshop notes")].enumerated() {
+                    var child = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
+                    child["id"] = .string(id); child["title"] = .string(title)
+                    child["task_generation"] = .string(String(format: "ec240000-0000-4000-8000-0000000000%02d", 61 + index))
+                    child["parent_id"] = .string(TeamEditorNativeFixture.taskID); child["child_order"] = .number(Double(index + 1))
+                    tasks.append(child)
+                }
+            }
             if ProcessInfo.processInfo.arguments.contains("--team-batch-testing") {
                 var next = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
                 next["id"] = .string("ec240000-0000-4000-8000-000000000031")
@@ -5300,7 +5188,6 @@ extension Store {
             }
             if ProcessInfo.processInfo.arguments.contains("--team-template-testing") {
                 tasks[0]["labels"] = .array([.string("Launch shared")])
-                tasks[0]["subtasks"] = SubtaskTree.changing(tasks[0]["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["labels": .array([.string("Outline shared")])])
                 labels = [Record(["id": .string("Launch shared"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private catalog name"), "color": .string("#112233")])]
             }
             if PersonalHeadingNativePeer.enabled {
@@ -5316,7 +5203,6 @@ extension Store {
             if TeamTaskMoveNativePeer.enabled {
                 row["section_id"] = .null
                 row["assigned_to"] = .string(TeamEditorNativeFixture.recipientID)
-                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["assigned_to": .string(TeamEditorNativeFixture.recipientID)])
                 tasks = [row]
                 projects += [Record(["id": .string(TeamTaskMoveNativePeer.destination), "user_id": row["user_id"], "name": .string("Launch studio")]), Record(["id": .string(TeamTaskMoveNativePeer.viewerProject), "user_id": row["user_id"], "name": .string("Read-only studio")])]
                 try TeamTaskMoveNativePeer.write(TeamTaskMoveNativePeer.State(tasks: tasks))
@@ -5331,7 +5217,7 @@ extension Store {
                 let requests = backupVault.directory.appendingPathComponent("Team template requests", isDirectory: true)
                 if FileManager.default.fileExists(atPath: requests.path) { try FileManager.default.removeItem(at: requests) }
             }
-            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: TaskFileViewerFixture.enabled && !TaskFileViewerFixture.selectionTesting), previous: nil, pending: [], tasks: tasks)
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: (TaskFileViewerFixture.enabled && !TaskFileViewerFixture.selectionTesting) || TeamEditorNativeFixture.viewer), previous: nil, pending: [], tasks: tasks)
             try persist()
             try seedTeamCompletionRecoveryFixture()
         } catch { self.error = error.localizedDescription }
@@ -5342,12 +5228,6 @@ extension Store {
         var renamed = original; renamed["name"] = .string("Private design")
         guard save("labels", renamed), save("labels", original) else { return }
         remove("labels", original.id)
-    }
-    func changeTeamEditorFixtureSibling() {
-        guard TeamEditorNativeFixture.enabled,
-              let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
-        snapshot.tables["tasks"]![index]["subtasks"] = SubtaskTree.changing(snapshot.tables["tasks"]![index]["subtasks"], id: TeamEditorNativeFixture.siblingID, fields: ["title": .string("Sibling updated elsewhere")])
-        do { try persist() } catch { self.error = error.localizedDescription }
     }
     func changeTeamDeletionFixtureSource() {
         guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing"),
@@ -5418,8 +5298,8 @@ extension Store {
         let state = try Self.read(), row = try task(scope, state: state)
         let date = ISO8601DateFormatter().string(from: Date().addingTimeInterval(1800))
         let original = scope.undoes.flatMap { state.before[$0] }
-        let currentCount = (row.string("assigned_to").isEmpty ? 0 : 1) + (try TeamChecklist.indexed(row["subtasks"])).values.filter { !($0["assigned_to"]?.text ?? "").isEmpty }.count
-        let restoredCount = try original.map { value in (value.string("assigned_to").isEmpty ? 0 : 1) + (try TeamChecklist.indexed(value["subtasks"])).values.filter { !($0["assigned_to"]?.text ?? "").isEmpty }.count } ?? 0
+        let currentCount = row.string("assigned_to").isEmpty ? 0 : 1
+        let restoredCount = original.map { $0.string("assigned_to").isEmpty ? 0 : 1 } ?? 0
         var raw = scope.body; raw.removeValue(forKey: "undoes")
         raw.merge(["move_review_protocol": .number(1), "account": .string(scope.account), "related_request": scope.undoes.map(JSON.string) ?? .null,
                    "review_token": .string(try Self.proof(scope, row, date)), "expires_at": .string(date), "task": .object(row.fields),
@@ -5440,10 +5320,9 @@ extension Store {
         guard expiry > Date(), command.body["review_token"] == .string(try Self.proof(command.scope, before, command.body["expires_at"]!.text)) else { throw TeamTaskMoveCommand.invalid }
         var after = before; after["project_id"] = .string(command.scope.destination)
         if let related = command.scope.undoes, let original = state.before[related] {
-            for key in ["section_id", "assigned_to", "subtasks"] { after[key] = original[key] }
+            for key in ["section_id", "assigned_to"] { after[key] = original[key] }
         } else {
-            let children = try PersonalTaskMove.clearAssignments(after["subtasks"])
-            after["assigned_to"] = .null; after["section_id"] = .null; after["subtasks"] = children
+            after["assigned_to"] = .null; after["section_id"] = .null
         }
         var raw = command.scope.body; raw.removeValue(forKey: "undoes")
         raw.merge(["protocol": .number(1), "account": .string(command.account), "request_id": .string(command.id), "operation": .string(command.operation), "related_request": command.scope.undoes.map(JSON.string) ?? .null, "replayed": .bool(false), "task": .object(after.fields)]) { _, new in new }
@@ -5512,7 +5391,7 @@ extension Store {
               cache.boundary.belongs(account: scope.account, origin: scope.origin), Set(scope.roots).isSubset(of: Set(ids)),
               ids.allSatisfy({ id in record("projects", id: id)?.string("user_id") == userID && cache.knownTeams[id] == nil && cache.boundary.projects[id]?.role == "owner" && cache.boundary.projects[id]?.team == nil }) else { return nil }
         for editor in editorSessions.values where !editor.closed && editor.account == userID {
-            let root = SubtaskTree.referencePath(editor.original.id)?.first ?? editor.original.id
+            let root = editor.original.id
             let project = record("tasks", id: root)?.string("project_id") ?? editor.original.string("project_id")
             if ids.contains(project) { return nil }
         }
@@ -7141,7 +7020,7 @@ extension Store {
     /// Selection completion and deletion for plain rows: one plan per selected task, applied in order so overlapping subtrees never double-write.
     /// Any other action (a field patch) keeps the existing selection plan.
     func childRowsSelectionChanges(_ requests: [TaskSelectionPlan.Request], workspace: WorkspaceBinding) throws -> [Mutation] {
-        let plain = requests.allSatisfy { SubtaskTree.referencePath($0.task.id) == nil && record("tasks", id: $0.task.id) != nil }
+        let plain = requests.allSatisfy { LegacySubtaskReference.path($0.task.id) == nil && record("tasks", id: $0.task.id) != nil }
         var completions: [(Record, Bool, Date)] = [], deletes: [String] = []
         for request in requests {
             switch request.action {
@@ -7157,7 +7036,7 @@ extension Store {
         var working = tasks, result: [Mutation] = []
         for (task, done, date) in completions {
             guard let current = working.first(where: { TaskTree.key($0.id) == TaskTree.key(task.id) }) else { continue }
-            guard TaskKind.mayComplete(current) else { throw SubtaskTree.Failure(message: "Headings stay open. Select tasks to complete.") }
+            guard TaskKind.mayComplete(current) else { throw TaskSelectionPlan.Failure(message: "Headings stay open. Select tasks to complete.") }
             guard current.completed != done, let plan = TaskTree.completion(of: current, tasks: working, at: date, account: userID) else { continue }
             result += plan.mutations; working = TaskTree.apply(plan.mutations, to: working)
         }

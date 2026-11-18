@@ -175,11 +175,7 @@ struct ProjectPulseView: View {
                 let task = item.task
                 Button {
                     guard active, let root = store.record("tasks", id: item.root.id), root == item.root else { return }
-                    let destination: Record
-                    if let projected = item.navigationTask, item.nested,
-                       let selection = try? store.hierarchySelection(for: projected) { destination = selection.item.record }
-                    else { destination = root }
-                    dismiss(); openTask(destination)
+                    dismiss(); openTask(root)
                 } label: {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(task.title).font(.body.weight(.medium)).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)

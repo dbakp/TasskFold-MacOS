@@ -10,19 +10,11 @@ final class TaskBreakdownTests: XCTestCase {
     private func request(_ row: Record? = nil, depth: Int = 0) throws -> TaskBreakdownRequest {
         try .init(workspace: workspace, session: session, source: row ?? source(), depth: depth)
     }
-    func testLiteralTitlesAppendFreshChildrenWithoutChangingOriginalMetadata() throws {
+    func testLiteralTitlesAreReturnedTrimmedAndWithoutChangingOriginalMetadata() throws {
         let original = source(), r = try request(original)
         let titles = [" Call @Alice #Finance tomorrow p1 ", "Pack food"]
-        let children = try r.applying(titles, to: original, workspace: workspace, session: session)
-        XCTAssertEqual(children.list.count, 3)
-        XCTAssertTrue(AuthoredValueComparison.exactJSON(children.list[0], original["subtasks"].list[0]))
-        XCTAssertEqual(children.list[1].object["title"], .string(titles[0].trimmingCharacters(in: .whitespaces)))
-        for child in children.list.dropFirst() {
-            XCTAssertEqual(Set(child.object.keys), ["id", "title", "completed"])
-            XCTAssertNotNil(UUID(uuidString: child.object["id"]!.text))
-            XCTAssertEqual(child.object["completed"], .bool(false))
-        }
-        XCTAssertEqual(Set(children.list.map { $0.object["id"]!.text }).count, 3)
+        let checked = try r.applying(titles, to: original, workspace: workspace, session: session)
+        XCTAssertEqual(checked, ["Call @Alice #Finance tomorrow p1", "Pack food"])
         XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(original.fields), .object(source().fields)))
     }
     func testRejectsAnyChangedDraftBeforeApplying() throws {
@@ -64,18 +56,16 @@ final class TaskBreakdownTests: XCTestCase {
             var row = source(); row[field] = .bool(true)
             XCTAssertThrowsError(try request(row))
         }
-        var invalid = source(); invalid["subtasks"] = .string("future container")
-        XCTAssertThrowsError(try request(invalid))
         XCTAssertThrowsError(try request(depth: -1))
-        XCTAssertThrowsError(try request(depth: SubtaskTree.maximumDepth))
-        let r = try request(depth: SubtaskTree.maximumDepth - 1)
-        XCTAssertEqual(try r.applying(["Last level"], to: source(), workspace: workspace, session: session).list.count, 2)
+        XCTAssertThrowsError(try request(depth: TaskTree.maximumAncestors))
+        let r = try request(depth: TaskTree.maximumAncestors - 1)
+        XCTAssertEqual(try r.applying(["Last level"], to: source(), workspace: workspace, session: session), ["Last level"])
     }
-    func testApplyingTwiceCannotDuplicateIntoChangedDraft() throws {
+    func testApplyingIntoAChangedDraftIsRefused() throws {
         let r = try request(); var draft = source()
-        draft["subtasks"] = try r.applying(["One step"], to: draft, workspace: workspace, session: session)
+        XCTAssertEqual(try r.applying(["One step"], to: draft, workspace: workspace, session: session), ["One step"])
+        draft["title"] = .string("Edited meanwhile")
         XCTAssertThrowsError(try r.applying(["One step"], to: draft, workspace: workspace, session: session))
-        XCTAssertEqual(draft["subtasks"].list.count, 2)
     }
     func testCancelSupersedeAndLateAccountResultsAreIgnored() throws {
         var run = TaskBreakdownSession(request: try request())
@@ -134,10 +124,8 @@ final class TaskBreakdownTests: XCTestCase {
         let publish = steps[2].id
         TaskBreakdownReview.move(publish, by: -1, in: &steps); TaskBreakdownReview.move(publish, by: -1, in: &steps)
         steps[0].title = "Publish #work tomorrow p1"
-        let children = try r.applying(steps.filter(\.included).map(\.title), to: original, workspace: workspace, session: session)
-        XCTAssertTrue(AuthoredValueComparison.exactJSON(children.list[0], original["subtasks"].list[0]))
-        XCTAssertEqual(children.list.dropFirst().map { $0.object["title"]!.text }, ["Publish #work tomorrow p1", "Inspect"])
-        for child in children.list.dropFirst() { XCTAssertEqual(Set(child.object.keys), ["id", "title", "completed"]) }
+        let titles = try r.applying(steps.filter(\.included).map(\.title), to: original, workspace: workspace, session: session)
+        XCTAssertEqual(titles, ["Publish #work tomorrow p1", "Inspect"])
         XCTAssertEqual(original.fields, r.source.fields)
         var changed = original; changed["priority"] = .number(1)
         XCTAssertThrowsError(try r.applying(steps.filter(\.included).map(\.title), to: changed, workspace: workspace, session: session))

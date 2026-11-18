@@ -240,19 +240,6 @@ final class TeamTaskTypeTests: XCTestCase {
         reply["task_types_protocol"] = .number(1); saved["is_heading"] = .string("future"); reply["task"] = .object(saved.fields)
         XCTAssertThrowsError(try scope().saved(reply, for: change))
     }
-    func testNestedTypeChangesAdvanceCheckboxRevisionAndNeedCapability() throws {
-        var row = source(); let epoch = UUID().uuidString.lowercased()
-        let child: [String: JSON] = ["id": .string("child"), "title": .string("Design"), "completed": .bool(false), "taskfold_completion_v1": .object(["epoch": .string(epoch), "version": .number(3)])]
-        row["subtasks"] = .array([.object(child)]); var next = child; next["is_heading"] = .bool(true)
-        let change = patch(row, ["subtasks": .array([.object(next)])]), prepared = try scope().capturing(change, existing: row)
-        XCTAssertEqual(prepared.fields["subtasks"]?.list[0].object["taskfold_completion_v1"]?.object["version"], .number(4))
-        XCTAssertEqual(try scope().body(for: prepared)["task_types_protocol"], .number(1))
-        XCTAssertThrowsError(try scope(false).capturing(patch(row, ["subtasks": .array([.object(next)])], enabled: false), existing: row))
-        next = child; next["description"] = .string("New notes")
-        let plain = try scope(false).capturing(patch(row, ["subtasks": .array([.object(next)])], enabled: false), existing: row)
-        XCTAssertNil(try scope(false).body(for: plain)["task_types_protocol"])
-        XCTAssertEqual(plain.fields["subtasks"]?.list[0].object["taskfold_completion_v1"]?.object["version"], .number(3))
-    }
     func testUndoRetainsTypedScopeAndUsesExplicitOrdinaryType() throws {
         let row = source(), change = patch(row, ["is_heading": .bool(true)])
         let journal = EditHistory(changes: [change], snapshot: Snapshot(tables: ["tasks": [row]]))
