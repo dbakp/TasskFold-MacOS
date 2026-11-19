@@ -918,6 +918,70 @@ struct LocationPlaceRequest: Equatable, Sendable {
     }
 }
 
+extension LocationPlaceRequest {
+    /// Place names this account has asked for before: earlier requests by name and the reminders they became. Only
+    /// words that already synced as part of a task are read; no device's saved places are.
+    static func knownNames(in tasks: [Record]) -> [String] {
+        var seen = Set<String>(), names: [String] = []
+        for task in tasks {
+            for row in ReminderSpec.rows(task) {
+                guard let name = Self(raw: row.object)?.name ?? LocationReminderSettings(raw: row.object)?.requestedName,
+                      LocationPlaceLabel.valid(name, limit: 120), seen.insert(LocationPlaceName.key(name)).inserted else { continue }
+                names.append(name)
+            }
+        }
+        return names
+    }
+    /// The task with this request added to its reminder list. Nil when the task can't take a reminder or already asks
+    /// for the same place and direction, so adding twice never makes a second request.
+    func adding(to task: Record) -> Record? {
+        guard TaskKind.mayComplete(task), !task.completed else { return nil }
+        var rows = ReminderSpec.rows(task)
+        let key = LocationPlaceName.key(name)
+        let asked = rows.contains { row in
+            if let other = Self(raw: row.object) { return LocationPlaceName.key(other.name) == key && other.transition == transition }
+            if let settings = LocationReminderSettings(raw: row.object), let requested = settings.requestedName { return LocationPlaceName.key(requested) == key && settings.transition == transition }
+            return false
+        }
+        guard !asked else { return nil }
+        if rows.isEmpty { rows = [ReminderAutomatic.legacyPlaceholder] }
+        guard rows.count < ReminderSpec.maximum else { return nil }
+        rows.append(.object(raw))
+        var result = task; result["reminder_specs"] = .array(rows); return result
+    }
+    /// A Mac place draft from the retired pin handoff, kept as a request by its name. The pin and radius are dropped.
+    static func converting(_ proposal: LocationHandoffProposal) -> Self? {
+        guard case .string(let name)? = proposal.raw["place_name"],
+              let transition = LocationReminderSettings.Transition(rawValue: proposal.raw["transition"]?.text ?? "") else { return nil }
+        return make(name: name, transition: transition, repeats: proposal.raw["repeats"] == .bool(true))
+    }
+}
+
+/// Quick Add on a device without places (the Mac): "at Home", "arrive at Home" or "leave Home" asks the iPhone for a
+/// place by name. A name the account used before is recognised anywhere in the title; any other short phrase after
+/// "at" at the end of the title is offered and needs a click, so "Look at Bob" never loses words by itself.
+struct QuickPlaceRequest: Equatable, Sendable {
+    /// The reference-choice key that records an accepted new name for one draft.
+    static let acceptKey = "place:accept"
+    let title: String
+    let raw: String
+    let name: String
+    let transition: LocationReminderSettings.Transition
+    let known: Bool
+    static func find(in title: String, known: [String]) -> Self? {
+        if let found = QuickEntry.place(in: title, names: known) {
+            return Self(title: found.title, raw: found.raw, name: found.choice.name, transition: found.choice.transition == .leave ? .leave : .arrive, known: true)
+        }
+        guard let unknown = QuickEntry.unknownPlace(in: title, names: known), let range = title.range(of: unknown.raw, options: .backwards) else { return nil }
+        var rest = title; rest.replaceSubrange(range, with: " ")
+        return Self(title: rest.split(whereSeparator: \.isWhitespace).joined(separator: " "), raw: unknown.raw, name: unknown.name, transition: .arrive, known: false)
+    }
+    /// Applies when the name is known or the user accepted this exact phrase.
+    func applies(accepted: String?) -> Bool { known || accepted == raw }
+    var label: String { (transition == .arrive ? "Arrive at " : "Leave ") + name }
+    var request: LocationPlaceRequest? { LocationPlaceRequest.make(name: name, transition: transition) }
+}
+
 /// How each place is used by this device's tasks. Only reminders bound to this device's private file count.
 enum LocationPlaceUsage {
     static func count(placeID: String, device: String, tasks: [Record]) -> Int {

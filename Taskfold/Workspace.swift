@@ -832,6 +832,12 @@ final class Workspace {
         let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }
         task = parsed.applying(to: task)
+        // "at Home" becomes a request by name that the iPhone resolves to its own place (D3), as the composer showed it.
+        if !declined.contains("place"), let found = QuickPlaceRequest.find(in: parsed.title, known: LocationPlaceRequest.knownNames(in: store.rows("tasks"))),
+           found.applies(accepted: referenceChoices[QuickPlaceRequest.acceptKey]), !found.title.isEmpty, let request = found.request {
+            var placed = task; placed["title"] = .string(found.title)
+            if let withPlace = request.adding(to: placed) { task = withPlace }
+        }
         let slot = forced ?? parsed.planning
         if forced == .someday { for (field, value) in Planning.clearedSchedule { task[field] = value } }
         var planningRows: [Mutation] = []

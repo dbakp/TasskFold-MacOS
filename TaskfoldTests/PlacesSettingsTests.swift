@@ -180,4 +180,62 @@ final class PlacesSettingsTests: XCTestCase {
         cleanup.only = [records[0].source]
         XCTAssertEqual(Set(try cleanup.retaining(ledger).keys), [records[1].source])
     }
+
+    // MARK: Leftovers: Mac Quick Add "at <place>", retired Mac drafts, Skip holidays as a toggle
+
+    func testMacQuickAddRecognisesUsedNamesAnywhereAndOffersNewNamesAtTheEnd() throws {
+        let known = QuickPlaceRequest.find(in: "Buy milk at home on the way", known: ["Home"])
+        XCTAssertEqual(known?.name, "Home"); XCTAssertEqual(known?.title, "Buy milk on the way"); XCTAssertEqual(known?.known, true); XCTAssertEqual(known?.transition, .arrive)
+        XCTAssertTrue(known?.applies(accepted: nil) == true, "a name used before applies by itself")
+        let leaving = QuickPlaceRequest.find(in: "Call Sam leave work", known: ["Work"])
+        XCTAssertEqual(leaving?.transition, .leave); XCTAssertEqual(leaving?.label, "Leave Work"); XCTAssertEqual(leaving?.title, "Call Sam")
+        let fresh = try XCTUnwrap(QuickPlaceRequest.find(in: "Buy milk at Home", known: []))
+        XCTAssertEqual(fresh.name, "Home"); XCTAssertEqual(fresh.raw, "at Home"); XCTAssertEqual(fresh.title, "Buy milk"); XCTAssertFalse(fresh.known)
+        XCTAssertFalse(fresh.applies(accepted: nil), "a new name is only offered")
+        XCTAssertTrue(fresh.applies(accepted: "at Home")); XCTAssertFalse(fresh.applies(accepted: "at Hom"))
+        XCTAssertNil(QuickPlaceRequest.find(in: "Call Sam at 4pm", known: []))
+        XCTAssertEqual(fresh.request?.name, "Home"); XCTAssertEqual(fresh.request?.transition, .arrive)
+    }
+
+    func testKnownNamesComeFromRequestsAndTheRemindersTheyBecame() throws {
+        var a = Record.task(user: account), b = Record.task(user: account)
+        a = try XCTUnwrap(LocationPlaceRequest.make(name: "Gym", transition: .arrive)!.adding(to: a))
+        b = try XCTUnwrap(LocationPlaceRequest.make(name: "the gym", transition: .leave)!.adding(to: b))
+        b = try XCTUnwrap(LocationPlaceRequest.make(name: "Home", transition: .leave)!.adding(to: b))
+        XCTAssertEqual(LocationPlaceRequest.knownNames(in: [a, b]), ["Gym", "Home"], "case and a leading the fold into one name")
+    }
+
+    func testAddingARequestKeepsTheLegacyDefaultAndNeverDuplicates() throws {
+        let request = try XCTUnwrap(LocationPlaceRequest.make(name: "Home", transition: .arrive))
+        let task = Record.task(user: account)
+        let added = try XCTUnwrap(request.adding(to: task))
+        XCTAssertEqual(ReminderSpec.rows(added).count, 2, "the legacy at-planned-time default stays alongside")
+        XCTAssertEqual(LocationPlaceRequest.all(added).map(\.name), ["Home"])
+        XCTAssertNil(LocationPlaceRequest.make(name: "home", transition: .arrive)!.adding(to: added), "the same place and direction is asked once")
+        XCTAssertNotNil(LocationPlaceRequest.make(name: "Home", transition: .leave)!.adding(to: added))
+        var done = task; done["completed"] = .bool(true); done["completed_at"] = .string("2026-11-19T10:00:00Z")
+        XCTAssertNil(request.adding(to: done))
+    }
+
+    func testARetiredMacDraftBecomesARequestByNameWithoutItsPin() throws {
+        let owner = "96000000-0000-4000-8000-0000000000aa"
+        let raw: [String: JSON] = ["version": .number(1), "id": .string("96000000-0000-4000-8000-0000000000b1"), "task_id": .string("96000000-0000-4000-8000-0000000000b2"),
+                                   "task_generation": .string("96000000-0000-4000-8000-0000000000b3"), "completion_version": .number(0), "authored_at_ms": .number(1_800_000_000_000),
+                                   "place_name": .string("Studio"), "latitude_e6": .number(55_676_098), "longitude_e6": .number(12_568_337), "radius_m": .number(150),
+                                   "transition": .string("leave"), "repeats": .bool(true)]
+        let proposal = try XCTUnwrap(LocationHandoffProposal(account: owner, raw: raw))
+        let request = try XCTUnwrap(LocationPlaceRequest.converting(proposal))
+        XCTAssertEqual(request.name, "Studio"); XCTAssertEqual(request.transition, .leave); XCTAssertTrue(request.repeats)
+        XCTAssertEqual(Set(request.request.keys), ["name", "transition", "repeats"], "no pin or radius is kept")
+    }
+
+    func testSkipHolidaysBuildsANationwidePolicyFromTheDefaultCountry() throws {
+        let data = Data(#"[{"date":"2027-01-01","name":"Nytårsdag","countryCode":"DK","nationalHoliday":true,"subdivisionCodes":null,"holidayTypes":["Public"]},{"date":"2027-06-05","name":"Regional","countryCode":"DK","nationalHoliday":false,"subdivisionCodes":["DK-84"],"holidayTypes":["Public"]},{"date":"2027-12-25","name":"Juledag","countryCode":"DK","nationalHoliday":true,"subdivisionCodes":null,"holidayTypes":["Public"]}]"#.utf8)
+        let snapshot = try CountryHolidayCalendar.snapshot(data: data, year: 2027, country: "DK")
+        let policy = try XCTUnwrap(CountryHolidayCalendar.policy(snapshot, countryName: "Denmark"))
+        XCTAssertEqual(policy.dates, ["2027-01-01", "2027-12-25"], "regional days are left out")
+        XCTAssertEqual(policy.region, "Denmark · Nationwide"); XCTAssertEqual(policy.source, "Nager.Holidays"); XCTAssertEqual(policy.mode, .skip)
+        XCTAssertEqual(policy.origin?.country, "DK"); XCTAssertNil(policy.origin?.subdivision); XCTAssertEqual(policy.year, 2027)
+        XCTAssertEqual(CountryHolidayCalendar.policy(snapshot, countryName: "", mode: .nextDay, avoidWeekends: true)?.region, "DK · Nationwide")
+    }
 }

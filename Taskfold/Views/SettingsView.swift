@@ -60,12 +60,12 @@ struct GeneralSettings: View {
             MacNotificationInspectionView()
             #endif
             if store.signedIn {
-                Section("Date phrases") { DatePhrasePreferencesView() }
+                Section("Date words") { DatePhrasePreferencesView() }
                 Section("Automatic reminders") { ReminderAutomaticPreferencesView() }
                 Section("Snooze") { ReminderSnoozePreferencesView() }
                 Section("Place reminders") {
-                    Label("Set up on iPhone or iPad", systemImage: "mappin.and.ellipse")
-                    Text("Open Notifications → Place reminders in Taskfold on the device that will deliver the alert. Saved pins stay on that device. Your task’s reminder settings are preserved on this Mac.")
+                    Label("Places live on your iPhone", systemImage: "mappin.and.ellipse")
+                    Text("Save places in Taskfold on your iPhone, in Settings → Places. On this Mac, type “at Home” in Quick Add or add a Location in a task’s Reminders: only the place’s name syncs, and your iPhone reminds you at its place with that name.")
                         .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 Section("Remote reminders") { RemoteReminderRegistrationView() }

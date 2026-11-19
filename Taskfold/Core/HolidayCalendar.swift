@@ -375,6 +375,16 @@ enum CountryHolidayCalendar {
         let subdivisionCodes: [String]?
         let holidayTypes: [String]
     }
+    /// "Skip holidays" without a review step: the country's public holidays for one year, nationwide. Turning the
+    /// toggle on is the choice; the full review lives in Settings → Holidays.
+    static func policy(_ snapshot: Snapshot, countryName: String, mode: ReminderHolidayPolicy.Mode = .skip, avoidWeekends: Bool = false) -> ReminderHolidayPolicy? {
+        let name = countryName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let days = snapshot.days(subdivision: nil)
+        return ReminderHolidayPolicy(raw: ["version": .number(1), "year": .number(Double(snapshot.year)), "source": .string("Nager.Holidays"),
+                                           "region": .string(String(((name.isEmpty ? snapshot.country : name) + " · Nationwide").prefix(160))), "digest": .string(snapshot.digest),
+                                           "dates": .array(days.map { .string($0.date) }), "mode": .string(mode.rawValue), "avoid_weekends": .bool(avoidWeekends),
+                                           "origin": .object(["provider": .string("nager-v4"), "country": .string(snapshot.country)])])
+    }
     static func validCountry(_ code: String) -> Bool { code.range(of: "^[A-Z]{2}$", options: .regularExpression) != nil }
     static func validSubdivision(_ code: String, country: String) -> Bool {
         code.hasPrefix(country + "-") && code.range(of: "^[A-Z]{2}-[A-Z0-9]{1,3}$", options: .regularExpression) != nil
