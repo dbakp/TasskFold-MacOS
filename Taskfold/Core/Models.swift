@@ -672,7 +672,6 @@ struct SyncConflict: Identifiable {
 /// Permission failures are not conflicts and stay ordinary sync errors.
 enum SyncAutoMerge {
     static let attemptLimit = 4
-    static let pendingStatus = "Merging a change from another device…"
     enum Outcome: Equatable, Sendable { case rebased, keptSynced }
     struct Plan { let snapshot: Snapshot; let outcome: Outcome }
 

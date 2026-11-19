@@ -3148,14 +3148,13 @@ final class Store {
                    let review = try? await backend.reviewTeamCompletionBatch(mutation, expectedAccount: account),
                    generation == accountGeneration, snapshot.pending.first == mutation {
                     installTeamCompletionBatchReview(review)
-                    notice = SyncAutoMerge.pendingStatus; return
+                    return
                 }
                 if let mutation=sending,mutation.teamCompletion != nil,
                    !(error is CancellationError),!(error is AccountSessionAuthorizationRequired),
                    let review=try? await backend.reviewTeamCompletion(mutation,expectedAccount:account),
                    generation == accountGeneration,snapshot.pending.first == mutation {
                     syncConflict=SyncConflict(mutation:mutation,remote:review.task ?? mutation.teamCompletion!.source,completionReview:review)
-                    notice=SyncAutoMerge.pendingStatus
                     return
                 }
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
@@ -3168,14 +3167,13 @@ final class Store {
                     focusSyncConflict = FocusSyncConflict(mutation: mutation, remote: remote)
                     Task { await reschedule() }
                     publishWidgetSnapshot(scheduleCapacityRefresh: false)
-                    notice = SyncAutoMerge.pendingStatus
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"),let mutation=sending,ProductivityGoalEdit.matches(mutation),
                    let data=try? await backend.request("/rest/v1/view_preferences?id=eq.insights&select=*",expectedAccount:account),
                    let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
                     let remote=rows.first ?? ProductivityGoalEdit.emptyRow(account:account)
                     if remote.id==ProductivityGoals.recordID,remote.string("user_id")==account {
-                        syncConflict=SyncConflict(mutation:mutation,remote:remote);notice=SyncAutoMerge.pendingStatus
+                        syncConflict=SyncConflict(mutation:mutation,remote:remote)
                     }
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation=sending,mutation.table==WorkflowTemplate.table,
@@ -3183,7 +3181,6 @@ final class Store {
                    let data=try? await backend.request("/rest/v1/project_templates?id=eq.\(escaped)&select=*"),
                    let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
                     syncConflict=SyncConflict(mutation:mutation,remote:rows.first ?? Record(["id":.string(mutation.recordID),"name":.string("Deleted template")]))
-                    notice=SyncAutoMerge.pendingStatus
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
                    mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
@@ -3193,7 +3190,6 @@ final class Store {
                    generation == accountGeneration, snapshot.pending.contains(mutation),
                    remote.id.lowercased() == mutation.recordID.lowercased() {
                     syncConflict = SyncConflict(mutation: mutation, remote: remote)
-                    notice = SyncAutoMerge.pendingStatus
                 }
                 // A personal edit to a task deleted on another device can never apply: deletion wins.
                 if syncConflict == nil, let mutation = sending, mutation.table == "tasks", mutation.method == "PATCH",
@@ -3479,10 +3475,8 @@ final class Store {
               syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
         if let request = requests.0, let review = groupReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
             installTeamCompletionBatchReview(terminal)
-            notice = SyncAutoMerge.pendingStatus
         } else if let request = requests.1, let review = singleReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
             syncConflict = SyncConflict(mutation: terminal.mutation, remote: terminal.task ?? terminal.mutation.teamCompletion!.source, completionReview: terminal)
-            notice = SyncAutoMerge.pendingStatus
         } else { return false }
         return true
     }
@@ -3790,7 +3784,6 @@ final class Store {
         }
         autoMerging = false
         if error != earlierError { error = earlierError; teamCompletionReviewFailure = nil }
-        if syncConflict != nil || focusSyncConflict != nil { notice = SyncAutoMerge.pendingStatus }
         if resolved { Task { await self.sync() } }
     }
 
