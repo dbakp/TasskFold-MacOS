@@ -7,6 +7,7 @@ struct TaskDependencyRows: View {
     @Environment(Store.self) private var store
     let taskID: String
     @State private var picking = false
+    @Environment(\.inspectorFieldRequest) private var fieldRequest
 
     var body: some View {
         let lines = store.blockerLines(for: taskID)
@@ -29,6 +30,10 @@ struct TaskDependencyRows: View {
                 .accessibilityIdentifier("addBlocker")
         }
         .sheet(isPresented: $picking) { TaskDependencyPicker(taskID: taskID) }
+        // Inspector ▸ Add ▸ Blocker goes straight to the blocker search (mac-r2 IQ-1).
+        .onChange(of: fieldRequest, initial: true) { _, request in
+            if request?.field == .blocker, store.blockerLines(for: taskID).count < TaskDependencies.maximumBlockers { DispatchQueue.main.async { picking = true } }
+        }
     }
 }
 
@@ -101,6 +106,7 @@ struct TaskWaitingOnField: View {
     let task: Record
     @State private var text = ""
     @FocusState private var focused: Bool
+    @Environment(\.inspectorFieldRequest) private var fieldRequest
 
     var body: some View {
         HStack {
@@ -118,6 +124,7 @@ struct TaskWaitingOnField: View {
         .onAppear { text = task.string("waiting_on") }
         .onChange(of: task.id) { _, _ in text = task.string("waiting_on") }
         .onChange(of: task.string("waiting_on")) { _, remote in if !focused { text = remote } }
+        .onChange(of: fieldRequest, initial: true) { _, request in if request?.field == .waitingOn { DispatchQueue.main.async { focused = true } } }
     }
     private func commit() {
         guard store.record("tasks", id: task.id) != nil else { return }

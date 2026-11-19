@@ -297,7 +297,7 @@ struct AudioCommentNativeFixtureView: View {
     }
     private func prepare() {
         guard AudioCommentNativeFixture.taskEditorTesting else { return }
-        store.dailyBackupsEnabled = false; store.online = false; store.startLocal()
+        store.dailyBackupsEnabled = false; store.online = false; store.startLocal(persist: false)
         guard store.localMode else { failure = "Local workspace did not open"; return }
         do {
             if ProcessInfo.processInfo.arguments.contains("--audio-task-editor-reset") {

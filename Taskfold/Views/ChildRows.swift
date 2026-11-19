@@ -165,6 +165,7 @@ struct ChildRowsList: View {
     @State private var text = ""
     @State private var dropTarget: String?
     @FocusState private var addFocused: Bool
+    @Environment(\.inspectorFieldRequest) private var fieldRequest
 
     private var children: [Record] { store.children(of: parentID) }
     private var atDepthLimit: Bool { store.breadcrumb(of: parentID).count >= TaskTree.maximumAncestors - 1 }
@@ -175,6 +176,9 @@ struct ChildRowsList: View {
             if canAdd { addField }
         }
         .accessibilityElement(children: .contain).accessibilityIdentifier("childRows")
+        .onChange(of: fieldRequest, initial: true) { _, request in
+            if request?.field == .subtask, canAdd, !atDepthLimit { DispatchQueue.main.async { addFocused = true } }
+        }
     }
 
     private func row(_ child: Record) -> some View {

@@ -5,6 +5,8 @@ import SwiftUI
 struct CalendarView: View {
     @AppStorage("mac.taskDensity") private var density = DS.Size.densityDefault
     var showsDayPanel = false
+    /// The window's width, which decides whether the view switcher fits in the toolbar as segments (mac-r2 CAL-5).
+    var windowWidth: CGFloat = 0
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -23,6 +25,8 @@ struct CalendarView: View {
     @FocusState private var focusedGridDay: String?
     @State private var gridNavigationActive = false
     @State private var yearNavigationActive = false
+    /// Briefly highlights today's header when Today is pressed while today is already showing (mac-r2 CAL-3).
+    @State private var todayFlash = false
     @Namespace private var dayNamespace
 
     private var calendar: Calendar { Calendar.current }
@@ -71,10 +75,11 @@ struct CalendarView: View {
         switch mode {
         case .year: return start.formatted(.dateTime.year())
         case .month: return start.formatted(.dateTime.month(.wide).year())
+        // The exact period (mac-r2 CAL-7): "Thursday 19 November 2026", or "16–22 November 2026" for 3, 5 and 7 days.
+        case .day: return start.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
         default:
             let end = calendar.date(byAdding: .day, value: (mode.days ?? 7) - 1, to: start)!
-            if calendar.isDate(start, equalTo: end, toGranularity: .month) { return start.formatted(.dateTime.month(.wide).year()) }
-            return start.formatted(.dateTime.month(.abbreviated).day()) + " – " + end.formatted(.dateTime.month(.abbreviated).day().year())
+            return (start..<end).formatted(.interval.day().month(.wide).year())
         }
     }
 
@@ -129,15 +134,18 @@ struct CalendarView: View {
                 ToolbarItemGroup(placement: .navigation) {
                     Button { shift(-1) } label: { Label("Previous", systemImage: "chevron.left") }.help("Previous period (←)")
                     Button { shift(1) } label: { Label("Next", systemImage: "chevron.right") }.help("Next period (→)")
-                    Button("Today") { jump(to: today) }.disabled(calendar.isDate(selected, inSameDayAs: today) && page == 0).help("Jump to today (⌘T)").keyboardShortcut("t", modifiers: .command)
+                    // Always enabled (mac-r2 CAL-3): on today it flashes today's header instead of doing nothing.
+                    Button("Today") { goToToday() }.help("Jump to today (⌘T)").keyboardShortcut("t", modifiers: .command).accessibilityIdentifier("calendarToday")
                 }
                 // The period switcher is a native segmented control in the toolbar, the one neutral control.
                 if !textSize.isAccessibilitySize {
                     ToolbarItem(placement: .principal) {
-                        Picker("Calendar view", selection: Binding(get: { workspace.calendarMode }, set: { workspace.calendarMode = $0 })) {
+                        // Segments when they fit; a "Week ▾" pull-down in a narrow window instead of a "»" overflow (mac-r2 CAL-5).
+                        let picker = Picker("Calendar view", selection: Binding(get: { workspace.calendarMode }, set: { workspace.calendarMode = $0 })) {
                             ForEach(CalendarMode.allCases) { Text($0.title).tag($0) }
-                        }
-                        .pickerStyle(.segmented).labelsHidden().fixedSize().accessibilityIdentifier("calendarModePicker")
+                        }.labelsHidden().fixedSize().accessibilityIdentifier("calendarModePicker")
+                        if windowWidth > 0 && windowWidth < Self.segmentedSwitcherMinimumWindowWidth { picker.pickerStyle(.menu) }
+                        else { picker.pickerStyle(.segmented) }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
@@ -267,21 +275,40 @@ struct CalendarView: View {
         .accessibilityIdentifier("calendarModeMenu")
     }
     private func shift(_ delta: Int) { withAnimation(layout) { page += delta } }
+    /// Below this window width the segmented switcher overflows the toolbar into "»" (seen at 900 pt; fits at 1040 pt).
+    static let segmentedSwitcherMinimumWindowWidth: CGFloat = 980
+    /// Day columns narrower than this split and hyphenate words; the period scrolls sideways instead (mac-r2 CAL-5).
+    /// The finding asks for at least 120 pt; at 120 a card leaves only about 60 pt for the title, so this uses 144.
+    static let minimumDayColumnWidth: CGFloat = 144
+    private func goToToday() {
+        let showing = calendar.isDate(selected, inSameDayAs: today) && page == page(containing: today, mode: mode)
+        jump(to: today)
+        guard showing else { return }
+        withAnimation(Motion.respecting(reduceMotion, Motion.quick)) { todayFlash = true }
+        Task { try? await Task.sleep(for: .milliseconds(650)); withAnimation(Motion.respecting(reduceMotion, Motion.quick)) { todayFlash = false } }
+    }
     private func jump(to day: Date) { withAnimation(layout) { workspace.calendarDay = day; page = page(containing: day, mode: mode) } }
     private func select(_ day: Date) { withAnimation(Motion.respecting(reduceMotion, Motion.quick)) { workspace.calendarDay = calendar.startOfDay(for: day) } }
 
     // MARK: Day columns (3 / 5 / week)
 
-    /// Columns take an equal share of whatever width is available, so the pane never forces the window wider.
+    /// Columns take an equal share of the available width, so the pane never forces the window wider. Below
+    /// `minimumDayColumnWidth` a column would break words mid-word, so the period scrolls sideways instead.
     private func dayColumns(_ days: [Date]) -> some View {
         GeometryReader { proxy in
-            let width = max(0, (proxy.size.width - CGFloat(days.count - 1)) / CGFloat(days.count))
-            HStack(alignment: .top, spacing: 0) {
+            let share = max(0, (proxy.size.width - CGFloat(days.count - 1)) / CGFloat(days.count))
+            let width = max(share, Self.minimumDayColumnWidth)
+            let columns = HStack(alignment: .top, spacing: 0) {
                 ForEach(days, id: \.self) { day in
                     dayColumn(day).frame(width: width)
                     if day != days.last { Divider() }
                 }
             }
+            if share < Self.minimumDayColumnWidth {
+                ScrollView(.horizontal) { columns.frame(height: proxy.size.height) }
+                    .scrollIndicators(.visible)
+                    .accessibilityIdentifier("calendarDayColumnsScroll")
+            } else { columns }
         }
     }
     private func dayColumn(_ day: Date) -> some View {
@@ -300,7 +327,8 @@ struct CalendarView: View {
                     let count = open(on: day)
                     if count > 0 { Text("\(count)").font(.caption).monospacedDigit().foregroundStyle(.tertiary) }
                 }
-                .padding(.horizontal, 10).padding(.top, 10)
+                .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 2)
+                .background(alignment: .bottom) { if isToday && todayFlash { RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.taskfold.opacity(0.14)).padding(.horizontal, 4) } }
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
@@ -562,12 +590,16 @@ struct CalendarView: View {
         let isSelected = calendar.isDate(month, equalTo: selected, toGranularity: .month)
         return Button { openMonth(month) } label: {
             VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text(month.formatted(.dateTime.month(.wide))).font(.callout.weight(.semibold)).foregroundStyle(isCurrent ? Color.taskfold : .primary)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(month.formatted(.dateTime.month(.wide))).font(.system(size: 13, weight: .semibold)).foregroundStyle(isCurrent ? Color.taskfold : .primary)
                     Spacer()
-                    if total > 0 { Text("\(total)").font(.caption).monospacedDigit().foregroundStyle(.secondary) }
+                    if total > 0 { Text("\(total)").font(.system(size: 11)).monospacedDigit().foregroundStyle(.secondary) }
                 }
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7), spacing: 3) {
+                // Weekday initials, day numbers, a workload dot and a today circle (mac-r2 CAL-4).
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 2), count: 7), spacing: 2) {
+                    ForEach(Array(weekdayInitials.enumerated()), id: \.offset) { _, initial in
+                        Text(initial).font(.system(size: 9, weight: .medium)).foregroundStyle(.tertiary).frame(maxWidth: .infinity)
+                    }
                     ForEach(cells, id: \.self) { day in
                         miniMonthCell(day, month: month)
                     }
@@ -588,15 +620,26 @@ struct CalendarView: View {
         .accessibilityAction(named: Text("Open month")) { openMonth(month) }
     }
 
+    /// Very short weekday symbols, starting on the calendar's first weekday.
+    private var weekdayInitials: [String] {
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        let first = calendar.firstWeekday - 1
+        return Array(symbols[first...] + symbols[..<first])
+    }
     private func miniMonthCell(_ day: Date, month: Date) -> some View {
         let inMonth = calendar.isDate(day, equalTo: month, toGranularity: .month)
         let count = inMonth ? open(on: day) : 0
-        let tint: Color = count == 0 ? Color.primary.opacity(0.07) : Color.taskfold.opacity(min(1, 0.35 + Double(count) * 0.2))
-        return RoundedRectangle(cornerRadius: 2, style: .continuous)
-            .fill(tint)
-            .aspectRatio(1, contentMode: .fit)
-            .opacity(inMonth ? 1 : 0)
-            .overlay { if inMonth && calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
+        let isToday = inMonth && calendar.isDate(day, inSameDayAs: today)
+        return VStack(spacing: 1) {
+            Text(day.formatted(.dateTime.day())).font(.system(size: 10, weight: isToday ? .semibold : .regular)).monospacedDigit()
+                .foregroundStyle(isToday ? AnyShapeStyle(Color.white) : AnyShapeStyle(.primary))
+                .frame(width: 16, height: 16)
+                .background { if isToday { Circle().fill(Color.brandCrimson) } }
+            Circle().fill(count == 0 ? Color.clear : Color.taskfold.opacity(min(1, 0.45 + Double(count) * 0.18))).frame(width: 4, height: 4)
+        }
+        .frame(maxWidth: .infinity)
+        .opacity(inMonth ? 1 : 0)
+        .accessibilityHidden(true)
     }
 
     private func openMonth(_ month: Date) {

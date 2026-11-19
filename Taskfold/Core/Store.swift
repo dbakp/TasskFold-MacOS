@@ -1516,6 +1516,7 @@ final class Store {
             initializingStore = false
             backend.onSessionContextChange = { [weak self] in self?.invalidateStartupPublication(privacy: true) }
         }
+        LocalModeDefaults.repairLeakedFlag()
         localMode = UserDefaults.standard.bool(forKey: "localMode")
         #if DEBUG
         if TeamEditorNativeFixture.enabled { localMode = false }
@@ -2006,7 +2007,9 @@ final class Store {
         } catch { widgetActionStatus = "Widget actions need attention: " + error.localizedDescription; notice = widgetActionStatus }
         consumeFocusControlRequest(); reloadFocusFilter()
     }
-    func startLocal() {
+    /// Opens the local workspace. Fixture and preview runs pass `persist: false` so they never save local mode
+    /// into the app's defaults, which would skip sign-in on the next normal launch.
+    func startLocal(persist: Bool = true) {
         guard !signingOut else { return }
         // Re-entering the current workspace is not an account switch. Preserve its
         // session-bound routes and already scheduled one-shot snoozes.
@@ -2015,7 +2018,7 @@ final class Store {
         if !remoteReminderTestWorkspace {
             do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
         }
-        accountGeneration = UUID(); localMode = true; signedIn = true; UserDefaults.standard.set(true, forKey: "localMode"); load()
+        accountGeneration = UUID(); localMode = true; signedIn = true; LocalModeDefaults.recordStart(persist: persist); load()
         CalendarBusyStore.shared.bind(account: userID)
         if firstRun && userID == "local" && tasks.isEmpty { seedGettingStarted() }
     }

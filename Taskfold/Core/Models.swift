@@ -3328,3 +3328,66 @@ enum ClockFormat {
         return out
     }
 }
+
+/// Where local mode is remembered, and the one-off repair for a leaked flag (mac-r2 OA-1).
+/// Debug fixtures and previews used to save `localMode` into the real defaults domain, which skipped
+/// sign-in for good. Fixtures now start local mode without saving it, and a normal launch clears a
+/// leaked flag once, but only when the local workspace holds nothing a person made.
+enum LocalModeDefaults {
+    static let key = "localMode"
+    static let repairKey = "localModeRepair.v1"
+    /// Records a local-mode start. Fixture and preview runs pass `persist: false`, so they never change the saved mode.
+    static func recordStart(persist: Bool, defaults: UserDefaults = .standard) {
+        if persist { defaults.set(true, forKey: key) }
+    }
+    /// The getting-started project and tasks that `Store.seedGettingStarted` writes on either platform.
+    static let gettingStartedProject = "Getting started"
+    static let gettingStartedDescription = "A few tasks to try Taskfold with. Delete them whenever you like."
+    static let gettingStartedTitles: Set<String> = [
+        "Press Space to complete this task", "Drag me onto Tomorrow in Upcoming",
+        "Press ⌘N and type “Call Mum tomorrow 9am p1”", "Open Calendar and switch to Week",
+        "Swipe right to complete this task", "Press and hold, then drag me to tomorrow",
+        "Tap + and type “Call Mum tomorrow 9am p1”", "Open the Calendar tab and drag it upward",
+    ]
+    /// Logs and view settings that follow from other rows; they are never something a person made on their own.
+    static let derivedTables: Set<String> = ["view_preferences", "_local_day_order", "task_activity", "task_activity_epoch", "task_node_activity", "task_node_activity_epoch"]
+    static func isFixtureRow(_ row: Record) -> Bool {
+        ["preview", "ui-testing"].contains(row.string("user_id")) || row.id.hasPrefix("preview-")
+    }
+    /// True only when every row is a getting-started seed or a preview/test row. Any other row keeps local mode.
+    static func holdsOnlySeedRows(_ snapshot: Snapshot) -> Bool {
+        var seedProjects = Set<String>()
+        for project in snapshot.tables["projects"] ?? [] {
+            if isFixtureRow(project) { seedProjects.insert(project.id); continue }
+            guard project.string("name") == gettingStartedProject, project.string("description") == gettingStartedDescription else { return false }
+            seedProjects.insert(project.id)
+        }
+        for (table, rows) in snapshot.tables where table != "projects" && !derivedTables.contains(table) {
+            for row in rows where !isFixtureRow(row) {
+                guard table == "tasks", gettingStartedTitles.contains(row.string("title")), seedProjects.contains(row.string("project_id")) else { return false }
+            }
+        }
+        return true
+    }
+    /// Whether this launch should clear a leaked `localMode`. Runs once per defaults domain, never for a launch
+    /// with options (fixtures, previews and tests state their own mode), and keeps local mode whenever the
+    /// workspace cannot be read or holds any row a person made. `workspace` is nil when no local file exists.
+    static func shouldClearLeakedFlag(defaults: UserDefaults, arguments: [String], workspace: () -> Snapshot??) -> Bool {
+        guard !defaults.bool(forKey: repairKey) else { return false }
+        guard !arguments.dropFirst().contains(where: { $0.hasPrefix("--") || $0 == "-" + key }) else { return false }
+        defaults.set(true, forKey: repairKey)
+        guard defaults.bool(forKey: key) else { return false }
+        guard let snapshot = workspace() else { return false }
+        return snapshot.map(holdsOnlySeedRows) ?? true
+    }
+    /// The launch-time repair. Clears only the saved flag; the local workspace file is left untouched.
+    static func repairLeakedFlag(defaults: UserDefaults = .standard, arguments: [String] = ProcessInfo.processInfo.arguments,
+                                 workspace url: URL = URL.applicationSupportDirectory.appending(path: "Taskfold/local.json")) {
+        let clear = shouldClearLeakedFlag(defaults: defaults, arguments: arguments) {
+            guard FileManager.default.fileExists(atPath: url.path) else { return .some(nil) }
+            guard let data = try? Data(contentsOf: url), let snapshot = try? DurableSnapshotReadCache().decode(data) else { return nil }
+            return .some(snapshot)
+        }
+        if clear { defaults.set(false, forKey: key) }
+    }
+}

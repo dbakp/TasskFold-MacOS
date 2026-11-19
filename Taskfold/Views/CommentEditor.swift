@@ -5,6 +5,8 @@ import AppKit
 /// Ordinary text editing, selection, and clipboard behavior stay with NSTextView.
 struct CommentEditor: NSViewRepresentable {
     @Binding var text: String
+    /// Set once by the inspector's Add ▸ Comment; the editor then takes key focus (mac-r2 IQ-1).
+    var focusRequest: InspectorFieldRequest? = nil
     let pasteImage: (Data) -> Void
     let pasteError: (String) -> Void
 
@@ -38,9 +40,14 @@ struct CommentEditor: NSViewRepresentable {
         editor.onImage = pasteImage
         editor.onError = pasteError
         if editor.string != text { editor.string = text }
+        if let request = focusRequest, request.id != context.coordinator.handledFocus {
+            context.coordinator.handledFocus = request.id
+            DispatchQueue.main.async { editor.window?.makeFirstResponder(editor) }
+        }
     }
     final class Coordinator: NSObject, NSTextViewDelegate {
         var parent: CommentEditor
+        var handledFocus: UUID?
         init(_ parent: CommentEditor) { self.parent = parent }
         func textDidChange(_ notification: Notification) {
             guard let editor = notification.object as? NSTextView else { return }

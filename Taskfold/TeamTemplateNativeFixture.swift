@@ -479,12 +479,12 @@ enum WidgetCapacityNativeCheck {
                     }.accessibilityIdentifier("checkCapacityForecast")
                     Button("Restore scale fixture", action: restoreScale).disabled(scaleOriginal == nil).accessibilityIdentifier("restoreScaleFixture")
                     if ProcessInfo.processInfo.arguments.contains("--workflow-rich-children") {
-                        Button("Open saved local workflow") { store.startLocal() }.accessibilityIdentifier("openSavedRichWorkflow")
+                        Button("Open saved local workflow") { store.startLocal(persist: false) }.accessibilityIdentifier("openSavedRichWorkflow")
                     }
                 }
                 if ProcessInfo.processInfo.arguments.contains("--workflow-local-preparation-testing") {
                     Button("Prepare local workflow") {
-                        store.startLocal(); scaleOriginal = store.snapshot
+                        store.startLocal(persist: false); scaleOriginal = store.snapshot
                         var template = WorkflowUndoNativePeer.template; template["user_id"] = .string(store.userID)
                         store.snapshot = Snapshot(tables: [WorkflowTemplate.table: [template]])
                         do { try store.persist() } catch { store.error = error.localizedDescription }
@@ -549,7 +549,7 @@ enum WidgetCapacityNativeCheck {
             let rich = ProcessInfo.processInfo.arguments.contains("--workflow-rich-children")
             guard !rich || (localHistory && count == 1000) else { return }
             if localHistory {
-                store.startLocal()
+                store.startLocal(persist: false)
                 scaleOriginal = store.snapshot
                 var seed = Snapshot()
                 let time = Date(timeIntervalSince1970: 1793095200)
@@ -696,7 +696,7 @@ enum WidgetCapacityNativeCheck {
                     Button("Save startup task") { store.saveStartupNativeTask() }.accessibilityIdentifier("startupNativeSave")
                     Button("Leave workspace") { Task { await store.signOut() } }.accessibilityIdentifier("startupNativeLeave")
                     Button("Release startup write") { Task { await SharedStartupNativeFixture.gate.resume() } }.accessibilityIdentifier("startupNativeRelease")
-                    Button("Return to workspace") { store.startLocal() }.accessibilityIdentifier("startupNativeReturn")
+                    Button("Return to workspace") { store.startLocal(persist: false) }.accessibilityIdentifier("startupNativeReturn")
                     Text(store.startupNativeWriterIdle ? "Writer idle" : "Writer waiting").accessibilityIdentifier("startupNativeWriterStatus")
                 }
 
