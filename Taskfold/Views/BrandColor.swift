@@ -58,12 +58,15 @@ struct PriorityCheck: View {
     var checked = false
     var doneColor: Color = .brandCrimson
     var size: CGFloat = 22
+    /// Mac (design review mac-r1): crimson has three jobs, and P1 is one of them. P1 is a crimson ring with a faint fill,
+    /// P2 the same ring at 55%, P3 and P4 a quiet ink ring at 35%.
     var body: some View {
-        let strength = CheckStrength.forPriority(priority)
+        let ring: Color = priority == 1 ? Color(brand: Brand.crimson) : priority == 2 ? Color(brand: Brand.crimson, opacity: 0.55, darkOpacity: 0.6)
+            : Color(brand: Brand.ink, opacity: 0.35, darkOpacity: 0.4)
         ZStack {
-            Circle().fill(Color(brand: Brand.crimson, opacity: strength.fillOpacity.light, darkOpacity: strength.fillOpacity.dark))
-                .opacity(checked ? 0 : 1)
-            Circle().strokeBorder(Color(brand: strength.pair, opacity: strength.strokeOpacity.light, darkOpacity: strength.strokeOpacity.dark), lineWidth: strength.lineWidth)
+            Circle().fill(Color(brand: Brand.crimson, opacity: 0.1, darkOpacity: 0.16))
+                .opacity(checked || priority != 1 ? 0 : 1)
+            Circle().strokeBorder(ring, lineWidth: priority == 1 ? 1.6 : 1.3)
                 .opacity(checked ? 0 : 1)
             Circle().fill(doneColor).opacity(checked ? 1 : 0)
             Image(systemName: "checkmark").font(.system(size: size * 0.45, weight: .bold)).foregroundStyle(.white).opacity(checked ? 1 : 0)

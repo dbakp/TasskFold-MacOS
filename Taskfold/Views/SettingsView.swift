@@ -367,6 +367,8 @@ struct AccountMenu: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.openSettings) private var openSettings
+    /// The sidebar foot shows the initials chip alone.
+    var compact = false
     var body: some View {
         Menu {
             if store.localMode || !store.signedIn {
@@ -378,12 +380,18 @@ struct AccountMenu: View {
             Divider()
             Button("Settings…", systemImage: "gearshape") { show(.general) }
         } label: {
-            HStack(spacing: 8) {
-                PersonAvatar(person: store.accountIdentity, size: 26).accessibilityHidden(true)
-                Text(store.accountName).lineLimit(1)
-            }.frame(maxWidth: .infinity, alignment: .leading)
+            if compact {
+                PersonAvatar(person: store.accountIdentity, size: 22).accessibilityHidden(true)
+            } else {
+                HStack(spacing: 8) {
+                    PersonAvatar(person: store.accountIdentity, size: 26).accessibilityHidden(true)
+                    Text(store.accountName).lineLimit(1)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
-        .menuStyle(.borderlessButton).padding(.horizontal, 14).padding(.vertical, 10)
+        .menuStyle(.borderlessButton).menuIndicator(compact ? .hidden : .automatic).fixedSize(horizontal: compact, vertical: false)
+        .padding(.horizontal, compact ? 0 : 14).padding(.vertical, compact ? 0 : 10)
+        .help(store.accountName)
         .accessibilityIdentifier("accountMenu").accessibilityLabel(store.accountName + ", Account")
     }
     private func show(_ tab: SettingsTab) { workspace.settingsTab = tab; openSettings() }

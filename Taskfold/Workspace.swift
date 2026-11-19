@@ -43,8 +43,8 @@ enum SidebarItem: Hashable {
         case .calendar: return "calendar"
         case .all: return "tray.full"
         case .assigned: return "person.crop.circle.badge.checkmark"
-        case .someday: return "moon.zzz"
-        case .habits: return "circle.hexagongrid"
+        case .someday: return "moon"
+        case .habits: return "arrow.trianglehead.2.clockwise"
         case .completed: return "checkmark.circle"
         case .project: return "folder.fill"
         case .label: return "tag.fill"
@@ -190,6 +190,19 @@ final class Workspace {
     }
     var titleFocusRequest = 0
     var newProjectRequest = 0
+    var newLabelRequest = 0
+    var newFilterRequest = 0
+    /// Tools that live in menus (the sidebar foot, the menu bar) rather than in the sidebar or toolbar. RootView presents them.
+    enum Tool: String, Identifiable { case mentions, weeklyReview, insights, templates, sharedDrafts, archivedProjects, multipleTasks, pinnedNotes, projectPulse, focus; var id: String { rawValue } }
+    var toolRequest: Tool?
+    /// What the toolbar search field searches: the current list, or everything (the Finder sheet).
+    enum SearchScope: Hashable { case list, everywhere }
+    var searchScope = SearchScope.list
+    var everywhereQuery = ""
+    /// Text the Finder sheet starts with, set when the toolbar search is scoped to Everywhere.
+    var finderInitialQuery = ""
+    /// Calendar's right-hand day panel: hidden by default, because the week already shows the day.
+    var calendarDayPanel: Bool { didSet { UserDefaults.standard.set(calendarDayPanel, forKey: "mac.calendarDayPanel") } }
     /// Presents the planning sheet for a day or a week.
     var planning: PlanKind?
     /// Presents the end-of-day shutdown review.
@@ -246,6 +259,7 @@ final class Workspace {
         section = SidebarItem(key: defaults.string(forKey: "macSection") ?? defaults.string(forKey: "defaultView") ?? "today")
         inspectorShown = defaults.object(forKey: "inspectorShown") as? Bool ?? true
         calendarMode = CalendarMode(rawValue: defaults.string(forKey: "calendarMode") ?? "") ?? .week
+        calendarDayPanel = defaults.bool(forKey: "mac.calendarDayPanel")
         if case .project(let id) = section, store.record("projects", id: id) == nil { section = .today }
         if case .label(let id) = section, store.record("labels", id: id) == nil { section = .today }
     }

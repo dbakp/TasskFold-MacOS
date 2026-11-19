@@ -260,17 +260,33 @@ struct MenuBarContent: View {
 struct MenuBarLabel: View {
     @Environment(Store.self) private var store
     @AppStorage(GlobalQuickAddSettings.menuBarTitleKey) private var showTitle = false
+    /// No `TimelineView` here: inside a `MenuBarExtra` label its scheduled refresh (`requestUpdate(after:)`) is serviced at
+    /// once by SwiftUI's menu bar host, which re-renders the label, resizes the status item and schedules again. On
+    /// macOS 27.2 that loop pinned launch at 100% CPU in `MenuBarExtraController.updateButton` → `NSStatusItem _adjustLength`.
+    /// A plain timer-driven clock refreshes the title instead, and only a label that shows a title reads it.
+    private var clock: MenuBarClock { MenuBarClock.shared }
     var body: some View {
-        TimelineView(.periodic(from: .now, by: showTitle ? 15 : 3600)) { context in
-            let title = showTitle && (store.signedIn || store.localMode)
-                ? NowNext.compactTitle(NowNext.resolve(focus: store.focusSession, tasks: store.activeTasks, now: context.date)) : nil
-            HStack(spacing: 4) {
-                // A template symbol, so the system tints it for light, dark and tinted menu bars.
-                Image(systemName: "checkmark.circle")
-                if let title { Text(title).lineLimit(1).accessibilityIdentifier("menuBarTitle") }
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(title.map { "Taskfold, " + $0 } ?? "Taskfold")
+        let title = showTitle && (store.signedIn || store.localMode)
+            ? NowNext.compactTitle(NowNext.resolve(focus: store.focusSession, tasks: store.activeTasks, now: clock.now)) : nil
+        HStack(spacing: 4) {
+            // A template symbol, so the system tints it for light, dark and tinted menu bars.
+            Image(systemName: "checkmark.circle")
+            if let title { Text(title).lineLimit(1).accessibilityIdentifier("menuBarTitle") }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title.map { "Taskfold, " + $0 } ?? "Taskfold")
+    }
+}
+
+/// The menu bar title's clock: one repeating timer, ticking every 15 seconds. Only a label that shows a title reads it.
+@MainActor @Observable final class MenuBarClock {
+    static let shared = MenuBarClock()
+    private(set) var now = Date()
+    @ObservationIgnored private var timer: Timer?
+    func start() {
+        guard timer == nil else { return }
+        timer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
+            MainActor.assumeIsolated { MenuBarClock.shared.now = Date() }
         }
     }
 }

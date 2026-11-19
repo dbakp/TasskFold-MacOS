@@ -98,7 +98,7 @@ struct SomedayView: View {
         .animation(layout, value: prompt)
         .onAppear { if workspace.section == .someday { workspace.navigationSubtitle = subtitle } }
         .onChange(of: subtitle) { _, value in if workspace.section == .someday { workspace.navigationSubtitle = value } }
-        .onChange(of: workspace.searchPresented) { _, requested in if requested && workspace.section == .someday { ideaFocused = false; workspace.searchPresented = false } }
+        .onChange(of: workspace.searchPresented) { _, requested in if requested && workspace.section == .someday { ideaFocused = false } }
         .sheet(isPresented: $picking) {
             DatePickSheet(date: $pickerDate, count: workspace.selection.count, verb: "Schedule") {
                 workspace.scheduleFromSomeday(workspace.selection, to: Dates.day(pickerDate), label: pickerDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
