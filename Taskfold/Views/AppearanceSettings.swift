@@ -4,7 +4,7 @@ import AppKit
 struct AppearanceSettings: View {
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("accent") private var accent = "rose"
-    @AppStorage("mac.taskDensity") private var density = "roomy"
+    @AppStorage("mac.taskDensity") private var density = DS.Size.densityDefault
     @AppStorage(DayRingSetting.key) private var showDayRing = true
     @AppStorage("mac.savedAccents") private var saved = ""
     @State private var proposed = Color.accentValue(UserDefaults.standard.string(forKey: "accent") ?? "rose")

@@ -1205,13 +1205,11 @@ final class TaskfoldMacUITests: XCTestCase {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let row = app.staticTexts["title-drag-fixture-1"]
         XCTAssertTrue(row.waitForExistence(timeout: 10))
-        // The row's actions menu only exists while the row is hovered or selected.
-        row.click()
-        let actions = app.descendants(matching: .any)["actions-drag-fixture-1"].firstMatch
-        XCTAssertTrue(actions.waitForExistence(timeout: 5)); actions.click()
-        app.menuItems["Change Date…"].click()
-        XCTAssertTrue(app.buttons["Tomorrow"].waitForExistence(timeout: 5))
-        app.buttons["Tomorrow"].click()
+        // Row actions live in the context menu (design review mac-r1 removed the hover buttons).
+        row.rightClick()
+        let reschedule = app.menuItems["Reschedule"].firstMatch
+        XCTAssertTrue(reschedule.waitForExistence(timeout: 5)); reschedule.hover()
+        app.menuItems["Tomorrow"].firstMatch.click()
         XCTAssertTrue(waitForDisappearance(row, timeout: 5))
         app.typeKey("z", modifierFlags: .command)
         XCTAssertTrue(row.waitForExistence(timeout: 5))
@@ -2498,9 +2496,8 @@ extension TaskfoldMacUITests {
         if !title.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
         XCTAssertTrue(title.waitForExistence(timeout: 5)); title.click(); app.typeKey("a", modifierFlags: .command); title.typeText(f.offlineTitle); app.typeKey(.tab, modifierFlags: [])
         _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["title"] as? String == f.offlineTitle && ($0["pending"] as? [Any])?.count == 1 }
-        // Priority moved off the row into its actions menu (shown while the row is selected or hovered).
-        let actions = app.menuButtons["actions-" + f.taskID]
-        XCTAssertTrue(actions.waitForExistence(timeout: 5)); actions.click()
+        // Priority is in the row's context menu.
+        liveConflictRow(app, f.taskID).rightClick()
         app.menuItems["Priority"].firstMatch.hover(); app.menuItems["Priority 1"].firstMatch.click()
         let queued = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["priority"] as? Int == 1 && ($0["pending"] as? [Any])?.count == 2 }
         retainWindow(app, name: "Mac two real offline edits queued")

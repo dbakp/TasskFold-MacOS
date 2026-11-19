@@ -3,7 +3,7 @@ import SwiftUI
 /// Calendar for a wide window: the period on the left (day columns for 3/5/week, a grid for month, twelve heat
 /// months for year) and the selected day's tasks alongside. Tasks open in the inspector; days accept drops.
 struct CalendarView: View {
-    @AppStorage("mac.taskDensity") private var density = "roomy"
+    @AppStorage("mac.taskDensity") private var density = DS.Size.densityDefault
     var showsDayPanel = false
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
@@ -85,7 +85,7 @@ struct CalendarView: View {
         GeometryReader { proxy in
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                header
+                if textSize.isAccessibilitySize { header }
                 if periodWork.incomplete {
                     Label("Some work needs review. Calendar totals include only readable tasks.", systemImage: "exclamationmark.circle")
                         .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -131,9 +131,26 @@ struct CalendarView: View {
                     Button { shift(1) } label: { Label("Next", systemImage: "chevron.right") }.help("Next period (→)")
                     Button("Today") { jump(to: today) }.disabled(calendar.isDate(selected, inSameDayAs: today) && page == 0).help("Jump to today (⌘T)").keyboardShortcut("t", modifiers: .command)
                 }
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button { quickAddVisible = true } label: { Label("New Task", systemImage: "plus") }.help("Add a task on the selected day (⌘N)")
-                    Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }.help("Show or hide the inspector (⌥⌘I)")
+                // The period switcher is a native segmented control in the toolbar, the one neutral control.
+                if !textSize.isAccessibilitySize {
+                    ToolbarItem(placement: .principal) {
+                        Picker("Calendar view", selection: Binding(get: { workspace.calendarMode }, set: { workspace.calendarMode = $0 })) {
+                            ForEach(CalendarMode.allCases) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented).labelsHidden().fixedSize().accessibilityIdentifier("calendarModePicker")
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button { quickAddVisible = true } label: {
+                        Label { Text("New task") } icon: { Image(systemName: "plus").fontWeight(.semibold).foregroundStyle(Color.brandCrimson) }
+                    }.help("Add a task on the selected day (⌘N)").accessibilityIdentifier("addTask")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    // With a task selected this shows its inspector; otherwise it shows the selected day's panel.
+                    Button {
+                        if workspace.actionSelection.isEmpty { workspace.calendarDayPanel.toggle() } else { workspace.inspectorShown.toggle() }
+                    } label: { Label("Inspector", systemImage: "sidebar.trailing") }
+                    .help("Show or hide the inspector or the day panel (⌥⌘I)").accessibilityIdentifier("toggleInspector")
                 }
             }
         }
@@ -275,9 +292,9 @@ struct CalendarView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(day.formatted(.dateTime.weekday(.abbreviated)).uppercased()).font(.caption.weight(.semibold)).tracking(0.6).lineLimit(1).fixedSize().foregroundStyle(isToday ? Color.taskfold : .secondary)
                     Text(day.formatted(.dateTime.day())).font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit()
-                        .foregroundStyle(isSelected ? Color.onAccent : isToday ? Color.taskfold : .primary)
+                        .foregroundStyle(isSelected ? (isToday ? Color.onAccent : DS.Palette.surface) : isToday ? Color.brandCrimson : .primary)
                         .frame(width: 30, height: 30)
-                        .background { if isSelected { Circle().fill(Color.taskfold).matchedGeometryEffect(id: "selectedDay", in: dayNamespace) } }
+                        .background { if isSelected { Circle().fill(isToday ? Color.brandCrimson : DS.Palette.textPrimary).matchedGeometryEffect(id: "selectedDay", in: dayNamespace) } }
                     Spacer()
                     let count = open(on: day)
                     if count > 0 { Text("\(count)").font(.caption).monospacedDigit().foregroundStyle(.tertiary) }
@@ -300,7 +317,7 @@ struct CalendarView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(isSelected ? Color.taskfold.opacity(0.05) : isToday ? Color.primary.opacity(0.02) : Color.clear)
+        .background(isSelected ? DS.Palette.selectionFill.opacity(0.5) : Color.clear)
         .modifier(CalendarDayDrop(day: day))
         .accessibilityIdentifier("calendar-day-\(Dates.day(day))")
     }
@@ -310,10 +327,8 @@ struct CalendarView: View {
         let plannedTime = task.string("due_time").isEmpty ? "" : TaskRowView.timeText(TaskPlanner.clockValue(task))
         let accessibilityValue = [task.completed ? "Completed" : "Open", store.productiveReading.parents[task.id] ?? "", plannedTime, projectName]
             .filter { !$0.isEmpty }.joined(separator: ", ")
-        return calendarCardContent(task)
-        .padding(.horizontal, 8).padding(.vertical, density == "compact" ? 5 : 8)
-        .modifier(CardSurface(radius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.taskfold, lineWidth: selectedTask ? 1.5 : 0))
+        // No border: a 3 pt bar in the project's colour leads the card.
+        return styledCard(task, selected: selectedTask)
         .contentShape(.rect)
         .focusable()
         .focusEffectDisabled()
@@ -350,6 +365,16 @@ struct CalendarView: View {
         .accessibilityAction(named: Text("Open in Inspector")) { workspace.open(task.id) }
         .accessibilityAction(named: Text(task.completed ? "Reopen" : "Complete")) { workspace.complete(task) }
     }
+    private func styledCard(_ task: Record, selected: Bool) -> some View {
+        let hue: ProjectHue = DS.Palette.project(store.record("projects", id: task.string("project_id")))
+        let vertical: CGFloat = density == "compact" ? 5 : 8
+        let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+        return calendarCardContent(task)
+            .padding(.leading, 11).padding(.trailing, 8).padding(.vertical, vertical)
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.7), in: shape)
+            .overlay(alignment: .leading) { Capsule().fill(hue.color).frame(width: 3).padding(.vertical, 4).padding(.leading, 3) }
+            .overlay(shape.strokeBorder(DS.Palette.textSecondary, lineWidth: selected ? 1.5 : 0))
+    }
     private func calendarCardContent(_ task: Record) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Button { workspace.complete(task) } label: { CheckMark(checked: task.completed || workspace.completing.contains(task.id), color: Color.priority(task.priority), emphasized: task.priority < 4, size: 16, priority: task.priority) }
@@ -359,14 +384,11 @@ struct CalendarView: View {
                 if let parent = store.productiveReading.parents[task.id] {
                     Text(parent).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 }
-                Text(task.title).font(.callout).lineLimit(2).truncationMode(.tail).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
+                Text(task.title).font(.callout).lineLimit(3).truncationMode(.tail).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                HStack(spacing: 6) {
-                    if !task.string("due_time").isEmpty { Text(TaskRowView.timeText(TaskPlanner.clockValue(task))).fixedSize() }
-                    if let project = store.record("projects", id: task.string("project_id")) {
-                        HStack(spacing: 4) { Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6); Text(project.name).lineLimit(1) }
-                    }
-                }.font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                if !task.string("due_time").isEmpty {
+                    Text(TaskRowView.timeText(TaskPlanner.clockValue(task))).font(.caption.monospacedDigit()).foregroundStyle(.secondary).fixedSize()
+                }
             }
             Spacer(minLength: 0)
         }

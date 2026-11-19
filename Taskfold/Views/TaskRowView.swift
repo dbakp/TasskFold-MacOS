@@ -47,7 +47,7 @@ struct TaskRowView: View {
     @Environment(Workspace.self) private var workspace
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @AppStorage("mac.taskDensity") private var density = "roomy"
+    @AppStorage("mac.taskDensity") private var density = DS.Size.densityDefault
     let task: Record
     @State private var fullNote: (request: TaskNotePreviewReadCache.Request, reading: Linkify.Reading)?
     @State private var notePresentation: UUID?
@@ -89,7 +89,7 @@ struct TaskRowView: View {
                 .accessibilityLabel("Subtasks of \(task.title)")
                 .accessibilityValue(workspace.expandedTasks.contains(task.id) ? "Expanded" : "Collapsed")
                 .accessibilityIdentifier("expand-" + task.id)
-            } else if card == nil { Color.clear.frame(width: DS.Space.l, height: 1) }
+            } else if card == nil, workspace.nestedRowsList { Color.clear.frame(width: DS.Space.l, height: 1) }
 
             if TaskKind.mayComplete(task) {
             Button { workspace.complete(task) } label: {
@@ -98,7 +98,7 @@ struct TaskRowView: View {
                           size: DS.Size.checkbox, stroke: task.priority < 4 ? nil : DS.Palette.textTertiary,
                           restFill: task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !checked,
                           priority: task.priority, doneColor: DS.Palette.project(store.record("projects", id: task.string("project_id"))).color)
-                    .frame(width: DS.Space.xxxl, height: DS.Space.xxxl) // 32 pt hit area
+                    .frame(width: DS.Space.xxxl, height: listRow ? DS.Size.checkbox + DS.Space.xs : DS.Space.xxxl) // 32 pt wide hit area; list rows keep it within the 32 pt row
                     .contentShape(.rect)
             }
             .buttonStyle(GlyphStyle())
@@ -113,7 +113,16 @@ struct TaskRowView: View {
                     .foregroundStyle(isSelected ? selectedForeground : DS.Palette.textSecondary).frame(width: DS.Space.xxl, height: DS.Space.xxl)
                     .accessibilityLabel(TaskKind(task) == .heading ? "Heading, stays open" : "Task type unavailable")
             }
-            VStack(alignment: .leading, spacing: DS.Space.xs) {
+            VStack(alignment: .leading, spacing: listRow ? DS.Space.xxs : DS.Space.xs) {
+                HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
+                if listRow {
+                    // The project is a 7 pt dot before the title (name on hover and in the inspector), not a trailing column.
+                    if let project = rowProject {
+                        Circle().fill(DS.Palette.project(project).color).frame(width: 7, height: 7)
+                            .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+                            .help(project.name).accessibilityHidden(true)
+                    } else if rowScopeMixesProjects { Color.clear.frame(width: 7, height: 1).accessibilityHidden(true) }
+                }
                 if titleLinks.matches.isEmpty {
                     Text(task.title.isEmpty ? "Untitled task" : task.title)
                         .font(DS.Font.taskTitle)
@@ -132,7 +141,23 @@ struct TaskRowView: View {
                              strikethrough: checked, lineLimit: 3,
                              accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary(planning), preparedLinks: titleLinks, autoFetchTitles: store.mayAutoFetchLinkTitles(task))
                 }
-                if !notePreview.isEmpty && density != "compact" {
+                if listRow {
+                    // Labels read as quiet "#deep work" after the title.
+                    let labels = labelNames
+                    if !labels.isEmpty {
+                        Text(labels.prefix(2).map { "#" + $0 }.joined(separator: " ") + (labels.count > 2 ? " +\(labels.count - 2)" : ""))
+                            .font(DS.Font.taskTitle).foregroundStyle(DS.Palette.textSecondary).lineLimit(1).layoutPriority(-1)
+                            .accessibilityHidden(true)
+                    }
+                    Spacer(minLength: DS.Space.s)
+                    if hasMetadata(planning) {
+                        HStack(spacing: DS.Space.s) { metadata(wrapping: false, planning: planning) }
+                            .labelStyle(.titleAndIcon).lineLimit(1).fixedSize()
+                            .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+                    }
+                }
+                }
+                if !notePreview.isEmpty {
                     if previewLinks.matches.isEmpty {
                         Text(notePreview).font(DS.Font.taskNote).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1).fixedSize(horizontal: false, vertical: true)
@@ -154,7 +179,7 @@ struct TaskRowView: View {
                 } else if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary).lineLimit(1)
                 }
-                if hasMetadata(planning) {
+                if !listRow, hasMetadata(planning) {
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: DS.Space.s) { metadata(wrapping: false, planning: planning) }
                             .labelStyle(.titleAndIcon).lineLimit(1).fixedSize(horizontal: true, vertical: false)
@@ -168,10 +193,9 @@ struct TaskRowView: View {
             if !task.string("assigned_to").isEmpty {
                 AssigneeMenu(task: task, selected: isSelected) { workspace.assign(task.id, to: $0) }
             }
-            if card == nil, !inInspector { trailing }
         }
         .overlay(alignment: .topTrailing) { if card != nil, !inInspector { trailing.background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: DS.Radius.s)).opacity(hovering || isSelected ? 1 : 0).allowsHitTesting(hovering || isSelected) } }
-        .padding(.vertical, card == nil ? DS.Size.rowVerticalPadding(compact: density == "compact") : DS.Space.s)
+        .padding(.vertical, card == nil ? DS.Size.rowVerticalPadding(compact: density == "compact") - (listRow ? DS.Space.xxs : 0) : DS.Space.s)
         .padding(.horizontal, card == nil ? DS.Space.xs : DS.Space.s)
         .frame(minHeight: DS.Size.rowMinHeight)
         .background {
@@ -180,7 +204,7 @@ struct TaskRowView: View {
                     .overlay { RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : hovering ? DS.Palette.surfaceSunken.opacity(0.5) : Color.clear) }
                     .overlay { RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).strokeBorder(DS.Palette.separator.opacity(0.6), lineWidth: 0.5) }
             } else {
-                RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : hovering ? DS.Palette.surfaceSunken.opacity(0.5) : Color.clear)
+                RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : Color.clear)
             }
         }
         .contentShape(.rect)
@@ -256,6 +280,14 @@ struct TaskRowView: View {
             Button(priority == 4 ? "None" : "Priority \(priority)") { workspace.setPriority([task.id], priority) }
         }
     }
+    /// A plain list row (not a board card, not the inspector's subtask list).
+    private var listRow: Bool { card == nil && !inInspector }
+    /// The row's project dot: in lists that mix projects only.
+    private var rowProject: Record? {
+        guard rowScopeMixesProjects else { return nil }
+        return store.record("projects", id: task.string("project_id"))
+    }
+    private var rowScopeMixesProjects: Bool { if case .project = rowScope { return false }; return true }
     /// The project shows at the trailing edge only in lists that mix projects.
     private var trailingProject: Record? {
         if card != nil { return nil }
@@ -282,7 +314,7 @@ struct TaskRowView: View {
     private var labelNames: [String] { task["labels"].list.map(\.text).filter { !$0.isEmpty }.map { store.record("labels", id: $0)?.name ?? $0 } }
     private func hasMetadata(_ planning: TaskRowPlanningRead) -> Bool {
         cardProject != nil || dateText(planning) != nil || planning.deadline != nil || task["is_recurring"].flag || rowChildProgress.total > 0 || !task["comments"].list.isEmpty
-            || !labelNames.isEmpty || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || store.dependencyIndicator(for: task) != nil
+            || (!listRow && !labelNames.isEmpty) || !task["attachments"].list.isEmpty || (TaskKind.mayComplete(task) && task.durationMinutes != nil) || store.dependencyIndicator(for: task) != nil
     }
     private enum DateRole { case overdue, today, tomorrow, thisWeek, later }
     private func dateRole(_ planning: TaskRowPlanningRead) -> DateRole {
@@ -324,10 +356,11 @@ struct TaskRowView: View {
         if let text = dateText(planning) {
             Button { choosingDate = true } label: {
                 // Ink, except overdue (crimson). Times are semibold and tabular.
+                // Rows: tabular, regular weight, secondary ink, crimson only when overdue.
                 Text(text).monospacedDigit()
-                    .fontWeight(dateRole(planning) == .overdue || !planning.clock.isEmpty ? .semibold : .regular)
+                    .fontWeight(!listRow && (dateRole(planning) == .overdue || !planning.clock.isEmpty) ? .semibold : .regular)
                     .accessibilityIdentifier("plannedDate-" + task.id)
-                    .foregroundStyle(isSelected ? selectedForeground : dateColor(planning))
+                    .foregroundStyle(dateRole(planning) == .overdue ? DS.Palette.dateOverdue : listRow ? DS.Palette.textSecondary : isSelected ? selectedForeground : dateColor(planning))
             }
             .buttonStyle(.borderless)
             .help("Change date")
@@ -367,7 +400,7 @@ struct TaskRowView: View {
             Image(systemName: "paperclip")
                 .accessibilityLabel(task["attachments"].list.count == 1 ? "1 attachment" : "\(task["attachments"].list.count) attachments")
         }
-        let labels = labelNames
+        let labels = listRow ? [] : labelNames
         ForEach(Array(labels.prefix(2)), id: \.self) { name in
             Label(name, systemImage: "tag").lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true)
         }

@@ -166,12 +166,21 @@ struct ProjectSectionHeader: View {
     let count: String
     @Binding var collapsed: Bool
     let add: () -> Void
+    @State private var hovering = false
     var body: some View {
+        // Ink, 13 pt semibold; the chevron and "+" show on hover (and stay reachable by VoiceOver).
         HStack {
-            Button { collapsed.toggle() } label: { HStack(spacing: DS.Space.s) { Image(systemName: collapsed ? "chevron.right" : "chevron.down"); Text(title); Text("\(count)").foregroundStyle(DS.Palette.textSecondary) }.font(DS.Font.sectionHeader) }
+            Button { collapsed.toggle() } label: {
+                HStack(spacing: DS.Space.s) {
+                    Text(title).font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.textPrimary)
+                    Text("\(count)").font(DS.Font.sectionHeader.weight(.regular)).monospacedDigit().foregroundStyle(DS.Palette.textTertiary)
+                    Image(systemName: collapsed ? "chevron.right" : "chevron.down").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).opacity(collapsed || hovering ? 1 : 0)
+                }.contentShape(.rect)
+            }
                 .buttonStyle(.plain).accessibilityIdentifier("section-collapse-" + key).accessibilityValue(collapsed ? "Collapsed" : "Expanded")
             Spacer()
-            Button(action: add) { Image(systemName: "plus") }.buttonStyle(.borderless).help("Add task to \(title)").accessibilityIdentifier("section-add-" + key)
-        }.modifier(DayHeaderDrop(day: key))
+            Button(action: add) { Image(systemName: "plus").frame(width: 20, height: 20).contentShape(.rect) }.buttonStyle(.plain).foregroundStyle(DS.Palette.textSecondary)
+                .opacity(hovering ? 1 : 0).help("Add task to \(title)").accessibilityLabel("Add task to \(title)").accessibilityIdentifier("section-add-" + key)
+        }.contentShape(.rect).onHover { hovering = $0 }.modifier(DayHeaderDrop(day: key))
     }
 }
