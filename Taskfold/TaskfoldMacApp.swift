@@ -35,8 +35,18 @@ struct TaskfoldMacApp: App {
         registersHotKey = !launch.contains("--uitesting") && !launch.contains { $0.hasPrefix("--capture") }
         #endif
         GlobalQuickAddController.shared.start(store: store, workspace: workspace, registersHotKey: registersHotKey)
+        MenuBarClock.shared.start()
     }
 
+    /// Screenshot captures of an unsigned Debug build (`--hide-setup-banner`): that build has no app group, so the
+    /// "Widgets and shared drafts aren't connected" banner would sit over every capture. Release builds always show it.
+    private var hidesSetupBanner: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("--hide-setup-banner")
+        #else
+        return false
+        #endif
+    }
     private var menuBarInserted: Binding<Bool> {
         #if DEBUG
         // UI-test hosts get no menu bar item, so a fixture run never leaves one behind.
@@ -66,7 +76,7 @@ struct TaskfoldMacApp: App {
     var body: some Scene {
         WindowGroup("Taskfold") {
             mainContent
-                .safeAreaInset(edge: .top, spacing: 0) { VStack(spacing: 0) { SharedStorageSetupBanner().environment(store); AccountRemovalRecoveryBanner().environment(store) } }
+                .safeAreaInset(edge: .top, spacing: 0) { VStack(spacing: 0) { if !hidesSetupBanner { SharedStorageSetupBanner().environment(store) }; AccountRemovalRecoveryBanner().environment(store) } }
                 .task {
                     #if DEBUG
                     if TeamEditorNativeFixture.enabled || TeamOrganizationFixture.enabled || AutomationManagementFixture.enabled || AccountRemovalNativeFixture.enabled { return }
@@ -247,14 +257,30 @@ struct TaskfoldCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Task") { workspace.quickAddFocusRequest += 1 }.keyboardShortcut("n", modifiers: .command)
             Button("New Project…") { workspace.newProjectRequest += 1 }.keyboardShortcut("n", modifiers: [.command, .shift])
+            Button("New Filter…") { workspace.newFilterRequest += 1 }.disabled(!store.signedIn)
+            Button("New Label…") { workspace.newLabelRequest += 1 }.disabled(!store.signedIn)
+            Divider()
+            Button("Add Multiple Tasks…") { workspace.toolRequest = .multipleTasks }.disabled(!store.signedIn)
             Button("Brain Dump…") { workspace.openBrainDump() }.keyboardShortcut("b", modifiers: [.command, .option]).disabled(!store.signedIn)
         }
         CommandGroup(after: .pasteboard) {
             Divider()
             Button("Search Everywhere…") { workspace.finderPresented = true }.keyboardShortcut("f", modifiers: .command)
             Button("Find Commands…") { workspace.finderPresented = true }.keyboardShortcut("k", modifiers: .command)
-            Button("Filter Current List") { workspace.searchPresented = true }.keyboardShortcut("f", modifiers: [.command, .shift])
+            Button("Search This List") { workspace.searchScope = .list; workspace.searchPresented = true }.keyboardShortcut("f", modifiers: [.command, .shift])
                 .disabled(workspace.section == .calendar)
+        }
+        // Tools that used to sit in the sidebar and toolbar. The sidebar foot's "⋯" menu opens the same ones.
+        CommandGroup(before: .windowList) {
+            Button("Pinned Notes") { workspace.toolRequest = .pinnedNotes }.disabled(!store.signedIn)
+            Button("Mentions") { workspace.toolRequest = .mentions }.disabled(!store.signedIn)
+            Button("Weekly Review") { workspace.toolRequest = .weeklyReview }.disabled(!store.signedIn)
+            Button("Insights") { workspace.toolRequest = .insights }.disabled(!store.signedIn)
+            Button("Project Pulse") { workspace.toolRequest = .projectPulse }.disabled(!store.signedIn)
+            Button("Templates") { workspace.toolRequest = .templates }.disabled(!store.signedIn)
+            Button("Shared Drafts") { workspace.toolRequest = .sharedDrafts }.disabled(!store.signedIn)
+            Button("Archived Projects") { workspace.toolRequest = .archivedProjects }.disabled(!store.signedIn)
+            Divider()
         }
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
@@ -316,6 +342,9 @@ struct TaskfoldCommands: Commands {
             }
             Button("Duplicate") { workspace.duplicate(workspace.actionSelection) }.keyboardShortcut("d", modifiers: .command).disabled(workspace.actionSelection.isEmpty)
             Divider()
+            Button("Start Focus Session…") { workspace.requestFocus(taskID: workspace.actionSelection.count == 1 ? workspace.actionSelection.first : nil) }
+                .keyboardShortcut("f", modifiers: [.command, .option]).disabled(!store.signedIn)
+            Divider()
             Button("Delete") { workspace.delete(workspace.actionSelection) }.keyboardShortcut(.delete, modifiers: .command).disabled(workspace.actionSelection.isEmpty)
         }
         CommandGroup(before: .sidebar) {
@@ -326,6 +355,7 @@ struct TaskfoldCommands: Commands {
             Button("All Tasks") { workspace.section = .all }.keyboardShortcut("5", modifiers: .command)
             Divider()
             Button(workspace.inspectorShown ? "Hide Inspector" : "Show Inspector") { workspace.inspectorShown.toggle() }.keyboardShortcut("i", modifiers: [.command, .option])
+            Button(workspace.calendarDayPanel ? "Hide Day Panel" : "Show Day Panel") { workspace.calendarDayPanel.toggle() }.disabled(workspace.section != .calendar)
             Divider()
             // ⌃⌘ rather than ⌥⌘: ⌥⌘1 to ⌥⌘4 already set a task's priority.
             ForEach(Array(TaskLayout.allCases.enumerated()), id: \.element) { index, layout in

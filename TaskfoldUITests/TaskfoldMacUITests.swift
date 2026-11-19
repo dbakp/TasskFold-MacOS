@@ -6,6 +6,13 @@ import Darwin
 extension XCUIApplication {
     /// Static text by what it displays. Row titles carry a `title-<id>` identifier and macOS 27 reports their text as the value, so the plain subscript no longer finds them.
     /// A static text showing `text`. A task row's title text is spoken as "title, due …, in Project", so the row matches by its title prefix too.
+    /// Chooses a menu bar command (tools moved from the sidebar and toolbar into the menu bar, design review mac-r1).
+    func menuCommand(_ menu: String, _ item: String) {
+        menuBars.menuBarItems[menu].click()
+        let command = menuBars.menuItems[item]
+        _ = command.waitForExistence(timeout: 5)
+        command.click()
+    }
     func textNamed(_ text: String) -> XCUIElement {
         staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@ OR value BEGINSWITH %@ OR label BEGINSWITH %@", text, text, text + ", ", text + ", ")).firstMatch
     }
@@ -38,7 +45,7 @@ extension TaskfoldMacUITests {
         try launchHeadingWorkspace(app)
         let today = app.textNamed("Today").firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 15), app.debugDescription); today.click()
         if pinned {
-            app.buttons["openPinnedNotes"].click()
+            app.menuCommand("Window", "Pinned Notes")
             let note = app.buttons["pinnedNote-f1810000-0000-4000-8000-000000000001"]
             XCTAssertTrue(note.waitForExistence(timeout: 8), app.debugDescription); note.click()
             let printNote = app.buttons["printPinnedNote"]; outputReveal(printNote, app); printNote.click()
@@ -47,7 +54,7 @@ extension TaskfoldMacUITests {
             let command = app.menuItems["Print or Export…"]
             XCTAssertTrue(command.waitForExistence(timeout: 5)); XCTAssertTrue(command.isEnabled); command.click()
         } else {
-            let menu = app.menuButtons["Task options"].firstMatch
+            let menu = app.menuButtons["viewOptionsMenu"].firstMatch
             XCTAssertTrue(menu.waitForExistence(timeout: 10), app.debugDescription); menu.click()
             let command = app.menuItems["openPrintReview"]
             XCTAssertTrue(command.waitForExistence(timeout: 5), app.debugDescription); command.click()
@@ -323,7 +330,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testFocusFinishAlertPreferencePauseResumeAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-finish-testing"]; app.launch()
-        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Task"].waitForExistence(timeout: 10)); app.menuCommand("Task", "Start Focus Session…")
         let toggle = app.descendants(matching: .any).matching(identifier: "focusAlerts").firstMatch
         for _ in 0..<5 where !toggle.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
         XCTAssertTrue(toggle.isHittable); toggle.click()
@@ -349,17 +356,17 @@ final class TaskfoldMacUITests: XCTestCase {
         for _ in 0..<5 where !pause.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: 400) }
         pause.click(); pending(1)
         app.terminate(); app.launchArguments = ["--uitesting", "--focus-finish-testing"]; app.launch()
-        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click(); pending(1); app.terminate()
+        XCTAssertTrue(app.menuBars.menuBarItems["Task"].waitForExistence(timeout: 10)); app.menuCommand("Task", "Start Focus Session…"); pending(1); app.terminate()
     }
     @MainActor func testFocusPauseResumeEndAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed"]; app.launch()
-        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Task"].waitForExistence(timeout: 10)); app.menuCommand("Task", "Start Focus Session…")
         let picker = app.descendants(matching: .any).matching(identifier: "focusTaskPicker").firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 10)); picker.click(); app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"].click(); app.buttons["startFocus"].click()
         XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); app.buttons["pauseResumeFocus"].click()
         XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Paused"); let remaining = app.staticTexts["focusRemaining"].shownText
         app.buttons["closeFocusSession"].click(); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        let open = app.buttons["openFocusSession"]; XCTAssertTrue(open.waitForExistence(timeout: 10)); open.click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Task"].waitForExistence(timeout: 10)); app.menuCommand("Task", "Start Focus Session…")
         XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Paused"); XCTAssertEqual(app.staticTexts["focusRemaining"].shownText, remaining)
         app.buttons["pauseResumeFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Time to focus")
         app.buttons["endFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].shownText, "Session ended"); app.terminate()
@@ -598,7 +605,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testSavedFilterBoardLastCardCompletionAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
-        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10)); app.menuCommand("File", "New Filter…")
         let name = "Workshop board " + String(UUID().uuidString.prefix(6))
         let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
         app.descendants(matching: .any)["advancedFilter"].click()
@@ -621,7 +628,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testCreationFiltersValidationAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-creation-fixture"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10)); app.menuCommand("File", "New Filter…")
         let name = "Creation dates " + String(UUID().uuidString.prefix(6))
         let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
         app.descendants(matching: .any)["advancedFilter"].click()
@@ -641,7 +648,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testTimeFiltersAndDatedBoundarySurviveRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-times-fixture"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10)); app.menuCommand("File", "New Filter…")
         let name = "Morning work " + String(UUID().uuidString.prefix(6))
         let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
         app.descendants(matching: .any)["advancedFilter"].click()
@@ -661,7 +668,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testExplicitDateSourcesAndRelativeFilterSurviveRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-dates-fixture"]; app.launch()
-        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10)); app.menuCommand("File", "New Filter…")
         let name = "Date sources " + String(UUID().uuidString.prefix(6))
         let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
         app.descendants(matching: .any)["advancedFilter"].click()
@@ -682,7 +689,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testKeywordFilterAndUnsupportedQueryPreservation() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-primitives-fixture"]; app.launch()
-        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10)); app.menuCommand("File", "New Filter…")
         let name = "Email review " + String(UUID().uuidString.prefix(6))
         let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
         app.descendants(matching: .any)["advancedFilter"].click()
@@ -699,7 +706,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testSavedFilterSurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
-        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10)); app.menuCommand("File", "New Filter…")
         let name = "Workshop focus " + String(UUID().uuidString.prefix(6))
         let nameField = app.textFields["savedViewName"]; XCTAssertTrue(nameField.waitForExistence(timeout: 5)); nameField.click(); nameField.typeText(name)
         let expressionSwitch = app.descendants(matching: .any)["advancedFilter"]; expressionSwitch.click()
@@ -716,7 +723,7 @@ final class TaskfoldMacUITests: XCTestCase {
     }
     @MainActor func testDeadlineEstimateQuickEntrySurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 5))
         app.typeText("Planning capture ~25m {2026-10-09}")
@@ -773,7 +780,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.textNamed("Release workshop").firstMatch.click()
         XCTAssertTrue(collapse.waitForExistence(timeout: 5)); XCTAssertEqual(collapse.value as? String, "Collapsed")
         collapse.click()
-        app.menuButtons["Task options"].click(); app.menuItems["Layout"].hover(); app.menuItems["Board"].click()
+        app.menuButtons["viewOptionsMenu"].click(); app.menuItems["Layout"].hover(); app.menuItems["Board"].click()
         XCTAssertTrue(app.scrollViews["projectBoard"].waitForExistence(timeout: 5))
         let add = app.buttons["board-add-ready"]
         for _ in 0..<3 {
@@ -948,10 +955,10 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testTaskEntryIsExplicitAndFilterLivesAboveTasks() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
-        let filter = app.textFields["listFilter"]
+        let filter = app.searchFields.firstMatch
         XCTAssertTrue(filter.waitForExistence(timeout: 10))
         let sidebar = app.outlines["Sidebar"]
-        XCTAssertFalse(sidebar.textFields["listFilter"].exists)
+        XCTAssertFalse(sidebar.searchFields.firstMatch.exists)
         XCTAssertFalse(app.textFields["quickAdd"].exists)
         app.buttons["addTask"].click()
         let input = app.textFields["quickAdd"]
@@ -1088,7 +1095,7 @@ final class TaskfoldMacUITests: XCTestCase {
     /// The composer shows the property chips; a manual choice replaces the parsed token and its words stay in the title.
     @MainActor func testQuickAddPropertyChipsAndManualPriority() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 5))
         for id in ["quickChipDate", "quickChipPriority", "quickChipLabels", "quickChipReminders", "quickChipMore"] { XCTAssertTrue(app.descendants(matching: .any)[id].firstMatch.exists, id) }  // quickChipMore is a menu, so match any element type
@@ -1103,7 +1110,7 @@ final class TaskfoldMacUITests: XCTestCase {
     /// Declining the date chip keeps "tomorrow" in the title while the priority chip still applies.
     @MainActor func testDeclinedChipKeepsWordsInTitle() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         XCTAssertTrue(input.waitForExistence(timeout: 5))
@@ -1212,7 +1219,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testFinderOpensCompletedTaskWithoutChangingListFilter() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("f", modifierFlags: [.command, .shift])
         app.typeText("Navigation task 003")
         app.typeKey("f", modifierFlags: .command)
@@ -1223,7 +1230,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let title = app.descendants(matching: .any)["taskTitle"]
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         XCTAssertEqual(title.value as? String, "Archived navigation target")
-        XCTAssertEqual(app.textFields["listFilter"].value as? String, "Navigation task 003")
+        XCTAssertEqual(app.searchFields.firstMatch.value as? String, "Navigation task 003")
         XCTAssertTrue(app.staticTexts["title-nav-3"].exists)
     }
 
@@ -1288,7 +1295,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testFinderKeyboardSelectionAndCommand() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("f", modifierFlags: .command)
         let finder = app.textFields["commandBarField"]
         XCTAssertTrue(finder.waitForExistence(timeout: 5)); finder.typeText("Navigation task 00")
@@ -1306,11 +1313,11 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testCompletedFilterBelongsToItsDestination() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("5", modifierFlags: .command)
         let archived = app.staticTexts["title-nav-archived"]
         XCTAssertFalse(archived.exists)
-        app.menuButtons["Task options"].click(); app.menuItems["Filter"].hover(); app.menuItems["Show Completed"].click()
+        app.menuButtons["viewOptionsMenu"].click(); app.menuItems["Filter"].hover(); app.menuItems["Show Completed"].click()
         XCTAssertTrue(archived.waitForExistence(timeout: 5))
         app.typeKey("1", modifierFlags: .command)
         XCTAssertFalse(archived.exists, "Today should retain its own completed filter")
@@ -1468,7 +1475,7 @@ final class TaskfoldMacUITests: XCTestCase {
     @MainActor func testPinnedNoteReadEditUnpinUndoAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--pinned-notes-seed", "--widget-action-testing", "--pinned-notes-testing"]; app.launch()
         XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(renderedText(app.staticTexts["noteProjection"]), "Notes: 2 · Private: hidden")
-        app.buttons["openPinnedNotes"].click(); XCTAssertTrue(app.buttons["pinnedNote-note-first"].waitForExistence(timeout: 5)); app.buttons["pinnedNote-note-first"].click()
+        app.menuCommand("Window", "Pinned Notes"); XCTAssertTrue(app.buttons["pinnedNote-note-first"].waitForExistence(timeout: 5)); app.buttons["pinnedNote-note-first"].click()
         XCTAssertTrue(app.staticTexts["pinnedNoteText"].waitForExistence(timeout: 5)); XCTAssertTrue(renderedText(app.staticTexts["pinnedNoteText"]).contains("Final instruction"))
         app.buttons["editPinnedNote"].click()
         let input = app.descendants(matching: .any).matching(identifier: "taskDescription").firstMatch
@@ -1482,7 +1489,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("z", modifierFlags: .command); XCTAssertEqual(renderedText(app.staticTexts["noteProjection"]), "Notes: 2 · Private: hidden")
         app.terminate(); app.launchArguments.removeAll { $0 == "--pinned-notes-seed" }; app.launch()
         XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(renderedText(app.staticTexts["noteProjection"]), "Notes: 2 · Private: hidden")
-        app.buttons["openPinnedNotes"].click(); app.buttons["pinnedNote-note-first"].click()
+        app.menuCommand("Window", "Pinned Notes"); app.buttons["pinnedNote-note-first"].click()
         XCTAssertTrue(app.staticTexts["pinnedNoteText"].waitForExistence(timeout: 5))
         XCTAssertTrue(renderedText(app.staticTexts["pinnedNoteText"]).contains("Edited on Mac."))
         retainWindow(app, name: "Pinned note edit survives Mac relaunch")
@@ -1494,7 +1501,7 @@ final class TaskfoldMacUITests: XCTestCase {
 extension TaskfoldMacUITests {
     @MainActor func testProjectPulseCurrentScopeRecordedHistoryAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--project-pulse-seed"]; app.launch()
-        XCTAssertTrue(app.buttons["openProjectPulse"].waitForExistence(timeout: 10)); app.buttons["openProjectPulse"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 10)); app.menuCommand("Window", "Project Pulse")
         let picker = app.descendants(matching: .any).matching(identifier: "pulseProjectPicker").firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5)); picker.click(); picker.menuItems["Studio"].click()
         XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(renderedText(app.staticTexts["pulseProgress"]), "1 of 3 completed")
@@ -1504,7 +1511,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(renderedText(app.staticTexts["pulseHistoryCoverage"]).contains("Earlier work has no recorded timeline."))
         retainWindow(app, name: "Project pulse history on Mac")
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        XCTAssertTrue(app.buttons["openProjectPulse"].waitForExistence(timeout: 10)); app.buttons["openProjectPulse"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 10)); app.menuCommand("Window", "Project Pulse")
         let again = app.descendants(matching: .any).matching(identifier: "pulseProjectPicker").firstMatch
         again.click(); again.menuItems["Studio"].click()
         XCTAssertEqual(renderedText(app.staticTexts["pulseProgress"]), "1 of 3 completed")
@@ -1569,7 +1576,7 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor func testFocusSearchDuplicateContextCancelAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-catalog-seed"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Task"].waitForExistence(timeout: 10)); app.menuCommand("Task", "Start Focus Session…")
         app.buttons["focusTaskPicker"].click()
         let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch; XCTAssertTrue(search.waitForExistence(timeout: 5)); search.click(); search.typeText("proposal")
         let home = app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-000000001249"], studio = app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-000000001248"]
@@ -1577,7 +1584,7 @@ extension TaskfoldMacUITests {
         home.click(); app.buttons["focusTaskPicker"].click(); app.buttons["cancelFocusTaskChoice"].click()
         XCTAssertTrue(app.buttons["focusTaskPicker"].label.contains("Home")); app.buttons["startFocus"].click()
         XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); XCTAssertEqual(renderedText(app.staticTexts["focusTaskContext"]), "Home"); app.buttons["pauseResumeFocus"].click()
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); app.buttons["openFocusSession"].click()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); app.menuCommand("Task", "Start Focus Session…")
         XCTAssertEqual(renderedText(app.staticTexts["focusStatus"]), "Paused"); XCTAssertEqual(renderedText(app.staticTexts["focusTaskContext"]), "Home")
         retainWindow(app, name: "Focus paused context after Mac relaunch")
     }
@@ -1586,7 +1593,7 @@ extension TaskfoldMacUITests {
 extension TaskfoldMacUITests {
     @MainActor func testElapsedFilterMinuteRefreshValidationAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--clock-window-testing", "--clock-window-fixture"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10)); app.menuCommand("File", "New Filter…")
         let name = "Next minute " + String(UUID().uuidString.prefix(6))
         let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
         app.descendants(matching: .any)["advancedFilter"].click()
@@ -1660,7 +1667,7 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Phone edit received in native Mac inspector")
         XCTAssertEqual(notesPinned(app), 0, "Disposable task should begin unpinned")
         togglePinnedNotes(app); XCTAssertEqual(notesPinned(app), 1)
-        app.buttons["openFocusSession"].click()
+        app.menuCommand("Task", "Start Focus Session…")
         app.buttons["focusTaskPicker"].click()
         let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 5)); search.click(); search.typeText("Continuity")
@@ -1694,7 +1701,7 @@ extension TaskfoldMacUITests {
             XCTAssertTrue((notes.value as? String ?? "").contains("Created in the native Mac app for device-switch verification."))
             XCTAssertEqual(notesPinned(app), 1)
             retainWindow(app, name: "Phone note and Mac pin retained — pass \(pass)")
-            app.buttons["openFocusSession"].click()
+            app.menuCommand("Task", "Start Focus Session…")
             let status = app.staticTexts["focusStatus"]
             XCTAssertTrue(status.waitForExistence(timeout: 5))
             let ended = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR label == %@", "Session ended", "Session ended"), object: status)
@@ -2023,8 +2030,8 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-catalog-seed"]
         app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10))
-        app.buttons["openFocusSession"].click(); app.buttons["focusTaskPicker"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Task"].waitForExistence(timeout: 10))
+        app.menuCommand("Task", "Start Focus Session…"); app.buttons["focusTaskPicker"].click()
         let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.typeText("proposal")
@@ -2047,8 +2054,8 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["pauseResumeFocus"].waitForExistence(timeout: 5))
         app.buttons["pauseResumeFocus"].click()
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10))
-        app.buttons["openFocusSession"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Task"].waitForExistence(timeout: 10))
+        app.menuCommand("Task", "Start Focus Session…")
         XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5))
         XCTAssertEqual(renderedText(app.staticTexts["focusStatus"]), "Paused")
         XCTAssertEqual(renderedText(app.staticTexts["focusTaskContext"]), "Studio · Client launch")
@@ -2661,7 +2668,7 @@ extension TaskfoldMacUITests {
         // Acknowledge only the previous disposable Mac case's retained notice.
         if app.buttons["dismissAccessRecovery"].exists { app.buttons["dismissAccessRecovery"].click() }
         func inspect() {
-            app.textNamed("All Tasks").firstMatch.click()
+            app.typeKey("5", modifierFlags: .command)
             let row = liveConflictRow(app, f.taskID)
             XCTAssertTrue(row.waitForExistence(timeout: 15)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
             let title = app.textFields["taskTitle"]
@@ -2682,7 +2689,7 @@ extension TaskfoldMacUITests {
         _ = try waitLiveConflict(f) { c in
             self.liveConflictTask(c, f) == nil && !((c["tables"] as? NSDictionary)?["projects"] as? [NSDictionary] ?? []).contains { $0["id"] as? String == projectID } && (c["pending"] as? [Any])?.isEmpty == true
         }
-        app.textNamed("All Tasks").firstMatch.click(); XCTAssertFalse(liveConflictRow(app, f.taskID).exists)
+        app.typeKey("5", modifierFlags: .command); XCTAssertFalse(liveConflictRow(app, f.taskID).exists)
         retainWindow(app, name: "Mac receives exact synthetic phone recovery cleanup")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
     }
@@ -2829,7 +2836,7 @@ extension TaskfoldMacUITests {
         password.click(); password.typeText(f.account["password"]!); app.buttons["nativeSignIn"].click()
         XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
         let before = try stableTables(settled())
-        app.textNamed("All Tasks").firstMatch.click()
+        app.typeKey("5", modifierFlags: .command)
         let id = try XCTUnwrap(expectedIDs.sorted().first), row = liveConflictRow(app, id)
         XCTAssertTrue(row.waitForExistence(timeout: 15)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         let title = app.descendants(matching: .any)["taskTitle"].firstMatch
@@ -2918,7 +2925,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 8))
         retainWindow(app, name: "Imported Account after open-Settings normal relaunch")
         app.windows["Account"].buttons["_XCUI:CloseWindow"].click()
-        app.textNamed("All Tasks").firstMatch.click()
+        app.typeKey("5", modifierFlags: .command)
         XCTAssertTrue(app.outlines.firstMatch.exists)
         XCTAssertEqual(try tables(settled()), before)
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
@@ -3030,7 +3037,7 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
         app.launchArguments = ["--uitesting", "-onboardingSeen", "YES"]; liveConflictLaunch(app)
         XCTAssertTrue(app.buttons["addTask"].waitForExistence(timeout: 20))
-        app.textNamed("All Tasks").firstMatch.click()
+        app.typeKey("5", modifierFlags: .command)
         XCTAssertTrue(row.waitForExistence(timeout: 10)); try waitCompleted(false)
         XCTAssertEqual(try cache(), before)
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
@@ -3244,15 +3251,14 @@ extension TaskfoldMacUITests {
         guard Bundle(for: Self.self).bundleIdentifier?.contains("workflowtests") == true else { throw XCTSkip("Requires a disposable workflow test app") }
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--workflow-fixture", "--section=inbox"]
         app.launch(); defer { app.terminate() }
-        let capture = app.buttons["openMultiLineCapture"]
-        XCTAssertTrue(capture.waitForExistence(timeout: 8)); capture.click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 8)); app.menuCommand("File", "Add Multiple Tasks…")
         let input = app.textViews["multiLineText"]
         XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("- Capture Mac workflow idea\n- Review Mac workflow sketch tomorrow p1")
         app.buttons["reviewMultiLine"].click()
         XCTAssertTrue(app.buttons["saveMultiLine"].waitForExistence(timeout: 5)); app.buttons["saveMultiLine"].click()
         app.textNamed("Inbox").firstMatch.click()
         XCTAssertTrue(app.textNamed("Capture Mac workflow idea").waitForExistence(timeout: 8))
-        app.buttons["openTemplates"].click()
+        app.menuCommand("Window", "Templates")
         let name = app.textFields["templateName"]
         XCTAssertTrue(name.waitForExistence(timeout: 5)); name.click(); name.typeText("Weekly Mac launch")
         app.buttons["saveWorkflowTemplate"].click()
@@ -3265,7 +3271,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(root.waitForExistence(timeout: 5)); root.rightClick(); app.menuItems["Edit Project…"].click()
         let archived = app.checkBoxes["projectArchived"]
         XCTAssertTrue(archived.waitForExistence(timeout: 5)); archived.click(); app.buttons["saveRecord"].click()
-        app.buttons["openArchivedProjects"].click()
+        app.menuCommand("Window", "Archived Projects")
         XCTAssertTrue(app.textNamed("Design studio").waitForExistence(timeout: 5))
         app.buttons["restoreProject-f0742000-1111-4111-8111-000000000001"].click()
         app.buttons["Done"].firstMatch.click()
@@ -4306,9 +4312,9 @@ extension TaskfoldMacUITests {
         try launchHeadingWorkspace(app)
         let cacheURL = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
         func tables() throws -> [String: Any] { try XCTUnwrap((JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any])?["tables"] as? [String: Any]) }
-        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 15), app.debugDescription)
         let before = try tables()
-        app.buttons["openTemplates"].click()
+        app.menuCommand("Window", "Templates")
 
         func reveal(_ control: XCUIElement) {
             for _ in 0..<15 where !control.isHittable {
@@ -4347,7 +4353,7 @@ extension TaskfoldMacUITests {
         let source = try XCTUnwrap((before["project_templates"] as? [[String: Any]])?.first)
         let imported = try XCTUnwrap(definitions.first { $0["id"] as? String != source["id"] as? String })
         XCTAssertEqual((imported["document"] as? [String: Any])?["version"] as? Int, 2)
-        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription); app.buttons["openTemplates"].click()
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 15), app.debugDescription); app.menuCommand("Window", "Templates")
         XCTAssertTrue(app.buttons["workflowTemplate-" + (imported["id"] as! String)].waitForExistence(timeout: 8))
         XCTAssertEqual(try tables()["tasks"] as? NSArray, before["tasks"] as? NSArray)
     }
@@ -4391,8 +4397,8 @@ extension TaskfoldMacUITests {
             for _ in 0..<15 where !control.isHittable { front().scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
             XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
         }
-        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15)); let before = try tables()
-        app.buttons["openTemplates"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 15)); let before = try tables()
+        app.menuCommand("Window", "Templates")
         let template = app.buttons["workflowTemplate-f2810000-0000-4000-8000-000000000003"]
         XCTAssertTrue(template.waitForExistence(timeout: 8)); template.rightClick(); app.menuItems["Export template…"].click()
         let format = app.switches["templateCSVFormat"]; reveal(format); format.click()
@@ -4455,8 +4461,8 @@ extension TaskfoldMacUITests {
             for _ in 0..<15 where !control.isHittable { front().scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
             XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
         }
-        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15)); let before = try tables()
-        app.buttons["openTemplates"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 15)); let before = try tables()
+        app.menuCommand("Window", "Templates")
         let file = URL(fileURLWithPath: "/tmp/taskfold-source-mapping-" + UUID().uuidString.lowercased() + ".csv")
         try Data("Name,Details,Kind,Done\nDesign context,Keep the context,heading,true\n* Ordinary action,Keep the action,task,true".utf8).write(to: file)
         defer { try? FileManager.default.removeItem(at: file) }
@@ -4485,7 +4491,7 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(document["version"] as? Int, 2); XCTAssertEqual(tasks[0]["is_heading"] as? Bool, true)
         XCTAssertEqual(tasks[1]["title"] as? String, "* Ordinary action"); XCTAssertNil(tasks[0]["completed"])
         app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app)
-        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15)); app.buttons["openTemplates"].click()
+        XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 15)); app.menuCommand("Window", "Templates")
         XCTAssertTrue(app.buttons["workflowTemplate-" + (imported["id"] as! String)].waitForExistence(timeout: 8))
         XCTAssertEqual((try tables())["tasks"] as? NSArray, before["tasks"] as? NSArray)
         XCTAssertEqual(((try tables())["project_templates"] as? [[String: Any]])?.first { $0["id"] as? String == imported["id"] as? String } as NSDictionary?, imported as NSDictionary)
@@ -5458,7 +5464,7 @@ extension TaskfoldMacUITests {
         app.launch(); defer { app.terminate() }
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststemplatecancel/Data/Library/Application Support/Taskfold/ui-testing.json")
         let before = try Data(contentsOf: cache)
-        app.buttons["openTemplates"].click()
+        app.menuCommand("Window", "Templates")
         func choose() {
             let button = app.buttons["importWorkflowTemplate"]
             XCTAssertTrue(button.waitForExistence(timeout: 8), app.debugDescription); button.click()
@@ -5494,7 +5500,7 @@ extension TaskfoldMacUITests {
         app.buttons["cancelImportTemplateReview"].click()
         XCTAssertEqual(try Data(contentsOf: cache), before)
         app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
-        app.buttons["openTemplates"].click()
+        app.menuCommand("Window", "Templates")
         XCTAssertTrue(app.buttons["importWorkflowTemplate"].waitForExistence(timeout: 8))
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary, try JSONSerialization.jsonObject(with: before) as? NSDictionary)
     }
@@ -5518,8 +5524,7 @@ extension TaskfoldMacUITests {
         app.launchArguments = ["--uitesting", "--workflow-fixture", "--voice-fixture", "-localMode", "YES", "-appearance", denied ? "dark" : "light"]
         if denied { app.launchArguments.append("--voice-denial-fixture") }
         try launchHeadingWorkspace(app)
-        let open = app.buttons["openMultiLineCapture"]
-        XCTAssertTrue(open.waitForExistence(timeout: 15), app.debugDescription); app.activate(); open.click()
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 15), app.debugDescription); app.activate(); app.menuCommand("File", "Add Multiple Tasks…")
         XCTAssertTrue(app.textViews["multiLineText"].waitForExistence(timeout: 8), app.debugDescription)
     }
     @MainActor private func voiceMacRecord(_ app: XCUIApplication) throws -> XCUIElement {
@@ -5573,7 +5578,7 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
         app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
         try launchHeadingWorkspace(app)
-        XCTAssertTrue(app.buttons["openMultiLineCapture"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10))
         XCTAssertEqual(try voiceMacBytes(voiceMacTables()), saved)
         let proof = XCTAttachment(data: try voiceMacBytes(redone), uniformTypeIdentifier: "public.json")
         proof.name = "Mac reviewed voice tasks after explicit Add Undo Redo and cold return"; proof.lifetime = .keepAlways; add(proof)
@@ -5601,7 +5606,7 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
         app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "dark"]
         try launchHeadingWorkspace(app)
-        XCTAssertTrue(app.buttons["openMultiLineCapture"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.menuBars.menuBarItems["File"].waitForExistence(timeout: 10))
         XCTAssertEqual(try voiceMacBytes(voiceMacTables()), before)
     }
 }
@@ -5704,7 +5709,7 @@ extension TaskfoldMacUITests {
         app.launchArguments = ["--uitesting", "--workflow-fixture", "--assignment-tree-fixture", "-localMode", "YES", "-appearance", "dark"]
         if unsupported { app.launchArguments.append("--assignment-tree-unsupported") }
         try launchHeadingWorkspace(app)
-        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 15), app.debugDescription)
         let cache = assignmentCache()
         app.launchArguments.removeAll { ["--workflow-fixture", "--assignment-tree-fixture", "--assignment-tree-unsupported"].contains($0) }
         let today = app.textNamed("Today").firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
@@ -5762,7 +5767,7 @@ extension TaskfoldMacUITests {
         try assignmentAttach(cache, name: "Unsupported source after refusal")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
         try assignmentEquivalent(Data(contentsOf: cache), before)
-        try launchHeadingWorkspace(app); XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 12))
+        try launchHeadingWorkspace(app); XCTAssertTrue(app.menuBars.menuBarItems["Window"].waitForExistence(timeout: 12))
         try assignmentAttach(cache, name: "Unsupported source after cold return")
         try assignmentEquivalent(Data(contentsOf: cache), before)
     }

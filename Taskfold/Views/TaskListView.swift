@@ -80,7 +80,6 @@ struct TaskListView: View {
     @State private var referenceChoices: [String: String] = [:]
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
-    @FocusState private var filterFocused: Bool
     @State private var momentum = MomentumModel()
     @Environment(\.openInsights) private var openInsights
     @FocusState private var taskListFocused: Bool
@@ -314,27 +313,17 @@ struct TaskListView: View {
                     .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
                     .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             }
-            HStack(spacing: DS.Space.s) {
-                if scope == .today { DayPlanTodayPrompt(offersPlanElsewhere: true, plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }) }
-                if scope == .today, let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
-                if scope == .today, let habits = store.habitTodaySummary { HabitsChip(summary: habits) { workspace.section = .habits } }
-                Spacer(minLength: 0)
+            if scope == .today {
+                // Search and View options moved to the toolbar; what is left here is the day's own state.
                 HStack(spacing: DS.Space.s) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(DS.Palette.textSecondary)
-                    TextField("Filter current list", text: $workspace.search)
-                        .textFieldStyle(.plain).focused($filterFocused)
-                        .accessibilityIdentifier("listFilter")
-                    if !workspace.search.isEmpty {
-                        Button { workspace.search = "" } label: { Image(systemName: "xmark.circle.fill") }
-                            .buttonStyle(.plain).foregroundStyle(DS.Palette.textSecondary).help("Clear filter")
-                    }
+                    DayPlanTodayPrompt(offersPlanElsewhere: true, plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true })
+                    if let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
+                    if let habits = store.habitTodaySummary { HabitsChip(summary: habits) { workspace.section = .habits } }
+                    Spacer(minLength: 0)
                 }
-                .padding(DS.Space.s).frame(maxWidth: 220)
-                .background(.quaternary, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
-                viewOptions
+                .padding(.horizontal, DS.Space.l).padding(.vertical, DS.Space.s)
+                .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, DS.Space.l).padding(.vertical, DS.Space.s)
-            .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             if let failure = store.filterError(scope) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DS.Space.l) {
@@ -458,9 +447,6 @@ struct TaskListView: View {
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
         .onChange(of: workspace.quickAddFocusRequest, initial: true) { _, _ in
             if workspace.section.key == preferenceKey, workspace.consumeQuickAddRequest(destination: preferenceKey) { revealQuickAdd() }
-        }
-        .onChange(of: workspace.searchPresented) { _, requested in
-            if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
         }
         .onDisappear { quickAddVisible = false; rowSwipe.cancel(); rowSwipe.isAvailable = { false } }
         .onChange(of: quickAddVisible) { _, shown in if !shown { captureDateOverride = nil; captureProjectOverride = nil } }
@@ -786,6 +772,12 @@ struct TaskListView: View {
 
     private var viewOptions: some View {
             Menu {
+                if scope == .inbox { Button("Review Inbox…", systemImage: "tray") { startInboxReview(.five) }.accessibilityIdentifier("reviewInbox") }
+                if scope == .today { Button("Plan Your Day…", systemImage: "sparkles") { workspace.planning = .day }.accessibilityIdentifier("planButton") }
+                if scope == .upcoming {
+                    Button("Review This Week…", systemImage: "sparkles") { workspace.planning = .week }.disabled(workspace.planQueue(.week).isEmpty).accessibilityIdentifier("planButton")
+                }
+                if scope == .inbox || scope == .today || scope == .upcoming { Divider() }
                 Button("Print or Export…", systemImage: "printer") { preparePrint() }.disabled(store.filterError(scope) != nil).accessibilityIdentifier("openPrintReview")
                 if store.teamTaskMovesAvailable { Button("Recent Shared Task Moves", systemImage: "arrow.left.arrow.right") { workspace.teamTaskMove = TeamTaskMoveRequest() }.accessibilityIdentifier("openRecentTeamTaskMoves") }
                 Divider()
@@ -810,33 +802,24 @@ struct TaskListView: View {
                     Button("Sections…", systemImage: "rectangle.split.3x1") { sectionsEditor = true }
                     Button("Collaborators…", systemImage: "person.2") { collaborationProject = store.record("projects", id: projectID) }.disabled(store.localMode)
                 }
-            } label: { Label("View Options", systemImage: "line.3.horizontal.decrease.circle") }
-                .help("View options").accessibilityLabel("Task options")
+            } label: { Label("View", systemImage: "line.3.horizontal.decrease") }
+                .labelStyle(.titleAndIcon)
+                .help("Sort, filter, layout and list actions").accessibilityLabel("View options").accessibilityIdentifier("viewOptionsMenu")
     }
 
+    /// Three controls beside the search field (design review mac-r1): View ⌄, New task and the inspector. Everything else is in
+    /// the View menu here, the menu bar (File, Task, View, Window) and the sidebar foot.
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button("Pinned notes", systemImage: "pin") { openPinnedNotes() }.accessibilityIdentifier("openPinnedNotes")
-            Button("Project pulse", systemImage: "chart.bar") { if case .project(let id) = scope { openProjectPulse(id) } else { openProjectPulse(nil) } }.accessibilityIdentifier("openProjectPulse")
-            Button("Focus session", systemImage: "timer") { openFocusSession() }.accessibilityIdentifier("openFocusSession")
-            if scope == .inbox {
-                Button { startInboxReview(.five) } label: { Label("Review Inbox", systemImage: "tray") }
-                    .accessibilityIdentifier("reviewInbox")
+        ToolbarItem(placement: .primaryAction) { viewOptions }
+        ToolbarItem(placement: .primaryAction) {
+            Button { revealQuickAdd() } label: {
+                Label { Text("New task") } icon: { Image(systemName: "plus").fontWeight(.semibold).foregroundStyle(Color.brandCrimson) }
             }
-            if scope == .today || scope == .upcoming {
-                Button { workspace.planning = scope == .today ? .day : .week } label: { Label(scope == .today ? "Plan Your Day" : "Review This Week", systemImage: "sparkles") }
-                    .help(scope == .today ? "Triage, estimate and time-block today (⌥⌘P)" : "Review the next seven days one task at a time (⌥⌘W)")
-                    .disabled(scope == .upcoming && workspace.planQueue(.week).isEmpty)
-                    .accessibilityIdentifier("planButton")
-            }
-            Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCaptureInList")
-            Button { revealQuickAdd() } label: { Label("New Task", systemImage: "plus") }
-                .help("New Task (⌘N)").accessibilityIdentifier("addTask")
-
+            .help("New task (⌘N)").accessibilityIdentifier("addTask")
         }
         ToolbarItem(placement: .primaryAction) {
             Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }
-                .help("Show or hide the inspector (⌥⌘I)")
+                .help("Show or hide the inspector (⌥⌘I)").accessibilityIdentifier("toggleInspector")
         }
     }
 }

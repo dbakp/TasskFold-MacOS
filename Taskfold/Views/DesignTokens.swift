@@ -81,14 +81,9 @@ enum DS {
         /// The fill of a prominent button: the crimson fill for the brand accent (white text reaches 4.5:1 in dark mode
         /// too, where #FF4F6B would be 3.19:1), otherwise the chosen accent.
         static var accentFill: Color { (UserDefaults.standard.string(forKey: "accent") ?? "rose") == "rose" ? Color(brand: Brand.crimsonFill) : Color.taskfold }
-        /// Accent at 0.14 (light) / 0.22 (dark). A selected row keeps `textPrimary`, never white on light grey.
-        static var selectionFill: Color {
-            let accent = NSColor(Color.taskfold)
-            return Color(nsColor: NSColor(name: nil) { appearance in
-                let dark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-                return accent.withAlphaComponent(dark ? 0.22 : 0.14)
-            })
-        }
+        /// Neutral ink at 0.06 (light) / 0.10 (dark), with the title kept in ink (design review mac-r1: crimson is for acting
+        /// and for "late", not for selection).
+        static var selectionFill: Color { Color(brand: Brand.ink, opacity: 0.06, darkOpacity: 0.10) }
         /// A project's identity hue: its stored colour mapped to the nearest palette pair (stored data is never
         /// rewritten), or a stable hue from its id when it has none. Inbox work is ink.
         static func project(_ record: Record?) -> ProjectHue {

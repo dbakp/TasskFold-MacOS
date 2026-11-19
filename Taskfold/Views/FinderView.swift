@@ -155,7 +155,10 @@ struct FinderView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Command bar")
         .accessibilityIdentifier("commandBar")
-        .onAppear { selection = entries.first?.id; searchFocused = true }
+        .onAppear {
+            if !workspace.finderInitialQuery.isEmpty { query = workspace.finderInitialQuery; workspace.finderInitialQuery = "" }
+            selection = entries.first?.id; searchFocused = true
+        }
         .onChange(of: query) { _, _ in selection = results.first?.id }
         .onChange(of: entries.map(\.id)) { _, ids in if selection.map({ !ids.contains($0) }) ?? true { selection = ids.first } }
         .onExitCommand { dismiss() }

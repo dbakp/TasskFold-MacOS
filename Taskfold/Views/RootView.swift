@@ -15,6 +15,8 @@ struct RootView: View {
     @State private var weeklyReviewRequest: WeeklyReviewRequest?
     @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
+    /// Tools opened from menus (the sidebar foot and the menu bar): see `Workspace.Tool`.
+    @State private var toolSheet: Workspace.Tool?
     @Environment(\.openSettings) private var openSettings
     @AppStorage("mac.pendingInvitations") private var pendingInvitations = false
     private var labelsInput: Binding<BulkTaskLabelsRequest?> { Binding(get: { workspace.bulkLabels }, set: { workspace.bulkLabels = $0 }) }
@@ -71,10 +73,23 @@ struct RootView: View {
             focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: launch.taskID)
         }
         .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
+        .sheet(item: $toolSheet) { tool in
+            switch tool {
+            case .templates: TemplateLibraryView()
+            case .sharedDrafts: SharedDraftsView()
+            case .archivedProjects: ArchivedProjectsView()
+            default: MultiLineCaptureView()
+            }
+        }
+        .onChange(of: workspace.toolRequest) { _, tool in
+            guard let tool else { return }
+            workspace.toolRequest = nil
+            openTool(tool)
+        }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
         .onChange(of: store.workspaceGeneration) { _, _ in
             workspace.workspaceChanged(account: store.userID, generation: store.workspaceGeneration)
-            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; weeklyReviewRequest = nil; mentionsRequest = nil
+            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; weeklyReviewRequest = nil; mentionsRequest = nil; toolSheet = nil
         }
         .sheet(item: Binding(get: { workspace.teamTaskCreation }, set: { workspace.teamTaskCreation = $0 })) { opening in
             TaskInspectorForm(taskID: opening.task.id, admission: opening.admission)
@@ -209,6 +224,23 @@ struct RootView: View {
         if url.scheme == "taskfold" && url.host == "task" {
             do { workspace.openExternalTask(try store.widgetLinkedTask(url).id) }
             catch { store.error = error.localizedDescription }
+        }
+    }
+
+    private func openTool(_ tool: Workspace.Tool) {
+        guard store.signedIn else { return }
+        let binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+        switch tool {
+        case .mentions: mentionsRequest = MentionsRequest(workspace: binding)
+        case .weeklyReview: weeklyReviewRequest = WeeklyReviewRequest(workspace: binding)
+        case .insights: insightsRequest = InsightsRequest(workspace: binding)
+        case .pinnedNotes: pinnedNote = PinnedNoteRequest(workspace: binding)
+        case .focus: focusRequest = FocusSessionRequest(workspace: binding)
+        case .projectPulse:
+            var project: String?
+            if case .project(let id) = workspace.section { project = id }
+            pulseRequest = ProjectPulseRequest(workspace: binding, projectID: project)
+        case .templates, .sharedDrafts, .archivedProjects, .multipleTasks: toolSheet = tool
         }
     }
 
@@ -661,14 +693,23 @@ struct RootView: View {
                 (6, "Call Grandma", 2, home.id, ""),
                 (9, "Draft the talk outline", 2, focus.id, ""),
             ]
+            var children: [Record] = []
             for (i, entry) in plan.enumerated() {
                 var task = Record.task(user: "preview", project: entry.3, date: calendar.date(byAdding: .day, value: entry.0, to: Date()))
                 task["title"] = .string(entry.1); task["priority"] = .number(Double(entry.2))
                 if !entry.4.isEmpty { task["due_time"] = .string(entry.4) }
-                if i == 1 { task["description"] = .string("An hour of focus. A little room to think."); task["labels"] = .array([.string("deep work")]); task["subtasks"] = .array([.object(["id": .string("s1"), "title": .string("Clear the desk"), "completed": .bool(true)]), .object(["id": .string("s2"), "title": .string("Open the notebook"), "completed": .bool(false)])]) }
+                if i == 1 { task["description"] = .string("An hour of focus. A little room to think."); task["labels"] = .array([.string("deep work")]); children = [("Clear the desk", true), ("Open the notebook", false)].enumerated().map { order, child in
+                    // Subtasks are child rows (`parent_id`, `child_order`). The JSON `subtasks` field this fixture used to write is
+                    // retired: real workspaces convert it once on load, but a fixture replaces the snapshot after that pass.
+                    var row = Record.task(user: "preview", project: entry.3)
+                    row["title"] = .string(child.0); row["parent_id"] = .string(task.id); row["child_order"] = .number(Double(order + 1))
+                    if child.1 { row["completed"] = .bool(true); row["completed_at"] = .string(Dates.timestamp()) }
+                    return row
+                } }
                 if i == 8 { task["is_recurring"] = .bool(true); task["recurrence_pattern"] = .object(["type": .string("weekly"), "interval": .number(1), "daysOfWeek": .array([.number(6)])]) }
                 samples.append(task)
             }
+            samples += children
             var inbox = Record.task(user: "preview"); inbox["title"] = .string("Read that article about slow productivity"); samples.append(inbox)
             store.snapshot.tables["tasks"] = samples
             // Plan captures: --plan-fixture adds three tasks held for This Evening and six undated Someday tasks (three older than a month).
@@ -777,6 +818,23 @@ struct WorkspaceView: View {
             .navigationSplitViewStyle(.prominentDetail)
             .navigationTitle(workspace.navigationTitle)
             .navigationSubtitle(workspace.navigationSubtitle)
+            // One search in the toolbar: "This list" filters the current list as you type; "Everywhere" opens the Finder
+            // on Return (⌘F opens it directly, ⇧⌘F focuses this field).
+            .searchable(text: Binding(get: { workspace.searchScope == .list ? workspace.search : workspace.everywhereQuery },
+                                      set: { if workspace.searchScope == .list { workspace.search = $0 } else { workspace.everywhereQuery = $0 } }),
+                        isPresented: $workspace.searchPresented, placement: .toolbar, prompt: Text("Search"))
+            .searchScopes($workspace.searchScope) {
+                Text("This list").tag(Workspace.SearchScope.list)
+                Text("Everywhere").tag(Workspace.SearchScope.everywhere)
+            }
+            .onSubmit(of: .search) {
+                guard workspace.searchScope == .everywhere else { return }
+                workspace.finderInitialQuery = workspace.everywhereQuery; workspace.finderPresented = true
+            }
+            .onChange(of: workspace.searchScope) { _, scope in
+                if scope == .everywhere { workspace.everywhereQuery = workspace.search; workspace.search = "" }
+                else { workspace.search = workspace.everywhereQuery; workspace.everywhereQuery = "" }
+            }
         }
         .sheet(isPresented: $workspace.finderPresented, onDismiss: { workspace.finishFinderDismissal() }) { FinderView() }
         .sheet(item: $workspace.planning) { kind in PlanDayView(kind: kind, queue: workspace.planQueue(kind)) }
