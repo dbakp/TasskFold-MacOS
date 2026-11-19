@@ -655,6 +655,68 @@ struct SyncConflict: Identifiable {
     }
 }
 
+/// Latest edit wins, on every device, without a review prompt.
+///
+/// When the server rejects a queued change because the synced row moved on,
+/// the change is rebased on the synced row and sent again:
+/// - Fields this device did not change keep the other device's values.
+/// - A field both devices changed takes the value sent last, which is this retry.
+///   Labels, comments, attachments and checklist items still merge item by item.
+/// - A deletion wins over a concurrent edit. A queued edit to a task that was
+///   deleted elsewhere is dropped and never recreates the task. Whatever is
+///   discarded is first copied to Backups & restore, and a local Undo still works.
+/// - Templates follow the same rules; an edit to a template removed elsewhere is dropped.
+/// - Focus sessions and goals keep this device's newer choice.
+/// - A change that keeps conflicting is retried a few times, then the synced
+///   version is kept (after the same backup) so sync can never stall.
+/// Permission failures are not conflicts and stay ordinary sync errors.
+enum SyncAutoMerge {
+    static let attemptLimit = 4
+    static let pendingStatus = "Merging a change from another device…"
+    enum Outcome: Equatable, Sendable { case rebased, keptSynced }
+    struct Plan { let snapshot: Snapshot; let outcome: Outcome }
+
+    /// One retry budget per row, so a rebase that renews the request identity still counts.
+    static func key(_ mutation: Mutation) -> String { mutation.table + "/" + mutation.recordID.lowercased() }
+
+    /// Whether this resolution discards queued work that is backed up first.
+    static func discards(_ conflict: SyncConflict, outcome: Outcome) -> Bool {
+        outcome == .keptSynced || conflict.mutation.method == "DELETE"
+    }
+
+    static func resolving(_ conflict: SyncConflict, snapshot: Snapshot, attempts: Int) -> Plan? {
+        guard conflict.completionReview == nil, conflict.completionBatchReview == nil else { return nil }
+        // A template removed on another device stays removed; an older edit never resurrects it.
+        let removedElsewhere = conflict.mutation.table == WorkflowTemplate.table && conflict.remote["document"] == .null
+        if attempts < attemptLimit, !removedElsewhere, let next = conflict.resolving(snapshot, keepLocal: true) {
+            return Plan(snapshot: next, outcome: .rebased)
+        }
+        return conflict.resolving(snapshot, keepLocal: false).map { Plan(snapshot: $0, outcome: .keptSynced) }
+    }
+
+    static func resolving(_ conflict: FocusSyncConflict, snapshot: Snapshot, account: String, attempts: Int) -> Plan? {
+        if attempts < attemptLimit, let next = conflict.resolving(snapshot, account: account, keepLocal: true) {
+            return Plan(snapshot: next, outcome: .rebased)
+        }
+        return conflict.resolving(snapshot, account: account, keepLocal: false).map { Plan(snapshot: $0, outcome: .keptSynced) }
+    }
+
+    /// The task was deleted on another device: deletion wins. Queued edits and
+    /// deletions for it are dropped so nothing recreates it. A queued re-creation
+    /// (for example a local Undo of a delete) is kept and still restores the task.
+    static func droppingEdits(toDeletedTask recordID: String, in snapshot: Snapshot) -> Snapshot {
+        let id = recordID.lowercased()
+        func same(_ change: Mutation) -> Bool { change.table == "tasks" && change.recordID.lowercased() == id }
+        var result = snapshot
+        // Edits queued after a re-creation belong to the restored task and are kept.
+        let recreation = result.pending.firstIndex { same($0) && $0.method == "POST" }
+        let stale = Set(result.pending[..<(recreation ?? result.pending.endIndex)].filter { same($0) && ["PATCH", "DELETE"].contains($0.method) }.map(\.id))
+        result.pending.removeAll { stale.contains($0.id) }
+        if recreation == nil { result.tables["tasks"]?.removeAll { $0.id.lowercased() == id } }
+        return result
+    }
+}
+
 /// An ephemeral read proof, never encoded or used as account authority. It has
 /// no effect on Snapshot's domain equality; admission compares identity explicitly.
 fileprivate struct SnapshotMetadataSource: Equatable, Sendable {

@@ -70,13 +70,6 @@ struct RootView: View {
             guard store.signedIn || store.localMode, store.focusAvailable else { return }
             focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: launch.taskID)
         }
-        .safeAreaInset(edge: .top) {
-            if store.focusSyncConflict != nil {
-                Button { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) } label: {
-                    Label("Review Focus session", systemImage: "exclamationmark.icloud").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                }.padding(.horizontal).accessibilityIdentifier("reviewFocusConflict")
-            }
-        }
         .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
         .onChange(of: store.workspaceGeneration) { _, _ in
@@ -564,7 +557,6 @@ struct RootView: View {
             let later = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["duration_minutes": .number(45)], baseline: ["duration_minutes": .null]), existing: local)
             store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change, later]; store.snapshot.apply(later)
             store.syncConflict = SyncConflict(mutation: change, remote: remote)
-            store.notice = "Changes overlap on the same task. Review this edit to resume sync."
             workspace.section = .today
             try? store.persist()
         }

@@ -211,7 +211,6 @@ struct TaskDropTarget<Content: View>: View {
 /// The sync line at the foot of the sidebar: online state, pending changes, and a retry when sync pauses.
 struct SyncFooter: View {
     @Environment(Store.self) private var store
-    @State private var reviewing = false
     /// Screenshot fixture (`--capture-sync-status=synced|syncing|offline|pending`); nil in the app.
     var preview: String? = nil
     var body: some View {
@@ -235,9 +234,9 @@ struct SyncFooter: View {
                 .accessibilityLabel(status).accessibilityValue(presentation.help ?? "")
                 .accessibilityIdentifier("syncStatus")
                 if preview == nil {
-                    if store.syncConflict != nil { Button("Review") { reviewing = true }.buttonStyle(.link).font(.caption).accessibilityIdentifier("reviewSyncConflict") }
-                    else if store.canSignInForSync && store.focusSyncConflict == nil { SyncSignInButton().buttonStyle(.link).font(.caption) }
-                    else if store.notice != nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
+                    // Conflicts merge automatically (latest edit wins); there is nothing to review.
+                    if store.canSignInForSync { SyncSignInButton().buttonStyle(.link).font(.caption) }
+                    else if store.notice != nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
                 }
             }
             .font(.caption).foregroundStyle(.secondary)
@@ -248,7 +247,6 @@ struct SyncFooter: View {
             if preview == nil { TeamAudioRestoreRecoveryButton().buttonStyle(.link).font(.caption).padding(.horizontal, 14).padding(.bottom, 8) }
         }
         .background(.bar)
-        .sheet(isPresented: $reviewing) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
     }
     private var canSyncNow: Bool { preview != nil || (!store.localMode && store.signedIn && store.online && !store.syncing) }
     private var presentation: SyncStatus.Presentation {

@@ -869,100 +869,27 @@ final class TaskfoldMacUITests: XCTestCase {
     }
 
 
-    @MainActor func testConflictResolutionKeepsIndependentComment() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"]; app.launch()
-        XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10))
-        app.links["reviewSyncConflict"].click()
-        XCTAssertTrue(app.buttons["keepMyEdit"].waitForExistence(timeout: 5))
-        app.buttons["keepMyEdit"].click()
-        XCTAssertTrue(waitForDisappearance(app.links["reviewSyncConflict"], timeout: 5))
+    /// A conflict parked by an earlier app version merges itself on launch: no review,
+    /// this Mac's comment wins and the other device's independent comment stays.
+    @MainActor func testConflictAutoMergeKeepsIndependentComment() throws { try walkAutoMerge(legacyEmpty: false) }
+    @MainActor func testLegacyNullCollectionAutoMergeRetainsRemoteComments() throws { try walkAutoMerge(legacyEmpty: true) }
+    @MainActor private func walkAutoMerge(legacyEmpty: Bool) throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"] + (legacyEmpty ? ["--legacy-null-collection-fixture"] : []); app.launch()
+        XCTAssertTrue(app.staticTexts["title-conflict-task"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.links["reviewSyncConflict"].exists)
         app.staticTexts["title-conflict-task"].click()
         XCTAssertTrue(app.textNamed("My revised comment").waitForExistence(timeout: 5))
         XCTAssertTrue(app.textNamed("Independent teammate comment").exists)
+        if legacyEmpty { XCTAssertTrue(app.textNamed("Shared revised comment").exists) }
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         XCTAssertTrue(app.staticTexts["title-conflict-task"].waitForExistence(timeout: 10))
         app.staticTexts["title-conflict-task"].click()
-        XCTAssertTrue(app.textNamed("Independent teammate comment").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("My revised comment").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Independent teammate comment").exists)
+        XCTAssertFalse(app.links["reviewSyncConflict"].exists)
     }
 
 
-    @MainActor func testConflictUseSyncedPreservesLaterOfflineEstimateAndRelaunch() throws {
-        try walkCommentConflict(keepLocal: false, legacyEmpty: false)
-    }
-    @MainActor func testLegacyNullCollectionKeepMyEditRetainsRemoteCommentsAndRelaunch() throws {
-        try walkCommentConflict(keepLocal: true, legacyEmpty: true)
-    }
-    @MainActor func testLegacyNullCollectionUseSyncedRetainsRemoteCommentsAndRelaunch() throws {
-        try walkCommentConflict(keepLocal: false, legacyEmpty: true)
-    }
-    @MainActor private func walkCommentConflict(keepLocal: Bool, legacyEmpty: Bool) throws {
-        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else {
-            throw XCTSkip("Dedicated isolated native acceptance app required")
-        }
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"] + (legacyEmpty ? ["--legacy-null-collection-fixture"] : [])
-        liveConflictLaunch(app); defer { app.terminate() }
-        let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
-        func saved() throws -> NSDictionary { try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary }
-        let review = app.links["reviewSyncConflict"]
-        XCTAssertTrue(review.waitForExistence(timeout: 10))
-        XCTAssertFalse(app.buttons["Retry"].exists, "A conflict needs Review, not another retry")
-        XCTAssertFalse(app.links["Retry"].exists, "Link-styled retry must also be absent")
-        let before = try saved()
-        let originalPending = try XCTUnwrap(before["pending"] as? [NSDictionary])
-        XCTAssertEqual(originalPending.count, 2)
-        if legacyEmpty {
-            XCTAssertTrue((originalPending[0]["baseline"] as? NSDictionary)?["comments"] is NSNull)
-        }
-        let seededTables = try XCTUnwrap(before["tables"] as? NSDictionary)
-        XCTAssertEqual((seededTables["tasks"] as? [NSDictionary])?.first?["duration_minutes"] as? Int, 45)
-        review.click()
-        XCTAssertTrue(app.buttons["conflictLater"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label == %@", "Later")).count, 1)
-        XCTAssertTrue(app.buttons["conflictLater"].isEnabled)
-        app.buttons["conflictLater"].click()
-        XCTAssertTrue(review.waitForExistence(timeout: 5)); XCTAssertEqual(try saved(), before)
-        review.click()
-        let sheet = app.sheets.firstMatch
-        let capture = XCTAttachment(screenshot: sheet.screenshot())
-        capture.name = "Mac offline conflict before choosing synced comment"; capture.lifetime = .keepAlways; add(capture)
-        app.buttons[keepLocal ? "keepMyEdit" : "useSharedEdit"].click()
-        XCTAssertTrue(waitForDisappearance(review, timeout: 5))
-        let after = try saved()
-        let afterPending = try XCTUnwrap(after["pending"] as? [NSDictionary])
-        if keepLocal {
-            XCTAssertEqual(afterPending.count, 2)
-            XCTAssertEqual(afterPending.last, originalPending.last, "Retain the exact later estimate")
-        } else { XCTAssertEqual(afterPending, [originalPending[1]], "Discard only the reviewed comment edit") }
-        let beforeTables = try XCTUnwrap(before["tables"] as? NSDictionary)
-        let afterTables = try XCTUnwrap(after["tables"] as? NSDictionary)
-        let originalTask = try XCTUnwrap((beforeTables["tasks"] as? [NSDictionary])?.first)
-        let currentTask = try XCTUnwrap((afterTables["tasks"] as? [NSDictionary])?.first)
-        let expectedTask = originalTask.mutableCopy() as! NSMutableDictionary
-        var expectedComments = [["id": legacyEmpty ? "remote" : "a", "text": "Shared revised comment"], ["id": "b", "text": "Independent teammate comment"]]
-        if keepLocal { expectedComments.append(["id": "a", "text": "My revised comment"]) }
-        expectedTask["comments"] = expectedComments
-        XCTAssertEqual(currentTask, expectedTask, "Retain every other task field, including the later estimate")
-        for key in beforeTables.allKeys as! [String] where key != "tasks" { XCTAssertEqual(afterTables[key] as? NSArray, beforeTables[key] as? NSArray) }
-        app.staticTexts["title-conflict-task"].click()
-        XCTAssertTrue(app.textNamed("Shared revised comment").waitForExistence(timeout: 5))
-        openChip(app, "taskDuration"); XCTAssertTrue(app.steppers["taskDuration"].exists)
-        XCTAssertTrue(app.textNamed("Estimate · 45 min").exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
-        XCTAssertTrue(app.textNamed("Independent teammate comment").exists)
-        if keepLocal { XCTAssertTrue(app.textNamed("My revised comment").exists) }
-        else { XCTAssertFalse(app.textNamed("My revised comment").exists) }
-        retainWindow(app, name: "Mac synced comment keeps independent work")
-        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
-        app.launchArguments = ["--uitesting"]; liveConflictLaunch(app)
-        XCTAssertTrue(app.staticTexts["title-conflict-task"].waitForExistence(timeout: 10))
-        app.staticTexts["title-conflict-task"].click()
-        XCTAssertTrue(app.textNamed("Shared revised comment").waitForExistence(timeout: 5))
-        openChip(app, "taskDuration"); XCTAssertTrue(app.steppers["taskDuration"].exists)
-        XCTAssertTrue(app.textNamed("Estimate · 45 min").exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
-        XCTAssertTrue(app.textNamed("Independent teammate comment").exists)
-        if keepLocal { XCTAssertTrue(app.textNamed("My revised comment").exists) }
-        XCTAssertEqual(try saved(), after, "Normal Quit/relaunch must preserve the whole resolved workspace")
-        retainWindow(app, name: "Mac offline conflict resolution retained after normal Quit")
-    }
 
     @MainActor func testCapacityWidgetDayLinksAndRetainedProjection() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--capacity-widget-testing", "--capacity-widget-seed"]; app.launch()
@@ -978,17 +905,16 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.shownText, "Work 480 · Tasks 90 · Unknown 1 · Calendar off"); app.terminate()
     }
 
-    @MainActor func testCompletionCycleUseSyncedKeepsLaterOccurrenceDraftAndSurvivesRelaunch() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--completion-cycle-fixture", "--edited-occurrence-fixture"]; app.launch()
-        XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10)); app.links["reviewSyncConflict"].click()
-        XCTAssertTrue(app.buttons["useSharedEdit"].waitForExistence(timeout: 5)); app.buttons["useSharedEdit"].click()
-        XCTAssertEqual(app.staticTexts["widgetRootState"].shownText, "Original: open")
-        XCTAssertEqual(app.staticTexts["widgetCopyCount"].shownText, "Next copies: 0")
-        XCTAssertEqual(app.staticTexts["widgetDraftCount"].shownText, "Drafts: 1")
+    @MainActor func testCompletionCycleAutoMergeKeepsThisMacsCompletionAndSurvivesRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--completion-cycle-fixture"]; app.launch()
+        XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["widgetRootState"].shownText, "Original: completed")
+        XCTAssertEqual(app.staticTexts["widgetCopyCount"].shownText, "Next copies: 1")
+        XCTAssertFalse(app.links["reviewSyncConflict"].exists)
         app.terminate(); app.launchArguments = ["--uitesting", "--widget-action-testing"]; app.launch()
         XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["widgetRootState"].shownText, "Original: open")
-        XCTAssertEqual(app.staticTexts["widgetDraftCount"].shownText, "Drafts: 1"); app.terminate()
+        XCTAssertEqual(app.staticTexts["widgetRootState"].shownText, "Original: completed")
+        XCTAssertEqual(app.staticTexts["widgetCopyCount"].shownText, "Next copies: 1"); app.terminate()
     }
     @MainActor func testWidgetIntentRecurringCompletionRetryUndoAndOldTap() throws {
         func text(_ element: XCUIElement) -> String { (element.value as? String).flatMap { $0.isEmpty ? nil : $0 } ?? element.label }
@@ -1006,21 +932,15 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10)); XCTAssertEqual(text(app.staticTexts["widgetCopyCount"]), "Next copies: 0")
     }
 
-    @MainActor func testDeletionReviewKeepsTaskContentsAndRelaunch() throws {
+    /// Delete wins over a concurrent edit: the parked deletion merges itself and stays deleted.
+    @MainActor func testDeletionConflictAutoMergeDeletesTaskAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--deletion-conflict-fixture"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10)); app.links["reviewSyncConflict"].click()
-        XCTAssertTrue(app.buttons["useSharedEdit"].waitForExistence(timeout: 5)); XCTAssertEqual(app.buttons["useSharedEdit"].label, "Keep task")
-        XCTAssertEqual(app.buttons["keepMyEdit"].label, "Delete task")
-        let form = app.sheets.scrollViews.firstMatch
-        for _ in 0..<3 { form.scroll(byDeltaX: 0, deltaY: -600) }
-        let capture = XCTAttachment(screenshot: app.sheets.firstMatch.screenshot())
-        capture.name = "Mac deletion review task contents and actions"; capture.lifetime = .keepAlways; add(capture)
-        app.buttons["useSharedEdit"].click()
-        XCTAssertTrue(waitForDisappearance(app.links["reviewSyncConflict"], timeout: 5))
-        app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"].click()
-        XCTAssertTrue(app.textNamed("New work from another device").waitForExistence(timeout: 5))
+        let title = app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"]
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertFalse(title.waitForExistence(timeout: 3)); XCTAssertFalse(app.links["reviewSyncConflict"].exists)
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
-        XCTAssertTrue(app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertFalse(title.waitForExistence(timeout: 2)); XCTAssertFalse(app.links["reviewSyncConflict"].exists)
     }
 
 
@@ -2581,31 +2501,22 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); XCTAssertEqual(try liveConflictCache(f), queued)
         retainWindow(app, name: "Mac offline queue retained after normal Quit")
     }
-    @MainActor func testLiveMacReviewsCollisionAndPreservesLaterOfflinePriority() throws { try reviewLiveConflict(keepLocal: false) }
-    @MainActor func testLiveMacKeepsOfflineTitleAndPhoneNotes() throws { try reviewLiveConflict(keepLocal: true) }
-    @MainActor private func reviewLiveConflict(keepLocal: Bool) throws {
+    @MainActor func testLiveMacMergesCollisionAndKeepsOfflineTitleAndPhoneNotes() throws { try mergeLiveConflict() }
+    /// Real phone and Mac collision: the Mac's later title wins, the phone's notes and the later offline priority stay.
+    @MainActor private func mergeLiveConflict() throws {
         continueAfterFailure = false
-        let f = try liveConflictFixture(keepLocal: keepLocal), app = XCUIApplication(); defer { app.terminate() }
+        let f = try liveConflictFixture(keepLocal: true), app = XCUIApplication(); defer { app.terminate() }
         app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
-        let review = app.links["reviewSyncConflict"]
-        XCTAssertTrue(review.waitForExistence(timeout: 35)); let queued = try liveConflictCache(f)
-        XCTAssertEqual((queued["pending"] as? [Any])?.count, 2)
-        review.click(); XCTAssertTrue(app.buttons["conflictLater"].waitForExistence(timeout: 5)); app.buttons["conflictLater"].click()
-        XCTAssertEqual(try liveConflictCache(f), queued)
-        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
-        XCTAssertTrue(review.waitForExistence(timeout: 35)); review.click()
-        let capture = XCTAttachment(screenshot: app.sheets.firstMatch.screenshot()); capture.name = "Mac real phone collision after Later and relaunch"; capture.lifetime = .keepAlways; add(capture)
-        app.buttons[keepLocal ? "keepMyEdit" : "useSharedEdit"].click()
         let settled = try waitLiveConflict(f) { cache in
             let task = self.liveConflictTask(cache, f)
-            return task?["title"] as? String == (keepLocal ? f.offlineTitle : f.remoteTitle) && task?["description"] as? String == f.remoteNotes && task?["priority"] as? Int == 1 && (cache["pending"] as? [Any])?.isEmpty == true
+            return task?["title"] as? String == f.offlineTitle && task?["description"] as? String == f.remoteNotes && task?["priority"] as? Int == 1 && (cache["pending"] as? [Any])?.isEmpty == true
         }
+        XCTAssertFalse(app.links["reviewSyncConflict"].exists)
         app.textNamed("Inbox").firstMatch.click(); XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); liveConflictRow(app, f.taskID).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, f.remoteNotes)
-        retainWindow(app, name: "Mac synced phone title and notes retain later offline priority")
+        retainWindow(app, name: "Mac merged phone notes and kept its later title and priority")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
         XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); XCTAssertEqual(try liveConflictCache(f), settled)
-        retainWindow(app, name: "Mac resolved real collision retained after normal Quit")
     }
     @MainActor func testLiveMacRemovesOnlySyntheticCollisionTask() throws { try removeLiveConflict(keepLocal: false) }
     @MainActor func testLiveMacRemovesKeepLocalSyntheticTask() throws { try removeLiveConflict(keepLocal: true) }
@@ -2865,10 +2776,8 @@ extension TaskfoldMacUITests {
         continueAfterFailure = false
         let (f, labels) = try labelFixture(), app = XCUIApplication(); defer { app.terminate() }
         app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
-        let review = app.links["reviewSyncConflict"]; XCTAssertTrue(review.waitForExistence(timeout: 35)); review.click()
-        XCTAssertTrue(app.buttons["keepMyEdit"].waitForExistence(timeout: 5)); retainWindow(app, name: "Real phone and Mac label conflict review")
-        app.buttons["keepMyEdit"].click()
         try verifyResolvedLabels(app, f, labels)
+        XCTAssertFalse(app.links["reviewSyncConflict"].exists)
     }
     @MainActor func testLiveMacRetainsResolvedLabelMembershipAfterRelaunch() throws {
         continueAfterFailure = false

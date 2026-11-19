@@ -362,7 +362,7 @@ struct TaskListView: View {
                         .font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("datedGroupedWorkReview").selectionDisabled()
                 }
-                if !store.online || (store.notice != nil && store.syncConflict == nil && store.focusSyncConflict == nil) { statusRow }
+                if !store.online || store.notice != nil { statusRow }
                 if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, DS.Space.m).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
                 if filtered.isEmpty && !dated || datedEmpty { emptyState }
                 if dated {
@@ -528,7 +528,7 @@ struct TaskListView: View {
             Image(systemName: store.online ? (store.localMode ? "exclamationmark.triangle" : "exclamationmark.icloud") : "wifi.slash").foregroundStyle(DS.Palette.dateTomorrow).accessibilityHidden(true)
             Text(!store.online ? "Offline · changes are saved on this Mac and sync later." : store.notice ?? "")
             Spacer()
-            if store.notice != nil && store.online && store.syncConflict == nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link) }
+            if store.notice != nil && store.online { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link) }
         }.font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).selectionDisabled().listRowSeparator(.hidden)
     }
     private var isSavedFilterScope: Bool { if case .saved = scope { return true }; return false }
