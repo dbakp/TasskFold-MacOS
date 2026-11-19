@@ -1425,17 +1425,23 @@ extension QuickEntry {
     static func place(in title: String, names: [String]) -> (title: String, raw: String, choice: PlaceChoice)? {
         let cleaned = Set(names.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }).sorted { $0.count > $1.count }
         guard !cleaned.isEmpty, title.utf16.count < 2_000 else { return nil }
-        let alternatives = cleaned.prefix(50).map { $0.split(whereSeparator: \.isWhitespace).map { NSRegularExpression.escapedPattern(for: String($0)) }.joined(separator: #"\s+"#) }.joined(separator: "|")
+        // Match like the completion list does: "at cafe" finds a place saved as "Café". Folding is used only when it
+        // keeps every UTF-16 offset, so the ranges found below still point into the typed title.
+        func fold(_ text: String) -> String { text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX")) }
+        let folded = fold(title), foldable = folded.utf16.count == title.utf16.count
+        let searched = foldable ? folded : title
+        func words(_ name: String) -> [String] { name.split(whereSeparator: \.isWhitespace).map(String.init) }
+        let alternatives = cleaned.prefix(50).map { name in words(foldable ? fold(name) : name).map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: #"\s+"#) }.joined(separator: "|")
         let pattern = #"(?<!\S)(?:(arrive|leave)(?:\s+at)?|(at))\s+("# + alternatives + #")(?![\p{L}\p{N}_])"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
         let whole = NSRange(title.startIndex..., in: title)
         // Quoted text, escaped words and links stay literal.
         let literal = try? NSRegularExpression(pattern: #""[^"\n]*"|(?<!\S)(?:https?://|www\.)\S+|\\\S+"#)
         let protected = literal?.matches(in: title, range: whole).map(\.range) ?? []
-        guard let match = regex.matches(in: title, range: whole).first(where: { m in !protected.contains { NSIntersectionRange($0, m.range).length > 0 } }),
+        guard let match = regex.matches(in: searched, range: NSRange(searched.startIndex..., in: searched)).first(where: { m in !protected.contains { NSIntersectionRange($0, m.range).length > 0 } }),
               let full = Range(match.range, in: title), let nameRange = Range(match.range(at: 3), in: title) else { return nil }
         let typed = title[nameRange].split(whereSeparator: \.isWhitespace).joined(separator: " ")
-        let name = cleaned.first { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ").caseInsensitiveCompare(typed) == .orderedSame } ?? typed
+        let name = cleaned.first { fold(words($0).joined(separator: " ")) == fold(typed) } ?? typed
         let leaves = Range(match.range(at: 1), in: title).map { title[$0].lowercased() == "leave" } ?? false
         var rest = title
         rest.replaceSubrange(full, with: " ")
