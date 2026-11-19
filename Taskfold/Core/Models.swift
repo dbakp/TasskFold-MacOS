@@ -1432,7 +1432,8 @@ extension QuickEntry {
         let searched = foldable ? folded : title
         func words(_ name: String) -> [String] { name.split(whereSeparator: \.isWhitespace).map(String.init) }
         let alternatives = cleaned.prefix(50).map { name in words(foldable ? fold(name) : name).map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: #"\s+"#) }.joined(separator: "|")
-        let pattern = #"(?<!\S)(?:(arrive|leave)(?:\s+at)?|(at))\s+("# + alternatives + #")(?![\p{L}\p{N}_])"#
+        // "at the gym" and "at my gym" find a place saved as "Gym".
+        let pattern = #"(?<!\S)(?:(arrive|leave)(?:\s+at)?|(at))\s+(?:(?:the|my)\s+)?("# + alternatives + #")(?![\p{L}\p{N}_])"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
         let whole = NSRange(title.startIndex..., in: title)
         // Quoted text, escaped words and links stay literal.
@@ -1446,6 +1447,24 @@ extension QuickEntry {
         var rest = title
         rest.replaceSubrange(full, with: " ")
         return (rest.split(whereSeparator: \.isWhitespace).joined(separator: " "), String(title[full]), PlaceChoice(name: name, transition: leaves ? .leave : .arrive))
+    }
+    /// "at the gym" at the end of a title that names no saved place: a short plain phrase after "at", with no numbers.
+    /// Returns the typed words and the name a new place would get ("Gym"). Nothing is stored.
+    static func unknownPlace(in title: String, names: [String]) -> (raw: String, name: String)? {
+        guard title.utf16.count < 2_000, place(in: title, names: names) == nil,
+              let regex = try? NSRegularExpression(pattern: #"(?<!\S)at\s+((?:(?:the|my)\s+)?\p{L}[\p{L}'’&-]*(?:\s+\p{L}[\p{L}'’&-]*)?)\s*$"#, options: .caseInsensitive),
+              let match = regex.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)),
+              let full = Range(match.range, in: title), let words = Range(match.range(at: 1), in: title),
+              title[..<full.lowerBound].trimmingCharacters(in: .whitespaces).count > 0,
+              title[..<full.lowerBound].filter({ $0 == "\"" }).count % 2 == 0 else { return nil }
+        let typed = String(title[words])
+        let key = LocationPlaceName.key(typed)
+        // Times and vague words are not places.
+        let notPlaces: Set<String> = ["noon", "midnight", "night", "dawn", "dusk", "lunch", "lunchtime", "dinner", "breakfast", "once", "last", "least", "first",
+                                      "all", "some point", "end", "weekend", "morning", "evening", "afternoon", "tonight", "today", "tomorrow", "latest", "most", "best", "it", "that", "this", "them", "him", "her", "me", "us"]
+        let words2 = key.split(separator: " ").map(String.init)
+        guard !key.isEmpty, !notPlaces.contains(key), !words2.contains(where: { notPlaces.contains($0) && words2.count == 1 }) else { return nil }
+        return (String(title[full]).trimmingCharacters(in: .whitespaces), LocationPlaceName.display(typed))
     }
 }
 

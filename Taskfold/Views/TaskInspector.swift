@@ -482,6 +482,7 @@ struct TaskInspectorForm: View {
             priorityChip
             labelChips
             remindersChip
+            placeChip
             if let minutes = draft.durationMinutes { estimateChip(minutes) }
             spentChip
             assigneeChip
@@ -520,6 +521,19 @@ struct TaskInspectorForm: View {
                                     identifier: isTeamTask ? "taskTeamLabels" : label.map { "taskLabelChip-" + $0.id } ?? "taskLabels", action: open)
             if index == 0 { chip.popover(isPresented: chipOpen(.label("")), arrowEdge: .bottom) { TaskLabelsEditor(draft: $draft) } }
             else { chip }
+        }
+    }
+    /// D3: a place reminder is the iPhone's. The Mac shows it read-only: "Arrive at Home · on iPhone".
+    @ViewBuilder private var placeChip: some View {
+        let rows = ReminderSpec.rows(draft)
+        if let text = rows.lazy.compactMap({ row -> String? in
+            if let settings = LocationReminderSettings(raw: row.object), settings.enabled { return (settings.transition == .arrive ? "Arrive at " : "Leave ") + (settings.requestedName ?? "a place") }
+            if let request = LocationPlaceRequest(raw: row.object), request.enabled { return request.label }
+            return nil
+        }).first {
+            ChipLabel(icon: "mappin.and.ellipse", text: text + " · on iPhone", tint: DS.Palette.textSecondary)
+                .accessibilityElement(children: .ignore).accessibilityLabel("Location, " + text + ", on iPhone")
+                .accessibilityIdentifier("taskPlaceChip")
         }
     }
     private var remindersChip: some View {
