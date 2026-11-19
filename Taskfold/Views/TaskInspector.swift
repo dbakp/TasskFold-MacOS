@@ -16,7 +16,7 @@ struct TaskInspector: View {
                 MultiSelectionInspector(count: workspace.selection.count)
             } else {
                 ContentUnavailableView {
-                    Label("No Task Selected", systemImage: "sidebar.trailing")
+                    Label("No task selected", systemImage: "sidebar.trailing")
                 } description: {
                     Text("Select a task to see and edit its details here.")
                 }
@@ -204,7 +204,7 @@ struct TaskInspectorForm: View {
                         else { creationFinished = true; _ = recoverySession?.finish(); dismiss() }
                     }.keyboardShortcut(.cancelAction)
                     Spacer()
-                    Button("Add Task", action: createTeamTask).buttonStyle(.borderedProminent)
+                    Button("Add task", action: createTeamTask).buttonStyle(.borderedProminent)
                         .keyboardShortcut(.defaultAction).disabled(!editorAvailable || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("createSharedTask")
                 }.padding().background(.bar)
@@ -243,31 +243,38 @@ struct TaskInspectorForm: View {
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
         .onDisappear {checkpoint()}
     }
+    /// The inspector is a note card (design review mac-r1): the title and notes, a short list of the properties that are set,
+    /// and only the sections that have content. Everything else is added from "Add ⌄" at the foot.
     private var detailContent: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Space.l) {
-                    header
-                    chipRow
-                    destinationRow
-                    if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(DS.Palette.danger).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure").id("taskProjectMoveFailure") }
-                    linksSection
-                    subtasksSection
-                    dependenciesSection
-                    attachmentsSection
-                    commentsSection
-                    footer
+        VStack(spacing: 0) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: DS.Space.l) {
+                        header
+                        Divider().padding(.leading, DS.Space.xxl + DS.Space.xs + DS.Space.s)
+                        propertyList
+                        if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(DS.Palette.danger).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure").id("taskProjectMoveFailure") }
+                        Group {
+                            linksSection
+                            subtasksSection
+                            dependenciesSection
+                            attachmentsSection
+                            commentsSection
+                        }
+                        .padding(.leading, DS.Space.xxl + DS.Space.xs + DS.Space.s)
+                    }
+                    .padding(DS.Space.l)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(DS.Space.l)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .onChange(of: projectFailureReveal) { _, _ in
-                guard projectChangeFailure != nil else { return }
-                // Reveal after the conditional message has joined the layout.
-                DispatchQueue.main.async {
-                    withAnimation(workspace.layout) { proxy.scrollTo("taskProjectMoveFailure", anchor: .center) }
+                .onChange(of: projectFailureReveal) { _, _ in
+                    guard projectChangeFailure != nil else { return }
+                    // Reveal after the conditional message has joined the layout.
+                    DispatchQueue.main.async {
+                        withAnimation(workspace.layout) { proxy.scrollTo("taskProjectMoveFailure", anchor: .center) }
+                    }
                 }
             }
+            footer
         }
     }
 
@@ -286,7 +293,7 @@ struct TaskInspectorForm: View {
                 completionControl
                 TextField("Title", text: text("title"), selection: $titleSelection, prompt: Text("What needs doing?"), axis: .vertical)
                     .labelsHidden().multilineTextAlignment(.leading)
-                    .font(.title3.weight(.semibold)).textFieldStyle(.plain).lineLimit(1...4)
+                    .font(DS.Font.inspectorTitle).textFieldStyle(.plain).lineLimit(1...4)
                     .focused($titleFocused)
                     .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
@@ -315,10 +322,7 @@ struct TaskInspectorForm: View {
             if let suggestions {
                 VStack(alignment: .leading, spacing: DS.Space.xs) {
                     QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeTitleFromChip, focusChanged: { titleChipFocused = $0 }).padding(.vertical, DS.Space.xxs)
-                    if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(DS.Palette.textTertiary) }
-                    if suggestions.updates["reminder_specs"] != nil && !store.remindersEnabled {
-                        Text("Reminders are off on this device. Enable delivery in Reminders below.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickReminderDeliveryOff")
-                    }
+                    if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words").font(.caption2).foregroundStyle(DS.Palette.textTertiary) }
                     if let rule = suggestions.updates["recurrence_pattern"] {
                         Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
                     }
@@ -326,7 +330,7 @@ struct TaskInspectorForm: View {
                 }
                 .transition(.opacity)
             }
-            descriptionEditor
+            descriptionEditor.padding(.leading, DS.Space.xxl + DS.Space.xs + DS.Space.s - DS.Space.xs - 1)
         }
     }
 
@@ -354,33 +358,24 @@ struct TaskInspectorForm: View {
     }
 
     private var descriptionEditor: some View {
-        // A hidden copy of the text sizes the editor so the description grows with its content.
+        // A hidden copy of the text sizes the editor so the notes grow with their content. Formatting is in the "⋯" menu.
         Text(draft.string("description").isEmpty ? " " : draft.string("description") + "\u{200B}")
-            .font(DS.Font.taskNote).padding(.horizontal, DS.Space.xs + 1).padding(.vertical, DS.Space.s).padding(.trailing, DS.Space.xxl)
+            .font(DS.Font.taskTitle).padding(.horizontal, DS.Space.xs + 1).padding(.vertical, DS.Space.xs)
             .frame(maxWidth: .infinity, alignment: .topLeading).opacity(0).accessibilityHidden(true)
             .overlay {
                 TextEditor(text: text("description"))
-                    .font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).scrollContentBackground(.hidden)
+                    .font(DS.Font.taskTitle).foregroundStyle(DS.Palette.textPrimary).scrollContentBackground(.hidden)
                     .overlay(alignment: .topLeading) {
                         if draft.string("description").isEmpty {
-                            Text("Description").font(DS.Font.taskNote).foregroundStyle(DS.Palette.textTertiary).padding(.top, DS.Space.s).padding(.leading, DS.Space.xs + 1).allowsHitTesting(false)
+                            Text("Notes").font(DS.Font.taskTitle).foregroundStyle(DS.Palette.textTertiary).padding(.top, DS.Space.xs).padding(.leading, DS.Space.xs + 1).allowsHitTesting(false)
                         }
                     }
-                    .accessibilityLabel("Description").accessibilityIdentifier("taskDescription")
+                    .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
             }
-            .overlay(alignment: .topTrailing) {
-                Button {
-                    guard let binding = workspaceBinding else { return }
-                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id,admission:TaskEditorAdmission(workspace:binding,record:draft,root:sourceRoot,kind:.nested,teamDraft:teamDraft))
-                } label: {
-                    Text("Aa").font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary)
-                        .padding(.horizontal, DS.Space.xs + DS.Space.xxs).padding(.vertical, DS.Space.xxs)
-                        .background(DS.Palette.surfaceSunken, in: .rect(cornerRadius: DS.Radius.xs, style: .continuous))
-                }
-                .buttonStyle(.plain).pointerStyle(.link).help("Format notes").padding(DS.Space.xs)
-                .disabled(current == nil && !isCreating)
-                .accessibilityLabel("Format notes").accessibilityIdentifier("openNoteFormatting")
-            }
+    }
+    private func openNoteFormatting() {
+        guard let binding = workspaceBinding else { return }
+        noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id,admission:TaskEditorAdmission(workspace:binding,record:draft,root:sourceRoot,kind:.nested,teamDraft:teamDraft))
     }
 
     // MARK: Menu
@@ -391,6 +386,9 @@ struct TaskInspectorForm: View {
     private var rowsMode: Bool { !isCreating && store.record("tasks", id: taskID) != nil }
     private var moreMenu: some View {
         Menu {
+            Button("Format notes…", systemImage: "textformat") { openNoteFormatting() }
+                .disabled(current == nil && !isCreating).accessibilityIdentifier("openNoteFormatting")
+            Divider()
             if store.canAuthorTaskHeadings(teamDraft: teamDraft) {
                 Picker("Task type", selection: Binding(get: { TaskKind(draft) == .heading }, set: { heading in
                     guard editorAvailable else { return }
@@ -459,7 +457,7 @@ struct TaskInspectorForm: View {
             Image(systemName: "ellipsis").font(.body.weight(.semibold)).foregroundStyle(DS.Palette.textSecondary)
                 .frame(width: DS.Space.xxl + DS.Space.xs, height: DS.Space.xxl + DS.Space.xs).contentShape(.rect)
         }
-        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().tint(DS.Palette.textSecondary)
         .help("More actions").accessibilityLabel("More actions").accessibilityIdentifier("taskMoreMenu")
     }
 
@@ -475,154 +473,193 @@ struct TaskInspectorForm: View {
         return ([day.text, clock].filter { !$0.isEmpty }.joined(separator: " "), day.tint)
     }
     private var activeReminderCount: Int { ReminderSpec.rows(draft).compactMap { ReminderSpec(row: $0) }.filter(\.enabled).count }
-    private var chipRow: some View {
-        QuickEntryChipLayout(spacing: DS.Space.s) {
-            dateChip
-            if let deadline = draft.deadline { deadlineChip(deadline) }
-            priorityChip
-            labelChips
-            remindersChip
-            placeChip
-            if let minutes = draft.durationMinutes { estimateChip(minutes) }
-            spentChip
-            assigneeChip
-            addPropertyChip
+    // MARK: Properties
+
+    /// Properties that are unset stay hidden until added from "Add ⌄"; the project is always shown.
+    @State private var revealed = Set<String>()
+    private func shows(_ key: String, _ set: Bool) -> Bool { set || revealed.contains(key) }
+    /// Shows a hidden property row, then opens its editor once the row exists to anchor the popover.
+    private func reveal(_ key: String, open chip: DetailChip? = nil) {
+        revealed.insert(key)
+        if let chip { DispatchQueue.main.async { openChip = chip } }
+    }
+    private var propertyList: some View {
+        let labels = TaskLabels.normalized(draft["labels"].list, labels: store.labels).compactMap { value in store.labels.first { .string($0.id) == value } }
+        let reminders = activeReminderCount
+        return VStack(alignment: .leading, spacing: 0) {
+            if shows("when", draft.due != nil || draft["is_recurring"].flag) {
+                let set = dateChipText
+                propertyRow("When", identifier: "taskDate", accessibility: set.map { "When, \($0.text)" } ?? "Add date", action: { openChip = .date }) {
+                    HStack(spacing: DS.Space.xs) {
+                        Text(set?.text ?? "None").foregroundStyle(set == nil ? DS.Palette.textTertiary : set!.tint == DS.Palette.dateOverdue ? DS.Palette.dateOverdue : DS.Palette.textPrimary)
+                        if draft["is_recurring"].flag { Image(systemName: "repeat").foregroundStyle(DS.Palette.textSecondary).help(Recurrence.summary(Record(draft["recurrence_pattern"].object))) }
+                    }
+                }
+                .popover(isPresented: chipOpen(.date), arrowEdge: .leading) {
+                    TaskDateEditor(draft: $draft, repeatExpanded: $repeatExpanded, canRepeat: true, isTeamTask: isTeamTask, openTeamRepeat: openTeamRepeat, close: { openChip = nil })
+                }
+            }
+            if let deadline = draft.deadline {
+                let past = Calendar.current.startOfDay(for: deadline) < Calendar.current.startOfDay(for: Date()) && !draft.completed
+                propertyRow("Deadline", identifier: "taskDeadline", accessibility: "Deadline, " + TaskDetailFormat.relativeDay(deadline).text, action: { openChip = .deadline }) {
+                    Text(TaskDetailFormat.relativeDay(deadline, completed: true).text).foregroundStyle(past ? DS.Palette.dateOverdue : DS.Palette.textPrimary)
+                }
+                .popover(isPresented: chipOpen(.deadline), arrowEdge: .leading) { TaskDeadlineEditor(draft: $draft, close: { openChip = nil }) }
+            }
+            if shows("priority", draft.priority < 4) {
+                let value = draft.priority
+                propertyRow("Priority", identifier: "taskPriority", accessibility: value < 4 ? "Priority, P\(value)" : "Add priority", action: { openChip = .priority }) {
+                    Text(value < 4 ? "P\(value)" : "None").fontWeight(value == 1 ? .semibold : .regular)
+                        .foregroundStyle(value == 1 ? Color.brandCrimson : value < 4 ? DS.Palette.textPrimary : DS.Palette.textTertiary)
+                }
+                .popover(isPresented: chipOpen(.priority), arrowEdge: .leading) { TaskPriorityEditor(draft: $draft, close: { openChip = nil }) }
+            }
+            propertyRow("Project", identifier: "taskDestination", accessibility: "Project, \(destinationText)", action: { openChip = .destination }) {
+                HStack(spacing: DS.Space.s) {
+                    if let project = store.record("projects", id: workspace.assignmentProject(draft, contextID: taskID)) {
+                        Circle().fill(DS.Palette.project(project).color).frame(width: 7, height: 7)
+                    }
+                    Text(destinationText).foregroundStyle(DS.Palette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .popover(isPresented: chipOpen(.destination), arrowEdge: .leading) { TaskDestinationEditor(draft: $draft, projectLocked: isTeamTask, changeProject: changeTaskProject) }
+            if shows("labels", !labels.isEmpty) {
+                propertyRow("Labels", identifier: isTeamTask ? "taskTeamLabels" : "taskLabels", accessibility: labels.isEmpty ? "Add labels" : "Labels, " + labels.map(\.name).joined(separator: ", "),
+                            action: { if isTeamTask { openTeamLabels() } else { openChip = .label("") } }) {
+                    Text(labels.isEmpty ? "None" : labels.map(\.name).joined(separator: ", ")).foregroundStyle(labels.isEmpty ? DS.Palette.textTertiary : DS.Palette.textPrimary)
+                }
+                .popover(isPresented: chipOpen(.label("")), arrowEdge: .leading) { TaskLabelsEditor(draft: $draft) }
+            }
+            if shows("reminders", reminders > 0) {
+                propertyRow("Reminder", identifier: isTeamTask ? "taskTeamReminders" : "taskReminders", accessibility: reminders > 0 ? "Reminders, \(reminders)" : "Add reminders",
+                            action: { if isTeamTask { openTeamReminders() } else { openChip = .reminders } }) {
+                    HStack(spacing: DS.Space.xs) {
+                        Text(reminderSummary).foregroundStyle(reminders == 0 ? DS.Palette.textTertiary : DS.Palette.textPrimary)
+                        if reminders > 0 && !store.remindersEnabled {
+                            Image(systemName: "bell.slash").foregroundStyle(DS.Palette.textSecondary)
+                                .help("Reminders are off on this Mac. Turn on delivery in Settings ▸ General.").accessibilityLabel("Delivery off on this Mac")
+                        }
+                    }
+                }
+                .popover(isPresented: chipOpen(.reminders), arrowEdge: .leading) {
+                    VStack(spacing: 0) {
+                        TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }
+                        Divider()
+                        HStack { Spacer(); Button("Done") { openChip = nil }.keyboardShortcut(.defaultAction) }.padding(DS.Space.m)
+                    }.frame(width: 520, height: 600)
+                }
+            }
+            if let place = placeText {
+                propertyRow("Place", identifier: "taskPlaceChip", accessibility: "Location, " + place + ", on iPhone", action: {}) {
+                    Text(place + " · on iPhone").foregroundStyle(DS.Palette.textSecondary)
+                }.disabled(true)
+            }
+            if shows("estimate", draft.durationMinutes != nil), let minutes = draft.durationMinutes ?? (revealed.contains("estimate") ? 0 : nil) {
+                propertyRow("Estimate", identifier: "taskDuration", accessibility: "Estimate, \(TaskDetailFormat.estimate(minutes))", action: { openChip = .estimate }) {
+                    Text(minutes == 0 ? "None" : TaskDetailFormat.estimate(minutes)).monospacedDigit().foregroundStyle(minutes == 0 ? DS.Palette.textTertiary : DS.Palette.textPrimary)
+                }
+                .popover(isPresented: chipOpen(.estimate), arrowEdge: .leading) { TaskEstimateEditor(draft: $draft, close: { openChip = nil }) }
+            }
+            if case let seconds = store.actualSeconds(draft.id), let spent = ActualTime.spentText(seconds: seconds) {
+                propertyRow("Spent", identifier: "taskSpentChip", accessibility: ActualTime.spentSpoken(seconds: seconds) ?? spent, action: {}) {
+                    Text(spent).monospacedDigit().foregroundStyle(DS.Palette.textPrimary)
+                }.disabled(true)
+            }
+            if isTeamTask, !draft.string("assigned_to").isEmpty {
+                propertyRow("Assignee", identifier: "taskAssignee", accessibility: "Assignee, \(teamAssigneeCaption)", action: openTeamAssignee) {
+                    Text(teamAssigneeCaption).foregroundStyle(DS.Palette.textPrimary)
+                }
+            } else if !isTeamTask, !draft.string("assigned_to").isEmpty || assigneeRequested {
+                HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
+                    Text("Assignee").font(DS.Font.inspectorLabel).foregroundStyle(DS.Palette.textSecondary).frame(width: Self.labelColumn, alignment: .leading)
+                    AssigneeMenu(task: draft, contextID: taskID, showsName: true, startsOpen: assigneeRequested && draft.string("assigned_to").isEmpty) {
+                        assigneeRequested = false
+                        draft["assigned_to"] = $0.isEmpty ? .null : .string($0)
+                    }
+                    .font(DS.Font.taskTitle)
+                }.frame(minHeight: 28)
+            }
         }
+        .padding(.leading, DS.Space.xxl + DS.Space.xs + DS.Space.s)
         .accessibilityElement(children: .contain).accessibilityIdentifier("taskPropertyChips")
     }
-    private var dateChip: some View {
-        let set = dateChipText
-        return PropertyChip(icon: "calendar", text: set?.text ?? "Date", tint: set?.tint, trailingIcon: draft["is_recurring"].flag ? "repeat" : nil,
-                            accessibility: set.map { "Date, \($0.text)" + (draft["is_recurring"].flag ? ", repeats" : "") } ?? "Add date", identifier: "taskDate") { openChip = .date }
-            .popover(isPresented: chipOpen(.date), arrowEdge: .bottom) {
-                TaskDateEditor(draft: $draft, repeatExpanded: $repeatExpanded, canRepeat: true, isTeamTask: isTeamTask, openTeamRepeat: openTeamRepeat, close: { openChip = nil })
+    private static let labelColumn: CGFloat = 84
+    /// One property: a 12 pt secondary label in an 84 pt column and a 13 pt ink value; the row opens its editor.
+    private func propertyRow<Value: View>(_ label: String, identifier: String, accessibility: String, action: @escaping () -> Void, @ViewBuilder value: () -> Value) -> some View {
+        Button(action: action) {
+            HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
+                Text(label).font(DS.Font.inspectorLabel).foregroundStyle(DS.Palette.textSecondary).frame(width: Self.labelColumn, alignment: .leading)
+                value().font(DS.Font.taskTitle).frame(maxWidth: .infinity, alignment: .leading)
             }
-    }
-    private func deadlineChip(_ day: Date) -> some View {
-        let past = Calendar.current.startOfDay(for: day) < Calendar.current.startOfDay(for: Date()) && !draft.completed
-        let text = "Deadline " + TaskDetailFormat.relativeDay(day, completed: true).text
-        return PropertyChip(icon: "flag.checkered", text: text, tint: past ? DS.Palette.danger : DS.Palette.dateTomorrow, accessibility: "Deadline, " + TaskDetailFormat.relativeDay(day).text, identifier: "taskDeadline") { openChip = .deadline }
-            .popover(isPresented: chipOpen(.deadline), arrowEdge: .bottom) { TaskDeadlineEditor(draft: $draft, close: { openChip = nil }) }
-    }
-    private var priorityChip: some View {
-        let value = draft.priority
-        let set = value < 4
-        return PropertyChip(icon: set ? "flag.fill" : "flag", text: set ? "P\(value)" : "Priority", tint: set ? DS.Palette.priority(value) : nil,
-                            accessibility: set ? "Priority, P\(value)" : "Add priority", identifier: "taskPriority") { openChip = .priority }
-            .popover(isPresented: chipOpen(.priority), arrowEdge: .bottom) { TaskPriorityEditor(draft: $draft, close: { openChip = nil }) }
-    }
-    @ViewBuilder private var labelChips: some View {
-        let assigned = TaskLabels.normalized(draft["labels"].list, labels: store.labels).compactMap { value in store.labels.first { .string($0.id) == value } }
-        // Positional identity keeps the first chip, and the popover anchored to it, alive while labels are toggled.
-        ForEach(Array((assigned.isEmpty ? [nil] : assigned.map(Optional.some)).enumerated()), id: \.offset) { index, label in
-            let open = { if isTeamTask { openTeamLabels() } else { openChip = .label("") } }
-            let chip = PropertyChip(icon: label == nil ? "tag" : "tag.fill", text: label?.name ?? "Labels", tint: label.map { Color.project($0.string("color")) },
-                                    accessibility: label.map { "Label, \($0.name)" } ?? "Add labels",
-                                    identifier: isTeamTask ? "taskTeamLabels" : label.map { "taskLabelChip-" + $0.id } ?? "taskLabels", action: open)
-            if index == 0 { chip.popover(isPresented: chipOpen(.label("")), arrowEdge: .bottom) { TaskLabelsEditor(draft: $draft) } }
-            else { chip }
+            .frame(minHeight: 28).contentShape(.rect)
         }
+        .buttonStyle(.plain).pointerStyle(.link)
+        .accessibilityLabel(accessibility).accessibilityIdentifier(identifier)
     }
-    /// D3: a place reminder is the iPhone's. The Mac shows it read-only: "Arrive at Home · on iPhone".
-    @ViewBuilder private var placeChip: some View {
-        let rows = ReminderSpec.rows(draft)
-        if let text = rows.lazy.compactMap({ row -> String? in
+    private var reminderSummary: String {
+        let count = activeReminderCount
+        return count == 0 ? "None" : count == 1 ? "1 reminder" : "\(count) reminders"
+    }
+    /// D3: a place reminder is the iPhone's. The Mac shows it read-only.
+    private var placeText: String? {
+        ReminderSpec.rows(draft).lazy.compactMap { row -> String? in
             if let settings = LocationReminderSettings(raw: row.object), settings.enabled { return (settings.transition == .arrive ? "Arrive at " : "Leave ") + (settings.requestedName ?? "a place") }
             if let request = LocationPlaceRequest(raw: row.object), request.enabled { return request.label }
             return nil
-        }).first {
-            ChipLabel(icon: "mappin.and.ellipse", text: text + " · on iPhone", tint: DS.Palette.textSecondary)
-                .accessibilityElement(children: .ignore).accessibilityLabel("Location, " + text + ", on iPhone")
-                .accessibilityIdentifier("taskPlaceChip")
-        }
-    }
-    private var remindersChip: some View {
-        let count = activeReminderCount
-        return PropertyChip(icon: count > 0 ? "bell.fill" : "bell", text: count > 0 ? "\(count)" : "Reminders", tint: count > 0 ? DS.Palette.accent : nil,
-                            accessibility: count > 0 ? "Reminders, \(count)" : "Add reminders", identifier: isTeamTask ? "taskTeamReminders" : "taskReminders") { if isTeamTask { openTeamReminders() } else { openChip = .reminders } }
-            .popover(isPresented: chipOpen(.reminders), arrowEdge: .bottom) {
-                VStack(spacing: 0) {
-                    TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }
-                    Divider()
-                    HStack { Spacer(); Button("Done") { openChip = nil }.keyboardShortcut(.defaultAction) }.padding(DS.Space.m)
-                }.frame(width: 520, height: 600)
-            }
-    }
-    /// Focus and Pomodoro time recorded for this task (ActualTime.swift), shown beside the estimate.
-    @ViewBuilder private var spentChip: some View {
-        if case let seconds = store.actualSeconds(draft.id), let spent = ActualTime.spentText(seconds: seconds) {
-            ChipLabel(icon: "clock.arrow.circlepath", text: spent, tint: DS.Palette.textSecondary)
-                .accessibilityElement(children: .ignore).accessibilityLabel(ActualTime.spentSpoken(seconds: seconds) ?? spent)
-                .accessibilityIdentifier("taskSpentChip")
-        }
-    }
-    private func estimateChip(_ minutes: Int) -> some View {
-        PropertyChip(icon: "hourglass", text: TaskDetailFormat.estimate(minutes), tint: DS.Palette.textSecondary, accessibility: "Estimate, \(TaskDetailFormat.estimate(minutes))", identifier: "taskDuration") { openChip = .estimate }
-            .popover(isPresented: chipOpen(.estimate), arrowEdge: .bottom) { TaskEstimateEditor(draft: $draft, close: { openChip = nil }) }
-    }
-    @ViewBuilder private var assigneeChip: some View {
-        if isTeamTask {
-            if !draft.string("assigned_to").isEmpty {
-                PropertyChip(icon: "person.crop.circle", text: teamAssigneeCaption, tint: DS.Palette.accent, accessibility: "Assignee, \(teamAssigneeCaption)", identifier: "taskAssignee", action: openTeamAssignee)
-            }
-        } else if !draft.string("assigned_to").isEmpty || assigneeRequested {
-            AssigneeMenu(task: draft, contextID: taskID, showsName: true, startsOpen: assigneeRequested && draft.string("assigned_to").isEmpty) {
-                assigneeRequested = false
-                draft["assigned_to"] = $0.isEmpty ? .null : .string($0)
-            }
-            .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xs)
-            .font(DS.Font.chip)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(DS.Palette.accent.opacity(0.12)))
-        }
-    }
-    @ViewBuilder private var addPropertyChip: some View {
-        let canAssign = draft.string("assigned_to").isEmpty && !assigneeRequested
-        if draft.deadline == nil || draft.durationMinutes == nil || !draft["is_recurring"].flag || canAssign {
-            Menu {
-                if draft.deadline == nil { Button("Deadline", systemImage: "flag.checkered") { draft["deadline_date"] = .string(Dates.day(Date())); DispatchQueue.main.async { openChip = .deadline } } }
-                if draft.durationMinutes == nil { Button("Estimate", systemImage: "hourglass") { draft["duration_minutes"] = .number(30); DispatchQueue.main.async { openChip = .estimate } } }
-                if !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; openChip = .date } }
-                if canAssign { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
-            } label: { ChipLabel(icon: "plus", iconLabel: "Add property") }
-            // The button menu style keeps the outlined chip label; borderless would strip it to a bare glyph.
-            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-            .help("Add property").accessibilityLabel("Add property").accessibilityIdentifier("taskAddProperty")
-        }
+        }.first
     }
     private var destinationText: String {
         let projectID = workspace.assignmentProject(draft, contextID: taskID)
         let project = store.record("projects", id: projectID)?.name
         let section = store.rows("sections").first { $0.id == draft.string("section_id") && !draft.string("section_id").isEmpty }?.name
         guard let project else { return "Inbox" }
-        return "# " + [project, section].compactMap { $0 }.joined(separator: " / ")
+        return [project, section].compactMap { $0 }.joined(separator: " / ")
     }
-    @ViewBuilder private var destinationRow: some View {
-        Button { openChip = .destination } label: {
-            Label { Text(destinationText).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading) } icon: { Image(systemName: draft.string("project_id").isEmpty ? "tray" : "folder").accessibilityHidden(true) }
-                .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).contentShape(.rect)
-        }
-        .buttonStyle(.plain).pointerStyle(.link)
-        .accessibilityLabel("Project, \(destinationText.replacingOccurrences(of: "# ", with: ""))").accessibilityIdentifier("taskDestination")
-        .popover(isPresented: chipOpen(.destination), arrowEdge: .bottom) { TaskDestinationEditor(draft: $draft, projectLocked: isTeamTask, changeProject: changeTaskProject) }
+    /// "Add ⌄": every property and section that is not shown yet.
+    private var addMenu: some View {
+        Menu {
+            if draft.due == nil && !revealed.contains("when") { Button("Date", systemImage: "calendar") { reveal("when", open: .date) } }
+            if draft.priority == 4 && !revealed.contains("priority") { Button("Priority", systemImage: "flag") { reveal("priority", open: .priority) } }
+            if !isTeamTask, draft["labels"].list.isEmpty && !revealed.contains("labels") { Button("Labels", systemImage: "tag") { reveal("labels", open: .label("")) } }
+            if isTeamTask, draft["labels"].list.isEmpty { Button("Labels", systemImage: "tag") { openTeamLabels() } }
+            if activeReminderCount == 0 && !revealed.contains("reminders") { Button("Reminder", systemImage: "bell") { if isTeamTask { openTeamReminders() } else { reveal("reminders", open: .reminders) } } }
+            if draft.deadline == nil { Button("Deadline", systemImage: "flag.checkered") { draft["deadline_date"] = .string(Dates.day(Date())); DispatchQueue.main.async { openChip = .deadline } } }
+            if draft.durationMinutes == nil { Button("Estimate", systemImage: "hourglass") { draft["duration_minutes"] = .number(30); DispatchQueue.main.async { openChip = .estimate } } }
+            if !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; reveal("when", open: .date) } }
+            if draft.string("assigned_to").isEmpty && !assigneeRequested { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
+            Divider()
+            if rowsMode && store.canEditSubtasks(of: taskID) { Button("Subtask", systemImage: "list.bullet") { revealed.insert("subtasks") }.accessibilityIdentifier("addSubtaskSection") }
+            if !isCreating, !isTeamTask, store.supportsDependencies(taskID: taskID) {
+                Button("Blocker", systemImage: "lock") { revealed.insert("dependencies") }
+                Button("Waiting on", systemImage: "hourglass") { revealed.insert("dependencies") }
+            }
+            if !isTeamTask { Button("Attachment…", systemImage: "paperclip") { importing = true }.help("You can also paste an image into a comment with ⌘V") }
+            if isTeamTask && store.taskFileUploadsEnabled { Button("Shared files…", systemImage: "paperclip") { taskFiles = store.fileUploadRequest(taskID: taskID) }.accessibilityIdentifier("openTaskFiles") }
+            if !isTeamTask { Button("Comment", systemImage: "text.bubble") { revealed.insert("comments") } }
+        } label: { Label("Add", systemImage: "plus") }
+        .menuStyle(.borderlessButton).fixedSize()
+        .tint(DS.Palette.textSecondary)
+        .help("Add a property, subtask, blocker, attachment or comment").accessibilityLabel("Add").accessibilityIdentifier("taskAddProperty")
     }
 
     // MARK: Sections
 
-    private func block<Content: View>(_ id: String, _ title: String, summary: String? = nil, @ViewBuilder content: () -> Content) -> some View {
+    /// A section header in ink, 13 pt semibold, with a quiet trailing summary ("1 of 2"). Clicking it collapses the section.
+    private func block<Content: View>(_ id: String, _ title: String, summary: String? = nil, help: String? = nil, @ViewBuilder content: () -> Content) -> some View {
         let collapsed = collapsedSections.contains(id)
-        return VStack(alignment: .leading, spacing: DS.Space.s) {
+        return VStack(alignment: .leading, spacing: DS.Space.xs) {
             Button {
                 if collapsed { collapsedSections.remove(id) } else { collapsedSections.insert(id) }
             } label: {
                 HStack(spacing: DS.Space.xs) {
-                    Image(systemName: collapsed ? "chevron.right" : "chevron.down").font(DS.Font.badge).frame(width: DS.Space.m).accessibilityHidden(true)
-                    Text(title).font(DS.Font.sectionHeader)
-                    if let summary { Text(summary).font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.textSecondary) }
+                    Text(title).font(DS.Font.sectionHeader).foregroundStyle(DS.Palette.textSecondary)
+                    if collapsed { Image(systemName: "chevron.right").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).accessibilityHidden(true) }
                     Spacer(minLength: 0)
-                }.foregroundStyle(DS.Palette.textPrimary).contentShape(.rect)
+                    if let summary { Text(summary).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
+                }.contentShape(.rect)
             }
-            .buttonStyle(.plain).accessibilityLabel(title + (summary.map { ", " + $0 } ?? "")).accessibilityValue(collapsed ? "Collapsed" : "Expanded").accessibilityIdentifier("section-" + id)
-            if !collapsed { VStack(alignment: .leading, spacing: DS.Space.s) { content() } }
+            .buttonStyle(.plain).help(help ?? "").accessibilityLabel(title + (summary.map { ", " + $0 } ?? "")).accessibilityValue(collapsed ? "Collapsed" : "Expanded").accessibilityIdentifier("section-" + id)
+            if !collapsed { VStack(alignment: .leading, spacing: DS.Space.xs) { content() } }
         }
     }
 
@@ -653,9 +690,9 @@ struct TaskInspectorForm: View {
     }
 
     @ViewBuilder private var subtasksSection: some View {
-        if rowsMode {
+        if rowsMode, store.childProgress(of: taskID).total > 0 || revealed.contains("subtasks") {
             let progress = store.childProgress(of: taskID)
-            block("subtasks", "Subtasks", summary: progress.total == 0 ? nil : "\(progress.completed)/\(progress.total)") {
+            block("subtasks", "Subtasks", summary: progress.total == 0 ? nil : "\(progress.completed) of \(progress.total)") {
                 ChildRowsList(parentID: taskID, flush: { saveTask?.cancel(); return saveNow() }, canAdd: store.canEditSubtasks(of: taskID))
             }
         }
@@ -663,16 +700,18 @@ struct TaskInspectorForm: View {
 
     /// Blocked-by links and the "Waiting on" note. Only saved, non-team, top-level tasks offer them.
     @ViewBuilder private var dependenciesSection: some View {
-        if !isCreating, !isTeamTask, store.supportsDependencies(taskID: taskID) {
-            block("dependencies", "Blocked by", summary: store.blockerLines(for: taskID).isEmpty ? nil : "\(store.blockerLines(for: taskID).count)") {
+        if !isCreating, !isTeamTask, store.supportsDependencies(taskID: taskID),
+           !store.blockerLines(for: taskID).isEmpty || !draft.string("waiting_on").isEmpty || revealed.contains("dependencies") {
+            block("dependencies", "Blocked by", summary: store.blockerLines(for: taskID).isEmpty ? nil : "\(store.blockerLines(for: taskID).count)",
+                  help: "Hidden from Today and Upcoming until every blocker is completed or deleted.") {
                 TaskDependencyRows(taskID: taskID)
                 TaskWaitingOnField(task: draft)
-                Text("Hidden from Today and Upcoming until every blocker is completed or deleted.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
             }
         }
     }
 
-    private var attachmentsSection: some View {
+    @ViewBuilder private var attachmentsSection: some View {
+        if !draft["attachments"].list.isEmpty {
         block("attachments", "Attachments") {
             if isTeamTask && (store.taskFileUploadsEnabled || draft["attachments"].list.contains(where: { !$0.object["storage_object_id", default: .null].text.isEmpty })) {
                 Button("Shared files…", systemImage: "paperclip") { taskFiles = store.fileUploadRequest(taskID: taskID) }.accessibilityIdentifier("openTaskFiles")
@@ -684,13 +723,15 @@ struct TaskInspectorForm: View {
                     Button { var list = draft["attachments"].list; list.remove(at: index); draft["attachments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Remove attachment")
                 }
             }
-            Button("Attach a File…", systemImage: "doc.badge.plus") { importing = true }.disabled(isTeamTask)
+            Button("Attach file…", systemImage: "doc.badge.plus") { importing = true }.buttonStyle(.plain).foregroundStyle(DS.Palette.textSecondary).disabled(isTeamTask)
+        }
         }
     }
 
-    private var commentsSection: some View {
+    @ViewBuilder private var commentsSection: some View {
         let count = draft["comments"].list.count
-        return block("comments", "Comments and activity", summary: count > 0 ? "\(count)" : nil) {
+        if count > 0 || revealed.contains("comments") || !comment.isEmpty {
+        block("comments", "Comments", summary: count > 0 ? "\(count)" : nil) {
             ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
                 let row = Record(value.object)
                 VStack(alignment: .leading, spacing: DS.Space.xs) {
@@ -720,7 +761,8 @@ struct TaskInspectorForm: View {
                     } catch { store.error = error.localizedDescription }
                 }, pasteError: { store.error = $0 })
                 .disabled(isTeamTask)
-                .frame(height: 80)
+                .frame(height: 56)
+                .help("Paste an image with ⌘V to attach it")
                 .background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(DS.Palette.separator, lineWidth: 1))
                 if let pastedImageName {
@@ -728,26 +770,33 @@ struct TaskInspectorForm: View {
                         .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("pastedImageConfirmation")
                 }
                 HStack {
-                    Text("Paste an image with ⌘V to attach it immediately.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: DS.Space.s)
-                    Button("Add Comment", systemImage: "text.bubble") {
+                    Button("Add comment") {
                         appendComment(text: comment.trimmingCharacters(in: .whitespacesAndNewlines))
                         comment = ""
                     }.disabled(isTeamTask || comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
         }
+        }
     }
 
+    /// One line at the foot: "Add ⌄" and the creation date. Edits save as you go, so nothing says so.
     private var footer: some View {
         VStack(alignment: .leading, spacing: DS.Space.xs) {
-            if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) {
-                Text("Created " + created.formatted(date: .abbreviated, time: .shortened)).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
-            }
             if isTeamTask && !isCreating && !teamDeletionClean { Text("Finish saving your edits before moving or deleting this task.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary) }
-            Text(isCreating ? "Added only when you choose Add Task" : "Changes save automatically")
-                .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary).accessibilityIdentifier("inspectorAutosaveHint")
+            HStack {
+                addMenu
+                Spacer()
+                if isCreating { Text("Added when you choose Add task").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary).accessibilityIdentifier("inspectorAutosaveHint") }
+                else if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) {
+                    Text("Created " + created.formatted(.dateTime.day().month(.abbreviated))).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary)
+                        .help(created.formatted(date: .complete, time: .shortened))
+                }
+            }
         }
+        .padding(.horizontal, DS.Space.l).padding(.vertical, DS.Space.s)
+        .overlay(alignment: .top) { Divider().padding(.horizontal, DS.Space.l) }
     }
     private var editingBody: some View {
         detailContent

@@ -33,9 +33,10 @@ struct GlobalQuickAddSettings: View {
             }
             Toggle("Show in menu bar", isOn: $showInMenuBar).accessibilityIdentifier("showInMenuBar")
             Toggle("Show current task in menu bar", isOn: $showMenuBarTitle).disabled(!showInMenuBar)
+                .help("Adds a short title next to the icon, such as “▸ Write report · 18m” during Focus, or your next timed task.")
                 .accessibilityIdentifier("showMenuBarTitle")
-            Text("Adds a short title next to the icon, such as “▸ Write report · 18m” during Focus, or your next timed task.")
-                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            // A build that cannot open at login hides the row rather than explaining why.
+            if login.status != .notFound {
             Toggle("Open at login", isOn: Binding(get: { login.isOn }, set: { login.set($0) })).accessibilityIdentifier("openAtLogin")
             if let line = login.statusLine {
                 HStack {
@@ -44,6 +45,7 @@ struct GlobalQuickAddSettings: View {
                     if login.status == .requiresApproval { Button("Open Login Items") { SMAppService.openSystemSettingsLoginItems() }.buttonStyle(.link).font(.caption) }
                 }
                 .accessibilityIdentifier("openAtLoginStatus")
+            }
             }
         }
         .onAppear { login.refresh() }
@@ -62,7 +64,6 @@ struct LaunchAtLogin {
         switch status {
         case .enabled: return "Taskfold opens when you log in."
         case .requiresApproval: return "Waiting for approval: allow Taskfold in System Settings > General > Login Items."
-        case .notFound: return "Opening at login is not available for this build."
         default: return nil
         }
     }

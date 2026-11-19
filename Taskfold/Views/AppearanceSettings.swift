@@ -11,23 +11,21 @@ struct AppearanceSettings: View {
     @State private var colorPanel = AccentColorPanel()
     private var customs: [String] { saved.split(separator: ",").map(String.init) }
     var body: some View {
+        // A native grouped form with the system tint (owner decision 8): Settings is not where the brand lives.
         Form {
-            Section("Appearance") {
-                Picker("Appearance", selection: $appearance) { Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark") }.pickerStyle(.segmented)
-                Picker("Task layout", selection: $density) { Text("Roomy").tag("roomy"); Text("Compact").tag("compact") }.pickerStyle(.segmented).accessibilityIdentifier("taskDensity")
-                Text("Preferences apply only to this Mac. Accent shades adapt to keep controls readable in light and dark appearance.").font(.caption).foregroundStyle(.secondary)
-            }
             Section {
-                Toggle("Show day ring", isOn: $showDayRing).accessibilityIdentifier("showDayRingToggle")
-                Text(DayRingSetting.footer).font(.caption).foregroundStyle(.secondary)
+                Picker("Appearance", selection: $appearance) { Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark") }.pickerStyle(.segmented)
+                Picker("Density", selection: $density) { Text("Compact").tag("compact"); Text("Roomy").tag("roomy") }.pickerStyle(.segmented).accessibilityIdentifier("taskDensity")
+                Toggle("Day ring", isOn: $showDayRing).accessibilityIdentifier("showDayRingToggle").help(DayRingSetting.footer)
             }
-            Section("Accent color") {
+            Section("Accent") {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
                     ForEach(Color.accents, id: \.key) { option in swatch(option.key, option.name, option.color) }
                 }.padding(.vertical, 5)
-                LabeledContent("Custom color") {
+                LabeledContent("Custom") {
+                    // A custom colour applies as you pick it, and is kept in the recent colours below.
                     Button {
-                        colorPanel.show(proposed) { proposed = $0 }
+                        colorPanel.show(proposed) { proposed = $0; applyCustom($0) }
                     } label: {
                         HStack(spacing: 6) {
                             Circle().fill(proposed).frame(width: 16, height: 16).overlay(Circle().strokeBorder(.primary.opacity(0.2)))
@@ -35,12 +33,6 @@ struct AppearanceSettings: View {
                         }
                     }.accessibilityLabel("Choose custom color").accessibilityIdentifier("customAccentPicker")
                 }
-                Button("Save Custom Accent") {
-                    guard let color = NSColor(proposed).usingColorSpace(.sRGB) else { return }
-                    let value = String(format: "#%02X%02X%02X", Int((color.redComponent * 255).rounded()), Int((color.greenComponent * 255).rounded()), Int((color.blueComponent * 255).rounded()))
-                    saved = ([value] + customs.filter { $0 != value }).prefix(24).joined(separator: ",")
-                    accent = "custom:" + value.dropFirst()
-                }.accessibilityIdentifier("saveCustomAccent")
                 if !customs.isEmpty {
                     ScrollView(.horizontal) {
                         HStack(spacing: 12) {
@@ -50,10 +42,15 @@ struct AppearanceSettings: View {
                             }
                         }.padding(4)
                     }.frame(height: 62)
-                    Text("Up to 24 recent custom colors are saved. Removing a saved color keeps your current accent.").font(.caption).foregroundStyle(.secondary)
                 }
             }
         }.formStyle(.grouped).onDisappear { colorPanel.close() }
+    }
+    private func applyCustom(_ color: Color) {
+        guard let rgb = NSColor(color).usingColorSpace(.sRGB) else { return }
+        let value = String(format: "#%02X%02X%02X", Int((rgb.redComponent * 255).rounded()), Int((rgb.greenComponent * 255).rounded()), Int((rgb.blueComponent * 255).rounded()))
+        saved = ([value] + customs.filter { $0 != value }).prefix(24).joined(separator: ",")
+        accent = "custom:" + value.dropFirst()
     }
     private func swatch(_ value: String, _ name: String, _ color: Color) -> some View {
         Button { accent = value } label: {

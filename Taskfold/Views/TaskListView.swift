@@ -521,6 +521,8 @@ struct TaskListView: View {
         }
         quickAdd = ""
         referenceChoices = [:]
+        // ⌘⏎ adds and keeps the composer open for the next task.
+        if NSEvent.modifierFlags.contains(.command) { workspace.confirm("Added", undoable: false); return }
         quickAddVisible = false
         captureDateOverride = nil; captureProjectOverride = nil
         workspace.selection = [id]
@@ -809,15 +811,21 @@ struct TaskListView: View {
     /// Three controls beside the search field (design review mac-r1): View ⌄, New task and the inspector. Everything else is in
     /// the View menu here, the menu bar (File, Task, View, Window) and the sidebar foot.
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        // An empty principal item keeps the list's controls at the trailing edge now that the toolbar shows no title.
+        if #available(macOS 26.0, *) {
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1).accessibilityHidden(true) }.sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1).accessibilityHidden(true) }
+        }
         // Without a toolbar title the items would sit at the leading edge; a flexible spacer keeps them trailing.
-        ToolbarItem(placement: .automatic) { viewOptions }
-        ToolbarItem(placement: .automatic) {
+        ToolbarItem(placement: .primaryAction) { viewOptions }
+        ToolbarItem(placement: .primaryAction) {
             Button { revealQuickAdd() } label: {
                 Label { Text("New task") } icon: { Image(systemName: "plus").fontWeight(.semibold).foregroundStyle(Color.brandCrimson) }
             }
             .help("New task (⌘N)").accessibilityIdentifier("addTask")
         }
-        ToolbarItem(placement: .automatic) {
+        ToolbarItem(placement: .primaryAction) {
             Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }
                 .help("Show or hide the inspector (⌥⌘I)").accessibilityIdentifier("toggleInspector")
         }

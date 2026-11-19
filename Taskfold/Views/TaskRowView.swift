@@ -98,7 +98,7 @@ struct TaskRowView: View {
                           size: DS.Size.checkbox, stroke: task.priority < 4 ? nil : DS.Palette.textTertiary,
                           restFill: task.priority < 4 ? 0.1 : 0, previewCheck: checkHover && !checked,
                           priority: task.priority, doneColor: DS.Palette.project(store.record("projects", id: task.string("project_id"))).color)
-                    .frame(width: DS.Space.xxxl, height: listRow ? DS.Size.checkbox + DS.Space.xs : DS.Space.xxxl) // 32 pt wide hit area; list rows keep it within the 32 pt row
+                    .frame(width: DS.Space.xxxl, height: listRow || inInspector ? DS.Size.checkbox + DS.Space.xs : DS.Space.xxxl) // 32 pt wide hit area; list rows keep it within the 32 pt row
                     .contentShape(.rect)
             }
             .buttonStyle(GlyphStyle())
@@ -176,7 +176,7 @@ struct TaskRowView: View {
                 if let line = childParentLine {
                     Text(line).font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary).lineLimit(1)
                         .accessibilityIdentifier("parentLine-" + task.id)
-                } else if workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
+                } else if !inInspector, workspace.section == .assigned || workspace.hierarchyPresentation, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(DS.Font.taskMeta).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : DS.Palette.textSecondary).lineLimit(1)
                 }
                 if !listRow, hasMetadata(planning) {
@@ -195,9 +195,9 @@ struct TaskRowView: View {
             }
         }
         .overlay(alignment: .topTrailing) { if card != nil, !inInspector { trailing.background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: DS.Radius.s)).opacity(hovering || isSelected ? 1 : 0).allowsHitTesting(hovering || isSelected) } }
-        .padding(.vertical, card == nil ? DS.Size.rowVerticalPadding(compact: density == "compact") - (listRow ? DS.Space.xxs : 0) : DS.Space.s)
+        .padding(.vertical, inInspector ? DS.Space.xxs : card == nil ? DS.Size.rowVerticalPadding(compact: density == "compact") - (listRow ? DS.Space.xxs : 0) : DS.Space.s)
         .padding(.horizontal, card == nil ? DS.Space.xs : DS.Space.s)
-        .frame(minHeight: DS.Size.rowMinHeight)
+        .frame(minHeight: inInspector ? 28 : DS.Size.rowMinHeight)
         .background {
             if card != nil {
                 RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(DS.Palette.surfaceRaised)

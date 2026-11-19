@@ -93,43 +93,40 @@ struct TaskCapturePanel: View {
         let parsed = parsedNow
         let effective = parsed.fieldPreview(to: baseTask)
         let dateTint = effective.due.map { TaskDetailFormat.relativeDay($0).tint } ?? DS.Palette.accent
-        VStack(alignment: .leading, spacing: DS.Space.l) {
-            HStack {
-                Text("New Task").font(DS.Font.screenTitle)
-                Spacer()
-                Button { close() } label: { Image(systemName: "xmark").font(DS.Font.taskTitle.weight(.medium)) }
-                    .buttonStyle(.plain).help("Close (Esc)").accessibilityLabel("Close task entry")
+        // One panel, Things-style Quick Entry (design review mac-r1): the field is the title, one quiet row shows what will
+        // be saved, and the footer holds the destination and Add. Esc closes.
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: DS.Space.m) {
+                titleField(parsed, effective: effective, dateTint: dateTint)
+                tokenRow(parsed, effective: effective).padding(.leading, DS.Size.checkbox + DS.Space.m)
+                placeOffer(parsed).padding(.leading, DS.Size.checkbox + DS.Space.m)
+                ForEach(parsed.warnings, id: \.self) { warning in
+                    Text(warning).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).padding(.leading, DS.Size.checkbox + DS.Space.m).accessibilityIdentifier("quickEntryWarning")
+                }
             }
-            titleField(parsed, effective: effective, dateTint: dateTint)
-            if text.isEmpty {
-                Text("Try “Call Sam tomorrow at 4pm !30mb p1”").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
-            }
-            propertyChips(parsed, effective: effective)
-            let rowTokens = parsed.tokens.filter { !Self.propertyGroups.contains($0.group) } + placeTokens(parsed)
-            if !rowTokens.isEmpty {
-                QuickEntryChips(tokens: rowTokens, compact: true, decline: { token in
-                    _ = declined.insert(token.group)
-                    if token.group == "place" { choices[QuickPlaceRequest.acceptKey] = nil }
-                }, returnFocus: resumeDraftFromChip)
-            }
-            placeOffer(parsed)
-            if let rule = parsed.updates["recurrence_pattern"] {
-                Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
-            }
-            ReminderAutomaticPreview(task: effective, showDeliveryGuidance: parsed.updates["reminder_specs"] == nil)
-            ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickEntryWarning") }
-            if parsed.updates["reminder_specs"] != nil && !store.remindersEnabled {
-                Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).accessibilityIdentifier("quickReminderDeliveryOff")
-            }
+            .padding(.horizontal, DS.Space.xl).padding(.top, DS.Space.xl).padding(.bottom, DS.Space.l)
+            Divider()
             footer(effective, canAdd: !parsed.title.isEmpty)
-            if let hint { Text(hint).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).frame(maxWidth: .infinity).accessibilityIdentifier("quickAddHint") }
+                .padding(.horizontal, DS.Space.xl).padding(.vertical, DS.Space.m)
         }
-        .padding(DS.Space.xxl).frame(width: 540)
+        .frame(width: 560)
+        .background {
+            // ⇧⌘B turns the draft into a Brain dump (also File ▸ Brain Dump…).
+            if onClose == nil {
+                Button("Brain dump") { brainDump(effective) }.keyboardShortcut("b", modifiers: [.command, .shift]).hidden().accessibilityHidden(true)
+            }
+        }
         .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true; placeNames = LocationPlaceRequest.knownNames(in: store.rows("tasks")) }
         .task(id: parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) }
         .onExitCommand { close() }
         .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
         .onDisappear { if text.isEmpty { setManual([:]) } }
+    }
+    private func brainDump(_ effective: Record) {
+        // The composer closes first, so the Brain dump sheet is presented by the window itself.
+        let draft = text, project = effective.string("project_id")
+        close()
+        DispatchQueue.main.async { workspace.openBrainDump(project: project, text: draft) }
     }
 
     /// "at the gym" with a name this account never used: offered, not taken, so "Look at Bob" keeps its words.
@@ -158,16 +155,13 @@ struct TaskCapturePanel: View {
         let spans = QuickAddHighlight.spans(in: text, tokens: parsed.tokens + placeTokens(parsed)) { QuickEntryChips.tint(for: $0, date: dateTint) }
         return HStack(alignment: .top, spacing: DS.Space.m) {
             Circle().strokeBorder(ring, lineWidth: 1.5).background(ring.opacity(priority < 4 ? 0.15 : 0), in: .circle)
-                .frame(width: DS.Size.checkbox, height: DS.Size.checkbox).padding(.top, DS.Space.xs)
+                .frame(width: DS.Size.checkbox, height: DS.Size.checkbox).padding(.top, 2)
                 .accessibilityHidden(true)
             TextField(prompt, text: $text, selection: $titleSelection, axis: .vertical)
-                .font(.title3 /* capture field is larger than body by design */).lineLimit(2...6).textFieldStyle(.plain)
+                .font(.system(size: 17) /* the capture field is the title: 17 pt by design */).lineLimit(1...6).textFieldStyle(.plain)
                 .focused($focused).accessibilityIdentifier("quickAdd")
                 .overlay { QuickAddHighlightOverlay(text: text, spans: spans).allowsHitTesting(false).accessibilityHidden(true) }
         }
-        .padding(DS.Space.l)
-        .background(DS.Palette.surface, in: .rect(cornerRadius: DS.Radius.l, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).strokeBorder(DS.Palette.accent.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
         .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: parseContext, focused: focused, task: baseTask, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
     }
 
@@ -180,17 +174,65 @@ struct TaskCapturePanel: View {
     }
     private static let declineSize: CGFloat = 14 // matches the declinable row's glyph circle
 
-    private func propertyChips(_ parsed: QuickEntry, effective: Record) -> some View {
-        QuickEntryChipLayout(spacing: DS.Space.s) {
-            dateChip(parsed, effective)
-            priorityChip(parsed, effective)
+    /// What will be saved, once: set properties and recognised words as quiet chips (click to edit, × keeps the words), then
+    /// "+" for anything not set yet. The project is in the footer, so it is not repeated here.
+    private func tokenRow(_ parsed: QuickEntry, effective: Record) -> some View {
+        let others = parsed.tokens.filter { !Self.propertyGroups.contains($0.group) && !["project_id", "section_id"].contains($0.group) } + placeTokens(parsed)
+        let manualReminders = ReminderSpec.rows(baseTask).compactMap { ReminderSpec(row: $0) }.filter(\.enabled).count
+        let hasReminder = manualReminders > 0 || others.contains { $0.group.hasPrefix("reminder_specs") }
+        return QuickEntryChipLayout(spacing: DS.Space.s) {
+            if effective.due != nil || effective["is_recurring"].flag { dateChip(parsed, effective) }
+            if effective.priority < 4 { priorityChip(parsed, effective) }
             labelChips(parsed)
-            remindersChip(effective)
+            if manualReminders > 0 { remindersChip(effective) }
             deadlineChip(effective)
             estimateChip(effective)
+            ForEach(others) { token in
+                quickChip(icon: QuickEntryChips.symbol(for: token.group), text: Self.display(token), tint: DS.Palette.textPrimary,
+                          accessibility: "\(QuickEntryChips.name(for: token.group).capitalized) \(Self.display(token)), from “\(token.text)”", identifier: "chip-\(token.group)",
+                          declines: [ChipDecline(id: "decline-\(token.group)", help: "Keep “\(token.text)” in the title") {
+                              declined.insert(token.group)
+                              if token.group == "place" { choices[QuickPlaceRequest.acceptKey] = nil }
+                          }], parsedTokens: [token]) { if token.group.hasPrefix("reminder_specs") { openChip = .reminders } }
+            }
+            if let rule = parsed.updates["recurrence_pattern"] {
+                ChipLabel(icon: "repeat", text: Recurrence.summary(Record(rule.object)), tint: DS.Palette.textPrimary)
+                    .accessibilityElement(children: .ignore).accessibilityLabel("Repeat, " + Recurrence.summary(Record(rule.object)))
+                    .accessibilityValue(Recurrence.summary(Record(rule.object)))
+                    .accessibilityIdentifier("quickRepeatSummary")
+            }
+            if hasReminder && !store.remindersEnabled {
+                Image(systemName: "bell.slash").font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary).frame(minHeight: 22)
+                    .help("Reminders are off on this Mac. Turn on delivery in Settings ▸ General.")
+                    .accessibilityLabel("Reminder delivery is off on this Mac").accessibilityIdentifier("quickReminderDeliveryOff")
+            }
             moreMenu(effective)
         }
         .accessibilityElement(children: .contain).accessibilityIdentifier("quickPropertyChips")
+        .popover(isPresented: chipOpen(.date), arrowEdge: .bottom) {
+            TaskDateEditor(draft: effectiveBinding, repeatExpanded: $repeatExpanded, canRepeat: true, isTeamTask: false, openTeamRepeat: {}, close: { openChip = nil })
+        }
+        .popover(isPresented: chipOpen(.priority), arrowEdge: .bottom) { TaskPriorityEditor(draft: effectiveBinding, close: { openChip = nil }) }
+        .popover(isPresented: chipOpen(.label("")), arrowEdge: .bottom) { TaskLabelsEditor(draft: manualBinding) }
+        .popover(isPresented: chipOpen(.reminders), arrowEdge: .bottom) {
+            VStack(spacing: 0) {
+                TaskReminderEditor(task: manualBinding)
+                Divider()
+                HStack { Spacer(); Button("Done") { openChip = nil }.keyboardShortcut(.defaultAction) }.padding(DS.Space.m)
+            }.frame(width: 520, height: 600)
+        }
+        .popover(isPresented: chipOpen(.deadline), arrowEdge: .bottom) { TaskDeadlineEditor(draft: effectiveBinding, close: { openChip = nil }) }
+        .popover(isPresented: chipOpen(.estimate), arrowEdge: .bottom) { TaskEstimateEditor(draft: effectiveBinding, close: { openChip = nil }) }
+    }
+    /// "Remind 19 Nov 2026 at 18.45" reads as "Remind me 18.45 today".
+    static func display(_ token: QuickEntry.Token) -> String {
+        guard token.group.hasPrefix("reminder_specs"), token.label.hasPrefix("Remind ") else { return token.label }
+        let rest = String(token.label.dropFirst("Remind ".count))
+        guard let date = try? Date(rest, strategy: Date.FormatStyle(date: .abbreviated, time: .shortened)) else { return "Remind me " + rest }
+        let calendar = Calendar.current
+        let time = date.formatted(date: .omitted, time: .shortened)
+        let day = calendar.isDateInToday(date) ? "today" : calendar.isDateInTomorrow(date) ? "tomorrow" : date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        return "Remind me \(time) \(day)"
     }
 
     /// One property chip with an optional "×" per parsed token it shows (or one that clears a manual value).
@@ -253,9 +295,6 @@ struct TaskCapturePanel: View {
         return quickChip(icon: "calendar", text: set?.text ?? "Date", tint: set?.tint, trailingIcon: repeats ? "repeat" : nil,
                          accessibility: set.map { "Date, \($0.text)" + (repeats ? ", repeats" : "") } ?? "Add date", identifier: "quickChipDate",
                          declines: declines, parsedTokens: tokens) { openChip = .date }
-            .popover(isPresented: chipOpen(.date), arrowEdge: .bottom) {
-                TaskDateEditor(draft: effectiveBinding, repeatExpanded: $repeatExpanded, canRepeat: true, isTeamTask: false, openTeamRepeat: {}, close: { openChip = nil })
-            }
     }
 
     private func priorityChip(_ parsed: QuickEntry, _ effective: Record) -> some View {
@@ -266,7 +305,6 @@ struct TaskCapturePanel: View {
         if manual["priority"] != nil, set { declines.append(ChipDecline(id: "quickClearPriority", help: "Clear the chosen priority") { clearManual(["priority"]) }) }
         return quickChip(icon: set ? "flag.fill" : "flag", text: set ? "P\(value)" : "Priority", tint: set ? DS.Palette.priority(value) : nil,
                          accessibility: set ? "Priority, P\(value)" : "Add priority", identifier: "quickChipPriority", declines: declines, parsedTokens: tokens) { openChip = .priority }
-            .popover(isPresented: chipOpen(.priority), arrowEdge: .bottom) { TaskPriorityEditor(draft: effectiveBinding, close: { openChip = nil }) }
     }
 
     private struct LabelEntry {
@@ -281,12 +319,11 @@ struct TaskCapturePanel: View {
         let entries = tokens.map { LabelEntry(name: $0.label, tint: DS.Palette.label, token: $0) }
             + chosen.map { LabelEntry(name: $0.name, tint: Color.project($0.string("color")), label: $0) }
         // Positional identity keeps the first chip, and the popover anchored to it, alive while labels are toggled.
-        ForEach(Array((entries.isEmpty ? [LabelEntry()] : entries).enumerated()), id: \.offset) { index, entry in
+        ForEach(Array(entries.enumerated()), id: \.offset) { index, entry in
             let chip = quickChip(icon: entry.name == nil ? "tag" : "tag.fill", text: entry.name ?? "Labels", tint: entry.tint,
                                  accessibility: entry.name.map { "Label, \($0)" } ?? "Add labels", identifier: index == 0 ? "quickChipLabels" : "quickChipLabels-\(index)",
                                  declines: labelDeclines(entry), parsedTokens: entry.token.map { [$0] } ?? []) { openChip = .label("") }
-            if index == 0 { chip.popover(isPresented: chipOpen(.label("")), arrowEdge: .bottom) { TaskLabelsEditor(draft: manualBinding) } }
-            else { chip }
+            chip
         }
     }
     private func labelDeclines(_ entry: LabelEntry) -> [ChipDecline] {
@@ -300,16 +337,9 @@ struct TaskCapturePanel: View {
     }
 
     private func remindersChip(_ effective: Record) -> some View {
-        let count = ReminderSpec.rows(effective).compactMap { ReminderSpec(row: $0) }.filter(\.enabled).count
-        return quickChip(icon: count > 0 ? "bell.fill" : "bell", text: count > 0 ? "\(count)" : "Reminders", tint: count > 0 ? DS.Palette.accent : nil,
+        let count = ReminderSpec.rows(baseTask).compactMap { ReminderSpec(row: $0) }.filter(\.enabled).count
+        return quickChip(icon: count > 0 ? "bell.fill" : "bell", text: count == 1 ? "1 reminder" : "\(count) reminders", tint: DS.Palette.textPrimary,
                          accessibility: count > 0 ? "Reminders, \(count)" : "Add reminders", identifier: "quickChipReminders") { openChip = .reminders }
-            .popover(isPresented: chipOpen(.reminders), arrowEdge: .bottom) {
-                VStack(spacing: 0) {
-                    TaskReminderEditor(task: manualBinding)
-                    Divider()
-                    HStack { Spacer(); Button("Done") { openChip = nil }.keyboardShortcut(.defaultAction) }.padding(DS.Space.m)
-                }.frame(width: 520, height: 600)
-            }
     }
 
     /// A chosen deadline or estimate. A parsed one stays in the declinable row below.
@@ -319,29 +349,29 @@ struct TaskCapturePanel: View {
             quickChip(icon: "flag.checkered", text: "Deadline " + TaskDetailFormat.relativeDay(day, completed: true).text, tint: past ? DS.Palette.danger : DS.Palette.dateTomorrow,
                       accessibility: "Deadline, " + TaskDetailFormat.relativeDay(day).text, identifier: "quickChipDeadline",
                       declines: [ChipDecline(id: "quickClearDeadline", help: "Clear the chosen deadline") { clearManual(["deadline_date"]) }]) { openChip = .deadline }
-                .popover(isPresented: chipOpen(.deadline), arrowEdge: .bottom) { TaskDeadlineEditor(draft: effectiveBinding, close: { openChip = nil }) }
         }
     }
     @ViewBuilder private func estimateChip(_ effective: Record) -> some View {
         if manual["duration_minutes"] != nil, let minutes = effective.durationMinutes {
             quickChip(icon: "hourglass", text: TaskDetailFormat.estimate(minutes), tint: DS.Palette.textSecondary, accessibility: "Estimate, \(TaskDetailFormat.estimate(minutes))", identifier: "quickChipEstimate",
                       declines: [ChipDecline(id: "quickClearEstimate", help: "Clear the chosen estimate") { clearManual(["duration_minutes"]) }]) { openChip = .estimate }
-                .popover(isPresented: chipOpen(.estimate), arrowEdge: .bottom) { TaskEstimateEditor(draft: effectiveBinding, close: { openChip = nil }) }
         }
     }
 
-    @ViewBuilder private func moreMenu(_ effective: Record) -> some View {
-        let canDeadline = effective.deadline == nil, canEstimate = effective.durationMinutes == nil, canRepeat = !effective["is_recurring"].flag
-        if canDeadline || canEstimate || canRepeat {
-            Menu {
-                if canDeadline { Button("Deadline", systemImage: "flag.checkered") { setField("deadline_date", .string(Dates.day(Date()))); DispatchQueue.main.async { openChip = .deadline } } }
-                if canEstimate { Button("Estimate", systemImage: "hourglass") { setField("duration_minutes", .number(30)); DispatchQueue.main.async { openChip = .estimate } } }
-                if canRepeat { Button("Repeat", systemImage: "repeat") { repeatExpanded = true; openChip = .date } }
-            } label: { ChipLabel(icon: "plus", iconLabel: "Add property") }
-            // The button menu style keeps the outlined chip label; borderless would strip it to a bare glyph.
-            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-            .help("Add property").accessibilityLabel("Add property").accessibilityIdentifier("quickChipMore")
+    private func moreMenu(_ effective: Record) -> some View {
+        Menu {
+            if effective.due == nil { Button("Date", systemImage: "calendar") { openChip = .date } }
+            if effective.priority == 4 { Button("Priority", systemImage: "flag") { openChip = .priority } }
+            Button("Labels", systemImage: "tag") { openChip = .label("") }
+            Button("Reminder", systemImage: "bell") { openChip = .reminders }
+            if effective.deadline == nil { Button("Deadline", systemImage: "flag.checkered") { setField("deadline_date", .string(Dates.day(Date()))); DispatchQueue.main.async { openChip = .deadline } } }
+            if effective.durationMinutes == nil { Button("Estimate", systemImage: "hourglass") { setField("duration_minutes", .number(30)); DispatchQueue.main.async { openChip = .estimate } } }
+            if !effective["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = true; openChip = .date } }
+        } label: {
+            Image(systemName: "plus").font(DS.Font.chip).foregroundStyle(DS.Palette.textSecondary).frame(width: 22, height: 22).contentShape(.rect)
         }
+        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().tint(DS.Palette.textSecondary)
+        .help("Add a date, priority, labels, a reminder…").accessibilityLabel("Add property").accessibilityIdentifier("quickChipMore")
     }
     private func setField(_ field: String, _ value: JSON) {
         var record = effectiveNow
@@ -359,10 +389,16 @@ struct TaskCapturePanel: View {
 
     private func footer(_ effective: Record, canAdd: Bool) -> some View {
         let name = destinationText(effective)
-        return HStack {
+        let project = store.record("projects", id: effective.string("project_id"))
+        return HStack(spacing: DS.Space.m) {
             Button { openChip = .destination } label: {
-                Label { Text("# " + name).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading) } icon: { Image(systemName: effective.string("project_id").isEmpty ? "tray" : "folder").accessibilityHidden(true) }
-                    .font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).contentShape(.rect)
+                HStack(spacing: DS.Space.s) {
+                    if let project { Circle().fill(DS.Palette.project(project).color).frame(width: 7, height: 7) }
+                    else { Image(systemName: "tray").font(DS.Font.chip) }
+                    Text(name).lineLimit(1)
+                    Image(systemName: "chevron.down").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary)
+                }
+                .font(DS.Font.taskTitle).foregroundStyle(DS.Palette.textPrimary).contentShape(.rect)
             }
             .buttonStyle(.plain).pointerStyle(.link).help("Choose project and section")
             .accessibilityLabel("Destination, \(name)").accessibilityIdentifier("quickDestination")
@@ -374,19 +410,10 @@ struct TaskCapturePanel: View {
                     applyEdit(record, from: effectiveNow)
                 })
             }
-            if onClose == nil {
-                Button {
-                    // The composer closes first, so the Brain dump sheet is presented by the window itself.
-                    let draft = text, project = effective.string("project_id")
-                    close()
-                    DispatchQueue.main.async { workspace.openBrainDump(project: project, text: draft) }
-                } label: { Label("Brain dump", systemImage: "sparkles").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.accent) }
-                    .buttonStyle(.plain).pointerStyle(.link).help("Turn a messy paragraph into tasks, on this device")
-                    .accessibilityIdentifier("quickBrainDump")
-            }
             Spacer()
-            Button("Add Task", action: submitInWorkspace).buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction).disabled(!canAdd)
+            Text(hint ?? "⏎ Add · ⌘⏎ Add another").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textTertiary).lineLimit(1).accessibilityIdentifier("quickAddHint")
+            Button("Add", action: submitInWorkspace).buttonStyle(.borderedProminent).tint(Color(brand: Brand.crimsonFill))
+                .keyboardShortcut(.defaultAction).disabled(!canAdd).accessibilityIdentifier("quickAddSubmit")
         }
     }
 

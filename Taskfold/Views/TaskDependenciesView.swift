@@ -105,7 +105,7 @@ struct TaskWaitingOnField: View {
     var body: some View {
         HStack {
             Label("Waiting on", systemImage: "hourglass").foregroundStyle(.secondary)
-            TextField("Person or thing", text: $text)
+            TextField("Who or what?", text: $text)
                 .textFieldStyle(.roundedBorder).focused($focused)
                 .onSubmit(commit)
                 .onChange(of: focused) { _, now in if !now { commit() } }

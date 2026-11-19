@@ -154,7 +154,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(input.waitForExistence(timeout: 5))
         let name = "Quit retains estimate change"
         input.typeText(name + " ~25m")
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         XCTAssertTrue(app.descendants(matching: .any)["taskDuration"].waitForExistence(timeout: 5))
         openChip(app, "taskDuration"); app.buttons["taskRemoveEstimate"].click()
         app.typeKey("q", modifierFlags: .command)
@@ -177,7 +177,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let capture = app.textFields["quickAdd"]
         XCTAssertTrue(capture.waitForExistence(timeout: 5))
         capture.typeText("Inspector keyboard regression")
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         let title = app.textFields["taskTitle"]
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         title.click(); app.typeKey("a", modifierFlags: .command)
@@ -239,7 +239,7 @@ final class TaskfoldMacUITests: XCTestCase {
             let input = app.textFields["quickAdd"]
             XCTAssertTrue(input.waitForExistence(timeout: 5))
             input.click(); input.typeText(title)
-            app.buttons["Add Task"].click()
+            app.buttons["quickAddSubmit"].click()
             let editor = app.descendants(matching: .any)["taskTitle"].firstMatch
             XCTAssertTrue(editor.waitForExistence(timeout: 5))
             let updated = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", title), object: editor)
@@ -376,12 +376,12 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Literal clock at 13pm")
         let warning = app.staticTexts["quickEntryWarning"].firstMatch; XCTAssertTrue(warning.waitForExistence(timeout: 5)); XCTAssertTrue(warning.shownText.contains("valid planned time"))
-        app.buttons["Add Task"].click(); app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock plan tomorrow in the mor")
-        let choice = app.buttons["referenceSuggestion-due_time:planning:in the morning"]; XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click(); app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click(); app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock plan tomorrow in the mor")
+        let choice = app.buttons["referenceSuggestion-due_time:planning:in the morning"]; XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click(); app.buttons["quickAddSubmit"].click()
         app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(app.textNamed("Clock plan").waitForExistence(timeout: 5))
         app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock shift at midnight")
         let rollover = app.buttons["quickChipDate"]
-        XCTAssertTrue(rollover.waitForExistence(timeout: 5)); XCTAssertTrue(rollover.label.contains("Tomorrow")); app.buttons["Add Task"].click()
+        XCTAssertTrue(rollover.waitForExistence(timeout: 5)); XCTAssertTrue(rollover.label.contains("Tomorrow")); app.buttons["quickAddSubmit"].click()
         app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch(); XCTAssertTrue(app.textNamed("Clock plan").waitForExistence(timeout: 5)); XCTAssertTrue(app.textNamed("Clock shift").exists); XCTAssertTrue(app.textNamed("Literal clock at 13pm").exists)
     }
 
@@ -390,7 +390,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Planned conversation tom")
         XCTAssertTrue(app.buttons["referenceSuggestion-due_date:planning:tomorrow"].waitForExistence(timeout: 5)); app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue((input.value as? String ?? "").contains("tomorrow")); input.typeText("every d")
-        app.buttons["referenceSuggestion-recurrence:planning:every day"].click(); input.typeText("!30mb"); app.buttons["referenceSuggestion-reminder_specs:planning:!30mb"].click(); app.buttons["Add Task"].click()
+        app.buttons["referenceSuggestion-recurrence:planning:every day"].click(); input.typeText("!30mb"); app.buttons["referenceSuggestion-reminder_specs:planning:!30mb"].click(); app.buttons["quickAddSubmit"].click()
         XCTAssertTrue(app.textNamed("Planned conversation").waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
         XCTAssertTrue(app.textNamed("Planned conversation").waitForExistence(timeout: 5)); app.terminate()
     }
@@ -401,10 +401,10 @@ final class TaskfoldMacUITests: XCTestCase {
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Suggested proposal #Cli")
         XCTAssertTrue(app.buttons["referenceSuggestion-project_id:qe-work"].waitForExistence(timeout: 5))
         app.typeKey(.downArrow, modifierFlags: []); app.typeKey(.return, modifierFlags: [])
-        XCTAssertTrue((input.value as? String ?? "").contains("Client Work")); XCTAssertTrue(app.buttons["Add Task"].exists)
+        XCTAssertTrue((input.value as? String ?? "").contains("Client Work")); XCTAssertTrue(app.buttons["quickAddSubmit"].exists)
         input.typeText("/Ne"); app.buttons["referenceSuggestion-section_id:qe-next"].click()
         input.typeText("@Cli"); app.buttons["referenceSuggestion-labels:qe-client-label"].click()
-        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click()
+        app.buttons["quickAddSubmit"].click(); app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click()
         XCTAssertTrue(app.textNamed("Suggested proposal").waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click(); XCTAssertTrue(app.textNamed("Suggested proposal").waitForExistence(timeout: 5)); app.terminate()
     }
@@ -416,7 +416,7 @@ final class TaskfoldMacUITests: XCTestCase {
         input.typeText(name + " every day from 3 January 2028 until 5 January 2028 for 3 occurrences {6 January 2028} ~25m")
         let summary = app.staticTexts["quickRepeatSummary"]; XCTAssertTrue(summary.waitForExistence(timeout: 5))
         XCTAssertTrue(summary.shownText.contains("2028-01-05")); XCTAssertTrue(summary.shownText.contains("3 left"))
-        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
+        app.buttons["quickAddSubmit"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         let link = app.buttons["taskRepeat"]
         openChip(app, "taskDate")
         XCTAssertTrue(link.isHittable); link.click(); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
@@ -441,7 +441,7 @@ final class TaskfoldMacUITests: XCTestCase {
         input.typeText(name + " every 2 months on last friday starting 2027-01-01 until 2027-06-30 for 3 occurrences")
         XCTAssertTrue(app.staticTexts["quickRepeatSummary"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["quickRepeatSummary"].shownText.contains("Last Friday"))
-        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click()
+        app.buttons["quickAddSubmit"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click()
         XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
         let link = app.buttons["taskRepeat"]
         openChip(app, "taskDate")
@@ -498,9 +498,9 @@ final class TaskfoldMacUITests: XCTestCase {
         input.typeText(name + " tomorrow at 4pm !30mb !2h !tomorrow 9am")
         let chips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "decline-reminder_specs:"))
         XCTAssertTrue(chips.firstMatch.waitForExistence(timeout: 5)); XCTAssertEqual(chips.count, 3)
-        app.buttons["Add Task"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click()
+        app.buttons["quickAddSubmit"].click(); app.outlines["Sidebar"].staticTexts["Inbox"].firstMatch.click()
         XCTAssertTrue(app.textNamed(name).waitForExistence(timeout: 5)); app.textNamed(name).click()
-        let link = app.buttons["taskReminders"]
+        let link = inspectorProperty(app, "taskReminders")
         for _ in 0..<6 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
         XCTAssertTrue(link.isHittable); link.click()
         XCTAssertTrue(app.buttons["30 min before"].waitForExistence(timeout: 5))
@@ -515,7 +515,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--reminder-fixture"]; app.launch(); defer { app.terminate() }
         let title = app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"]
         XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
-        let reminders = app.buttons["taskReminders"]
+        let reminders = inspectorProperty(app, "taskReminders")
         for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }; reminders.click()
         app.buttons["reminderAdd"].click(); app.popUpButtons["reminderKind"].click(); app.menuItems["Repeats"].click()
         let rule = app.textFields["reminderRepeatRule"]; XCTAssertTrue(rule.waitForExistence(timeout: 5))
@@ -534,7 +534,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--reminder-fixture"]; app.launch()
         let title = app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"]
         XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
-        let reminders = app.buttons["taskReminders"]
+        let reminders = inspectorProperty(app, "taskReminders")
         for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
         XCTAssertTrue(reminders.isHittable); reminders.click()
         XCTAssertTrue(app.buttons["reminderAdd"].waitForExistence(timeout: 5)); app.buttons["reminderAdd"].click()
@@ -559,7 +559,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let title = "Client proposal " + String(UUID().uuidString.prefix(6))
         input.typeText(title + #" #"Client Work" /"Next steps" +Alex @"Client notes""#)
         XCTAssertTrue(app.buttons["decline-project_id"].waitForExistence(timeout: 5))
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click()
         XCTAssertTrue(app.textNamed(title).waitForExistence(timeout: 5))
         // macOS 27 folds the section header's title and count into its collapse button ("Next steps, 1"), so it is no longer a separate static text.
@@ -747,7 +747,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let roomy = first.frame.height
         app.typeKey(",", modifierFlags: .command)
         app.buttons["Appearance"].click()
-        XCTAssertTrue(app.buttons["Save Custom Accent"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["customAccentPicker"].waitForExistence(timeout: 5))
         app.radioButtons["Compact"].click()
         app.buttons["customAccentPicker"].click()
         let colors = app.windows["Colors"]
@@ -758,9 +758,9 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(hex.waitForExistence(timeout: 5)); hex.click()
         app.typeKey("a", modifierFlags: .command); app.typeText("FFD95A"); app.typeKey(.return, modifierFlags: [])
         app.typeKey("w", modifierFlags: .command)
-        app.buttons["saveCustomAccent"].click()
+        // A custom colour applies as it is picked (design review mac-r1 removed "Save Custom Accent").
         XCTAssertTrue(app.buttons["accent-custom:FFD95A"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["saveCustomAccent"].exists, "Accent changes must preserve this page")
+        XCTAssertTrue(app.buttons["customAccentPicker"].exists, "Accent changes must preserve this page")
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Appearance and saved custom accent"; shot.lifetime = .keepAlways; self.add(shot)
         app.typeKey("w", modifierFlags: .command)
         XCTAssertTrue(first.waitForExistence(timeout: 5))
@@ -1098,7 +1098,8 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 5))
-        for id in ["quickChipDate", "quickChipPriority", "quickChipLabels", "quickChipReminders", "quickChipMore"] { XCTAssertTrue(app.descendants(matching: .any)[id].firstMatch.exists, id) }  // quickChipMore is a menu, so match any element type
+        // Unset properties are not shown as empty chips any more; "+" offers them (it is a menu, so match any element type).
+        XCTAssertTrue(app.descendants(matching: .any)["quickChipMore"].firstMatch.exists)
         app.typeText("Chip capture p1")
         XCTAssertTrue(app.buttons["decline-priority"].waitForExistence(timeout: 5))
         app.buttons["quickChipPriority"].click()
@@ -1784,7 +1785,7 @@ extension TaskfoldMacUITests {
         let summary = renderedText(app.staticTexts["quickRepeatSummary"])
         for phrase in ["Every day", "2028-01-05", "3 left"] { XCTAssertTrue(summary.contains(phrase), summary) }
         retainWindow(app, name: "Native Mac rich planning capture preview")
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         let complete = app.buttons["Complete Planning 9a8bfc3d"]
         XCTAssertTrue(complete.waitForExistence(timeout: 10))
         let taskID = String(complete.identifier.dropFirst("complete-".count))
@@ -1798,7 +1799,7 @@ extension TaskfoldMacUITests {
             XCTAssertTrue(app.popUpButtons.matching(NSPredicate(format: "value == %@", "Ready on phone")).firstMatch.exists)
             app.typeKey(.escape, modifierFlags: [])
             retainWindow(app, name: "Native Mac rich planning inspector — pass \(pass)")
-            let reminders = app.buttons["taskReminders"]
+            let reminders = inspectorProperty(app, "taskReminders")
             for _ in 0..<8 where !reminders.isHittable { app.scrollViews["inspector"].swipeUp() }
             XCTAssertTrue(reminders.isHittable); reminders.click()
             XCTAssertTrue(app.buttons["15 min before"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["30 min before"].exists)
@@ -1838,7 +1839,7 @@ extension TaskfoldMacUITests {
         for phrase in ["Every day", "2028-01-05", "\(remaining) left"] { XCTAssertTrue(ruleText.contains(phrase), ruleText) }
         retainWindow(app, name: "Phone completion returned to Mac — \(remaining) left")
         app.typeKey(.escape, modifierFlags: [])
-        let reminders = app.buttons["taskReminders"]
+        let reminders = inspectorProperty(app, "taskReminders")
         for _ in 0..<8 where !reminders.isHittable { app.scrollViews["inspector"].swipeUp() }
         XCTAssertTrue(reminders.isHittable); reminders.click()
         XCTAssertTrue(app.buttons["15 min before"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["30 min before"].exists)
@@ -2074,7 +2075,7 @@ extension TaskfoldMacUITests {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText("Backup wait preserves Mac task")
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 5))
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
         let before = try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary
@@ -2152,7 +2153,7 @@ extension TaskfoldMacUITests {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText("Backup wait preserves Mac task")
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 5))
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
         let before = try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary
@@ -2230,7 +2231,7 @@ extension TaskfoldMacUITests {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText("Backup workspace return proof")
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 5))
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
         let before = try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary
@@ -2408,7 +2409,7 @@ extension TaskfoldMacUITests {
         app.textNamed("Inbox").firstMatch.click()
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText(title)
-        app.buttons["Add Task"].click()
+        app.buttons["quickAddSubmit"].click()
         XCTAssertTrue(app.textNamed(title).firstMatch.waitForExistence(timeout: 5))
         let saved = try JSONSerialization.jsonObject(with: Data(contentsOf: path)) as! NSDictionary
         retainWindow(app, name:"Mac work saved after cancelling sign-in")
@@ -2598,7 +2599,7 @@ extension TaskfoldMacUITests {
         } else {
             app.typeKey("n", modifierFlags: .command)
             let input = app.textFields["quickAdd"]
-            XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText((f["title"] as! String) + " ~25m"); app.buttons["Add Task"].click()
+            XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText((f["title"] as! String) + " ~25m"); app.buttons["quickAddSubmit"].click()
         }
         let notes = app.textViews["taskDescription"]
         XCTAssertTrue(notes.waitForExistence(timeout: 5)); notes.click(); app.typeKey("a", modifierFlags: .command); notes.typeText(f["notes"] as! String); app.textFields["taskTitle"].click()
@@ -2708,8 +2709,21 @@ extension TaskfoldMacUITests {
 
     /// Opens a property chip's popover from the task detail's chip row.
     @MainActor private func openChip(_ app: XCUIApplication, _ id: String) {
-        let chip = app.buttons[id]
-        XCTAssertTrue(chip.waitForExistence(timeout: 5), "Missing chip \(id)"); chip.click()
+        let chip = inspectorProperty(app, id)
+        XCTAssertTrue(chip.waitForExistence(timeout: 5), "Missing property \(id)"); chip.click()
+    }
+    /// The inspector shows only properties that are set (design review mac-r1); an unset one is added from "Add ⌄".
+    /// Adding opens its editor, which is dismissed here so callers can click the row as before.
+    @MainActor private func inspectorProperty(_ app: XCUIApplication, _ id: String) -> XCUIElement {
+        let row = app.buttons[id]
+        if row.waitForExistence(timeout: 3) { return row }
+        let titles = ["taskDate": "Date", "taskPriority": "Priority", "taskLabels": "Labels", "taskReminders": "Reminder", "taskDuration": "Estimate", "taskDeadline": "Deadline"]
+        guard let title = titles[id] else { return row }
+        let add = app.descendants(matching: .any)["taskAddProperty"].firstMatch
+        XCTAssertTrue(add.waitForExistence(timeout: 5)); add.click()
+        let item = app.menuItems[title].firstMatch; XCTAssertTrue(item.waitForExistence(timeout: 5)); item.click()
+        _ = row.waitForExistence(timeout: 5); app.typeKey(.escape, modifierFlags: [])
+        return row
     }
     /// Opens the destination popover (project and section pickers) below the chips.
     @MainActor private func openDestination(_ app: XCUIApplication) {
@@ -2997,7 +3011,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["addTask"].waitForExistence(timeout: 20), "Local workspace must be ready before capture")
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 10))
-        input.typeText("Keyboard capture proof"); app.buttons["Add Task"].click()
+        input.typeText("Keyboard capture proof"); app.buttons["quickAddSubmit"].click()
         let title = app.textFields["taskTitle"]; XCTAssertTrue(title.waitForExistence(timeout: 8))
         title.click(); title.typeKey("a", modifierFlags: .command); title.typeText("Keyboard editing proof")
         let cacheURL = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
@@ -3065,6 +3079,10 @@ extension TaskfoldMacUITests {
     }
     @MainActor private func revealCollectionComments(_ app: XCUIApplication) -> XCUIElement {
         let editor = app.textViews["commentEditor"]
+        if !editor.waitForExistence(timeout: 2) {
+            // Comments appear when added from "Add ⌄" (or once the task has one).
+            app.descendants(matching: .any)["taskAddProperty"].firstMatch.click(); app.menuItems["Comment"].firstMatch.click()
+        }
         let form = app.scrollViews.containing(.textView, identifier: "commentEditor").firstMatch
         for _ in 0..<15 { if editor.exists && editor.isHittable { break }; form.scroll(byDeltaX: 0, deltaY: -400) }
         XCTAssertTrue(editor.exists); XCTAssertTrue(editor.isHittable); return editor
@@ -3082,7 +3100,7 @@ extension TaskfoldMacUITests {
         let notes = app.descendants(matching: .any)["taskDescription"].firstMatch
         notes.click(); notes.typeKey("a", modifierFlags: .command); notes.typeText(f.remoteNotes); title.click()
         _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["description"] as? String == f.remoteNotes && ($0["pending"] as? [Any])?.isEmpty == true }
-        let editor = revealCollectionComments(app); editor.click(); editor.typeText(v["remoteComment"] as! String); app.buttons["Add Comment"].click()
+        let editor = revealCollectionComments(app); editor.click(); editor.typeText(v["remoteComment"] as! String); app.buttons["Add comment"].click()
         let settled = try waitLiveConflict(f) { self.collectionTexts($0, f) == [v["remoteComment"] as! String] && ($0["pending"] as? [Any])?.isEmpty == true }
         retainWindow(app, name: "Mac independent comment before phone review")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
@@ -5178,9 +5196,11 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, "Keep the original notes.")
     }
     @MainActor private func noteProofFormat(_ app: XCUIApplication) -> XCUIElement {
-        let button = app.buttons["openNoteFormatting"]
-        for _ in 0..<8 where !button.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -250) }
-        XCTAssertTrue(button.exists && button.isHittable); button.click()
+        // "Format notes…" is in the inspector's "⋯" menu (the "Aa" chip is gone).
+        let menu = app.descendants(matching: .any)["taskMoreMenu"].firstMatch
+        XCTAssertTrue(menu.waitForExistence(timeout: 5)); menu.click()
+        let button = app.menuItems["openNoteFormatting"].firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: 5)); button.click()
         let editor = app.textViews["noteFormatText"]
         XCTAssertTrue(editor.waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertEqual(editor.value as? String, "Keep the original notes.")
