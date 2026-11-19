@@ -85,7 +85,13 @@ struct OnboardingView: View {
         direction = CGFloat(delta)
         withAnimation(layout) { page = next }
     }
-    private func finish() { onboardingSeen = true; dismiss() }
+    private func finish() {
+        #if DEBUG
+        // A forced tour in a fixture run must not mark the real app's tour as seen.
+        if FixtureDefaults.isFixtureRun { FixtureDefaults.set(true, forKey: "onboardingSeen"); dismiss(); return }
+        #endif
+        onboardingSeen = true; dismiss()
+    }
 
     private var title: String {
         ["Welcome to Taskfold", "Capture in one line", "Order that stays put", "Plan the day, then move fast", "Make it yours"][page]

@@ -321,6 +321,9 @@ struct TaskListView: View {
             List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in
                 guard workspace.section.scope == scope else { return }
                 workspace.selection = selection
+                // A click on a row selects it, but key focus could stay in the sidebar, so Space and Return went
+                // nowhere. Selecting in the list makes the list the first responder (mac-r2 L-1).
+                if !selection.isEmpty && !taskListFocused { taskListFocused = true }
             })) {
                 if workspace.scope.usesProductiveWork && store.productiveReading.incomplete {
                     Label("Some grouped tasks need review. Open their heading in All Tasks.", systemImage: "exclamationmark.circle")

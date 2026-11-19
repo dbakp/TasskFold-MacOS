@@ -478,6 +478,18 @@ struct TaskInspectorForm: View {
     /// Properties that are unset stay hidden until added from "Add ⌄"; the project is always shown.
     @State private var revealed = Set<String>()
     private func shows(_ key: String, _ set: Bool) -> Bool { set || revealed.contains(key) }
+    /// Asks a newly revealed section's field to take focus. Cleared shortly after, so a section that is rebuilt later
+    /// does not steal focus again.
+    @State private var fieldRequest: InspectorFieldRequest?
+    /// Shows a section from "Add ⌄" and moves focus into its field. Without this, focus went back to the title,
+    /// which stayed selected, so typing replaced the task's name (mac-r2 IQ-1).
+    private func revealSection(_ key: String, field: InspectorFieldRequest.Field) {
+        titleFocused = false; titleChipFocused = false
+        revealed.insert(key); collapsedSections.remove(key)
+        let request = InspectorFieldRequest(field: field)
+        DispatchQueue.main.async { fieldRequest = request }
+        Task { try? await Task.sleep(for: .seconds(1)); if fieldRequest == request { fieldRequest = nil } }
+    }
     /// Shows a hidden property row, then opens its editor once the row exists to anchor the popover.
     private func reveal(_ key: String, open chip: DetailChip? = nil) {
         revealed.insert(key)
@@ -628,14 +640,14 @@ struct TaskInspectorForm: View {
             if !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; reveal("when", open: .date) } }
             if draft.string("assigned_to").isEmpty && !assigneeRequested { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
             Divider()
-            if rowsMode && store.canEditSubtasks(of: taskID) { Button("Subtask", systemImage: "list.bullet") { revealed.insert("subtasks") }.accessibilityIdentifier("addSubtaskSection") }
+            if rowsMode && store.canEditSubtasks(of: taskID) { Button("Subtask", systemImage: "list.bullet") { revealSection("subtasks", field: .subtask) }.accessibilityIdentifier("addSubtaskSection") }
             if !isCreating, !isTeamTask, store.supportsDependencies(taskID: taskID) {
-                Button("Blocker", systemImage: "lock") { revealed.insert("dependencies") }
-                Button("Waiting on", systemImage: "hourglass") { revealed.insert("dependencies") }
+                Button("Blocker", systemImage: "lock") { revealSection("dependencies", field: .blocker) }.accessibilityIdentifier("addBlockerSection")
+                Button("Waiting on", systemImage: "hourglass") { revealSection("dependencies", field: .waitingOn) }.accessibilityIdentifier("addWaitingOnSection")
             }
             if !isTeamTask { Button("Attachment…", systemImage: "paperclip") { importing = true }.help("You can also paste an image into a comment with ⌘V") }
             if isTeamTask && store.taskFileUploadsEnabled { Button("Shared files…", systemImage: "paperclip") { taskFiles = store.fileUploadRequest(taskID: taskID) }.accessibilityIdentifier("openTaskFiles") }
-            if !isTeamTask { Button("Comment", systemImage: "text.bubble") { revealed.insert("comments") } }
+            if !isTeamTask { Button("Comment", systemImage: "text.bubble") { revealSection("comments", field: .comment) }.accessibilityIdentifier("addCommentSection") }
         } label: { Label("Add", systemImage: "plus") }
         .menuStyle(.borderlessButton).fixedSize()
         .tint(DS.Palette.textSecondary)
@@ -748,7 +760,7 @@ struct TaskInspectorForm: View {
                 }
             }
             VStack(alignment: .leading, spacing: DS.Space.xs + DS.Space.xxs) {
-                CommentEditor(text: $comment, pasteImage: { data in
+                CommentEditor(text: $comment, focusRequest: fieldRequest?.field == .comment ? fieldRequest : nil, pasteImage: { data in
                     do {
                         let name = "Pasted image \(UUID().uuidString.prefix(8)).png"
                         guard data.count <= 5 * 1024 * 1024 else { throw AppFailure(message: "Choose an image smaller than 5 MB.") }
@@ -813,6 +825,7 @@ struct TaskInspectorForm: View {
         .onAppear { workspaceBinding = admission?.workspace ?? WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=admission?.source.root ?? store.record("tasks",id:taskID); if !teamDraftCaptured { teamDraftCaptured = true; if let admission { teamDraft = admission.teamDraft } else { teamDraft = sourceRoot.flatMap { try? store.captureTeamTaskEditor($0) } } }; load();sourceContext=admission?.source ?? TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { if !isTeamTask { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) } }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
+        .environment(\.inspectorFieldRequest, fieldRequest)
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
         .sheet(item: $conversation) { SharedConversationView(request: $0) }
         .sheet(item: $audioDraft) { TaskAudioDraftView(request: $0, taskID: taskID) }
@@ -1472,3 +1485,18 @@ struct TeamEditorNativeFixtureView: View {
 }
 }
 #endif
+
+/// A one-shot request from the inspector's "Add ⌄" menu for a section's field to take key focus (mac-r2 IQ-1).
+struct InspectorFieldRequest: Equatable {
+    enum Field { case subtask, blocker, waitingOn, comment }
+    let field: Field
+    let id = UUID()
+}
+
+private struct InspectorFieldRequestKey: EnvironmentKey { static let defaultValue: InspectorFieldRequest? = nil }
+extension EnvironmentValues {
+    var inspectorFieldRequest: InspectorFieldRequest? {
+        get { self[InspectorFieldRequestKey.self] }
+        set { self[InspectorFieldRequestKey.self] = newValue }
+    }
+}

@@ -1,4 +1,6 @@
 import SwiftUI
+import os
+import Security
 
 struct SharedDraftsView: View {
     @Environment(Store.self) private var store
@@ -172,45 +174,63 @@ private struct SharedDraftReview: View {
     }
 }
 
-/// Storage permission can wait independently of the first app window.
+/// Storage permission can wait independently of the first app window. On the Mac this sits inside the detail
+/// column, never above the split view, so it cannot cover column headers (mac-r2 CAL-1).
 struct SharedStorageSetupBanner: View {
     @Environment(Store.self) private var store
     @State private var visible = false
     @State private var takingLonger = false
     @State private var dismissed = false
+    /// Debug UI tests and screenshots force the failed state on, whatever the build's signing.
+    static var forced: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("--force-setup-banner")
+        #else
+        false
+        #endif
+    }
+    /// An unsigned Debug build has no App Group, so widgets can never connect. Say so once in the log rather than
+    /// showing a banner the developer cannot act on (mac-r2 CAL-2). Release builds always show it.
+    @MainActor static let suppressed: Bool = {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--hide-setup-banner") { return true }
+        guard !forced, !SharedStartupNativeFixture.enabled, !SharedStorageAvailability.appGroupEntitled else { return false }
+        SharedStorageAvailability.logger.notice("Debug build without an App Group: widgets and shared drafts stay off, and the setup banner is hidden.")
+        return true
+        #else
+        return false
+        #endif
+    }()
+    private var failed: Bool { Self.forced || store.startupSharingFailed }
+    private var shown: Bool { Self.forced ? !dismissed : visible && !store.startupSharedStorageReady && !dismissed }
     var body: some View {
         VStack(spacing: 0) {
-            if visible && !store.startupSharedStorageReady && (!dismissed || store.startupSharingFailed) {
-                HStack(alignment: .top, spacing: 10) {
-                    if store.startupSharingWorking && !takingLonger { ProgressView().controlSize(.small) }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(store.startupSharingFailed ? "Widgets and shared drafts aren’t connected." : takingLonger ? "Shared storage is taking longer than usual." : "Connecting widgets and shared drafts…")
-                            .accessibilityIdentifier("startupSharedStorageStatus")
-                        if takingLonger && store.startupSharingWorking {
-                            #if os(macOS)
-                            Text("You can keep using Taskfold. If macOS shows an access request for Taskfold, respond to it.")
-                                .accessibilityIdentifier("startupSharedStorageGuidance")
-                            #else
-                            Text("You can keep using Taskfold. Widgets and shared drafts will connect when shared storage becomes available.")
-                                .accessibilityIdentifier("startupSharedStorageGuidance")
-                            #endif
-                        }
-                    }.font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if !Self.suppressed && shown {
+                HStack(alignment: .center, spacing: 8) {
+                    if failed { Image(systemName: "exclamationmark.triangle").foregroundStyle(.secondary).accessibilityHidden(true) }
+                    else if store.startupSharingWorking && !takingLonger { ProgressView().controlSize(.mini) }
+                    Text(failed ? "Widgets can’t see your tasks yet. Your tasks are safe." : takingLonger ? "Widgets are taking longer than usual to connect. Your tasks are safe." : "Connecting widgets…")
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        .help(takingLonger && !failed ? "You can keep using Taskfold. If macOS shows an access request for Taskfold, respond to it." : "")
+                        .accessibilityIdentifier("startupSharedStorageStatus")
                     Spacer(minLength: 0)
-                    if !store.startupSharingWorking {
-                        Button("Try again") { dismissed = false; store.retryStartupPublication() }.font(.caption)
-                    } else if takingLonger {
-                        Button { dismissed = true } label: {
-                            Image(systemName: "xmark")
-                                #if os(iOS)
-                                .frame(minWidth: 44, minHeight: 44)
-                                #endif
-                        }
-                            .accessibilityLabel("Dismiss storage status")
-                            .accessibilityHint("Connection continues in the background.")
-                            .accessibilityIdentifier("dismissStartupSharedStorageStatus")
+                    if failed || !store.startupSharingWorking {
+                        Button("Try Again") { dismissed = false; store.retryStartupPublication() }.buttonStyle(.link)
+                            .accessibilityIdentifier("retryStartupSharedStorage")
                     }
-                }.padding(.horizontal, 14).padding(.vertical, 8).background(.bar)
+                    Button { dismissed = true } label: { Image(systemName: "xmark").font(.system(size: 10, weight: .semibold)) }
+                        .buttonStyle(.borderless).foregroundStyle(.secondary)
+                        .help("Hide until the next launch")
+                        .accessibilityLabel("Dismiss storage status")
+                        .accessibilityHint("Taskfold keeps trying in the background.")
+                        .accessibilityIdentifier("dismissStartupSharedStorageStatus")
+                }
+                .font(.system(size: 12)).foregroundStyle(.secondary)
+                .padding(.horizontal, 12).padding(.vertical, 5).frame(minHeight: 28)
+                .background(.bar)
+                .overlay(alignment: .bottom) { Divider() }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("startupSharedStorageBanner")
             }
         }.task(id: store.startupSharedStorageReady) {
             visible = false; takingLonger = false; dismissed = false
@@ -221,4 +241,14 @@ struct SharedStorageSetupBanner: View {
             } catch { }
         }
     }
+}
+
+/// Whether this build can reach the App Group that widgets and the share extension read.
+enum SharedStorageAvailability {
+    static let logger = Logger(subsystem: "com.dbakp.taskfold", category: "SharedStorage")
+    static let appGroupEntitled: Bool = {
+        guard let task = SecTaskCreateFromSelf(nil),
+              let value = SecTaskCopyValueForEntitlement(task, "com.apple.security.application-groups" as CFString, nil) as? [String] else { return false }
+        return !value.isEmpty
+    }()
 }

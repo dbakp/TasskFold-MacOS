@@ -258,9 +258,7 @@ struct RootView: View {
         // Debug options use --key=value so AppKit never mistakes a bare value for a document to open.
         func option(_ key: String) -> String? { arguments.first { $0.hasPrefix("--\(key)=") }.map { String($0.dropFirst(key.count + 3)) } }
         // --section= is applied last (the fixtures below reset navigation to Today while they seed); see the end of this function.
-        // Preview launches state the accent explicitly so one capture cannot tint the next.
-        if let value = option("accent") { UserDefaults.standard.set(value, forKey: "accent") }
-        else if arguments.contains("--preview") { UserDefaults.standard.set("rose", forKey: "accent") }
+        // The accent for preview launches is set in TaskfoldMacApp.init, before any view reads it.
         if arguments.contains("--preview-account") { workspace.previewsAccount = true }
         if let tab = option("open-settings").flatMap(SettingsTab.init(rawValue:)) {
             workspace.settingsTab = tab
@@ -275,7 +273,10 @@ struct RootView: View {
             let width = option("window-width").flatMap(Double.init) ?? 1380
             Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: width, height: 840)) }
         }
-        if arguments.contains("--preview") { Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: 1380, height: 840)) } }
+        if arguments.contains("--preview") {
+            let width = option("window-width").flatMap(Double.init) ?? 1380
+            Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: width, height: 840)) }
+        }
         if arguments.contains("--remote-highlight-preview") {
             // Screenshot fixture: tint the first two visible tasks as if another device had just changed them.
             Task { try? await Task.sleep(for: .seconds(1.5)); store.previewRemoteHighlight(Set(store.tasks.prefix(2).map(\.id))) }
@@ -451,14 +452,14 @@ struct RootView: View {
         }
         if arguments.contains("--uitesting") {
             if !arguments.contains("--invitation-link-fixture") && !arguments.contains("--keep-invitation-route") { pendingInvitations = false }
-            store.startLocal()
+            store.startLocal(persist: false)
             workspace.section = .today
             workspace.inspectorShown = true
             if arguments.contains("--day-drag-fixture") {
                 store.snapshot = Snapshot()
                 for scope in ["today", "inbox", "upcoming", "all"] {
-                    UserDefaults.standard.set(false, forKey: "mac.view.\(scope).overdueCollapsed")
-                    UserDefaults.standard.set("manual", forKey: "mac.view.\(scope).sortBy")
+                    FixtureDefaults.set(false, forKey: "mac.view.\(scope).overdueCollapsed")
+                    FixtureDefaults.set("manual", forKey: "mac.view.\(scope).sortBy")
                 }
                 store.snapshot.tables["tasks"] = [(-1, "Overdue sample"), (0, "Today first"), (0, "Today last"), (1, "Tomorrow sample")].enumerated().map { index, sample in
                     var task = Record.task(user: store.userID, date: Calendar.current.date(byAdding: .day, value: sample.0, to: Date())!)
@@ -474,8 +475,8 @@ struct RootView: View {
                 try? store.persist()
             }
         }
-        if ConversationFixture.enabled { store.startLocal(); store.seedConversationFixture(); workspace.section = .inbox }
-        if arguments.contains("--uitesting") && arguments.contains("--workflow-fixture") { store.startLocal(); store.seedWorkflowFixture(); workspace.section = .inbox }
+        if ConversationFixture.enabled { store.startLocal(persist: false); store.seedConversationFixture(); workspace.section = .inbox }
+        if arguments.contains("--uitesting") && arguments.contains("--workflow-fixture") { store.startLocal(persist: false); store.seedWorkflowFixture(); workspace.section = .inbox }
         // The sandboxed UI runner cannot write this app's protected cache.
         // Seed only inside the reserved synthetic host, never a normal app build.
         if arguments.contains("--uitesting"), arguments.contains("--assignment-tree-fixture"),
@@ -495,12 +496,12 @@ struct RootView: View {
         }
         if arguments.contains("--uitesting") && arguments.contains("--workflow-diagnostics") { try? store.persist() }
         if arguments.contains("--uitesting") && arguments.contains("--quick-entry-fixture") {
-            store.startLocal(); store.snapshot = Snapshot.quickEntryFixture(user: store.userID); workspace.section = .inbox
+            store.startLocal(persist: false); store.snapshot = Snapshot.quickEntryFixture(user: store.userID); workspace.section = .inbox
             workspace.projectMembers["qe-work"] = store.rows("project_members:qe-work")
             try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--planner-fixture") {
-            store.startLocal(); store.snapshot = Snapshot(); workspace.section = .calendar; workspace.calendarMode = .day
+            store.startLocal(persist: false); store.snapshot = Snapshot(); workspace.section = .calendar; workspace.calendarMode = .day
             workspace.calendarDay = Calendar.current.startOfDay(for: Date())
             store.snapshot.tables["tasks"] = [("planner-design", "Design session", "09:00", 60), ("planner-review", "Review layout", "09:30", 30), ("planner-anchor", "Call Alex", "11:00", 0), ("planner-report", "Prepare report", "", 25)].map { id, title, time, estimate in
                 var task = Record.task(user: store.userID, date: Date())
@@ -511,37 +512,37 @@ struct RootView: View {
             }
             try? store.persist()
         }
-        if arguments.contains("--uitesting") && arguments.contains("--assignee-pattern-testing") { store.startLocal(); store.startAssigneePatternFixture(); workspace.section = .inbox }
-        if arguments.contains("--uitesting") && arguments.contains("--date-phrase-testing") { store.startLocal(); store.startDatePhraseFixture(); workspace.section = .inbox }
+        if arguments.contains("--uitesting") && arguments.contains("--assignee-pattern-testing") { store.startLocal(persist: false); store.startAssigneePatternFixture(); workspace.section = .inbox }
+        if arguments.contains("--uitesting") && arguments.contains("--date-phrase-testing") { store.startLocal(persist: false); store.startDatePhraseFixture(); workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--clock-window-testing") {
-            store.startLocal(); store.startClockWindowFixture(); workspace.section = .inbox
+            store.startLocal(persist: false); store.startClockWindowFixture(); workspace.section = .inbox
         }
         if arguments.contains("--uitesting") && arguments.contains("--calendar-context-testing") {
-            store.startLocal(); store.startCalendarContextFixture(); workspace.section = .saved("live-calendar")
+            store.startLocal(persist: false); store.startCalendarContextFixture(); workspace.section = .saved("live-calendar")
         }
         if arguments.contains("--uitesting") && arguments.contains("--filter-creation-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.filterCreationFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--filter-times-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.filterTimeFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--filter-dates-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.filterDateFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--filter-primitives-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.filterPrimitiveFixture(user: store.userID, unknownSettings: ProcessInfo.processInfo.arguments.contains("--filter-unknown-settings-fixture")); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--parity-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
-            UserDefaults.standard.set("roomy", forKey: "mac.taskDensity")
-            UserDefaults.standard.set("", forKey: "mac.collapsedProjectSections")
-            UserDefaults.standard.set("list", forKey: "mac.view.project:parity-project.layout")
-            UserDefaults.standard.set("manual", forKey: "mac.view.project:parity-project.sortBy")
-            UserDefaults.standard.set(false, forKey: "mac.view.project:parity-project.showCompleted")
+            store.startLocal(persist: false); store.snapshot = Snapshot()
+            FixtureDefaults.set("roomy", forKey: "mac.taskDensity")
+            FixtureDefaults.set("", forKey: "mac.collapsedProjectSections")
+            FixtureDefaults.set("list", forKey: "mac.view.project:parity-project.layout")
+            FixtureDefaults.set("manual", forKey: "mac.view.project:parity-project.sortBy")
+            FixtureDefaults.set(false, forKey: "mac.view.project:parity-project.showCompleted")
             let project = Record(["id": .string("parity-project"), "user_id": .string(store.userID), "name": .string("Release workshop")])
             store.snapshot.tables["projects"] = [project]
             store.snapshot.tables["sections"] = [Record(["id": .string("planning"), "project_id": .string(project.id), "name": .string("Planning")]), Record(["id": .string("ready"), "project_id": .string(project.id), "name": .string("Ready")])]
@@ -559,27 +560,27 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
-        if arguments.contains("--uitesting") && arguments.contains("--insights-fixture") { store.startLocal();store.seedInsightsFixture();workspace.section = .inbox }
+        if arguments.contains("--uitesting") && arguments.contains("--insights-fixture") { store.startLocal(persist: false);store.seedInsightsFixture();workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--widget-list-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = arguments.contains("--widget-ordering-fixture") ? Snapshot.widgetOrderingFixture(user:store.userID) : Snapshot.widgetListFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--deadline-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.deadlineFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--reminder-route-testing") {
-            store.startLocal(); store.seedReminderRouteFixture(); workspace.section = .today; workspace.inspectorShown = false
+            store.startLocal(persist: false); store.seedReminderRouteFixture(); workspace.section = .today; workspace.inspectorShown = false
         }
         if arguments.contains("--uitesting") && arguments.contains("--reminder-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.disableNotifications()
             var task = Record.task(user: store.userID, date: Date())
             task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"); task["title"] = .string("Reminder review")
             task["due_time"] = .string("23:55"); task["reminder_specs"] = .array([])
             store.snapshot = Snapshot(); store.snapshot.tables["tasks"] = [task]; workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--conflict-fixture") {
-            store.startLocal(); store.dailyBackupsEnabled = false; store.snapshot = Snapshot()
+            store.startLocal(persist: false); store.dailyBackupsEnabled = false; store.snapshot = Snapshot()
             var local = Record.task(user: store.userID, date: Date())
             local["id"] = .string("conflict-task"); local["title"] = .string("Review launch copy")
             let legacyEmpty = ProcessInfo.processInfo.arguments.contains("--legacy-null-collection-fixture")
@@ -595,7 +596,7 @@ struct RootView: View {
             try? store.persist()
         }
                 if ProcessInfo.processInfo.arguments.contains("--deletion-conflict-fixture") {
-                    store.startLocal(); store.dailyBackupsEnabled = false
+                    store.startLocal(persist: false); store.dailyBackupsEnabled = false
                     var before = Record.task(user: store.userID, date: Date())
                     before["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"); before["title"] = .string("Next occurrence")
                     var remote = before; remote["title"] = .string("Updated next occurrence")
@@ -608,22 +609,22 @@ struct RootView: View {
                     workspace.section = .today
                 }
         if arguments.contains("--child-rows-fixture"), arguments.contains("--uitesting") || arguments.contains("--preview") {
-            store.startLocal(); store.seedChildRowsFixture()
-            UserDefaults.standard.set("list", forKey: "mac.view.project:\(ChildRowsFixture.project).layout")
-            UserDefaults.standard.set("manual", forKey: "mac.view.project:\(ChildRowsFixture.project).sortBy")
+            store.startLocal(persist: false); store.seedChildRowsFixture()
+            FixtureDefaults.set("list", forKey: "mac.view.project:\(ChildRowsFixture.project).layout")
+            FixtureDefaults.set("manual", forKey: "mac.view.project:\(ChildRowsFixture.project).sortBy")
             workspace.section = .project(ChildRowsFixture.project)
         }
-        if arguments.contains("--pinned-notes-seed") { store.startLocal(); store.seedPinnedNotesFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
-        if arguments.contains("--project-pulse-seed") { store.startLocal(); store.seedProjectPulseFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
+        if arguments.contains("--pinned-notes-seed") { store.startLocal(persist: false); store.seedPinnedNotesFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
+        if arguments.contains("--project-pulse-seed") { store.startLocal(persist: false); store.seedProjectPulseFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--focus-session-seed") {
-            store.startLocal(); store.seedFocusSessionFixture(); workspace.section = .inbox; workspace.inspectorShown = false
+            store.startLocal(persist: false); store.seedFocusSessionFixture(); workspace.section = .inbox; workspace.inspectorShown = false
         }
-        if arguments.contains("--inbox-review-seed") { store.startLocal(); store.seedInboxReviewFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
-        if arguments.contains("--capacity-widget-seed") { store.startLocal(); store.seedCapacityWidgetFixture(); workspace.section = .today }
-        if arguments.contains("--completion-cycle-fixture") { store.startLocal(); store.seedCompletionCycleFixture(); workspace.section = .today }
-        if arguments.contains("--widget-action-seed") { store.startLocal(); store.seedWidgetActionFixture(); workspace.section = .today }
+        if arguments.contains("--inbox-review-seed") { store.startLocal(persist: false); store.seedInboxReviewFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
+        if arguments.contains("--capacity-widget-seed") { store.startLocal(persist: false); store.seedCapacityWidgetFixture(); workspace.section = .today }
+        if arguments.contains("--completion-cycle-fixture") { store.startLocal(persist: false); store.seedCompletionCycleFixture(); workspace.section = .today }
+        if arguments.contains("--widget-action-seed") { store.startLocal(persist: false); store.seedWidgetActionFixture(); workspace.section = .today }
         if arguments.contains("--sticky-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
+            store.startLocal(persist: false); store.snapshot = Snapshot()
             store.snapshot.tables["tasks"] = (0..<100).map { index in
                 let offset = index < 60 ? 0 : 1
                 var task = Record.task(user: store.userID, date: Calendar.current.date(byAdding: .day, value: offset, to: Date()))
@@ -633,7 +634,7 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--link-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
+            store.startLocal(persist: false); store.snapshot = Snapshot()
             var linked = Record.task(user: store.userID, date: Date())
             linked["id"] = .string("link-0"); linked["title"] = .string("Read https://example.com/guides/focus before Friday")
             var plain = Record.task(user: store.userID, date: Date())
@@ -642,8 +643,8 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--priority-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
-            UserDefaults.standard.set("manual", forKey: "mac.view.today.sortBy")
+            store.startLocal(persist: false); store.snapshot = Snapshot()
+            FixtureDefaults.set("manual", forKey: "mac.view.today.sortBy")
             store.snapshot.tables["tasks"] = [("P1 alpha", 1), ("P1 beta", 1), ("P3 gamma", 3), ("P3 delta", 3)].enumerated().map { index, sample in
                 var task = Record.task(user: store.userID, date: Date())
                 task["id"] = .string("band-\(index)"); task["title"] = .string(sample.0); task["priority"] = .number(Double(sample.1))
@@ -652,11 +653,11 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--navigation-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
+            store.startLocal(persist: false); store.snapshot = Snapshot()
             for scope in ["today", "inbox", "all", "completed"] {
-                UserDefaults.standard.set(false, forKey: "mac.view.\(scope).showCompleted")
-                UserDefaults.standard.set(0, forKey: "mac.view.\(scope).priorityFilter")
-                UserDefaults.standard.set("title", forKey: "mac.view.\(scope).sortBy")
+                FixtureDefaults.set(false, forKey: "mac.view.\(scope).showCompleted")
+                FixtureDefaults.set(0, forKey: "mac.view.\(scope).priorityFilter")
+                FixtureDefaults.set("title", forKey: "mac.view.\(scope).sortBy")
             }
             store.snapshot.tables["projects"] = [Record(["id": .string("nav-project"), "name": .string("Navigation Studio"), "user_id": .string(store.userID)])]
             store.snapshot.tables["tasks"] = (0..<160).map { index in
@@ -674,7 +675,7 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--preview") {
-            store.startLocal(); store.snapshot = Snapshot()
+            store.startLocal(persist: false); store.snapshot = Snapshot()
             let focus = Record(["id": .string("preview-project"), "name": .string("A little more focus"), "user_id": .string("preview"), "color": .string("#e31e4b"), "order_index": .number(0)])
             let home = Record(["id": .string("preview-home"), "name": .string("Home"), "user_id": .string("preview"), "color": .string("#3b82f6"), "order_index": .number(1)])
             store.snapshot.tables["projects"] = [focus, home]
@@ -822,6 +823,8 @@ struct WorkspaceView: View {
                 SidebarView()
                     .navigationSplitViewColumnWidth(min: 200, ideal: 230, max: 320)
             } detail: {
+                VStack(spacing: 0) {
+                SharedStorageSetupBanner()
                 Group {
                     if workspace.section == .someday { SomedayView() }
                     else if workspace.section == .habits { HabitsView() }
@@ -829,11 +832,13 @@ struct WorkspaceView: View {
                         // Use the window budget, including space for the expanded sidebar, so
                         // toggling it cannot trigger a second calendar layout mid-transition.
                         // The day panel is hidden by default: the week already shows the day (owner decision 6).
-                        CalendarView(showsDayPanel: workspace.calendarDayPanel && window.size.width >= (workspace.inspectorVisible ? 1550 : 1240))
+                        CalendarView(showsDayPanel: workspace.calendarDayPanel && window.size.width >= (workspace.inspectorVisible ? 1550 : 1240), windowWidth: window.size.width)
                     }
                     else { TaskListView(scope: workspace.scope, preferenceKey: workspace.section.key) }
                 }
                 .id(workspace.section)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
                 .inspector(isPresented: Binding(get: { inspectorVisible }, set: { shown in
                     // Automatic hiding for an empty selection is not a user preference change.
                     if !workspace.actionSelection.isEmpty { workspace.inspectorShown = shown }
@@ -875,6 +880,22 @@ struct WorkspaceView: View {
 }
 
 #if DEBUG
+/// Settings written by Debug fixture and preview launches. In the real app's bundle they go to the volatile
+/// argument domain, so a fixture run never changes what the next normal launch reads (mac-r2 OA-1). Isolated
+/// test bundles keep their own defaults domain, so tests there may still change these settings through the UI.
+enum FixtureDefaults {
+    static let productionBundle = "com.dbakp.taskfold.mac"
+    static var isFixtureRun: Bool {
+        ProcessInfo.processInfo.arguments.dropFirst().contains { $0 == "--uitesting" || $0 == "--preview" || $0.hasPrefix("--capture") || $0.hasSuffix("-fixture") || $0.hasSuffix("-seed") }
+    }
+    static func set(_ value: Any, forKey key: String, defaults: UserDefaults = .standard, bundle: String? = Bundle.main.bundleIdentifier) {
+        guard bundle == productionBundle else { defaults.set(value, forKey: key); return }
+        var domain = defaults.volatileDomain(forName: UserDefaults.argumentDomain)
+        domain[key] = value
+        defaults.setVolatileDomain(domain, forName: UserDefaults.argumentDomain)
+    }
+}
+
 enum DebugCapture {
     /// Cache-displays the window frame, then repaints each visual-effect region with a solid background and
     /// its own subviews, because material backdrops cannot be rendered offscreen.

@@ -193,6 +193,20 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 - **Fixed on the way:** the menu bar extra's `TimelineView` label looped at launch (100% CPU); the account menu printed over the sidebar's last rows; the preview fixture still wrote retired JSON subtasks.
 - **Next:** the day ring as Today's hero and a Plan-into-the-ring signature (owner decision 9) get their own design round. iPhone is unchanged.
 
+### Mac first run (design review mac-r2, 19 November 2026)
+- [x] **PR 1, first-run fixes** ([Mac #199](https://github.com/dbakp/TasskFold-MacOS/pull/199), [iOS #211](https://github.com/dbakp/TaskFold-iOS/pull/211)):
+  - [x] CAL-1 and CAL-2: the setup banner sits in the detail column, can be closed and says "Widgets can’t see your tasks yet. Your tasks are safe." Debug builds without an App Group hide it.
+  - [x] OA-1: fixtures and previews no longer save local mode, the accent, `onboardingSeen` or `mac.view.*`. A one-off repair clears a leaked local-mode flag when the local workspace holds only starter or preview rows (Core `startLocal(persist:)`, `LocalModeDefaults`).
+  - [x] O-1: `Scripts/capture.sh` uses an isolated bundle, `open -n` and its own PID, with no `pkill` and the banner left on.
+  - [x] CAL-3, CAL-4, CAL-5 and CAL-7:
+    - Today is always enabled.
+    - The Year view has day numbers, workload dots and a today circle.
+    - Week columns are at least 144 pt and scroll sideways, and the view switcher becomes a pull-down in narrow windows.
+    - The period subtitles show the exact dates.
+  - [x] L-1: click a row, then press Space to complete it.
+  - [x] IQ-1: Add ▸ Subtask, Comment, Waiting on and Blocker focus their own field.
+- **Next:** PR 2 (sign-in screen and account entry points) and PR 3 (starter-project onboarding) wait for your mockup review. PR 4 is polish.
+
 ## Phase 0 outcome (10 November 2026)
 - **Baseline.**
   - Mac: Core tests 4,376 run, 0 failed, 46 skipped; Debug build succeeds in about 2 minutes.

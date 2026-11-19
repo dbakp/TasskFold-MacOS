@@ -1035,6 +1035,79 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(waitForDisappearance(second, timeout: 5))
     }
 
+    /// The Calendar view switcher is a native segmented control in the toolbar (Lighter Mac 2), whose segments macOS
+    /// reports as radio buttons; the accessibility-size header still uses buttons.
+    @MainActor private func calendarModeControl(_ app: XCUIApplication, _ title: String) -> XCUIElement {
+        let segment = app.radioButtons[title].firstMatch
+        return segment.waitForExistence(timeout: 5) ? segment : app.buttons[title].firstMatch
+    }
+    /// A segment reports its state as a value of 1 rather than as selected.
+    @MainActor private func calendarModeSelected(_ app: XCUIApplication, _ title: String) -> Bool {
+        let control = calendarModeControl(app, title)
+        return control.isSelected || (control.value as? NSNumber)?.intValue == 1 || (control.value as? String) == "1"
+    }
+
+    /// mac-r2 CAL-1: with the widget setup banner forced on, it sits inside the detail column and never covers the
+    /// week's day headers, at the default width and at 900 pt.
+    @MainActor func testSetupBannerNeverCoversWeekHeaders() throws {
+        for width in [1380, 900] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--uitesting", "--day-drag-fixture", "--force-setup-banner", "--section=calendar", "--calendar-mode=week", "--window-width=\(width)"]
+            app.launch(); defer { app.terminate() }
+            let banner = app.descendants(matching: .any)["startupSharedStorageBanner"].firstMatch
+            XCTAssertTrue(banner.waitForExistence(timeout: 10), "The forced banner should show at \(width) pt")
+            sleep(1) // The window is resized shortly after launch.
+            let formatter = DateFormatter(); formatter.calendar = Calendar(identifier: .gregorian); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.dateFormat = "yyyy-MM-dd"
+            let today = formatter.string(from: Date())
+            let header = app.buttons["calendar-day-" + today].firstMatch
+            XCTAssertTrue(header.waitForExistence(timeout: 5), "Today's week header should exist at \(width) pt")
+            XCTAssertTrue(header.isHittable, "Today's week header should be hittable under the banner at \(width) pt")
+            XCTAssertFalse(banner.frame.intersects(header.frame), "Banner \(banner.frame) overlaps header \(header.frame) at \(width) pt")
+            let sidebarToday = app.outlines["Sidebar"].staticTexts["Today"].firstMatch
+            if sidebarToday.exists { XCTAssertFalse(banner.frame.intersects(sidebarToday.frame), "The banner must stay out of the sidebar") }
+            header.click()
+            let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "Week with setup banner at \(width) pt"; shot.lifetime = .keepAlways; add(shot)
+            app.buttons["dismissStartupSharedStorageStatus"].firstMatch.click()
+            XCTAssertTrue(waitForDisappearance(banner, timeout: 5), "The banner closes with its ✕")
+        }
+    }
+
+    /// mac-r2 L-1: after the sidebar had key focus, clicking a row moves focus to the task list, so Space completes it.
+    @MainActor func testRowClickThenSpaceCompletesAfterSidebarFocus() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch(); defer { app.terminate() }
+        let row = app.staticTexts["title-drag-fixture-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        let sidebarToday = app.outlines["Sidebar"].staticTexts["Today"].firstMatch
+        XCTAssertTrue(sidebarToday.waitForExistence(timeout: 5)); sidebarToday.click()
+        row.click()
+        app.typeKey(" ", modifierFlags: [])
+        XCTAssertTrue(waitForDisappearance(row, timeout: 5), "Space should complete the clicked task; focused: \(app.descendants(matching: .any).matching(NSPredicate(format: "hasKeyboardFocus == 1")).allElementsBoundByIndex.map(\.identifier))")
+        XCTAssertTrue(app.descendants(matching: .any)["undoConfirmation"].waitForExistence(timeout: 2))
+    }
+
+    /// mac-r2 IQ-1: Inspector ▸ Add ▸ Subtask moves focus to the subtask field, so typing never renames the task.
+    @MainActor func testAddSubtaskFromInspectorDoesNotRenameTask() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch(); defer { app.terminate() }
+        let row = app.staticTexts["title-drag-fixture-1"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10)); row.click()
+        let title = app.descendants(matching: .any)["taskTitle"].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 5)); title.click()
+        // macOS 27 reports the inspector's identifier on the Add menu button, so find it by its title.
+        let add = app.menuButtons.matching(NSPredicate(format: "identifier == 'taskAddProperty' OR title == 'Add'")).firstMatch
+        XCTAssertTrue(add.waitForExistence(timeout: 5)); add.click()
+        let item = app.menuItems["Subtask"].firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 5)); item.click()
+        let field = app.textFields["addSubtask"].firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        sleep(1)
+        app.typeText("Child step")
+        XCTAssertEqual(field.value as? String, "Child step", "Typing should go to the subtask field")
+        XCTAssertEqual(title.value as? String, "Today first", "The task's title must not change")
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(app.textNamed("Child step").waitForExistence(timeout: 5), "The subtask should be added")
+        XCTAssertEqual(title.value as? String, "Today first")
+    }
+
     /// Selecting a row and pressing Space completes it; ⌘Z brings it back through the system undo manager.
     @MainActor func testKeyboardCompletionAndUndo() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
@@ -1879,7 +1952,7 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES", "--window-width=1040"]
         app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["Week"].waitForExistence(timeout: 10)); app.buttons["Week"].click()
+        XCTAssertTrue(calendarModeControl(app, "Week").waitForExistence(timeout: 10)); calendarModeControl(app, "Week").click()
         // The window is sized at launch (--window-width): corner-drag resizing no longer works on macOS 27.
         XCTAssertLessThanOrEqual(app.windows.firstMatch.frame.width, 1100)
         XCTAssertFalse(app.descendants(matching: .any)["calendarDayPanel"].firstMatch.exists)
@@ -1919,7 +1992,7 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES", "--window-width=1040"]
         app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["Month"].waitForExistence(timeout: 10)); app.buttons["Month"].click()
+        XCTAssertTrue(calendarModeControl(app, "Month").waitForExistence(timeout: 10)); calendarModeControl(app, "Month").click()
         // The window is sized at launch (--window-width): corner-drag resizing no longer works on macOS 27.
         XCTAssertLessThanOrEqual(app.windows.firstMatch.frame.width, 1100)
         XCTAssertFalse(app.descendants(matching: .any)["calendarDayPanel"].firstMatch.exists)
@@ -1927,7 +2000,7 @@ extension TaskfoldMacUITests {
         let today = formatter.string(from: Date())
         let day = app.buttons["calendar-day-" + today]
         XCTAssertTrue(day.waitForExistence(timeout: 5)); day.click()
-        XCTAssertTrue(app.buttons["Day"].isSelected)
+        XCTAssertTrue(calendarModeSelected(app, "Day"), "Calendar view should be Day")
         XCTAssertTrue(app.descendants(matching: .any)["hourlyPlanner"].firstMatch.waitForExistence(timeout: 5))
         app.buttons["plannerShowAllDay"].click()
         let task = app.buttons["Prepare report"]
@@ -1965,7 +2038,7 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
         app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["Month"].waitForExistence(timeout: 10)); app.buttons["Month"].click()
+        XCTAssertTrue(calendarModeControl(app, "Month").waitForExistence(timeout: 10)); calendarModeControl(app, "Month").click()
         let window = app.windows.firstMatch
         if window.frame.width < 1380 {
             let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1)).withOffset(CGVector(dx: -3, dy: -3))
@@ -1988,7 +2061,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(day(earlier).isSelected)
         app.typeKey(.downArrow, modifierFlags: []); XCTAssertTrue(day(last).isSelected)
         app.typeKey(.return, modifierFlags: [])
-        XCTAssertTrue(app.buttons["Day"].isSelected)
+        XCTAssertTrue(calendarModeSelected(app, "Day"), "Calendar view should be Day")
         XCTAssertTrue(app.descendants(matching: .any)["hourlyPlanner"].firstMatch.waitForExistence(timeout: 5))
         retainWindow(app, name: "Month date keyboard movement opens exact day")
     }
@@ -2000,7 +2073,7 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
         app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["Year"].waitForExistence(timeout: 10)); app.buttons["Year"].click()
+        XCTAssertTrue(calendarModeControl(app, "Year").waitForExistence(timeout: 10)); calendarModeControl(app, "Year").click()
         let calendar = Calendar.current
         let current = try XCTUnwrap(calendar.dateInterval(of: .month, for: Date())?.start)
         let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.dateFormat = "yyyy-MM-dd"
@@ -2016,7 +2089,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(month(next).waitForExistence(timeout: 5)); XCTAssertTrue(month(next).isSelected)
         app.typeKey(.leftArrow, modifierFlags: []); XCTAssertTrue(month(current).isSelected)
         app.typeKey(.return, modifierFlags: [])
-        XCTAssertTrue(app.buttons["Month"].isSelected)
+        XCTAssertTrue(calendarModeSelected(app, "Month"), "Calendar view should be Month")
         let today = app.buttons["calendar-day-" + formatter.string(from: Date())]
         XCTAssertTrue(today.waitForExistence(timeout: 5)); XCTAssertTrue(today.isSelected)
         retainWindow(app, name: "Year keyboard month selection opens populated current month")

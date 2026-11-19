@@ -18,6 +18,10 @@ struct TaskfoldMacApp: App {
         // restore "no windows" on the next launch. Ignore it for fixtures so every test starts with a window.
         let arguments = ProcessInfo.processInfo.arguments
         ChildRowsFixture.enableFlagIfRequested()
+        // Preview launches state the accent explicitly so one capture cannot tint the next. Set before any view reads
+        // it, and kept out of the real app's saved settings (FixtureDefaults).
+        if let value = arguments.first(where: { $0.hasPrefix("--accent=") }) { FixtureDefaults.set(String(value.dropFirst("--accent=".count)), forKey: "accent") }
+        else if arguments.contains("--preview") { FixtureDefaults.set("rose", forKey: "accent") }
         if arguments.contains("--uitesting") || arguments.contains("--preview") || TeamEditorNativeFixture.enabled || ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
             UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
         }
@@ -38,15 +42,6 @@ struct TaskfoldMacApp: App {
         MenuBarClock.shared.start()
     }
 
-    /// Screenshot captures of an unsigned Debug build (`--hide-setup-banner`): that build has no app group, so the
-    /// "Widgets and shared drafts aren't connected" banner would sit over every capture. Release builds always show it.
-    private var hidesSetupBanner: Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains("--hide-setup-banner")
-        #else
-        return false
-        #endif
-    }
     private var menuBarInserted: Binding<Bool> {
         #if DEBUG
         // UI-test hosts get no menu bar item, so a fixture run never leaves one behind.
@@ -76,7 +71,8 @@ struct TaskfoldMacApp: App {
     var body: some Scene {
         WindowGroup("Taskfold") {
             mainContent
-                .safeAreaInset(edge: .top, spacing: 0) { VStack(spacing: 0) { if !hidesSetupBanner { SharedStorageSetupBanner().environment(store) }; AccountRemovalRecoveryBanner().environment(store) } }
+                // The widget setup banner lives in the detail column (WorkspaceView), never above the split view.
+                .safeAreaInset(edge: .top, spacing: 0) { AccountRemovalRecoveryBanner().environment(store) }
                 .task {
                     #if DEBUG
                     if TeamEditorNativeFixture.enabled || TeamOrganizationFixture.enabled || AutomationManagementFixture.enabled || AccountRemovalNativeFixture.enabled { return }
