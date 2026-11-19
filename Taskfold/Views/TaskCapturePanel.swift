@@ -29,6 +29,8 @@ struct TaskCapturePanel: View {
     var manualChoices: Binding<[String: JSON]>?
     /// A quiet line of key hints under the footer (the global panel only).
     var hint: String?
+    /// Place names this account asked for before, read once when the composer opens.
+    @State private var placeNames: [String] = []
     @FocusState private var focused: Bool
     @FocusState private var focusedChip: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -57,6 +59,15 @@ struct TaskCapturePanel: View {
     private var disabledGroups: Set<String> { declined.union(Self.supersededGroups(manual)) }
     private var parsedNow: QuickEntry { QuickEntry(text, disabled: disabledGroups, context: parseContext, task: baseTask) }
     private var effectiveNow: Record { parsedNow.fieldPreview(to: baseTask) }
+    /// "at Home" asks the iPhone for its place called Home (D3). Only the name and direction sync; the Mac has no places.
+    private func typedPlace(_ parsed: QuickEntry) -> QuickPlaceRequest? {
+        guard !declined.contains("place") else { return nil }
+        return QuickPlaceRequest.find(in: parsed.title, known: placeNames)
+    }
+    private func placeTokens(_ parsed: QuickEntry) -> [QuickEntry.Token] {
+        guard let found = typedPlace(parsed), found.applies(accepted: choices[QuickPlaceRequest.acceptKey]), !found.title.isEmpty else { return [] }
+        return [QuickEntry.Token(group: "place", text: found.raw, label: found.label + " · on iPhone")]
+    }
 
     /// Editors see the effective task (manual choices over parsed tokens over defaults). A change is stored as a manual choice.
     private var effectiveBinding: Binding<Record> { Binding(get: { effectiveNow }, set: { applyEdit($0, from: effectiveNow) }) }
@@ -94,10 +105,14 @@ struct TaskCapturePanel: View {
                 Text("Try “Call Sam tomorrow at 4pm !30mb p1”").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
             }
             propertyChips(parsed, effective: effective)
-            let rowTokens = parsed.tokens.filter { !Self.propertyGroups.contains($0.group) }
+            let rowTokens = parsed.tokens.filter { !Self.propertyGroups.contains($0.group) } + placeTokens(parsed)
             if !rowTokens.isEmpty {
-                QuickEntryChips(tokens: rowTokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeDraftFromChip)
+                QuickEntryChips(tokens: rowTokens, compact: true, decline: { token in
+                    _ = declined.insert(token.group)
+                    if token.group == "place" { choices[QuickPlaceRequest.acceptKey] = nil }
+                }, returnFocus: resumeDraftFromChip)
             }
+            placeOffer(parsed)
             if let rule = parsed.updates["recurrence_pattern"] {
                 Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
             }
@@ -110,11 +125,26 @@ struct TaskCapturePanel: View {
             if let hint { Text(hint).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).frame(maxWidth: .infinity).accessibilityIdentifier("quickAddHint") }
         }
         .padding(DS.Space.xxl).frame(width: 540)
-        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true }
+        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true; placeNames = LocationPlaceRequest.knownNames(in: store.rows("tasks")) }
         .task(id: parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) }
         .onExitCommand { close() }
         .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
         .onDisappear { if text.isEmpty { setManual([:]) } }
+    }
+
+    /// "at the gym" with a name this account never used: offered, not taken, so "Look at Bob" keeps its words.
+    @ViewBuilder private func placeOffer(_ parsed: QuickEntry) -> some View {
+        if let found = typedPlace(parsed), !found.applies(accepted: choices[QuickPlaceRequest.acceptKey]), !found.title.isEmpty {
+            Button { choices[QuickPlaceRequest.acceptKey] = found.raw; resumeDraftFromChip() } label: {
+                Label("Remind me at “" + found.name + "” on iPhone", systemImage: "plus").font(DS.Font.chip)
+                    .padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xs)
+                    .overlay(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(DS.Palette.textSecondary, style: StrokeStyle(lineWidth: 1, dash: [3, 2])))
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain).pointerStyle(.link).foregroundStyle(DS.Palette.textSecondary)
+            .help("Your iPhone reminds you at its place called " + found.name + ". Only the name syncs.")
+            .accessibilityLabel("Remind me at " + found.name + " on iPhone").accessibilityIdentifier("quickPlaceOffer")
+        }
     }
 
     /// Groups a property chip shows. Their tokens are declined from the chip, not from the row below.
@@ -125,7 +155,7 @@ struct TaskCapturePanel: View {
     private func titleField(_ parsed: QuickEntry, effective: Record, dateTint: Color) -> some View {
         let priority = effective.priority
         let ring = priority < 4 ? DS.Palette.priority(priority) : DS.Palette.textSecondary
-        let spans = QuickAddHighlight.spans(in: text, tokens: parsed.tokens) { QuickEntryChips.tint(for: $0, date: dateTint) }
+        let spans = QuickAddHighlight.spans(in: text, tokens: parsed.tokens + placeTokens(parsed)) { QuickEntryChips.tint(for: $0, date: dateTint) }
         return HStack(alignment: .top, spacing: DS.Space.m) {
             Circle().strokeBorder(ring, lineWidth: 1.5).background(ring.opacity(priority < 4 ? 0.15 : 0), in: .circle)
                 .frame(width: DS.Size.checkbox, height: DS.Size.checkbox).padding(.top, DS.Space.xs)
@@ -383,7 +413,9 @@ struct QuickAddCaptureHost: View {
     @Environment(Workspace.self) private var workspace
     @State var text: String
     @State private var declined = Set<String>()
-    @State private var choices = [String: String]()
+    // --quick-add-place="at Home" shows a new place name as accepted, as after clicking its offer.
+    @State private var choices = ProcessInfo.processInfo.arguments.first { $0.hasPrefix("--quick-add-place=") }
+        .map { [QuickPlaceRequest.acceptKey: String($0.dropFirst("--quick-add-place=".count))] } ?? [:]
     var body: some View {
         TaskCapturePanel(text: $text, declined: $declined, choices: $choices, prompt: "Add a task for today — try “Call Sam at 4pm p1 #calls”",
                          context: workspace.quickEntryContext(), task: workspace.captureTask(date: Date()), submit: {})

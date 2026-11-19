@@ -9,8 +9,45 @@ import UIKit
 enum HolidayDefaults {
     static let countryKey = "taskfold.holidays.defaultCountry"
     static let nameKey = "taskfold.holidays.defaultCountryName"
+    static let modeKey = "taskfold.holidays.defaultMode"
+    static let weekendsKey = "taskfold.holidays.avoidWeekends"
     static var country: String { UserDefaults.standard.string(forKey: countryKey) ?? "" }
     static var name: String { UserDefaults.standard.string(forKey: nameKey) ?? "" }
+    /// What a reminder does on a holiday when "Skip holidays" is turned on: skip the alert (default) or move it.
+    static var mode: ReminderHolidayPolicy.Mode { ReminderHolidayPolicy.Mode(rawValue: UserDefaults.standard.string(forKey: modeKey) ?? "") ?? .skip }
+    static var avoidWeekends: Bool { UserDefaults.standard.bool(forKey: weekendsKey) }
+    /// Every country this device knows by name, sorted. Offline; the holiday service is asked only for the chosen one.
+    static var regions: [(code: String, name: String)] {
+        Locale.Region.isoRegions.map(\.identifier).filter { $0.count == 2 && $0.allSatisfy(\.isLetter) }
+            .compactMap { code in Locale.current.localizedString(forRegionCode: code).map { (code, $0) } }
+            .sorted { $0.1.localizedStandardCompare($1.1) == .orderedAscending }
+    }
+    static func setCountry(_ code: String, name: String) {
+        UserDefaults.standard.set(code, forKey: countryKey); UserDefaults.standard.set(code.isEmpty ? "" : name, forKey: nameKey)
+    }
+    /// Settings → Holidays → Review: the reviewed choices become the defaults every "Skip holidays" toggle uses.
+    static func adopt(_ policy: ReminderHolidayPolicy) {
+        if let origin = policy.origin { setCountry(origin.country, name: policy.region.components(separatedBy: " · ").first ?? origin.country) }
+        UserDefaults.standard.set(policy.mode.rawValue, forKey: modeKey); UserDefaults.standard.set(policy.avoidWeekends, forKey: weekendsKey)
+    }
+    /// The default country's public holidays for `year`, with the default holiday choices. Only the country and year are
+    /// sent to the holiday service.
+    static func policy(country: String, name: String, year: Int) async throws -> ReminderHolidayPolicy {
+        let data: Data
+        #if DEBUG
+        // UI tests never reach the holiday service: two nationwide holidays for the asked country and year.
+        if ProcessInfo.processInfo.arguments.contains("--holiday-service-stub") {
+            data = Data(#"[{"date":"\#(year)-01-01","name":"New Year's Day","countryCode":"\#(country)","nationalHoliday":true,"subdivisionCodes":null,"holidayTypes":["Public"]},{"date":"\#(year)-12-25","name":"Christmas Day","countryCode":"\#(country)","nationalHoliday":true,"subdivisionCodes":null,"holidayTypes":["Public"]}]"#.utf8)
+        } else { data = try await CountryHolidayCalendar.fetch(CountryHolidayCalendar.request(country: country, year: year)) }
+        #else
+        data = try await CountryHolidayCalendar.fetch(CountryHolidayCalendar.request(country: country, year: year))
+        #endif
+        let snapshot = try CountryHolidayCalendar.snapshot(data: data, year: year, country: country)
+        guard let policy = CountryHolidayCalendar.policy(snapshot, countryName: name, mode: mode, avoidWeekends: avoidWeekends) else {
+            throw AppFailure(message: "The holiday service returned an unsupported calendar. Your saved reminder has not changed.")
+        }
+        return policy
+    }
 }
 
 struct HolidayCalendarReview: View {
