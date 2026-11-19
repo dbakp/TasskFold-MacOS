@@ -98,6 +98,7 @@ final class Store {
     var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
     var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
     @ObservationIgnored private var workflowPresentationDeferred = false
+    @ObservationIgnored private var holidayYearsRefreshing = false
     @ObservationIgnored private(set) var snapshotRevision = UUID()
     // Dated rows depend on authored tasks and project/access presentation.
     // Unrelated preferences and byte-equal decoded refreshes keep this source.
@@ -2971,7 +2972,7 @@ final class Store {
     }
     private func connectivityRestored() {
         realtimeSupervisor?.wake()
-        Task { await sync() }
+        Task { await HolidayDefaults.cache.forgetFailures(); await sync() }
     }
     /// Keeps a realtime connection alive for the signed-in account until cancelled.
     func runRealtime() async {
@@ -4139,6 +4140,25 @@ final class Store {
         focusPermissionDenied = false; focusAlertStatus = "Finish alerts are off on this device."
         Task { await reschedule() }
     }
+    private func refreshHolidayYearsIfNeeded(now: Date = Date()) {
+        guard !holidayYearsRefreshing, sharedCaptureAvailable, activeTasks.contains(where: { TaskKind.mayComplete($0) && !$0.completed && HolidayYearCoverage.needsRefresh($0, now: now) }) else { return }
+        holidayYearsRefreshing = true
+        Task { [weak self] in await self?.refreshHolidayYears(now: now); self?.holidayYearsRefreshing = false }
+    }
+    /// Adds the next year's holiday dates to every "Skip holidays" reminder ahead of time and drops past years.
+    /// A failed or offline fetch keeps what is stored; the next reschedule or foreground retries it.
+    func refreshHolidayYears(now: Date = Date(), fetch: HolidayYearCoverage.Fetch = HolidayDefaults.fetch()) async {
+        guard sharedCaptureAvailable else { return }
+        let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration)
+        for task in activeTasks where TaskKind.mayComplete(task) && !task.completed && HolidayYearCoverage.needsRefresh(task, now: now) {
+            guard let changed = await HolidayYearCoverage.refreshing(task, now: now, fetch: fetch).task else { continue }
+            // Only the reminders this pass read are replaced; an edit made meanwhile wins and is refreshed next pass.
+            guard workspace.matches(account: userID, generation: workspaceGeneration), sharedCaptureAvailable, let current = record("tasks", id: task.id),
+                  current["reminder_specs"] == task["reminder_specs"], editorMayWrite(source: current, proposed: changed) else { continue }
+            let fields: [String: JSON] = ["reminder_specs": changed["reminder_specs"]]
+            _ = commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: current))], remember: false)
+        }
+    }
     private func reminderState() -> ReminderState {
         let generation = accountGeneration
         reminderRevision += 1
@@ -4179,6 +4199,8 @@ final class Store {
         #endif
         await reconcileTimeSnoozes(generation: generation)
         guard generation == accountGeneration else { return }
+        // "Skip holidays" reminders load the years they reach on their own; scheduling never waits for the holiday service.
+        refreshHolidayYearsIfNeeded()
         let state = reminderState()
         let report = await reminderScheduler.update(state)
         guard generation == accountGeneration, state.revision == reminderRevision, report.revision == state.revision else { return }

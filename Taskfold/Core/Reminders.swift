@@ -30,6 +30,8 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
             guard base.kind == "recurring", base.locallyEditable else { return nil }
             var payload = fields["holiday_policy"]?.object ?? [:]
             if policy.origin == nil { payload.removeValue(forKey: "origin") }
+            // Loaded later years belong to the calendar being set, never to a replaced one.
+            payload.removeValue(forKey: ReminderHolidayPolicy.laterYearsKey)
             for (key, value) in policy.raw {
                 if key == "origin", let origin = policy.origin, let previous = payload[key], CountryHolidayCalendar.Origin(raw: previous.object) == origin {
                     var preserved = previous.object

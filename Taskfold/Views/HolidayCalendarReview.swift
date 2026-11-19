@@ -30,9 +30,8 @@ enum HolidayDefaults {
         if let origin = policy.origin { setCountry(origin.country, name: policy.region.components(separatedBy: " · ").first ?? origin.country) }
         UserDefaults.standard.set(policy.mode.rawValue, forKey: modeKey); UserDefaults.standard.set(policy.avoidWeekends, forKey: weekendsKey)
     }
-    /// The default country's public holidays for `year`, with the default holiday choices. Only the country and year are
-    /// sent to the holiday service.
-    static func policy(country: String, name: String, year: Int) async throws -> ReminderHolidayPolicy {
+    /// One country's holidays for one year. Only the country and year are sent to the holiday service.
+    static func snapshot(country: String, year: Int) async throws -> CountryHolidayCalendar.Snapshot {
         let data: Data
         #if DEBUG
         // UI tests never reach the holiday service: two nationwide holidays for the asked country and year.
@@ -42,11 +41,26 @@ enum HolidayDefaults {
         #else
         data = try await CountryHolidayCalendar.fetch(CountryHolidayCalendar.request(country: country, year: year))
         #endif
-        let snapshot = try CountryHolidayCalendar.snapshot(data: data, year: year, country: country)
+        return try CountryHolidayCalendar.snapshot(data: data, year: year, country: country)
+    }
+    /// The app session's shared responses: a reminder editor and the background refresh ask for each year once.
+    static let cache = HolidaySnapshotCache()
+    /// `retrying` asks again at once after a failure (a person turned the toggle on); background passes wait a while.
+    static func fetch(retrying: Bool = false) -> HolidayYearCoverage.Fetch {
+        { country, year in try await cache.snapshot(country: country, year: year, retrying: retrying) { try await snapshot(country: $0, year: $1) } }
+    }
+    /// The default country's public holidays for `year`, with the default holiday choices, plus the later years
+    /// `schedule` already reaches. Only `year` must load; a later year that fails loads on its own later.
+    static func policy(country: String, name: String, year: Int, schedule: ReminderCalendarSchedule? = nil, now: Date = Date()) async throws -> ReminderHolidayPolicy {
+        let fetch = fetch(retrying: true)
+        let snapshot = try await fetch(country, year)
         guard let policy = CountryHolidayCalendar.policy(snapshot, countryName: name, mode: mode, avoidWeekends: avoidWeekends) else {
             throw AppFailure(message: "The holiday service returned an unsupported calendar. Your saved reminder has not changed.")
         }
-        return policy
+        guard let schedule else { return policy }
+        var fields = schedule.raw; fields["holiday_policy"] = .object(policy.raw)
+        guard let holiday = ReminderHolidaySchedule(raw: fields) else { return policy }
+        return await HolidayYearCoverage.loading(holiday, now: now, fetch: fetch).policy ?? policy
     }
 }
 
@@ -142,7 +156,7 @@ struct HolidayCalendarReview: View {
                     }
                 } header: { Text("Holiday calendar") } footer: {
                     if sourceKind == .country {
-                        Text("Public holidays from Nager.Holidays load automatically when you choose a country or year. Only that country and year are sent to the service. Review the dates before applying; the saved calendar works offline. City, company and some locally announced holidays may be missing. Refresh to review updates; next year needs a new review.")
+                        Text("Public holidays from Nager.Holidays load automatically when you choose a country or year. Only that country and year are sent to the service. Review the dates before applying; the saved calendar works offline. City, company and some locally announced holidays may be missing. Refresh to review updates. Later years load on their own when your reminders reach them.")
                     } else {
                         Text("Choose an all-day .ics calendar for the selected year. No account connection or calendar access is needed. Import updates this draft only. A calendar name and region or organization are required.")
                     }
@@ -154,7 +168,7 @@ struct HolidayCalendarReview: View {
                     }.accessibilityIdentifier("holidayMode")
                     Toggle("Also avoid Saturday and Sunday", isOn: $weekends).accessibilityIdentifier("holidayWeekends")
                 } header: { Text("Holiday policy") } footer: {
-                    Text("The saved reminder time zone defines each date. Skipped dates still use the repeat count. Moves keep the clock time, merge alerts that reach the same day, and stay within the repeat end and reviewed year. The task’s plan does not move.")
+                    Text("The saved reminder time zone defines each date. Skipped dates still use the repeat count. Moves keep the clock time, merge alerts that reach the same day, and never pass the repeat end or an imported calendar’s year. The task’s plan does not move.")
                 }
                 if let days {
                     Section {
@@ -168,7 +182,7 @@ struct HolidayCalendarReview: View {
                         if days.isEmpty { Text("This calendar has no matching public holidays in this year. Confirm that the calendar covers the entire year before using it.").foregroundStyle(.secondary) }
                         Toggle("I reviewed this calendar’s coverage for \(yearText)", isOn: $reviewed).accessibilityIdentifier("holidayReviewed")
                     } header: { Text("Review dates") } footer: {
-                        Text("Alerts are scheduled only within this reviewed year. Review a new calendar to continue beyond it. The dates, calendar name and region sync with this task; event notes, links, attendees and file contents are excluded.")
+                        Text((sourceKind == .country ? "Later years load automatically, so alerts keep skipping holidays without another review." : "Alerts are scheduled only within this reviewed year. Review a new calendar to continue beyond it.") + " The dates, calendar name and region sync with this task; event notes, links, attendees and file contents are excluded.")
                     }
                 } else {
                     Section { Text("Choose a country or import a calendar for this year to review its dates.").foregroundStyle(.secondary) }

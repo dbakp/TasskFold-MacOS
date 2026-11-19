@@ -151,7 +151,7 @@ struct TaskReminderEditor: View {
     }
     private func status(_ spec: ReminderSpec) -> String {
         if !spec.enabled { return "Off" }
-        if let holiday = spec.holidaySchedule, !holiday.base.dates(after: Date(), limit: 1).isEmpty, ReminderCivilDay.current(Date(), zone: holiday.base.calendar.timeZone).map({ $0 > holiday.policy.lastDay }) == true { return "Review holiday dates to continue beyond " + String(holiday.policy.year) }
+        if let holiday = spec.holidaySchedule, holiday.policy.origin == nil, !holiday.base.dates(after: Date(), limit: 1).isEmpty, ReminderCivilDay.current(Date(), zone: holiday.base.calendar.timeZone).map({ $0 > holiday.policy.lastDay }) == true { return "Review holiday dates to continue beyond " + String(holiday.policy.lastDay.year) }
         guard let date = spec.date(task: task, calendar: .current) else { return ["recurring", "interval"].contains(spec.kind) ? "This schedule has ended" : "Waiting for a planned date" }
         if date <= Date() { return "This reminder time has passed" }
         let time = date.formatted(date: .abbreviated, time: .shortened)
@@ -296,12 +296,12 @@ struct ReminderSpecEditor: View {
                             }.frame(minHeight: 44).accessibilityIdentifier("reminderUseCurrentZone")
                         }
                         Button { repeatFocused = false; choosingHolidays = true } label: {
-                            Label(holidayPolicy.map { "Holiday dates · " + String($0.year) } ?? "Add holiday policy", systemImage: "calendar.badge.minus").frame(minHeight: 44)
+                            Label(holidayPolicy.map { "Holiday dates · " + ($0.origin == nil ? String($0.year) : $0.placeName) } ?? "Add holiday policy", systemImage: "calendar.badge.minus").frame(minHeight: 44)
                         }.accessibilityIdentifier("reminderHolidayDates")
                         if let policy = holidayPolicy {
                             Text(policy.source + " · " + policy.region).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             Text(policy.mode == .skip ? "Skip excluded dates" : "Move to next available day").font(.footnote)
-                            Text("Alerts stop at the end of this reviewed year. Review new dates to continue.").font(.footnote).foregroundStyle(.secondary)
+                            Text(HolidayYearCoverage.footer(policy, schedule: recurringSchedule, now: Date())).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("reminderHolidayFooter")
                         }
                         if let schedule = recurringSchedule, !calendarDates(after: previewNow, limit: 1).isEmpty {
                             Text(schedule.summary).font(.footnote).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("reminderRepeatSummary")

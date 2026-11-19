@@ -128,6 +128,7 @@ enum PrivacyFacts {
              summary: "Choosing a holiday calendar for a reminder asks a public holiday service for dates.",
              points: [
                 "TaskFold requests the list of countries, or one country’s holidays for a year, from nagerholidays.com. The request names the country and year and contains no account details or task content.",
+                "While a reminder skips a country’s holidays, TaskFold asks for the next year’s dates ahead of time, so the reminder keeps skipping them without another step.",
              ]),
     ]
 
