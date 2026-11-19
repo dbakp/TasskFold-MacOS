@@ -88,6 +88,18 @@ enum LocationReminderIdentity {
         guard case .string(let text)? = value else { return false }
         return UUID(uuidString: text)?.uuidString.lowercased() == text
     }
+    /// Tasks from before task generations existed sync with no `task_generation`, and the server never gives such a row
+    /// one later. The server keys those rows under the nil UUID ("a private key for an existing legacy row, never a new
+    /// public generation"), so a place reminder binds to the same stand-in. A deleted and restored row always gets a fresh
+    /// generation, so the stand-in cannot carry a reminder over to a different task.
+    static let legacyGeneration = "00000000-0000-0000-0000-000000000000"
+    static func generation(of task: Record) -> String? {
+        switch task["task_generation"] {
+        case .null: return legacyGeneration
+        case let value where uuid(value): return value.text
+        default: return nil
+        }
+    }
     static func account(_ value: String) -> Bool {
         !value.isEmpty && value.utf8.count <= 128 && value == value.trimmingCharacters(in: .whitespacesAndNewlines) &&
         !value.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
@@ -137,7 +149,7 @@ struct LocationReminderCandidate: Equatable, Sendable {
     let priority: Int
     init?(account: String, device: String, task: Record, settings: LocationReminderSettings, place: LocationPrivatePlace) {
         guard LocationReminderIdentity.account(account), settings.enabled, TaskKind.mayComplete(task), !task.completed,
-              task.id == settings.taskID, task.string("task_generation") == settings.taskGeneration,
+              task.id == settings.taskID, LocationReminderIdentity.generation(of: task) == settings.taskGeneration,
               device == settings.device, place.account == account, place.id == settings.placeID, place.revision == settings.placeRevision else { return nil }
         let completion: Int
         if task["completion_version"] == .null { completion = 0 }
@@ -527,9 +539,9 @@ struct LocationReminderReview: Sendable {
     init?(workspace: WorkspaceBinding, task: Record, archive: LocationPrivateArchive, place: LocationPrivatePlace,
           transition: LocationReminderSettings.Transition, repeats: Bool? = nil, replacing: LocationReminderSettings? = nil, identity: (id: String, arm: String)? = nil) {
         guard archive.valid, place.account == workspace.account, archive.places(for: workspace.account).contains(where: { $0 == place }),
-              TaskKind.mayComplete(task), !task.completed, LocationReminderIdentity.uuid(task["task_generation"]),
+              TaskKind.mayComplete(task), !task.completed, let generation = LocationReminderIdentity.generation(of: task),
               replacing == nil || ReminderSpec.rows(task).contains(.object(replacing!.raw)),
-              let created = LocationReminderSettings.make(device: archive.device, taskID: task.id, taskGeneration: task.string("task_generation"), place: place, transition: transition, repeats: repeats ?? replacing?.repeats ?? false, id: identity?.id ?? replacing?.id ?? UUID().uuidString.lowercased(), arm: identity?.arm ?? UUID().uuidString.lowercased()) else { return nil }
+              let created = LocationReminderSettings.make(device: archive.device, taskID: task.id, taskGeneration: generation, place: place, transition: transition, repeats: repeats ?? replacing?.repeats ?? false, id: identity?.id ?? replacing?.id ?? UUID().uuidString.lowercased(), arm: identity?.arm ?? UUID().uuidString.lowercased()) else { return nil }
         var fields = replacing?.raw ?? [:]
         for (key, value) in created.raw {
             if key == "location_reference" { fields[key] = .object((fields[key]?.object ?? [:]).merging(value.object) { _, fresh in fresh }) }
@@ -541,7 +553,7 @@ struct LocationReminderReview: Sendable {
     }
     func valid(task: Record, archive: LocationPrivateArchive, workspace: WorkspaceBinding) -> Bool {
         self.workspace == workspace && archive.valid && archive.device == settings.device &&
-        task.id == settings.taskID && task.string("task_generation") == settings.taskGeneration && TaskKind.mayComplete(task) && !task.completed && task["completion_version"] == completion &&
+        task.id == settings.taskID && LocationReminderIdentity.generation(of: task) == settings.taskGeneration && TaskKind.mayComplete(task) && !task.completed && task["completion_version"] == completion &&
         archive.places(for: workspace.account).contains { $0.id == place.id && $0.revision == place.revision && $0.geometry == place.geometry }
     }
     func applying(to task: Record, archive: LocationPrivateArchive, workspace: WorkspaceBinding) -> Record? {
@@ -571,7 +583,7 @@ struct LocationReminderReview: Sendable {
 
 extension LocationReminderTicket {
     static func bound(account: String, task: Record, settings: LocationReminderSettings) -> Self? {
-        guard task.id == settings.taskID, task.string("task_generation") == settings.taskGeneration else { return nil }
+        guard task.id == settings.taskID, LocationReminderIdentity.generation(of: task) == settings.taskGeneration else { return nil }
         let completion: Int
         if task["completion_version"] == .null { completion = 0 }
         else { guard let number = Recurrence.number(task["completion_version"], in: 0...9_007_199_254_740_991) else { return nil }; completion = number }
