@@ -39,8 +39,6 @@ struct FocusSessionView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     if !activeWorkspace {
                         ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Close Focus and reopen it in your current workspace."))
-                    } else if let conflict = store.focusSyncConflict {
-                        TimelineView(.periodic(from: .now, by: 1)) { _ in conflictReview(conflict) }
                     } else if let row = store.focusRecord, !FocusSessionChange.validRow(row, account: store.userID) {
                         ContentUnavailableView("Refresh Focus", systemImage: "arrow.clockwise", description: Text("This session could not be read. Refresh your workspace before changing it."))
                     } else {
@@ -242,25 +240,6 @@ struct FocusSessionView: View {
                           backToWork: { if !pomodoro.backToWork(store, workspace: request.workspace) { message = store.error; store.error = nil } },
                           end: { pomodoro.endCycle(store) })
     }
-    private func conflictReview(_ conflict: FocusSyncConflict) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Label("Focus changed on another device", systemImage: "exclamationmark.icloud").font(.title2.weight(.semibold))
-            Text("Choose the session to continue with. Your later task edits will stay saved.").foregroundStyle(.secondary)
-            if let session = store.focusSession { comparison(session, heading: "This device") } else { Text("This device: no session") }
-            if let session = FocusSessionChange.session(in: conflict.remote, account: store.userID) { comparison(session, heading: "Synced session") } else { Text("Synced session: no session") }
-            Button { resolve(conflict, keepLocal: false) } label: { Text("Use synced session").frame(maxWidth: .infinity, minHeight: 44) }.buttonStyle(.borderedProminent).accessibilityIdentifier("useSyncedFocus")
-            Button { resolve(conflict, keepLocal: true) } label: { Text("Keep this device's session").frame(maxWidth: .infinity, minHeight: 44) }.buttonStyle(.bordered).accessibilityIdentifier("keepLocalFocus")
-            Button { dismiss() } label: { Text("Decide later").frame(maxWidth: .infinity, minHeight: 44) }.accessibilityIdentifier("deferFocusReview")
-        }
-    }
-    private func comparison(_ session: FocusSession, heading: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(heading).font(.headline)
-            Text(store.tasks.first { $0.id.lowercased() == session.taskID }?.title ?? "Task unavailable").fixedSize(horizontal: false, vertical: true)
-            if let task = store.tasks.first(where: { $0.id.lowercased() == session.taskID }) { Text(taskContext(task)).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-            Text("\(clock(session.remaining(at: Date()))) remaining · \(session.finished(at: Date()) ? "Finished" : session.status.rawValue.capitalized)").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-        }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(.quaternary, in: RoundedRectangle(cornerRadius: 16))
-    }
     private func clock(_ seconds: TimeInterval) -> String {
         let remaining = Int(ceil(seconds)); return String(format: "%02d:%02d", remaining / 60, remaining % 60)
     }
@@ -282,11 +261,6 @@ struct FocusSessionView: View {
             if store.changeFocus(session, expected: expected, workspace: request.workspace) { message = nil }
             else { message = store.error; store.error = nil }
         } catch { message = error.localizedDescription }
-    }
-    private func resolve(_ conflict: FocusSyncConflict, keepLocal: Bool) {
-        guard activeWorkspace else { return }
-        if store.resolveFocusConflict(id: conflict.id, keepLocal: keepLocal) { message = nil }
-        else { message = store.error; store.error = nil }
     }
 }
 

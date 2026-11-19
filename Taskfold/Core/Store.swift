@@ -465,8 +465,13 @@ final class Store {
     }
     var sharedCaptureDraftCount = 0
     var widgetActionStatus: String?
-    var syncConflict: SyncConflict?
-    var focusSyncConflict: FocusSyncConflict?
+    /// A parked change that the server rejected because the synced row moved on.
+    /// It never waits for the user: `SyncAutoMerge` rebases it and sync resumes.
+    var syncConflict: SyncConflict? { didSet { if syncConflict != nil { scheduleAutoMerge() } } }
+    var focusSyncConflict: FocusSyncConflict? { didSet { if focusSyncConflict != nil { scheduleAutoMerge() } } }
+    @ObservationIgnored private var autoMergeAttempts: [String: Int] = [:]
+    @ObservationIgnored private var autoMerging = false
+    @ObservationIgnored private var autoMergeScheduled = false
     var lastSync: Date?
     var undoStack: [EditHistory] = []
     var redoStack: [EditHistory] = []
@@ -1177,15 +1182,6 @@ final class Store {
     /// The session as it stands once it is replaced or left: a session still running is counted up to now.
     func settledFocus(_ session: FocusSession, at now: Date) -> FocusSession {
         session.status == .stopped ? session : ((try? session.stopped(at: now)) ?? session)
-    }
-    @discardableResult func resolveFocusConflict(id: UUID, keepLocal: Bool) -> Bool {
-        guard let conflict = focusSyncConflict, conflict.id == id,
-              let next = conflict.resolving(snapshot, account: userID, keepLocal: keepLocal) else {
-            error = "Reopen the current Focus review before choosing a session."; return false
-        }
-        let old = snapshot; snapshot = next
-        do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
-        focusSyncConflict = nil; notice = nil; publishWidgetSnapshot(scheduleCapacityRefresh: false); Task { await reschedule(); await sync() }; return true
     }
     @discardableResult func setWorkingHours(_ hours: WorkingHours, workspace: WorkspaceBinding) -> Bool {
         guard workspace.matches(account: userID, generation: workspaceGeneration), workingHoursEditable else {
@@ -3037,6 +3033,8 @@ final class Store {
         var sending: Mutation?
         defer {
             syncing = false
+            // A conflict left parked by an unfinished merge (or by an earlier app version) resolves itself.
+            if syncConflict != nil || focusSyncConflict != nil { scheduleAutoMerge() }
             if !readApplied { fullReadRequested = fullReadRequested || requestedFull; workspaceReadBase = nil; backend.changeLedger.restore(evidence) }
             #if DEBUG
             if TeamBatchRecoveryNativePeer.blockedSync {
@@ -3150,14 +3148,14 @@ final class Store {
                    let review = try? await backend.reviewTeamCompletionBatch(mutation, expectedAccount: account),
                    generation == accountGeneration, snapshot.pending.first == mutation {
                     installTeamCompletionBatchReview(review)
-                    notice = "Your task selection is saved. Review its sync status to continue."; return
+                    notice = SyncAutoMerge.pendingStatus; return
                 }
                 if let mutation=sending,mutation.teamCompletion != nil,
                    !(error is CancellationError),!(error is AccountSessionAuthorizationRequired),
                    let review=try? await backend.reviewTeamCompletion(mutation,expectedAccount:account),
                    generation == accountGeneration,snapshot.pending.first == mutation {
                     syncConflict=SyncConflict(mutation:mutation,remote:review.task ?? mutation.teamCompletion!.source,completionReview:review)
-                    notice="Your completion is saved. Review its sync status to continue."
+                    notice=SyncAutoMerge.pendingStatus
                     return
                 }
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
@@ -3170,14 +3168,14 @@ final class Store {
                     focusSyncConflict = FocusSyncConflict(mutation: mutation, remote: remote)
                     Task { await reschedule() }
                     publishWidgetSnapshot(scheduleCapacityRefresh: false)
-                    notice = "Focus changed on another device. Open Focus session to review it and resume sync."
+                    notice = SyncAutoMerge.pendingStatus
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"),let mutation=sending,ProductivityGoalEdit.matches(mutation),
                    let data=try? await backend.request("/rest/v1/view_preferences?id=eq.insights&select=*",expectedAccount:account),
                    let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
                     let remote=rows.first ?? ProductivityGoalEdit.emptyRow(account:account)
                     if remote.id==ProductivityGoals.recordID,remote.string("user_id")==account {
-                        syncConflict=SyncConflict(mutation:mutation,remote:remote);notice="Goals changed on another device. Review both choices to resume sync."
+                        syncConflict=SyncConflict(mutation:mutation,remote:remote);notice=SyncAutoMerge.pendingStatus
                     }
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation=sending,mutation.table==WorkflowTemplate.table,
@@ -3185,7 +3183,7 @@ final class Store {
                    let data=try? await backend.request("/rest/v1/project_templates?id=eq.\(escaped)&select=*"),
                    let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
                     syncConflict=SyncConflict(mutation:mutation,remote:rows.first ?? Record(["id":.string(mutation.recordID),"name":.string("Deleted template")]))
-                    notice="This template changed on another device. Review it to resume sync."
+                    notice=SyncAutoMerge.pendingStatus
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
                    mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
@@ -3195,7 +3193,17 @@ final class Store {
                    generation == accountGeneration, snapshot.pending.contains(mutation),
                    remote.id.lowercased() == mutation.recordID.lowercased() {
                     syncConflict = SyncConflict(mutation: mutation, remote: remote)
-                    notice = mutation.method == "DELETE" ? "This task changed before deletion. Review it to resume sync." : "Changes overlap on the same task. Review this edit to resume sync."
+                    notice = SyncAutoMerge.pendingStatus
+                }
+                // A personal edit to a task deleted on another device can never apply: deletion wins.
+                if syncConflict == nil, let mutation = sending, mutation.table == "tasks", mutation.method == "PATCH",
+                   mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil,
+                   !(error is CancellationError), !(error is AccountSessionAuthorizationRequired),
+                   let escaped = mutation.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
+                   let data = try? await backend.request("/rest/v1/tasks?id=eq.\(escaped)&select=id", expectedAccount: account),
+                   let rows = try? TaskfoldJSONDecoder().decode([Record].self, from: data), rows.isEmpty,
+                   generation == accountGeneration, snapshot.pending.first == mutation {
+                    await dropEditsToDeletedTask(mutation, generation: generation)
                 }
             }
             return
@@ -3207,8 +3215,9 @@ final class Store {
         let workflowUndoBlocked = snapshot.pending.first.map { !WorkflowUndo.canSend($0, boundary: snapshot.teamWorkspace?.boundary, service: snapshot.workflowUndoService, origin: try? backend.accountRemovalOrigin) } ?? false
         if workflowUndoBlocked { notice = "Your workflow Undo is saved on this device. Its service needs an update before it can sync." }
         if headingBlocked, syncSignInWorkspace == nil { notice = "Your heading changes are saved on this device. This service needs heading support before they can sync." }
+        pruneAutoMergeAttempts()
         if !accessBlocked && !headingBlocked && !workflowUndoBlocked && !workflowUndoRefused && !hadConflict {notice = widgetActionStatus}
-        // A blocked head needs review, not an immediate busy retry loop.
+        // A blocked head waits for its merge or access change, not an immediate busy retry loop.
         if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && !workflowUndoBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.syncAutomatically()}}
     }
     /// Only fill missing remote rows after a successful fetch. Existing synchronized choices win.
@@ -3470,10 +3479,10 @@ final class Store {
               syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
         if let request = requests.0, let review = groupReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
             installTeamCompletionBatchReview(terminal)
-            notice = terminal.isCancelled ? "This saved task selection was cancelled. Review your work to continue." : "This task selection already synced. Review its result to continue."
+            notice = SyncAutoMerge.pendingStatus
         } else if let request = requests.1, let review = singleReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
             syncConflict = SyncConflict(mutation: terminal.mutation, remote: terminal.task ?? terminal.mutation.teamCompletion!.source, completionReview: terminal)
-            notice = terminal.isCancelled ? "This saved task action was cancelled. Review your work to continue." : "This task action already synced. Review its result to continue."
+            notice = SyncAutoMerge.pendingStatus
         } else { return false }
         return true
     }
@@ -3735,19 +3744,131 @@ final class Store {
         syncConflict = nil; notice = nil; Task { await sync() }; return true
     }
 
-    /// Resolution is persisted before resuming. A second simultaneous edit can still conflict safely.
-    @discardableResult func resolveConflict(id: UUID, keepLocal: Bool) -> Bool {
-        guard let conflict = syncConflict, conflict.id == id,
-              let next = conflict.resolving(snapshot, keepLocal: keepLocal) else {
-            error = "This edit is no longer waiting for review. Reopen the current sync review."
+    // MARK: Automatic merge (latest edit wins)
+
+    private var autoMergeEnabled: Bool {
+        #if DEBUG
+        // The reserved team recovery fixtures drive the review engine by hand.
+        if TeamEditorNativeFixture.enabled { return false }
+        #endif
+        return true
+    }
+    private func scheduleAutoMerge() {
+        guard autoMergeEnabled, !autoMerging, !autoMergeScheduled else { return }
+        autoMergeScheduled = true
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.autoMergeScheduled = false
+            await self.autoResolveSyncConflicts()
+        }
+    }
+    private func countAutoMergeAttempt(_ mutation: Mutation) -> Int {
+        let key = SyncAutoMerge.key(mutation), attempts = autoMergeAttempts[key, default: 0]
+        autoMergeAttempts[key] = attempts + 1
+        return attempts
+    }
+    /// A budget lasts while the row still has queued work, so a fresh edit starts over.
+    private func pruneAutoMergeAttempts() {
+        guard !autoMergeAttempts.isEmpty else { return }
+        let queued = Set(snapshot.pending.map(SyncAutoMerge.key))
+        autoMergeAttempts = autoMergeAttempts.filter { queued.contains($0.key) }
+    }
+
+    /// Resolves every parked conflict without asking, then resumes sync. A
+    /// resolution that cannot finish now stays parked and is retried on the next sync.
+    func autoResolveSyncConflicts() async {
+        guard autoMergeEnabled, !autoMerging, workspaceCacheReadable else { return }
+        autoMerging = true
+        // Failures inside an automatic merge are retried later, never shown as review alerts.
+        let earlierError = error
+        var resolved = false
+        if let focus = focusSyncConflict { if autoMergeFocus(focus) { resolved = true } }
+        if let conflict = syncConflict {
+            if let review = conflict.completionBatchReview { if await autoMergeTeamCompletionBatch(review) { resolved = true } }
+            else if let review = conflict.completionReview { if await autoMergeTeamCompletion(review) { resolved = true } }
+            else { if await autoMerge(conflict) { resolved = true } }
+        }
+        autoMerging = false
+        if error != earlierError { error = earlierError; teamCompletionReviewFailure = nil }
+        if syncConflict != nil || focusSyncConflict != nil { notice = SyncAutoMerge.pendingStatus }
+        if resolved { Task { await self.sync() } }
+    }
+
+    private func autoMerge(_ conflict: SyncConflict) async -> Bool {
+        let attempts = countAutoMergeAttempt(conflict.mutation)
+        guard let plan = SyncAutoMerge.resolving(conflict, snapshot: snapshot, attempts: attempts) else { return false }
+        let before = snapshot
+        if SyncAutoMerge.discards(conflict, outcome: plan.outcome) {
+            // Discarded work stays restorable from Backups & restore.
+            guard (try? await makeRecoveryBackup(kind: "Before sync merge")) != nil,
+                  syncConflict?.id == conflict.id, snapshot == before else { return false }
+        }
+        snapshot = plan.snapshot
+        do { try persist() } catch { snapshot = before; return false }
+        // A rebased edit is still this device's edit, so its Undo stays available.
+        if plan.outcome == .keptSynced { undoStack = []; redoStack = [] }
+        syncConflict = nil; notice = nil
+        return true
+    }
+
+    private func autoMergeFocus(_ conflict: FocusSyncConflict) -> Bool {
+        let attempts = countAutoMergeAttempt(conflict.mutation)
+        guard let plan = SyncAutoMerge.resolving(conflict, snapshot: snapshot, account: userID, attempts: attempts) else { return false }
+        let before = snapshot; snapshot = plan.snapshot
+        do { try persist() } catch { snapshot = before; return false }
+        focusSyncConflict = nil; notice = nil
+        publishWidgetSnapshot(scheduleCapacityRefresh: false); Task { await reschedule() }
+        return true
+    }
+
+    /// Team completions: an action already recorded is acknowledged; otherwise
+    /// this device's action is applied to the current task (latest wins). A
+    /// viewer cannot change the task, so the synced task is kept and a recovery
+    /// copy saved; that is reported as an ordinary permission error.
+    private func autoMergeTeamCompletion(_ review: TeamCompletion.Review) async -> Bool {
+        let attempts = countAutoMergeAttempt(review.mutation)
+        if review.isRecorded {
+            if await continueTeamCompletionReview(review) { return true }
+            return await preserveRecordedCompletionDraft(teamCompletionReviewPresentation)
+        }
+        let readOnly = review.role == .viewer || !review.canEditCurrent
+        if !readOnly, attempts < SyncAutoMerge.attemptLimit {
+            if await rebaseTeamCompletionReview(review) { notice = nil; return true }
+            guard let current = syncConflict?.completionReview else { return false }
+            if !current.isCancelled, await continueTeamCompletionReview(current) { return true }
             return false
         }
-        let old = snapshot
-        snapshot = next
-        do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
-        undoStack = []; redoStack = []; syncConflict = nil; notice = nil
-        Task { await sync() }
-        return true
+        let current = syncConflict?.completionReview ?? review
+        var done = await cancelTeamCompletionReview(current)
+        if !done { done = await preserveCancelledCompletionDraft(teamCompletionReviewPresentation) }
+        if done, readOnly { notice = "You can view this shared project but not change it. Your change is kept in Backups & restore." }
+        return done
+    }
+
+    private func autoMergeTeamCompletionBatch(_ review: TeamTaskBatch.Review) async -> Bool {
+        let attempts = countAutoMergeAttempt(review.mutation)
+        if review.isRecorded {
+            if await continueTeamCompletionBatchReview(review) { return true }
+            return await preserveRecordedCompletionDraft(teamCompletionReviewPresentation)
+        }
+        let readOnly = review.members.contains { $0.role == .viewer || !$0.canEditCurrent }
+        if !review.isCancelled, !readOnly, attempts < SyncAutoMerge.attemptLimit {
+            return await continueTeamCompletionBatchReview(review)
+        }
+        let done = await cancelTeamCompletionBatchReview(review)
+        if done, readOnly { notice = "You can view this shared project but not change it. Your change is kept in Saved team drafts." }
+        return done
+    }
+
+    /// A queued edit to a task deleted on another device: deletion wins.
+    private func dropEditsToDeletedTask(_ mutation: Mutation, generation: UUID) async {
+        let before = snapshot
+        guard (try? await makeRecoveryBackup(kind: "Before sync merge")) != nil,
+              generation == accountGeneration, snapshot == before, snapshot.pending.contains(mutation) else { return }
+        snapshot = SyncAutoMerge.droppingEdits(toDeletedTask: mutation.recordID, in: before)
+        do { try persist() } catch { snapshot = before; return }
+        notice = "A task you edited was deleted on another device. Your edit is kept in Backups & restore."
+        Task { await self.sync() }
     }
 
 
@@ -4086,7 +4207,7 @@ final class Store {
         else if report.focusFailure { focusAlertStatus = "The finish alert could not be scheduled. Open Focus to retry." }
         else if report.focusScheduled { focusAlertStatus = "A finish alert is scheduled on this device." }
         else if report.focusDeferred { focusAlertStatus = "There’s no room for the finish alert yet. Taskfold will retry while this session is running." }
-        else if focusSyncConflict != nil { focusAlertStatus = "Review the session changes before a finish alert can be scheduled." }
+        else if focusSyncConflict != nil { focusAlertStatus = "The finish alert is scheduled once this session finishes syncing." }
         else if focusSession?.finished(at: Date()) == true { focusAlertStatus = "Start another session to receive its finish alert." }
         else { focusAlertStatus = "Start or resume a session to schedule its finish alert." }
         guard remindersEnabled else { reminderStatus = "Reminders are off for this workspace on this device."; return }
