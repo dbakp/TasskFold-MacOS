@@ -74,7 +74,7 @@ struct QuickAddHighlightOverlay: NSViewRepresentable {
 
     func updateNSView(_ view: NSTextView, context: Context) {
         view.textContainerInset = NSSize(width: leadingInset, height: topInset)
-        let font = NSFont.preferredFont(forTextStyle: .title3)
+        let font = NSFont.systemFont(ofSize: 17) // the Quick Add field is 17 pt (design review mac-r1)
         let attributed = NSMutableAttributedString(string: text, attributes: [.font: font, .foregroundColor: NSColor.clear])
         let length = attributed.length
         for span in spans where NSMaxRange(span.range) <= length {

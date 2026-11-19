@@ -53,7 +53,6 @@ struct GeneralSettings: View {
                 ProgressView("Requesting permission…")
                     .accessibilityIdentifier("taskReminderPermissionProgress")
             }
-            Text("Choose fixed-time and before/after reminders in each task. Delivery is enabled separately for this workspace on each device. The nearest 60 notifications refresh while Taskfold is open.").font(.caption).foregroundStyle(.secondary)
             Text(store.reminderStatus).font(.caption).foregroundStyle(.secondary)
             ReminderSystemSettingsButton()
             #if DEBUG
@@ -65,7 +64,7 @@ struct GeneralSettings: View {
                 Section("Snooze") { ReminderSnoozePreferencesView() }
                 Section("Place reminders") {
                     Label("Places live on your iPhone", systemImage: "mappin.and.ellipse")
-                    Text("Save places in Taskfold on your iPhone, in Settings → Places. On this Mac, type “at Home” in Quick Add or add a Location in a task’s Reminders: only the place’s name syncs, and your iPhone reminds you at its place with that name.")
+                    Text("Type “at Home” in Quick Add; your iPhone reminds you at its place with that name.")
                         .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 Section("Remote reminders") { RemoteReminderRegistrationView() }
@@ -74,7 +73,7 @@ struct GeneralSettings: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section {
-                Button("Show Welcome Tour…") { workspace.onboarding = true; NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
+                Button("Show welcome tour…") { workspace.onboarding = true; NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
                     .disabled(!store.signedIn)
             }
         }

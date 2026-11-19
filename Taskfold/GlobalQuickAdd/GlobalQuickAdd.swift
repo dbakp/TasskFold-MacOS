@@ -48,7 +48,7 @@ struct GlobalQuickAddView: View {
         ZStack {
             TaskCapturePanel(text: $draft.text, declined: $draft.declined, choices: $draft.choices, prompt: "Add to Inbox — try “Call Sam tomorrow at 4pm p1”",
                              context: workspace.quickEntryContext(), task: workspace.captureTask(date: nil, scope: .inbox), submit: submit,
-                             onClose: close, manualChoices: $draft.manual, hint: "↩ Add   ·   ⌘↩ Add and keep open   ·   Esc Close")
+                             onClose: close, manualChoices: $draft.manual, hint: "⏎ Add · ⌘⏎ Add another")
                 .id(draft.generation)
                 .opacity(draft.confirmation == nil ? 1 : 0)
                 .allowsHitTesting(draft.confirmation == nil)
@@ -63,8 +63,8 @@ struct GlobalQuickAddView: View {
             }
         }
         .animation(Motion.respecting(reduceMotion, Motion.quick), value: draft.confirmation)
-        .frame(width: 540)
-        .background(DS.Palette.surface)
+        .frame(width: 560)
+        .background(.regularMaterial)
         .tint(Color.adaptiveAccent(accent))
         .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
     }

@@ -108,11 +108,11 @@ struct TaskfoldMacApp: App {
             if WorkflowUndoNativePeer.enabled {
                 Text("Account settings are outside this isolated workflow test.")
             } else {
-                SettingsView().environment(store).environment(workspace).tint(tint)
+                SettingsView().environment(store).environment(workspace)
                     .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
             }
             #else
-            SettingsView().environment(store).environment(workspace).tint(tint)
+            SettingsView().environment(store).environment(workspace)
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
             #endif
         }

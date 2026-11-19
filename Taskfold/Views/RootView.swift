@@ -425,8 +425,10 @@ struct RootView: View {
                 } else if arguments.contains("--capture-quick-add") {
                     // The sheet cannot be captured with the window, so host the composer alone, pre-filled with --quick-add-text.
                     let sample = option("quick-add-text") ?? "Call Anna tomorrow at 4pm #Work @calls p1 !30m"
-                    let host = NSHostingView(rootView: QuickAddCaptureHost(text: sample).environment(store).environment(workspace).frame(width: 540, height: 760, alignment: .top).background(Color(nsColor: .windowBackgroundColor)))
-                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 540, height: 760), styleMask: [.borderless], backing: .buffered, defer: false)
+                    let host = NSHostingView(rootView: QuickAddCaptureHost(text: sample).environment(store).environment(workspace).frame(width: 560).background(Color(nsColor: .windowBackgroundColor)))
+                    let fitted = NSSize(width: 560, height: max(120, host.fittingSize.height))
+                    host.frame = NSRect(origin: .zero, size: fitted)
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: fitted.width, height: fitted.height), styleMask: [.borderless], backing: .buffered, defer: false)
                     panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
                     try? await Task.sleep(for: .seconds(1.5))
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
