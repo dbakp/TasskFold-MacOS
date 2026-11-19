@@ -122,19 +122,21 @@ struct DayEndRow: View {
         let drag = workspace.drag
         Group {
             if isEmpty {
+                // At rest an empty day is one quiet line; the drop outline appears only while something is dragged.
                 HStack {
-                    Spacer()
+                    if drag.active { Spacer() }
                     Text(targeted ? releaseText : drag.active ? "Drop here" : emptyText)
-                        .font(.callout.weight(targeted ? .semibold : .regular))
+                        .font(drag.active ? .callout.weight(targeted ? .semibold : .regular) : DS.Font.taskMeta)
                         .foregroundStyle(targeted ? AnyShapeStyle(Color.taskfold) : AnyShapeStyle(.tertiary))
                         .contentTransition(.interpolate)
                     Spacer()
                 }
-                .frame(minHeight: 40)
+                .padding(.leading, drag.active ? 0 : DS.Space.xxxl + DS.Space.xs)
+                .frame(minHeight: drag.active ? 40 : 24)
                 .background {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .fill(targeted ? Color.taskfold.opacity(0.08) : Color.clear)
-                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: drag.active ? [5, 4] : [])).foregroundStyle(targeted ? Color.taskfold.opacity(0.7) : Color(nsColor: .separatorColor).opacity(drag.active ? 1 : 0.6)))
+                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: drag.active ? [5, 4] : [])).foregroundStyle(targeted ? Color.taskfold.opacity(0.7) : Color(nsColor: .separatorColor).opacity(drag.active ? 1 : 0)))
                 }
                 .scaleEffect(targeted ? 1.01 : 1)
             } else {

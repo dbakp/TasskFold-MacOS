@@ -779,6 +779,31 @@ struct RootView: View {
 }
 
 /// Sidebar ▸ content list ▸ inspector. The inspector is a real trailing column, not a sheet.
+/// One search in the toolbar: "This list" filters the current list as you type; "Everywhere" opens the Finder on Return
+/// (⌘F opens it directly, ⇧⌘F focuses this field). Applied by each destination so it sits with that destination's toolbar items.
+struct ToolbarSearch: ViewModifier {
+    @Environment(Workspace.self) private var workspace
+    func body(content: Content) -> some View {
+        @Bindable var workspace = workspace
+        content
+            .searchable(text: Binding(get: { workspace.searchScope == .list ? workspace.search : workspace.everywhereQuery },
+                                      set: { if workspace.searchScope == .list { workspace.search = $0 } else { workspace.everywhereQuery = $0 } }),
+                        isPresented: $workspace.searchPresented, placement: .toolbar, prompt: Text("Search"))
+            .searchScopes($workspace.searchScope) {
+                Text("This list").tag(Workspace.SearchScope.list)
+                Text("Everywhere").tag(Workspace.SearchScope.everywhere)
+            }
+            .onSubmit(of: .search) {
+                guard workspace.searchScope == .everywhere else { return }
+                workspace.finderInitialQuery = workspace.everywhereQuery; workspace.finderPresented = true
+            }
+            .onChange(of: workspace.searchScope) { _, scope in
+                if scope == .everywhere { workspace.everywhereQuery = workspace.search; workspace.search = "" }
+                else { workspace.search = workspace.everywhereQuery; workspace.everywhereQuery = "" }
+            }
+    }
+}
+
 struct WorkspaceView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
@@ -801,7 +826,8 @@ struct WorkspaceView: View {
                     else if workspace.section == .calendar {
                         // Use the window budget, including space for the expanded sidebar, so
                         // toggling it cannot trigger a second calendar layout mid-transition.
-                        CalendarView(showsDayPanel: window.size.width >= (workspace.inspectorVisible ? 1550 : 1240))
+                        // The day panel is hidden by default: the week already shows the day (owner decision 6).
+                        CalendarView(showsDayPanel: workspace.calendarDayPanel && window.size.width >= (workspace.inspectorVisible ? 1550 : 1240))
                     }
                     else { TaskListView(scope: workspace.scope, preferenceKey: workspace.section.key) }
                 }
@@ -818,23 +844,7 @@ struct WorkspaceView: View {
             .navigationSplitViewStyle(.prominentDetail)
             .navigationTitle(workspace.navigationTitle)
             .navigationSubtitle(workspace.navigationSubtitle)
-            // One search in the toolbar: "This list" filters the current list as you type; "Everywhere" opens the Finder
-            // on Return (⌘F opens it directly, ⇧⌘F focuses this field).
-            .searchable(text: Binding(get: { workspace.searchScope == .list ? workspace.search : workspace.everywhereQuery },
-                                      set: { if workspace.searchScope == .list { workspace.search = $0 } else { workspace.everywhereQuery = $0 } }),
-                        isPresented: $workspace.searchPresented, placement: .toolbar, prompt: Text("Search"))
-            .searchScopes($workspace.searchScope) {
-                Text("This list").tag(Workspace.SearchScope.list)
-                Text("Everywhere").tag(Workspace.SearchScope.everywhere)
-            }
-            .onSubmit(of: .search) {
-                guard workspace.searchScope == .everywhere else { return }
-                workspace.finderInitialQuery = workspace.everywhereQuery; workspace.finderPresented = true
-            }
-            .onChange(of: workspace.searchScope) { _, scope in
-                if scope == .everywhere { workspace.everywhereQuery = workspace.search; workspace.search = "" }
-                else { workspace.search = workspace.everywhereQuery; workspace.everywhereQuery = "" }
-            }
+            .modifier(ToolbarSearch())
         }
         .sheet(isPresented: $workspace.finderPresented, onDismiss: { workspace.finishFinderDismissal() }) { FinderView() }
         .sheet(item: $workspace.planning) { kind in PlanDayView(kind: kind, queue: workspace.planQueue(kind)) }

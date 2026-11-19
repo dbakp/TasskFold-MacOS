@@ -35,9 +35,14 @@ enum DS {
         /// Screen and panel titles: Fraunces SemiBold 17 (the opsz 24 cut), relative to title2. Display use only;
         /// falls back to the system face if the font is missing.
         static let screenTitle = SwiftUI.Font.custom(screenTitleFace, size: 17, relativeTo: .title2)
+        /// The title in the content of every list (design review mac-r1): Fraunces SemiBold 28, relative to largeTitle.
+        static let contentTitle = SwiftUI.Font.custom(screenTitleFace, size: 28, relativeTo: .largeTitle)
+        /// The inspector's task title: Fraunces SemiBold 20, relative to title2.
+        static let inspectorTitle = SwiftUI.Font.custom(screenTitleFace, size: 20, relativeTo: .title2)
         /// The sign-in wordmark: Fraunces SemiBold 34 (the opsz 72 cut), relative to largeTitle.
         static let displayTitle = SwiftUI.Font.custom(displayTitleFace, size: 34, relativeTo: .largeTitle)
-        static let sectionHeader = SwiftUI.Font.subheadline.weight(.semibold)
+        /// 13 pt semibold (the Mac body size), ink; Overdue alone is crimson.
+        static let sectionHeader = SwiftUI.Font.body.weight(.semibold)
         static let taskTitle = SwiftUI.Font.body
         /// Pair with `Palette.textSecondary`.
         static let taskNote = SwiftUI.Font.subheadline
@@ -46,9 +51,9 @@ enum DS {
         static let badge = SwiftUI.Font.caption2.weight(.semibold).monospacedDigit()
         static let inspectorLabel = SwiftUI.Font.subheadline
         /// The ring figure, "4h 10m of 6h".
-        static let ringFigure = SwiftUI.Font.title3.weight(.semibold).width(.expanded).monospacedDigit()
-        /// A date line under a title, sentence case, never an ALL-CAPS eyebrow.
-        static let dateLine = SwiftUI.Font.subheadline
+        static let ringFigure = SwiftUI.Font.callout.monospacedDigit()
+        /// A date line under a title, sentence case, never an ALL-CAPS eyebrow. 13 pt on Mac.
+        static let dateLine = SwiftUI.Font.body
         /// Times on time-grid blocks.
         static let blockTime = SwiftUI.Font.caption.weight(.semibold).width(.expanded).monospacedDigit()
     }
@@ -93,16 +98,20 @@ enum DS {
     }
 
     enum Size {
+        /// Mac density: "compact" unless the person chose "roomy" (stored values are kept).
+        static let densityDefault = "compact"
         static let checkbox: CGFloat = 18
         static let iconS: CGFloat = 12
         static let iconM: CGFloat = 14
         static let iconL: CGFloat = 18
         static let rowMinHeight: CGFloat = 32
         static let rowVerticalPaddingRoomy: CGFloat = 8
-        static let rowVerticalPaddingCompact: CGFloat = 4
+        /// Compact (the Mac default): 32 pt one-line rows, about 44 pt with a note line.
+        static let rowVerticalPaddingCompact: CGFloat = 6
         static func rowVerticalPadding(compact: Bool) -> CGFloat { compact ? rowVerticalPaddingCompact : rowVerticalPaddingRoomy }
         static let rowHorizontalPadding: CGFloat = Space.m
-        static let contentMaxWidth: CGFloat = 860
+        /// The list column is capped so lines stay readable in a wide window.
+        static let contentMaxWidth: CGFloat = 720
     }
 
     /// Aliases onto the existing `Motion` vocabulary (the Mac values stay shorter and subtler on purpose).
@@ -132,6 +141,8 @@ struct QuietNativeSelection: NSViewRepresentable {
                 while let current = node {
                     if let table = Self.table(in: current, containing: centre) {
                         table.selectionHighlightStyle = .none
+                        // No hairlines (design review mac-r1): groups are separated by space, so headers don't float with a rule.
+                        table.floatsGroupRows = false; table.gridStyleMask = []; table.intercellSpacing = NSSize(width: 0, height: 0)
                         return
                     }
                     node = current.superview

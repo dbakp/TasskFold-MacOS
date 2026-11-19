@@ -27,7 +27,7 @@ import AppKit
         let tasks: [[String: Any]] = workspace.store.tasks.map {
             ["id": $0.id, "title": $0.title, "due": $0.string("due_date"), "section": $0.string("section_id"), "priority": $0.priority, "completed": $0.completed]
         }
-        let report: [String: Any] = ["dragActive": workspace.drag.active, "windows": NSApp.windows.filter { $0.isVisible }.map { ["title": $0.title, "class": $0.className] }, "density": UserDefaults.standard.string(forKey: "mac.taskDensity") ?? "roomy", "tables": tables, "tasks": tasks]
+        let report: [String: Any] = ["dragActive": workspace.drag.active, "windows": NSApp.windows.filter { $0.isVisible }.map { ["title": $0.title, "class": $0.className] }, "density": UserDefaults.standard.string(forKey: "mac.taskDensity") ?? DS.Size.densityDefault, "tables": tables, "tasks": tasks]
         if let data = try? JSONSerialization.data(withJSONObject: report, options: [.sortedKeys]), let text = String(data: data, encoding: .utf8) {
             FileHandle.standardOutput.write(Data(("TASKFOLD_DIAGNOSTICS=" + text + "\n").utf8))
         }

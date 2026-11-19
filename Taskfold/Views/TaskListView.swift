@@ -295,35 +295,11 @@ struct TaskListView: View {
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
-            if scope == .today && workspace.search.isEmpty {
-                // The ring leads Today (design review round 2). Plan opens the day planner; without working hours the
-                // ring is dashed and the button sets them.
-                TodayHeader(ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), date: Date(),
-                            hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) },
-                            // Segments wait for their folding row to land (round 3); with Reduce Motion they fill at once.
-                            pending: reduceMotion ? [] : Set(workspace.lingering.keys).subtracting(flight.landed), flight: flight,
-                            plan: { workspace.planning = .day }, setHours: { hoursSettings = true })
-                    .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
-                    .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-                    .sheet(isPresented: $hoursSettings) { PlannerSettingsView(busy: ringBusy) }
-            }
-            if let week = projectWeek, !boardLayout, !calendarLayout {
-                // Round 6: under the project's title, a ring of its work due this week.
-                ProjectWeekHeader(week: week, hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) })
-                    .padding(.horizontal, DS.Space.l).padding(.top, DS.Space.m)
-                    .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-            }
-            if scope == .today {
-                // Search and View options moved to the toolbar; what is left here is the day's own state.
-                HStack(spacing: DS.Space.s) {
-                    DayPlanTodayPrompt(offersPlanElsewhere: true, plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true })
-                    if let summary = momentum.summary, summary.chipText != nil { StreakChip(summary: summary, open: openInsights) }
-                    if let habits = store.habitTodaySummary { HabitsChip(summary: habits) { workspace.section = .habits } }
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, DS.Space.l).padding(.vertical, DS.Space.s)
+            // One title line in the content (design review mac-r1); the toolbar no longer repeats it.
+            titleHeader
+                .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.xxl).padding(.top, DS.Space.l).padding(.bottom, DS.Space.xs)
                 .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-            }
+                .sheet(isPresented: $hoursSettings) { PlannerSettingsView(busy: ringBusy) }
             if let failure = store.filterError(scope) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DS.Space.l) {
@@ -368,7 +344,7 @@ struct TaskListView: View {
                             Section {
                                 if projectID.isEmpty || !collapsed(group.key) {
                                 if group.tasks.isEmpty && group.key.contains(":group:query:") { Text("No matching tasks").foregroundStyle(DS.Palette.textSecondary) }
-                                ForEach(workspace.visibleTasks(group.tasks)) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
+                                ForEach(workspace.visibleTasks(group.tasks)) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id).listRowSeparator(.hidden).listRowInsets(Self.rowInsets) }
                                     .onMove { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).move(from: $0, to: $1) }
                                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).insert(at: $0, providers: $1) }
                                 if scope != .completed && manualOrder  {
@@ -381,7 +357,7 @@ struct TaskListView: View {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
                                     }
-                                } else if !group.title.isEmpty { Text(group.title).font(DS.Font.sectionHeader).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true) }
+                                } else if !group.title.isEmpty { ListGroupHeader(title: group.title).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true) }
                             }
                         }
                     }
@@ -394,7 +370,11 @@ struct TaskListView: View {
             .environment(\.taskRowScope, scope)
             .environment(\.somedayMuted, mutedSomeday)
             .accessibilityIdentifier("taskList")
-            .listStyle(.inset)
+            .listStyle(.plain)
+            .listSectionSeparator(.hidden)
+            .listRowSeparator(.hidden)
+            // Rows set their own 32 pt minimum; the drop strip after each group is only a few points tall at rest.
+            .environment(\.defaultMinListRowHeight, 1)
             .scrollContentBackground(.hidden)
             .background(QuietNativeSelection())
             .frame(maxWidth: DS.Size.contentMaxWidth).frame(maxWidth: .infinity)
@@ -414,6 +394,7 @@ struct TaskListView: View {
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
+        .toolbar(removing: .title)
         .onAppear {
             printCommand.install(owner: printOwner, enabled: canPrint, action: { preparePrint() })
         }
@@ -461,6 +442,44 @@ struct TaskListView: View {
                     workspace.selection.formIntersection(ids)
                 }
             }
+        }
+    }
+
+    private func hue(_ project: String) -> ProjectHue { DS.Palette.project(project.isEmpty ? nil : store.record("projects", id: project)) }
+    private var contentTitle: String { workspace.section == .assigned ? "Assigned to me" : scope == .all ? "All tasks" : title }
+    /// Under the title: Today's date, Upcoming's horizon, otherwise the count.
+    private var contentSubtitle: String {
+        if store.filterError(scope) != nil { return "Filter unavailable" }
+        if scope == .today { let now = Date(); return now.formatted(.dateTime.weekday(.wide)) + " " + now.formatted(.dateTime.day().month(.wide)) }
+        let count = remaining == 1 ? "1 task" : "\(remaining) tasks"
+        if scope == .upcoming { return "Next 14 days · " + count }
+        if scope == .completed { return "\(filtered.count) completed" }
+        return count
+    }
+    @ViewBuilder private var titleHeader: some View {
+        switch scope {
+        case .today:
+            ListTitleHeader(title: contentTitle, subtitle: contentSubtitle) {
+                if workspace.search.isEmpty {
+                    TodayTitleTrailing(ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), hue: hue,
+                                       // Segments wait for their folding row to land (round 3); with Reduce Motion they fill at once.
+                                       pending: reduceMotion ? [] : Set(workspace.lingering.keys).subtracting(flight.landed), flight: flight,
+                                       plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }, setHours: { hoursSettings = true })
+                }
+            }
+        case .project(let id):
+            ListTitleHeader(title: contentTitle, subtitle: contentSubtitle, dot: store.record("projects", id: id).map { DS.Palette.project($0) }) {
+                if let week = projectWeek, !boardLayout, !calendarLayout, week.plannedMinutes > 0 {
+                    HStack(spacing: DS.Space.s) {
+                        InlineDayRing(ring: week.ring, hue: hue, size: 22)
+                        (Text(week.figure).fontWeight(.semibold).foregroundStyle(DS.Palette.textPrimary) + Text(" " + week.rest).foregroundStyle(DS.Palette.textSecondary))
+                            .font(DS.Font.ringFigure).lineLimit(1).fixedSize()
+                    }
+                    .accessibilityElement(children: .ignore).accessibilityLabel(week.accessibilityLabel).accessibilityIdentifier("projectWeekRing")
+                }
+            }
+        default:
+            ListTitleHeader(title: contentTitle, subtitle: contentSubtitle)
         }
     }
 
@@ -557,34 +576,14 @@ struct TaskListView: View {
         let count = tasks.filter(TaskKind.mayComplete).count
         return Section {
             if !overdueCollapsed {
-                ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: overdueKey, orderProvider: { order })).tag(task.id) }
+                ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: overdueKey, orderProvider: { order })).tag(task.id).listRowSeparator(.hidden).listRowInsets(Self.rowInsets) }
                     .onMove { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).move(from: $0, to: $1) }
                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).insert(at: $0, providers: $1) }
             }
+            Color.clear.frame(height: DS.Space.m).selectionDisabled().listRowSeparator(.hidden).accessibilityHidden(true)
         } header: {
-            HStack(spacing: DS.Space.m) {
-            Button { withAnimation(layout) { overdueCollapsed.toggle() } } label: {
-            HStack(spacing: DS.Space.s) {
-                Image(systemName: overdueCollapsed ? "chevron.right" : "chevron.down").font(DS.Font.chip)
-                Text(count == 0 ? "Earlier" : "Overdue").font(DS.Font.sectionHeader)
-                if count > 0 {
-                    Text("\(count)").font(DS.Font.badge).padding(.horizontal, DS.Space.s).padding(.vertical, DS.Space.xxs)
-                        .background(DS.Palette.dateOverdue.opacity(0.14), in: .capsule).foregroundStyle(DS.Palette.dateOverdue).contentTransition(.numericText())
-                        .transition(reduceMotion ? .opacity : .badgePop)
-                }
-            }
-            }.buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(count == 0 ? "Earlier dates" : "Overdue, \(count) \(count == 1 ? "task" : "tasks")")
-            .accessibilityValue(overdueCollapsed ? "Collapsed" : "Expanded")
-            .accessibilityIdentifier("overdueToggle")
-            if tasks.contains(where: { Planning.eligible($0) && store.smartRescheduleIsEditable($0) }) {
-                Button { workspace.openSmartReschedule() } label: { Label("Find a time", systemImage: "sparkles").font(DS.Font.chip) }
-                        .buttonStyle(.borderless).foregroundStyle(DS.Palette.accent).help("Spread overdue tasks over your next working days")
-                        .accessibilityIdentifier("rescheduleSmartly")
-                }
-                Spacer(minLength: 0)
-            }
+            OverdueHeader(count: count, collapsed: overdueCollapsed, toggle: { withAnimation(layout) { overdueCollapsed.toggle() } },
+                          reschedule: tasks.contains(where: { Planning.eligible($0) && store.smartRescheduleIsEditable($0) }) ? { workspace.openSmartReschedule() } : nil)
         }
     }
     private func eveningSection(_ tasks: [Record]) -> some View {
@@ -593,7 +592,7 @@ struct TaskListView: View {
         let isCollapsed = collapsed(key) && !workspace.drag.active
         return Section {
             if !isCollapsed {
-                ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: key, orderProvider: { order })).tag(task.id) }
+                ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: key, orderProvider: { order })).tag(task.id).listRowSeparator(.hidden).listRowInsets(Self.rowInsets) }
                     .onMove { DayDropHandling(workspace: workspace, day: key, tasks: tasks).move(from: $0, to: $1) }
                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: key, tasks: tasks).insert(at: $0, providers: $1) }
                 DayEndRow(day: key, isEmpty: tasks.isEmpty, emptyText: "Nothing for this evening", releaseText: "Release to plan for this evening").selectionDisabled().listRowSeparator(.hidden)
@@ -601,11 +600,9 @@ struct TaskListView: View {
         } header: {
             Button { withAnimation(layout) { collapseBinding(key).wrappedValue.toggle() } } label: {
                 HStack(spacing: DS.Space.s) {
-                    Image(systemName: isCollapsed ? "chevron.right" : "chevron.down").font(DS.Font.chip)
-                    Image(systemName: "moon.fill").font(DS.Font.chip).foregroundStyle(DS.Palette.accentSecondary)
-                    Text("This Evening").font(DS.Font.sectionHeader)
+                    ListGroupHeader(title: "This evening", count: count)
+                    Image(systemName: isCollapsed ? "chevron.right" : "chevron.down").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary)
                     Spacer()
-                    if count > 0 { Text("\(count)").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).contentTransition(.numericText()) }
                 }
                 .contentShape(.rect)
             }
@@ -625,32 +622,33 @@ struct TaskListView: View {
         let detail = date?.formatted(.dateTime.month(.abbreviated).day()) ?? ""
         let open = tasks.filter { TaskKind.mayComplete($0) && !$0.completed && !workspace.completing.contains($0.id) }.count
         return Section {
-            ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id) }
+            ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id).listRowSeparator(.hidden).listRowInsets(Self.rowInsets) }
                 .onMove { DayDropHandling(workspace: workspace, day: day, tasks: tasks).move(from: $0, to: $1) }
                 .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: day, tasks: tasks).insert(at: $0, providers: $1) }
             DayEndRow(day: day, isEmpty: tasks.isEmpty).selectionDisabled().listRowSeparator(.hidden)
         } header: {
             SwiftUI.Group {
-                if scope == .upcoming, let ring {
-                    // Round 6: a 20pt ring before the day name and "4h 10m of 6h" in place of the count.
-                    DayRingHeader(name: name, detail: detail, nameColor: day == today ? DS.Palette.accent : DS.Palette.textPrimary, ring: ring, dayOff: DayPlan.isDayOff(ring, hours: store.workingHours),
-                                  figure: DayPlan.dayFigure(ring, hours: store.workingHours),
-                                  spoken: DayPlan.dayRingLabel(ring, name: name + " " + detail, hours: store.workingHours),
-                                  hue: { DS.Palette.project($0.isEmpty ? nil : store.record("projects", id: $0)) })
-                } else {
-                    HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
-                        Text(name).font(DS.Font.sectionHeader).foregroundStyle(day == today ? DS.Palette.accent : DS.Palette.textPrimary)
-                        if !(scope == .today && day == today) { Text(detail).font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary) }
-                        Spacer()
-                        if open > 0 { Text("\(open)").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary).contentTransition(.numericText()) }
+                // "Today 19 Nov", "Saturday 21 Nov · Day off". A 12 pt ring appears only on days with estimates (round 6's dashed circles are gone).
+                let dayOff = ring.map { DayPlan.isDayOff($0, hours: store.workingHours) } ?? false
+                HStack(alignment: .firstTextBaseline, spacing: DS.Space.s) {
+                    if scope == .upcoming, let ring, !ring.segments.isEmpty {
+                        InlineDayRing(ring: ring, hue: hue, size: 12).alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+                    }
+                    ListGroupHeader(title: name, detail: (scope == .today && day == today ? "" : detail) + (dayOff ? " · Day off" : ""), count: scope == .today ? open : nil)
+                    Spacer()
+                    if scope == .upcoming, let ring, !dayOff {
+                        let figure = DayPlan.dayFigure(ring, hours: store.workingHours)
+                        if !figure.text.isEmpty { DayFigureText(figure: figure).font(DS.Font.taskMeta) }
                     }
                 }
+                .accessibilityLabel(ring.map { DayPlan.dayRingLabel($0, name: name + " " + detail, hours: store.workingHours) } ?? name + " " + detail)
             }
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("day-\(day)")
             .modifier(DayHeaderDrop(day: day))
         }
     }
+    static let rowInsets = EdgeInsets(top: 0, leading: DS.Space.s, bottom: 0, trailing: DS.Space.s)
     /// The selection tag must sit on the outermost row view, after any drag wrapper, or clicks cannot select.
     private func row(_ task: Record) -> some View {
         let intent = rowGestureIntent(task)
@@ -661,6 +659,7 @@ struct TaskListView: View {
                                                                                                                        hue: DS.Palette.project(store.record("projects", id: task.string("project_id"))))) }
         .remoteChangeHighlight(task.id)
         .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 0, leading: DS.Space.s, bottom: 0, trailing: DS.Space.s))
         .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }
         .accessibilityAction(named: "Move to tomorrow") { if let intent { performRowGesture(.tomorrow, intent: intent) } }
         .accessibilityAction(named: store.isInEvening(task) ? "Back to Today" : "Move to This Evening") {
@@ -810,14 +809,15 @@ struct TaskListView: View {
     /// Three controls beside the search field (design review mac-r1): View ⌄, New task and the inspector. Everything else is in
     /// the View menu here, the menu bar (File, Task, View, Window) and the sidebar foot.
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) { viewOptions }
-        ToolbarItem(placement: .primaryAction) {
+        // Without a toolbar title the items would sit at the leading edge; a flexible spacer keeps them trailing.
+        ToolbarItem(placement: .automatic) { viewOptions }
+        ToolbarItem(placement: .automatic) {
             Button { revealQuickAdd() } label: {
                 Label { Text("New task") } icon: { Image(systemName: "plus").fontWeight(.semibold).foregroundStyle(Color.brandCrimson) }
             }
             .help("New task (⌘N)").accessibilityIdentifier("addTask")
         }
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItem(placement: .automatic) {
             Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }
                 .help("Show or hide the inspector (⌥⌘I)").accessibilityIdentifier("toggleInspector")
         }
@@ -1063,5 +1063,40 @@ private struct TodayFoldFlight: ViewModifier {
         content
             .overlay { if enabled { FoldFlightLayer(model: flight) } }
             .environment(\.foldFlight, enabled ? flight : nil)
+    }
+}
+
+/// "Overdue 1" in crimson, collapsible. "Reschedule…" appears on the right while the pointer is over the header (it stays
+/// reachable by VoiceOver and the Edit ▸ View menu).
+private struct OverdueHeader: View {
+    var count: Int
+    var collapsed: Bool
+    var toggle: () -> Void
+    var reschedule: (() -> Void)?
+    @State private var hovering = false
+    var body: some View {
+        HStack(spacing: DS.Space.s) {
+            Button(action: toggle) {
+                HStack(spacing: DS.Space.s) {
+                    ListGroupHeader(title: count == 0 ? "Earlier" : "Overdue", count: count, alert: count > 0)
+                    if collapsed || hovering { Image(systemName: collapsed ? "chevron.right" : "chevron.down").font(DS.Font.badge).foregroundStyle(DS.Palette.textTertiary) }
+                }.contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(count == 0 ? "Earlier dates" : "Overdue, \(count) \(count == 1 ? "task" : "tasks")")
+            .accessibilityValue(collapsed ? "Collapsed" : "Expanded")
+            .accessibilityIdentifier("overdueToggle")
+            Spacer(minLength: 0)
+            if let reschedule {
+                Button("Reschedule…", action: reschedule)
+                    .buttonStyle(.plain).font(DS.Font.taskMeta.weight(.medium)).foregroundStyle(DS.Palette.textSecondary)
+                    .opacity(hovering ? 1 : 0)
+                    .help("Spread overdue tasks over your next working days")
+                    .accessibilityIdentifier("rescheduleSmartly")
+            }
+        }
+        .contentShape(.rect)
+        .onHover { hovering = $0 }
     }
 }
