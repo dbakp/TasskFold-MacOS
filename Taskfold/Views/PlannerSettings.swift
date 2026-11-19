@@ -1,9 +1,16 @@
 import SwiftUI
 
+/// Which planner settings a screen shows. Settings → Planning pushes the hours and the calendars as their own pages;
+/// the Today ring and the hourly planner keep the combined sheet as a shortcut.
+enum PlannerSettingsPart { case all, hours, calendars }
+
 struct PlannerSettingsView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let busy: CalendarBusyStore
+    var part: PlannerSettingsPart = .all
+    /// Pushed inside Settings: no own navigation stack or Cancel.
+    var embedded = false
     @State private var start = 540
     @State private var end = 1020
     @State private var weekdays: Set<Int> = [2, 3, 4, 5, 6]
@@ -13,8 +20,12 @@ struct PlannerSettingsView: View {
     @State private var connecting = false
     private func time(_ minutes: Int) -> String { String(format: "%02d:%02d", minutes / 60, minutes % 60) }
     var body: some View {
-        NavigationStack {
+        if embedded { content } else { NavigationStack { content } }
+    }
+    private var title: String { part == .hours ? "Working hours" : part == .calendars ? "Calendars" : "Planner settings" }
+    @ViewBuilder private var content: some View {
             Form {
+                if part != .calendars {
                 Section("Working hours") {
                     if !WorkingHours.editable(store.workingHoursDocument) {
                         Text("These working hours are unsupported. Update Taskfold before changing them.")
@@ -30,6 +41,8 @@ struct PlannerSettingsView: View {
                     }
                 }
                 .disabled(!editable)
+                }
+                if part != .hours {
                 Section("Device calendars") {
                     Text(busy.deviceStatus).foregroundStyle(.secondary)
                     Text("Taskfold only reads the calendars you select here, for busy time. Calendar choices apply immediately and stay on this device; connect calendars separately on your other devices.").font(.caption).foregroundStyle(.secondary)
@@ -78,13 +91,14 @@ struct PlannerSettingsView: View {
                             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                     }
                 }
+                }
             }
             .accessibilityIdentifier("plannerSettingsForm")
             .formStyle(.grouped)
             #if os(macOS)
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Planner settings").font(.headline)
+                    Text(title).font(.headline)
                         .accessibilityAddTraits(.isHeader)
                         .padding(.horizontal, 24).padding(.vertical, 16)
                     Divider()
@@ -93,16 +107,15 @@ struct PlannerSettingsView: View {
                 .background(.bar)
             }
             #else
-            .navigationTitle("Planner settings")
+            .navigationTitle(title)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save") {
+                if !embedded { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+                if part != .calendars { ToolbarItem(placement: .confirmationAction) { Button("Save") {
                     if let workspace, store.setWorkingHours(WorkingHours(start: start, end: end, weekdays: weekdays), workspace: workspace) { dismiss() }
-                }.disabled(start >= end || !editable).accessibilityIdentifier("plannerSaveSettings") }
+                }.disabled(start >= end || !editable).accessibilityIdentifier("plannerSaveSettings") } }
             }
             .onAppear { guard !loaded else { return }; loaded = true; workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); let hours = store.workingHours ?? WorkingHours(); start = hours.start; end = hours.end; weekdays = hours.weekdays }
-        }
         .onChange(of:store.workspaceGeneration) { _,_ in dismiss() }
         #if os(macOS)
         .frame(minWidth: 480, minHeight: 620)

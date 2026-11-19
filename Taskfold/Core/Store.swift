@@ -4521,26 +4521,6 @@ extension Store {
 #endif
 
 extension Store {
-    var locationHandoffAvailable: Bool { signedIn && !localMode && workspaceCacheReadable }
-    func locationHandoffs(workspace: WorkspaceBinding) async throws -> [LocationHandoffRecord] {
-        guard locationHandoffAvailable, workflowReady(workspace) else { throw LocationStorageFailure.changed }
-        return try await LocationHandoffAPI(backend: backend).perform(.list(device: nil), account: workspace.account,
-            isCurrent: { self.locationHandoffAvailable && self.workflowReady(workspace) }).records
-    }
-    /// Explicit confirmation uploads only this reviewed proposal, never the placebook.
-    func sendLocationHandoff(_ proposal: LocationHandoffProposal, workspace: WorkspaceBinding) async throws -> LocationHandoffRecord {
-        guard locationHandoffAvailable, workflowReady(workspace), let task = record("tasks", id: proposal.taskID),
-              proposal.matches(task: task, account: workspace.account) else { throw LocationStorageFailure.changed }
-        let response = try await LocationHandoffAPI(backend: backend).perform(.put(proposal), account: workspace.account,
-            isCurrent: { self.locationHandoffAvailable && self.workflowReady(workspace) })
-        guard let result = response.records.first else { throw LocationStorageFailure.changed }
-        return result
-    }
-    func discardLocationHandoff(_ row: LocationHandoffRecord, workspace: WorkspaceBinding) async throws {
-        guard locationHandoffAvailable, workflowReady(workspace), row.account == workspace.account, row.state == .pending else { throw LocationStorageFailure.changed }
-        _ = try await LocationHandoffAPI(backend: backend).perform(.discard(id: row.id), account: workspace.account,
-            isCurrent: { self.locationHandoffAvailable && self.workflowReady(workspace) })
-    }
     func captureWorkflowTemplate(kind: WorkflowTemplate.Kind, sourceID: String, binding: WorkspaceBinding?) throws -> WorkflowTemplateCapture {
         guard workflowReady(binding), let binding else { throw WorkflowTemplateCapture.changed }
         return try WorkflowTemplateCapture(kind: kind, sourceID: sourceID, snapshot: presentationSnapshot, workspace: binding, session: backend.reminderSessionIncarnation, origin: try? backend.accountRemovalOrigin, teamCache: nativeConversationTeamCache)
@@ -4829,42 +4809,6 @@ extension Store {
     }
 }
 
-#if DEBUG
-extension Store {
-    /// Command acceptance through the real Store/Backend, separate from UI input.
-    func runLocationHandoffSenderProof() async {
-        guard LocationHandoffNativeFixture.enabled else { return }
-        var checks: [String] = []
-        do {
-            func require(_ value: Bool, _ label: String) throws { guard value else { throw AppFailure(message: label) }; checks.append(label) }
-            let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration), before = snapshot
-            let task = LocationHandoffNativeFixture.task()
-            let place = LocationPrivatePlace.make(account: userID, name: "Sample design studio", latitude: 55.676098, longitude: 12.568337, radius: 250)!
-            let proposal = LocationHandoffProposal.make(account: userID, task: task, place: place, transition: .leave, repeats: true, id: LocationHandoffNativeFixture.draftID)!
-            do { _ = try await sendLocationHandoff(proposal, workspace: workspace); throw AppFailure(message: "Lost-response fixture did not interrupt") }
-            catch { try require(error.localizedDescription.contains("interrupted"), "first put commits but response is lost") }
-            let sent = try await sendLocationHandoff(proposal, workspace: workspace)
-            try require(sent.id == proposal.id && sent.state == .pending, "retry confirms same immutable proposal")
-            let rows = try await locationHandoffs(workspace: workspace)
-            try require(rows.count == 1 && rows[0].proposal == proposal, "list recovers one pending proposal")
-            let counter = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(contentsOf: LocationHandoffNativeFixture.root.appendingPathComponent("server.json"))).object
-            try require(counter["putCalls"] == .number(2) && counter["records"]!.object.count == 1, "retry uploads one logical draft")
-            let stale = WorkspaceBinding(account: userID, generation: UUID())
-            do { _ = try await sendLocationHandoff(proposal, workspace: stale); throw AppFailure(message: "Stale workspace accepted") }
-            catch { try require(error is LocationStorageFailure, "stale workspace refused before upload"); self.error = nil }
-            try await discardLocationHandoff(sent, workspace: workspace)
-            let terminal = try await locationHandoffs(workspace: workspace)
-            try require(terminal.count == 1 && terminal[0].state == .discarded && terminal[0].proposal == nil, "discard removes geometry without task mutation")
-            try require(snapshot == before, "send retry list discard leave task cache unchanged")
-            let report: [String:JSON] = ["passed":.bool(true),"checks":.array(checks.map(JSON.string))]
-            try TaskfoldJSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
-        } catch {
-            let report: [String:JSON] = ["passed":.bool(false),"checks":.array(checks.map(JSON.string)),"error":.string(error.localizedDescription)]
-            try? TaskfoldJSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
-        }
-    }
-}
-#endif
 
 
 struct AccountRemovalRecoveryBanner: View {

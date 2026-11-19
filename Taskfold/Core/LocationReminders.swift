@@ -20,8 +20,24 @@ struct LocationPrivatePlace: Equatable, Sendable {
               !name.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }),
               Recurrence.number(raw["latitude_e6"] ?? .null, in: -90_000_000...90_000_000) != nil,
               Recurrence.number(raw["longitude_e6"] ?? .null, in: -180_000_000...180_000_000) != nil,
-              Recurrence.number(raw["radius_m"] ?? .null, in: 100...5000) != nil else { return nil }
+              Recurrence.number(raw["radius_m"] ?? .null, in: 100...5000) != nil,
+              LocationPlaceLabel.optionalValid(raw["detail"], limit: 200), LocationPlaceLabel.optionalValid(raw["glyph"], limit: 32),
+              LocationPlaceLabel.optionalValid(raw["source"], limit: 16) else { return nil }
         self.raw = raw
+    }
+    /// An address line shown under the name in Places. Kept only in this device's private file.
+    var detail: String? { raw["detail"].map(\.text).flatMap { $0.isEmpty ? nil : $0 } }
+    /// A symbol hint: "house", "briefcase" or nil for a plain pin.
+    var glyph: String? { raw["glyph"].map(\.text).flatMap { $0.isEmpty ? nil : $0 } }
+    /// "card" when Home or Work came from the user's contact card.
+    var source: String? { raw["source"].map(\.text).flatMap { $0.isEmpty ? nil : $0 } }
+    /// The same place with an address line and glyph. Neither changes the boundary or its revision.
+    func describing(detail: String?, glyph: String?) -> Self? {
+        var fields = raw
+        fields["detail"] = detail.map { .string(String($0.trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))) }
+        fields["glyph"] = glyph.map { .string($0) }
+        if fields["detail"]?.text.isEmpty == true { fields["detail"] = nil }
+        return Self(raw: fields)
     }
     static func make(account: String, name: String, latitude: Double, longitude: Double, radius: Int,
                      id: String = UUID().uuidString.lowercased(), revision: String = UUID().uuidString.lowercased()) -> Self? {
@@ -58,6 +74,8 @@ struct LocationReminderSettings: Equatable, Sendable {
     var arm: String { reference["arm"]!.text }
     var transition: Transition { Transition(rawValue: reference["transition"]!.text)! }
     var repeats: Bool { reference["repeats"] == .bool(true) }
+    /// The place name a Mac request used. It came from the synced title words, so the Mac can show it again.
+    var requestedName: String? { raw["requested_name"].map(\.text).flatMap { $0.isEmpty ? nil : $0 } }
     var semanticFields: [String] { [device, taskID, taskGeneration, placeID, placeRevision, transition.rawValue] }
     /// A fresh arm cannot create a duplicate reminder for the same boundary/transition.
     var duplicateKey: String { LocationReminderIdentity.digest(semanticFields) }
@@ -537,7 +555,7 @@ struct LocationReminderReview: Sendable {
     let replacing: String?
     let completion: JSON
     init?(workspace: WorkspaceBinding, task: Record, archive: LocationPrivateArchive, place: LocationPrivatePlace,
-          transition: LocationReminderSettings.Transition, repeats: Bool? = nil, replacing: LocationReminderSettings? = nil, identity: (id: String, arm: String)? = nil) {
+          transition: LocationReminderSettings.Transition, repeats: Bool? = nil, replacing: LocationReminderSettings? = nil, identity: (id: String, arm: String)? = nil, requestedName: String? = nil) {
         guard archive.valid, place.account == workspace.account, archive.places(for: workspace.account).contains(where: { $0 == place }),
               TaskKind.mayComplete(task), !task.completed, let generation = LocationReminderIdentity.generation(of: task),
               replacing == nil || ReminderSpec.rows(task).contains(.object(replacing!.raw)),
@@ -547,6 +565,9 @@ struct LocationReminderReview: Sendable {
             if key == "location_reference" { fields[key] = .object((fields[key]?.object ?? [:]).merging(value.object) { _, fresh in fresh }) }
             else { fields[key] = value }
         }
+        // A request's name follows only the place it named; choosing another place drops it.
+        if let replacing, replacing.placeID != place.id { fields["requested_name"] = nil }
+        if let requestedName, LocationPlaceLabel.valid(requestedName, limit: 120) { fields["requested_name"] = .string(requestedName) }
         guard let settings = LocationReminderSettings(raw: fields) else { return nil }
         self.workspace = workspace; self.place = place; self.settings = settings
         originalRows = ReminderSpec.rows(task); self.replacing = replacing?.id; completion = task["completion_version"]
@@ -746,12 +767,14 @@ struct LocationInstallationReset: Sendable {
 struct LocationActionCleanup: Sendable {
     let account: String
     let journal: LocationReminderJournal
+    /// Automatic cleanup names the exact records that have been ended long enough; nil means every ended record.
+    var only: Set<String>? = nil
     init(account: String, archive: LocationPrivateArchive) throws {
         guard LocationReminderIdentity.account(account), archive.valid else { throw LocationStorageFailure.unreadable }
         self.account = account; journal = archive.journal
     }
     func permitsRemoval(_ record: LocationNotificationAction) -> Bool {
-        guard record.valid, record.ticket.account == account, record.ticket.device == journal.device,
+        guard only?.contains(record.source) ?? true, record.valid, record.ticket.account == account, record.ticket.device == journal.device,
               let entry = journal.entries[record.ticket.identifier], entry.ticket == record.ticket, entry.phase == .closed else { return false }
         return journal.revoked?.contains(record.ticket.identifier) == true || [.cancelled, .failed, .untracked].contains(entry.reason)
     }
@@ -798,6 +821,178 @@ enum LocationNotificationLedger {
             }
         }
         return next
+    }
+}
+
+// MARK: Places set once in Settings
+enum LocationPlaceLabel {
+    static func valid(_ text: String, limit: Int) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmed.isEmpty && trimmed.count <= limit && !text.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
+    }
+    static func optionalValid(_ value: JSON?, limit: Int) -> Bool {
+        guard let value, value != .null else { return true }
+        guard case .string(let text) = value else { return false }
+        return valid(text, limit: limit)
+    }
+}
+
+/// Words over metres. Existing places keep their exact radius; the editor shows it as Custom until a size is chosen.
+enum LocationPlaceSize: Int, CaseIterable, Identifiable, Sendable {
+    case small = 100, medium = 250, large = 1000
+    var id: Int { rawValue }
+    var metres: Int { rawValue }
+    var title: String {
+        switch self { case .small: "Small"; case .medium: "Medium"; case .large: "Large" }
+    }
+    static func matching(_ radius: Int) -> Self? { allCases.first { $0.metres == radius } }
+    /// "250 m", "1 km".
+    static func distance(_ metres: Int) -> String { metres >= 1000 && metres % 1000 == 0 ? "\(metres / 1000) km" : "\(metres) m" }
+    /// The size's metres for VoiceOver: "Medium, about 250 metres".
+    var accessibilityValue: String { title + ", about \(metres) metres" }
+}
+
+enum LocationPlaceName {
+    /// "The gym", "my Gym" and "gym" are the same place: case, accents, a leading "the" or "my" and extra spaces are ignored.
+    static func key(_ name: String) -> String {
+        var words = name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .split(whereSeparator: \.isWhitespace).map(String.init)
+        if words.count > 1, ["the", "my"].contains(words[0]) { words.removeFirst() }
+        return words.joined(separator: " ")
+    }
+    static func match(_ name: String, in places: [LocationPrivatePlace]) -> LocationPrivatePlace? {
+        let wanted = key(name)
+        guard !wanted.isEmpty else { return nil }
+        return places.first { key($0.name) == wanted }
+    }
+    /// A name for a place typed after "at": "the gym" becomes "Gym", "my mum's" becomes "Mum's".
+    static func display(_ typed: String) -> String {
+        var words = typed.split(whereSeparator: \.isWhitespace).map(String.init)
+        if words.count > 1, ["the", "my"].contains(words[0].lowercased()) { words.removeFirst() }
+        guard let first = words.first else { return "" }
+        words[0] = first.prefix(1).uppercased() + first.dropFirst()
+        return words.joined(separator: " ")
+    }
+    /// The glyph a new place gets from its name.
+    static func glyph(for name: String) -> String? {
+        switch key(name) {
+        case "home": "house"
+        case "work", "office", "the office": "briefcase"
+        default: nil
+        }
+    }
+}
+
+/// A place reminder asked for by name on a device without places (the Mac). Only the typed word and the direction
+/// sync; no location does. The iPhone that has a place with that name turns it into its own location reminder.
+struct LocationPlaceRequest: Equatable, Sendable {
+    static let kind = "place_request"
+    let raw: [String: JSON]
+    var id: String { raw["id"]!.text }
+    var request: [String: JSON] { raw["place_request"]!.object }
+    var name: String { request["name"]!.text }
+    var transition: LocationReminderSettings.Transition { .init(rawValue: request["transition"]!.text)! }
+    var repeats: Bool { request["repeats"] == .bool(true) }
+    var enabled: Bool { raw["enabled"] == .bool(true) }
+    init?(raw: [String: JSON]) {
+        guard raw["version"] == .number(1), raw["kind"] == .string(Self.kind), LocationReminderIdentity.uuid(raw["id"]),
+              raw["id"] != .string(ReminderSpec.plannedID), raw["channels"] == .array([.string("local")]), case .bool? = raw["enabled"],
+              case .object(let request)? = raw["place_request"], Set(request.keys).isSubset(of: ["name", "transition", "repeats"]),
+              case .string(let name)? = request["name"], LocationPlaceLabel.valid(name, limit: 120),
+              LocationReminderSettings.Transition(rawValue: request["transition"]?.text ?? "") != nil,
+              request["repeats"] == nil || request["repeats"] == .bool(true) || request["repeats"] == .bool(false) else { return nil }
+        self.raw = raw
+    }
+    static func make(name: String, transition: LocationReminderSettings.Transition, repeats: Bool = false, id: String = UUID().uuidString.lowercased()) -> Self? {
+        Self(raw: ["version": .number(1), "id": .string(id), "kind": .string(kind), "channels": .array([.string("local")]), "enabled": .bool(true),
+                   "place_request": .object(["name": .string(name.trimmingCharacters(in: .whitespacesAndNewlines)), "transition": .string(transition.rawValue), "repeats": .bool(repeats)])])
+    }
+    var label: String { (transition == .arrive ? "Arrive at " : "Leave ") + name }
+    static func all(_ task: Record) -> [Self] { ReminderSpec.rows(task).compactMap { Self(raw: $0.object) } }
+    /// The task without this request, ready for a location reminder to take its place.
+    func removing(from task: Record) -> Record? {
+        var rows = ReminderSpec.rows(task)
+        guard let index = rows.firstIndex(of: .object(raw)) else { return nil }
+        rows.remove(at: index)
+        var result = task; result["reminder_specs"] = .array(rows); return result
+    }
+}
+
+/// How each place is used by this device's tasks. Only reminders bound to this device's private file count.
+enum LocationPlaceUsage {
+    static func count(placeID: String, device: String, tasks: [Record]) -> Int {
+        tasks.filter { task in
+            TaskKind.mayComplete(task) && !task.completed &&
+            ReminderSpec.rows(task).contains { LocationReminderSettings(raw: $0.object).map { $0.device == device && $0.placeID == placeID } == true }
+        }.count
+    }
+    /// Location reminders that point at an older revision of a place this device moved or resized.
+    static func stale(place: LocationPrivatePlace, device: String, tasks: [Record]) -> [(task: Record, settings: LocationReminderSettings)] {
+        tasks.flatMap { task -> [(task: Record, settings: LocationReminderSettings)] in
+            guard TaskKind.mayComplete(task), !task.completed else { return [] }
+            return ReminderSpec.rows(task).compactMap { LocationReminderSettings(raw: $0.object) }
+                .filter { $0.device == device && $0.placeID == place.id && $0.placeRevision != place.revision }
+                .map { (task, $0) }
+        }
+    }
+    /// The task without its reminders for a removed place.
+    static func removing(placeID: String, device: String, from task: Record) -> Record? {
+        let rows = ReminderSpec.rows(task)
+        let kept = rows.filter { LocationReminderSettings(raw: $0.object).map { !($0.device == device && $0.placeID == placeID) } ?? true }
+        guard kept.count != rows.count else { return nil }
+        var result = task; result["reminder_specs"] = .array(kept.isEmpty ? [.object(ReminderSpec.relative(0, id: ReminderSpec.plannedID, enabled: false).raw)] : kept)
+        return result
+    }
+}
+
+/// A postal address from a contact card, turned into a place name and a search query. Nothing else from the card is kept.
+struct LocationContactAddress: Equatable, Sendable {
+    var label: String?
+    var street = ""
+    var city = ""
+    var postalCode = ""
+    var country = ""
+    /// The label without the Contacts framework's "_$!<Home>!$_" wrapper.
+    var cleanLabel: String { (label ?? "").replacingOccurrences(of: "_$!<", with: "").replacingOccurrences(of: ">!$_", with: "").trimmingCharacters(in: .whitespacesAndNewlines) }
+    /// Your own card: its Home and Work addresses become Home and Work; any other label names the place.
+    /// Someone else's card: the place is named after them ("Mum"), else after the label, else the street.
+    func placeName(contactName: String, ownCard: Bool) -> String {
+        let label = cleanLabel, person = contactName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let labelled = label.isEmpty ? "" : label.prefix(1).uppercased() + label.dropFirst()
+        if ownCard {
+            switch label.lowercased() {
+            case "home": return "Home"
+            case "work": return "Work"
+            default: break
+            }
+        }
+        let candidates = ownCard ? [labelled, person, firstLine] : [person, labelled, firstLine]
+        return String((candidates.first { !$0.isEmpty } ?? "Place").prefix(120))
+    }
+    /// Home or Work on your own card; nil for other labels.
+    var ownCardRole: String? {
+        switch cleanLabel.lowercased() { case "home": "Home"; case "work": "Work"; default: nil }
+    }
+    var firstLine: String { street.split(whereSeparator: \.isNewline).first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? "" }
+    /// One line for geocoding, or nil when the card has no usable address.
+    var query: String? {
+        let parts = [street.split(whereSeparator: \.isNewline).joined(separator: ", "), [postalCode, city].filter { !$0.isEmpty }.joined(separator: " "), country]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !parts.isEmpty, !(street.isEmpty && city.isEmpty) else { return nil }
+        return String(parts.joined(separator: ", ").prefix(500))
+    }
+}
+
+/// Ended place-reminder history is cleaned up on its own once it has been ended for 30 days. Only opaque action
+/// sources and the day each was first seen ended are kept, on this device.
+enum LocationEndedHistory {
+    static let retention: TimeInterval = 30 * 24 * 60 * 60
+    /// Returns the updated first-seen dates and the sources old enough to remove.
+    static func select(ended: Set<String>, seen: [String: Double], now: Date) -> (seen: [String: Double], expired: Set<String>) {
+        var next = seen.filter { ended.contains($0.key) }
+        for source in ended where next[source] == nil { next[source] = now.timeIntervalSince1970 }
+        let expired = Set(next.filter { now.timeIntervalSince1970 - $0.value >= retention }.keys)
+        return (next, expired)
     }
 }
 

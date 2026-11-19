@@ -5,6 +5,14 @@ import UniformTypeIdentifiers
 import UIKit
 #endif
 
+/// Settings → Planning → Holidays: the country a new "Skip holidays" reminder starts from, on this device.
+enum HolidayDefaults {
+    static let countryKey = "taskfold.holidays.defaultCountry"
+    static let nameKey = "taskfold.holidays.defaultCountryName"
+    static var country: String { UserDefaults.standard.string(forKey: countryKey) ?? "" }
+    static var name: String { UserDefaults.standard.string(forKey: nameKey) ?? "" }
+}
+
 struct HolidayCalendarReview: View {
     @Environment(\.dismiss) private var dismiss
     let initial: ReminderHolidayPolicy?
@@ -35,8 +43,8 @@ struct HolidayCalendarReview: View {
     init(policy: ReminderHolidayPolicy?, year: Int, apply: @escaping (ReminderHolidayPolicy?) -> Void) {
         initial = policy; self.apply = apply
         _sourceKind = State(initialValue: policy == nil || policy?.origin != nil ? .country : .file)
-        _country = State(initialValue: policy?.origin?.country ?? "")
-        _countryName = State(initialValue: policy?.origin == nil ? "" : (policy?.region.components(separatedBy: " · ").first ?? policy?.origin?.country ?? ""))
+        _country = State(initialValue: policy?.origin?.country ?? (policy == nil ? HolidayDefaults.country : ""))
+        _countryName = State(initialValue: policy?.origin == nil ? (policy == nil ? HolidayDefaults.name : "") : (policy?.region.components(separatedBy: " · ").first ?? policy?.origin?.country ?? ""))
         _subdivision = State(initialValue: policy?.origin?.subdivision ?? "")
         _yearText = State(initialValue: String(policy?.year ?? year)); _source = State(initialValue: policy?.source ?? "")
         _region = State(initialValue: policy?.region ?? ""); _mode = State(initialValue: policy?.mode ?? .skip)
@@ -144,6 +152,8 @@ struct HolidayCalendarReview: View {
             }
         }
         .onChange(of: sourceKind) { _, _ in invalidateSource(); countryCalendar = nil; imported = nil }
+        // A new reminder starts from the default country in Settings and fetches its dates straight away.
+        .task { if initial == nil, sourceKind == .country, !country.isEmpty, countryCalendar == nil, !loading { fetchCountry() } }
         .onChange(of: yearText) { _, _ in invalidateSource(); if sourceKind == .country, !country.isEmpty { fetchCountry() } }
         .onChange(of: subdivision) { _, _ in
             reviewed = false

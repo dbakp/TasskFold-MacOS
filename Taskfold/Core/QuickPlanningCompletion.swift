@@ -140,7 +140,9 @@ struct QuickPlanningCompletion {
               prefix[..<triggerRange.lowerBound].filter({ $0 == "\"" }).count % 2 == 0,
               let startIndex = Range(NSRange(location: match.range(at: 1).location, length: 0), in: input)?.lowerBound,
               var end = Range(NSRange(location: caret, length: 0), in: input)?.lowerBound else { return nil }
-        let typed = fold(rest)
+        // "at the gy" and "at my gy" still offer "Gym".
+        var typed = fold(rest)
+        for article in ["the ", "my "] where typed.hasPrefix(article) && typed.count > article.count { typed.removeFirst(article.count) }
         // Typing a space after a finished name closes the choice; a name with spaces may still be unfinished.
         let names = context.places.filter { fold($0).hasPrefix(typed) }.prefix(3)
         guard !names.isEmpty else { return nil }
@@ -150,10 +152,10 @@ struct QuickPlanningCompletion {
         var options: [Option] = []
         for name in names {
             if word == "at" || word == "arrive" {
-                options.append(Option(group: "place", recordID: "arrive:" + name, name: "Arrive at " + name, detail: "Place reminder · review after Save", reference: phrase + " " + name))
+                options.append(Option(group: "place", recordID: "arrive:" + name, name: "Arrive at " + name, detail: "Place reminder", reference: phrase + " " + name))
             }
             if word == "at" || word == "leave" {
-                options.append(Option(group: "place", recordID: "leave:" + name, name: "Leave " + name, detail: "Place reminder · review after Save", reference: (word == "leave" ? phrase : "leave") + " " + name))
+                options.append(Option(group: "place", recordID: "leave:" + name, name: "Leave " + name, detail: "Place reminder", reference: (word == "leave" ? phrase : "leave") + " " + name))
             }
         }
         return (NSRange(startIndex..<end, in: input), options)
