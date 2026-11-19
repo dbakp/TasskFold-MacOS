@@ -2,8 +2,31 @@ import Foundation
 import CryptoKit
 
 /// A reviewed, finite civil-date snapshot. It contains no event notes, URLs or attendees.
+/// A country calendar also carries the years after `year` that it loaded on its own (`later_years`, an extension
+/// older readers keep and ignore), so a reminder keeps skipping holidays into the next year without a new review.
 struct ReminderHolidayPolicy: Equatable, Sendable {
     enum Mode: String, CaseIterable, Sendable { case skip, nextDay = "next-day" }
+    /// One more year of the same calendar: its public-holiday dates and the digest of the response they came from.
+    struct Year: Equatable, Sendable {
+        let year: Int
+        let dates: [String]
+        let digest: String
+        init?(year: Int, dates: [String], digest: String) {
+            guard (1...9999).contains(year), dates.count <= 366, dates == Array(Set(dates)).sorted(),
+                  dates.allSatisfy({ ReminderCivilDay($0)?.year == year }),
+                  digest.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil else { return nil }
+            self.year = year; self.dates = dates; self.digest = digest
+        }
+        init?(raw: [String: JSON]) {
+            guard let year = Recurrence.number(raw["year"] ?? .null, in: 1...9999), case .string(let digest)? = raw["digest"],
+                  case .array(let values)? = raw["dates"] else { return nil }
+            var dates: [String] = []
+            for value in values { guard case .string(let key) = value else { return nil }; dates.append(key) }
+            self.init(year: year, dates: dates, digest: digest)
+        }
+        var raw: JSON { .object(["year": .number(Double(year)), "dates": .array(dates.map(JSON.string)), "digest": .string(digest)]) }
+    }
+    static let laterYearsKey = "later_years"
     let year: Int
     let dates: [String]
     let source: String
@@ -12,8 +35,16 @@ struct ReminderHolidayPolicy: Equatable, Sendable {
     let mode: Mode
     let avoidWeekends: Bool
     let origin: CountryHolidayCalendar.Origin?
+    /// Loaded years after `year`, ascending. Malformed entries are ignored as a whole, never the policy.
+    let laterYears: [Year]
     var firstDay: ReminderCivilDay { ReminderCivilDay(String(format: "%04d-01-01", year))! }
-    var lastDay: ReminderCivilDay { ReminderCivilDay(String(format: "%04d-12-31", year))! }
+    var lastDay: ReminderCivilDay { ReminderCivilDay(String(format: "%04d-12-31", coveredYears.last ?? year))! }
+    /// Every year whose holiday dates this policy holds.
+    var coveredYears: [Int] { [year] + laterYears.map(\.year) }
+    var allDates: [String] { dates + laterYears.flatMap(\.dates) }
+    var allYears: [Year] { (Year(year: year, dates: dates, digest: digest).map { [$0] } ?? []) + laterYears }
+    /// The country name shown to people, without the "· Nationwide" scope suffix.
+    var placeName: String { region.components(separatedBy: " · ").first ?? region }
     init?(raw: [String: JSON]) {
         guard raw["version"] == .number(1), let year = Recurrence.number(raw["year"] ?? .null, in: 1...9999),
               let mode = Mode(rawValue: raw["mode"]?.text ?? ""),
@@ -33,12 +64,31 @@ struct ReminderHolidayPolicy: Equatable, Sendable {
         guard dates == Array(Set(dates)).sorted() else { return nil }
         self.year = year; self.dates = dates; self.source = source; self.region = region; self.digest = digest
         self.mode = mode; avoidWeekends = weekends
+        var later: [Year] = []
+        if case .array(let entries)? = raw[Self.laterYearsKey], entries.count <= 4 {
+            for entry in entries {
+                guard let value = Year(raw: entry.object), value.year > (later.last?.year ?? year) else { later = []; break }
+                later.append(value)
+            }
+        }
+        laterYears = later
+    }
+    /// The same calendar and choices covering exactly `years` (ascending, unique); the first becomes `year`.
+    func covering(_ years: [Year]) -> ReminderHolidayPolicy? {
+        guard let first = years.first, years.count <= 5, zip(years, years.dropFirst()).allSatisfy({ $0.year < $1.year }) else { return nil }
+        var value = raw
+        value["year"] = .number(Double(first.year)); value["dates"] = .array(first.dates.map(JSON.string)); value["digest"] = .string(first.digest)
+        if years.count > 1 { value[Self.laterYearsKey] = .array(years.dropFirst().map(\.raw)) } else { value.removeValue(forKey: Self.laterYearsKey) }
+        return ReminderHolidayPolicy(raw: value)
     }
     var raw: [String: JSON] {
         var value: [String: JSON] = ["version": .number(1), "year": .number(Double(year)), "dates": .array(dates.map(JSON.string)), "source": .string(source), "region": .string(region), "digest": .string(digest), "mode": .string(mode.rawValue), "avoid_weekends": .bool(avoidWeekends)]
-        if let origin { value["origin"] = .object(origin.raw) }; return value
+        if let origin { value["origin"] = .object(origin.raw) }
+        if !laterYears.isEmpty { value[Self.laterYearsKey] = .array(laterYears.map(\.raw)) }
+        return value
     }
-    var semanticFields: [String] { [String(year), mode.rawValue, avoidWeekends ? "1" : "0"] + dates }
+    /// A policy without later years keeps its established signature fields.
+    var semanticFields: [String] { [String(year), mode.rawValue, avoidWeekends ? "1" : "0"] + dates + laterYears.flatMap { ["+" + String($0.year)] + $0.dates } }
 }
 
 struct ReminderHolidaySchedule: Sendable {
@@ -48,20 +98,24 @@ struct ReminderHolidaySchedule: Sendable {
         guard let base = ReminderCalendarSchedule(raw: raw), let policy = ReminderHolidayPolicy(raw: raw["holiday_policy"]?.object ?? [:]) else { return nil }
         self.base = base; self.policy = policy
     }
-    /// At most 366 nominal daily slots exist in this explicitly reviewed year.
-    /// Limits consume original slots; moves retain the clock, never the task's plan.
+    /// A reviewed file covers only its years: alerts stop after them until new dates are reviewed. A country calendar
+    /// loads later years on its own, so its alerts never wait for that: a day outside the loaded years is simply not
+    /// known to be a holiday. Limits consume original slots; moves retain the clock, never the task's plan.
     func dates(after now: Date, limit: Int = 60) -> [Date] {
         guard limit > 0, now.timeIntervalSince1970.isFinite else { return [] }
-        if let today = ReminderCivilDay.current(now, zone: base.calendar.timeZone), today > policy.lastDay { return [] }
-        let blocked = Set(policy.dates)
+        let zone = base.calendar.timeZone, bounded = policy.origin == nil
+        let first = policy.firstDay, last = policy.lastDay
+        if bounded, let today = ReminderCivilDay.current(now, zone: zone), today > last { return [] }
+        let blocked = Set(policy.allDates)
         func excluded(_ day: ReminderCivilDay) -> Bool { blocked.contains(day.key) || (policy.avoidWeekends && (day.weekday == 0 || day.weekday == 6)) }
-        var reviewStart = max(policy.firstDay, ReminderCivilDay.current(now, zone: base.calendar.timeZone) ?? policy.firstDay)
+        let today = ReminderCivilDay.current(now, zone: zone)
+        var reviewStart = bounded ? max(first, today ?? first) : (today ?? first), back = 0
         if policy.mode == .nextDay {
-            while reviewStart > policy.firstDay, let previous = reviewStart.adding(-1), excluded(previous) || base.instant(on: previous) == nil { reviewStart = previous }
+            while bounded ? reviewStart > first : back < 366, let previous = reviewStart.adding(-1), excluded(previous) || base.instant(on: previous) == nil { reviewStart = previous; back += 1 }
         }
-        let floor = policy.mode == .skip ? max(now, Date(timeIntervalSince1970: Double(policy.firstDay.serial * 86400 - 36 * 3600))) : Date(timeIntervalSince1970: Double(reviewStart.serial * 86400 - 36 * 3600))
+        let floor = policy.mode == .skip ? (bounded ? max(now, Date(timeIntervalSince1970: Double(first.serial * 86400 - 36 * 3600))) : now) : Date(timeIntervalSince1970: Double(reviewStart.serial * 86400 - 36 * 3600))
         var cursor = floor, result = Set<Date>(), examined = 0
-        var initial: [Date]? = ReminderCivilDay.current(floor, zone: base.calendar.timeZone) == nil ? [base.first] : nil
+        var initial: [Date]? = ReminderCivilDay.current(floor, zone: zone) == nil ? [base.first] : nil
         while examined < 370 {
             let nominal = initial ?? base.dates(after: cursor, limit: 60)
             let wasInitial = initial != nil; initial = nil
@@ -69,12 +123,13 @@ struct ReminderHolidaySchedule: Sendable {
             var ended = false
             for instant in nominal {
                 examined += 1; cursor = instant
-                guard var day = ReminderCivilDay.current(instant, zone: base.calendar.timeZone) else { continue }
-                if day > policy.lastDay { ended = true; break }
-                guard day >= policy.firstDay else { continue }
+                guard var day = ReminderCivilDay.current(instant, zone: zone) else { continue }
+                if bounded && day > last { ended = true; break }
+                guard !bounded || day >= first else { continue }
                 if excluded(day) {
                     if policy.mode == .skip { continue }
-                    while (excluded(day) || base.instant(on: day) == nil), day < policy.lastDay { day = day.adding(1)! }
+                    var steps = 0
+                    while excluded(day) || base.instant(on: day) == nil, bounded ? day < last : steps < 366, let next = day.adding(1) { day = next; steps += 1 }
                     if excluded(day) { continue }
                 }
                 if let end = ReminderCivilDay(base.rule.string("endDate")), day > end { continue }
@@ -88,6 +143,129 @@ struct ReminderHolidaySchedule: Sendable {
     }
     func contains(_ date: Date) -> Bool { date.timeIntervalSince1970.isFinite && dates(after: date.addingTimeInterval(-0.001), limit: 1).first == date }
     var semanticFields: [String] { base.semanticFields + ["reviewed-holidays"] + policy.semanticFields }
+}
+
+/// Keeps a country holiday policy covering the years its reminder reaches, with no user action. Runs on launch,
+/// reschedule and foreground; a failed or offline fetch keeps what is stored and is retried on a later pass.
+/// Reviewed files (no origin) cannot be refreshed and are left alone.
+enum HolidayYearCoverage {
+    /// How a reminder's holiday dates stand at a moment, for the editor's footer.
+    enum State: Equatable, Sendable { case complete, loading(missing: [Int]), reviewed(through: Int) }
+    typealias Fetch = @Sendable (_ country: String, _ year: Int) async throws -> CountryHolidayCalendar.Snapshot
+    /// The years the reminder needs dates for: from its next occurrence through the next 12 months (or that
+    /// occurrence's year when it is further away), and no later than an ended schedule's last occurrence.
+    static func needed(_ schedule: ReminderHolidaySchedule, now: Date) -> [Int] {
+        let zone = schedule.base.calendar.timeZone
+        let nominal = schedule.base.dates(after: now, limit: 60)
+        guard let today = ReminderCivilDay.current(now, zone: zone), let firstInstant = nominal.first, let lastInstant = nominal.last,
+              let next = ReminderCivilDay.current(firstInstant, zone: zone), let final = ReminderCivilDay.current(lastInstant, zone: zone),
+              let horizon = today.adding(365) else { return [] }
+        var through = max(horizon, next)
+        // A schedule with fewer than 60 more occurrences has ended; a move can still carry its last one a little later.
+        if nominal.count < 60, let end = final.adding(schedule.policy.mode == .nextDay ? 31 : 0) { through = min(through, end) }
+        guard next.year <= through.year else { return [] }
+        return Array(next.year...min(through.year, next.year + 2))
+    }
+    static func missing(_ schedule: ReminderHolidaySchedule, now: Date) -> [Int] {
+        guard schedule.policy.origin != nil else { return [] }
+        let covered = Set(schedule.policy.coveredYears)
+        return needed(schedule, now: now).filter { !covered.contains($0) }
+    }
+    static func state(_ schedule: ReminderHolidaySchedule, now: Date) -> State {
+        guard schedule.policy.origin != nil else {
+            let zone = schedule.base.calendar.timeZone
+            let ended = ReminderCivilDay.current(now, zone: zone).map { $0 > schedule.policy.lastDay } == true
+            let reaches = needed(schedule, now: now).contains { $0 > schedule.policy.lastDay.year }
+            return ended || reaches ? .reviewed(through: schedule.policy.lastDay.year) : .complete
+        }
+        let gaps = missing(schedule, now: now)
+        return gaps.isEmpty ? .complete : .loading(missing: gaps)
+    }
+    /// The editor's quiet footer. Later years load on their own (launch, reschedule, foreground), so it never asks for a step.
+    static func footer(_ policy: ReminderHolidayPolicy, schedule: ReminderCalendarSchedule?, now: Date) -> String {
+        let days = policy.origin == nil ? "dates from " + policy.source : "public holidays in " + policy.placeName
+        let skipped = policy.mode == .nextDay ? "Alerts on " + days + " move to the next day." : days.prefix(1).uppercased() + days.dropFirst() + " are skipped."
+        guard let schedule else { return skipped }
+        var fields = schedule.raw; fields["holiday_policy"] = .object(policy.raw)
+        guard let holiday = ReminderHolidaySchedule(raw: fields) else { return skipped }
+        switch state(holiday, now: now) {
+        case .complete: return skipped
+        case .loading(let missing):
+            let current = ReminderCivilDay.current(now, zone: schedule.calendar.timeZone)?.year ?? 0
+            let which = missing == [current + 1] ? "Next year’s holidays" : missing == [current] ? "This year’s holidays" : "Holidays for " + missing.map(String.init).joined(separator: " and ")
+            return skipped + " " + which + " will load when you’re online."
+        case .reviewed(let year): return skipped + " Alerts stop after " + String(year) + " until new dates are reviewed."
+        }
+    }
+    /// Adds `fetched` years, then drops years before `currentYear` once a year from then on is held.
+    /// Returns nil when nothing would change, so repeated passes write nothing.
+    static func updated(_ policy: ReminderHolidayPolicy, adding fetched: [ReminderHolidayPolicy.Year], currentYear: Int) -> ReminderHolidayPolicy? {
+        var years: [Int: ReminderHolidayPolicy.Year] = [:]
+        for value in policy.allYears + fetched { years[value.year] = years[value.year] ?? value }
+        var kept = years.values.sorted { $0.year < $1.year }
+        if kept.contains(where: { $0.year >= currentYear }) { kept.removeAll { $0.year < currentYear } }
+        kept = Array(kept.prefix(5))
+        guard kept != policy.allYears, let result = policy.covering(kept) else { return nil }
+        return result
+    }
+    /// Whether a pass over this task could change it: a country policy is missing a needed year or holds a past one.
+    static func needsRefresh(_ task: Record, now: Date) -> Bool {
+        ReminderSpec.rows(task).contains { row in
+            guard let spec = ReminderSpec(row: row), spec.locallyEditable, let schedule = spec.holidaySchedule, schedule.policy.origin != nil else { return false }
+            let current = ReminderCivilDay.current(now, zone: schedule.base.calendar.timeZone)?.year ?? schedule.policy.year
+            return !missing(schedule, now: now).isEmpty || updated(schedule.policy, adding: [], currentYear: current) != nil
+        }
+    }
+    /// The policy with every missing year it could fetch added and past years dropped; nil when nothing changed.
+    static func loading(_ schedule: ReminderHolidaySchedule, now: Date, fetch: Fetch) async -> (policy: ReminderHolidayPolicy?, failed: [Int]) {
+        guard let origin = schedule.policy.origin else { return (nil, []) }
+        var fetched: [ReminderHolidayPolicy.Year] = [], failed: [Int] = []
+        for year in missing(schedule, now: now) {
+            do {
+                let snapshot = try await fetch(origin.country, year)
+                guard snapshot.year == year, snapshot.country == origin.country,
+                      let value = ReminderHolidayPolicy.Year(year: year, dates: snapshot.days(subdivision: origin.subdivision).map(\.date), digest: snapshot.digest) else { failed.append(year); continue }
+                fetched.append(value)
+            } catch { failed.append(year) }
+        }
+        let current = ReminderCivilDay.current(now, zone: schedule.base.calendar.timeZone)?.year ?? schedule.policy.year
+        return (updated(schedule.policy, adding: fetched, currentYear: current), failed)
+    }
+    /// One pass over a task's reminders. `task` is nil when nothing changed; `failed` names years still to retry.
+    static func refreshing(_ task: Record, now: Date, fetch: Fetch) async -> (task: Record?, failed: [Int]) {
+        var rows = ReminderSpec.rows(task), changed = false, failed: [Int] = []
+        for index in rows.indices {
+            guard let spec = ReminderSpec(row: rows[index]), spec.locallyEditable, let schedule = spec.holidaySchedule, schedule.policy.origin != nil else { continue }
+            let result = await loading(schedule, now: now, fetch: fetch)
+            failed += result.failed
+            guard let policy = result.policy, let next = spec.settingHolidayPolicy(policy), next.raw != spec.raw else { continue }
+            rows[index] = .object(next.raw); changed = true
+        }
+        guard changed else { return (nil, failed) }
+        var result = task; result["reminder_specs"] = .array(rows)
+        return (result, failed)
+    }
+}
+
+/// Country/year responses this session already holds, and when a failed one may be asked again, so repeated
+/// reschedules while offline do not keep calling the holiday service.
+actor HolidaySnapshotCache {
+    private var snapshots: [String: CountryHolidayCalendar.Snapshot] = [:]
+    private var retryAfter: [String: Date] = [:]
+    let retryInterval: TimeInterval
+    init(retryInterval: TimeInterval = 5 * 60) { self.retryInterval = retryInterval }
+    func snapshot(country: String, year: Int, now: Date = Date(), retrying: Bool = false, load: HolidayYearCoverage.Fetch) async throws -> CountryHolidayCalendar.Snapshot {
+        let key = country + "|" + String(year)
+        if let snapshot = snapshots[key] { return snapshot }
+        if !retrying, let after = retryAfter[key], now < after { throw AppFailure(message: "Holiday dates will load when you’re online.") }
+        do {
+            let snapshot = try await load(country, year)
+            snapshots[key] = snapshot; retryAfter[key] = nil
+            return snapshot
+        } catch { retryAfter[key] = now.addingTimeInterval(retryInterval); throw error }
+    }
+    /// Back online: the next pass asks again at once.
+    func forgetFailures() { retryAfter = [:] }
 }
 
 /// A bounded all-day iCalendar review, independent of network/Calendar permissions.
