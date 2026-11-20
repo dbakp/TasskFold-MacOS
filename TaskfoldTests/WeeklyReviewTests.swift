@@ -233,10 +233,18 @@ final class WeeklyReviewTests: XCTestCase {
         XCTAssertEqual(s.fullestDay?.name, "Tuesday")
     }
     func testNothingPlannedAllWeek() {
-        let s = summary([task("noEstimate", date: "2026-11-10")])
+        let s = summary([])
         XCTAssertTrue(s.isEmpty); XCTAssertEqual(s.emptyLine, "Nothing planned this week yet."); XCTAssertNil(s.sentence)
         XCTAssertEqual(s.days.count, 7, "the strip still shows")
         XCTAssertEqual(s.accessibilityLabel, "Nothing planned this week yet.")
+    }
+    /// mac-r2 O-3: planned tasks without estimates are planned, so the week is not "nothing planned".
+    func testTasksWithoutEstimatesAreStillAPlannedWeek() {
+        let s = summary([task("a", date: "2026-11-10"), task("b", date: "2026-11-10"), task("c", date: "2026-11-12")])
+        XCTAssertFalse(s.isEmpty); XCTAssertEqual(s.taskCount, 3); XCTAssertFalse(s.hasEstimates)
+        XCTAssertEqual(s.figure, "3 tasks"); XCTAssertEqual(s.rest, "planned · add estimates to see the hours")
+        XCTAssertTrue(s.accessibilityLabel.hasPrefix("3 tasks planned, no estimates yet"))
+        XCTAssertEqual(summary([task("a", date: "2026-11-10")]).figure, "1 task")
     }
     func testEachDaySpeaksItsOwnRing() {
         let s = summary(fullWeek)

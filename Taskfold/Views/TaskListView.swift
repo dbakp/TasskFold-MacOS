@@ -298,7 +298,7 @@ struct TaskListView: View {
         VStack(spacing: 0) {
             // One title line in the content (design review mac-r1); the toolbar no longer repeats it.
             titleHeader
-                .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.xxl).padding(.top, DS.Space.l).padding(.bottom, DS.Space.xs)
+                .padding(.leading, 0).padding(.trailing, DS.Space.xxl).padding(.top, DS.Space.l).padding(.bottom, DS.Space.xs) // flush with the day headers below (mac-r2 L-7)
                 .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
                 .sheet(isPresented: $hoursSettings) { PlannerSettingsView(busy: ringBusy) }
             if let failure = store.filterError(scope) {
@@ -336,9 +336,12 @@ struct TaskListView: View {
                 if filtered.isEmpty && !dated || datedEmpty { emptyState }
                 if dated {
                     let rings = upcomingRings
-                    ForEach(datedEmpty ? [] : dayGroups, id: \.0) { group in
+                    let groups = datedEmpty ? [] : dayGroups
+                    let runs = quietRuns(groups)
+                    ForEach(groups, id: \.0) { group in
                         if group.0 == "Overdue" { if !group.1.isEmpty { overdueSection(group.1) } }
                         else if group.0 == Workspace.Placement.evening { if !group.1.isEmpty || workspace.drag.active { eveningSection(group.1) } }
+                        else if let run = runs[group.0] { if let line = run { quietRunSection(line, first: group.0) } }
                         else { daySection(group.0, group.1, ring: rings[group.0]) }
                     }
                 } else {
@@ -360,7 +363,7 @@ struct TaskListView: View {
                                     ProjectSectionHeader(key: group.key, title: group.title, count: TaskKind.listCountLabel(group.counted ?? group.tasks), collapsed: collapseBinding(group.key)) {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
-                                    }
+                                    } addSection: { sectionsEditor = true }
                                 } else if !group.title.isEmpty { ListGroupHeader(title: group.title).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true) }
                             }
                         }
@@ -407,7 +410,12 @@ struct TaskListView: View {
         .sheet(item: $printReview) { PrintReviewView(request: $0) }
         .alert("Could not prepare document", isPresented: Binding(get: { printFailure != nil }, set: { if !$0 { printFailure = nil } })) { Button("OK") { printFailure = nil } } message: { Text(printFailure ?? "") }
         .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil; rowSwipe.cancel() }
-        .onAppear { configureRowSwipes() }
+        .onAppear {
+            configureRowSwipes()
+            // Move focus into the destination like Calendar does; leaving it in the sidebar keeps the sidebar's
+            // active accent selection lit on some pages and grey on others (mac-r2 L-4).
+            if workspace.section.scope == scope { taskListFocused = true }
+        }
         .onChange(of: filtered.map(\.id), initial: true) { _, ids in orderMemory.ids = ids }
         .onChange(of: leadingGesture) { _, _ in configureRowSwipes() }
         .onChange(of: trailingGesture) { _, _ in configureRowSwipes() }
@@ -429,6 +437,7 @@ struct TaskListView: View {
         .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
+        .onChange(of: workspace.newSectionRequest) { _, _ in if !projectID.isEmpty, workspace.section.scope == scope { sectionsEditor = true } }
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
         .onChange(of: workspace.quickAddFocusRequest, initial: true) { _, _ in
             if workspace.section.key == preferenceKey, workspace.consumeQuickAddRequest(destination: preferenceKey) { revealQuickAdd() }
@@ -552,7 +561,7 @@ struct TaskListView: View {
     private var bareEmptyProject: Bool { !dated && layoutMode != .board && filtered.isEmpty && groups.count == 1 }
     /// Today and Upcoming show a per-scope empty state once every day group is empty.
     private var datedEmpty: Bool { dated && filtered.isEmpty && dayGroups.allSatisfy { $0.1.isEmpty } }
-    private struct EmptyContent { var symbol: String; var tint: Color; var title: String; var line: String?; var addTask = false }
+    private struct EmptyContent { var symbol: String; var tint: Color; var title: String; var line: String?; var addTask = false; var addSection = false }
     private var emptyContent: EmptyContent {
         let quiet = DS.Palette.textTertiary
         if !workspace.search.isEmpty { return EmptyContent(symbol: "magnifyingglass", tint: quiet, title: "No matching tasks", line: "Try a different search or filter.") }
@@ -563,7 +572,7 @@ struct TaskListView: View {
             return EmptyContent(symbol: "sun.max", tint: DS.Palette.dateToday, title: "All clear for today", line: "Enjoy the rest of your day.")
         case .inbox: return EmptyContent(symbol: "tray", tint: DS.Palette.accent, title: "Inbox zero", line: "Everything has a place.")
         case .upcoming: return EmptyContent(symbol: "calendar", tint: DS.Palette.dateThisWeek, title: "Nothing planned", line: "Add a task with a date to see it here.")
-        case .project(let id): return EmptyContent(symbol: "folder", tint: Color.project(store.record("projects", id: id)?.string("color") ?? ""), title: "No tasks yet", line: nil, addTask: true)
+        case .project(let id): return EmptyContent(symbol: "folder", tint: Color.project(store.record("projects", id: id)?.string("color") ?? ""), title: "No tasks yet", line: nil, addTask: true, addSection: true)
         case .label(let id): return EmptyContent(symbol: "tag", tint: Color.project(store.record("labels", id: id)?.string("color") ?? ""), title: "Nothing with this label", line: nil)
         case .completed: return EmptyContent(symbol: "checkmark.circle", tint: quiet, title: "Nothing completed yet", line: nil)
         default: return EmptyContent(symbol: "checkmark.seal", tint: quiet, title: "All clear", line: "Press ⌘N to add something new.")
@@ -576,7 +585,10 @@ struct TaskListView: View {
         } description: {
             if let line = content.line { Text(line) }
         } actions: {
-            if content.addTask { Button("Add task") { revealQuickAdd() }.accessibilityIdentifier("emptyStateAddTask") }
+            HStack {
+                if content.addTask { Button("Add task") { revealQuickAdd() }.accessibilityIdentifier("emptyStateAddTask") }
+                if content.addSection { Button("Add section") { sectionsEditor = true }.accessibilityIdentifier("emptyStateAddSection") }
+            }
         }
         .modifier(EmptyStateAppear())
         .id(content.title)
@@ -623,6 +635,29 @@ struct TaskListView: View {
             .accessibilityValue(isCollapsed ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("eveningToggle")
             .modifier(DayHeaderDrop(day: key))
+        }
+    }
+    /// Upcoming only: for each day folded into a quiet run, nil, except the run's first day which carries the summary line.
+    private func quietRuns(_ groups: [(String, [Record])]) -> [String: String?] {
+        guard scope == .upcoming, !workspace.drag.active else { return [:] }
+        let days = groups.filter { $0.0 != "Overdue" && $0.0 != Workspace.Placement.evening }
+        let items = UpcomingDayRuns.collapse(days.map { (day: $0.0, isEmpty: $0.1.isEmpty) }, keeping: [Dates.day(Date())])
+        var result: [String: String?] = [:]
+        for case .quiet(let first, let last, _) in items {
+            guard let start = Dates.parse(first), let end = Dates.parse(last) else { continue }
+            let style = Date.FormatStyle.dateTime.weekday(.abbreviated).day()
+            for day in days.map(\.0) where day >= first && day <= last { result[day] = .some(nil) }
+            result[first] = .some(start.formatted(style) + " – " + end.formatted(style) + " · nothing planned")
+        }
+        return result
+    }
+    private func quietRunSection(_ line: String, first: String) -> some View {
+        Section {
+            Text(line).font(DS.Font.taskMeta).foregroundStyle(.tertiary)
+                .padding(.leading, DS.Space.xxxl + DS.Space.xs).frame(minHeight: 24, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("quietDays-\(first)")
+                .selectionDisabled().listRowSeparator(.hidden)
         }
     }
     private func daySection(_ day: String, _ tasks: [Record], ring: TodayRing? = nil) -> some View {
@@ -872,7 +907,7 @@ struct ConfirmationBar: View {
             }
             Spacer()
             if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
-                Button("Undo") { workspace.undoFromConfirmation(request, confirmationID: confirmation.id) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+                Button("Undo") { workspace.undoFromConfirmation(request, confirmationID: confirmation.id) }.buttonStyle(.plain).foregroundStyle(DS.Palette.accent).pointerStyle(.link).accessibilityIdentifier("undoConfirmation")
                 Text("⌘Z").foregroundStyle(DS.Palette.textTertiary)
             }
         }

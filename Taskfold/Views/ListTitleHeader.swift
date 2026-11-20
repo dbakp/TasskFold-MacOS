@@ -74,13 +74,19 @@ struct TodayTitleTrailing: View {
     let setHours: () -> Void
     var body: some View {
         HStack(alignment: .center, spacing: DS.Space.s + DS.Space.xxs) {
-            InlineDayRing(ring: ring, hue: hue, pending: pending, flight: flight)
-            (Text(ring.figure).fontWeight(.semibold).foregroundStyle(DS.Palette.textPrimary)
-             + Text(" " + (ring.capacity ?? "planned")).foregroundStyle(DS.Palette.textSecondary))
-                .font(DS.Font.ringFigure).lineLimit(1).fixedSize()
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(ring.accessibilityLabel)
-                .accessibilityIdentifier("todayRing")
+            if ring.segments.isEmpty && ring.plannedMinutes == 0 {
+                // Before any estimates exist a ring and "0m of 8h" say nothing; say what fills the day instead (mac-r2 L-10).
+                Text("Add estimates to see your day fill up").font(DS.Font.ringFigure).foregroundStyle(DS.Palette.textSecondary)
+                    .lineLimit(1).fixedSize().accessibilityIdentifier("todayRing")
+            } else {
+                InlineDayRing(ring: ring, hue: hue, pending: pending, flight: flight)
+                (Text(ring.figure).fontWeight(.semibold).foregroundStyle(DS.Palette.textPrimary)
+                 + Text(" " + (ring.capacity ?? "planned")).foregroundStyle(DS.Palette.textSecondary))
+                    .font(DS.Font.ringFigure).lineLimit(1).fixedSize()
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(ring.accessibilityLabel)
+                    .accessibilityIdentifier("todayRing")
+            }
             TimelineView(.periodic(from: .now, by: 60)) { context in
                 let prompt = store.dayPlanPrompt(now: context.date)
                 if !ring.hasWorkingHours {

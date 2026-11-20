@@ -268,13 +268,14 @@ struct MacSwipeRow<Content: View>: View {
 }
 
 
+/// The swipe preferences as Form sections, shown inside General.
 struct MacSwipeSettings: View {
     @AppStorage("mac.rowGesture.leading") private var leading = "complete"
     @AppStorage("mac.rowGesture.trailing") private var trailing = "tomorrow"
     @AppStorage("mac.rowGesture.fullSwipe") private var fullSwipe = false
     @Environment(\.layoutDirection) private var direction
     var body: some View {
-        Form {
+        Group {
             Section("Task list swipes") {
                 picker(direction == .rightToLeft ? "Swipe left" : "Swipe right", edge: "leading", selection: $leading)
                 picker(direction == .rightToLeft ? "Swipe right" : "Swipe left", edge: "trailing", selection: $trailing)
@@ -285,7 +286,7 @@ struct MacSwipeSettings: View {
                 Button("Restore default swipe actions") { leading = "complete"; trailing = "tomorrow"; fullSwipe = false }
                 Text("Choosing None hides that direction’s actions. Task menus and keyboard controls remain available. These preferences apply only to this Mac.").font(.caption).foregroundStyle(.secondary)
             }
-        }.formStyle(.grouped)
+        }
     }
     private func picker(_ title: String, edge: String, selection: Binding<String>) -> some View {
         Picker(title, selection: Binding(get: { RowGestureAction(rawValue: selection.wrappedValue)?.rawValue ?? "none" }, set: { selection.wrappedValue = $0 })) {

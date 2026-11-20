@@ -265,13 +265,17 @@ struct WeekSummary: Equatable, Sendable {
     var doneMinutes: Int
     /// "9–15 Nov", or "30 Nov – 6 Dec" across months.
     var rangeLabel: String
-    /// Nothing is planned all week: the strip shows one line, `emptyLine`.
-    var isEmpty: Bool { plannedMinutes == 0 }
+    /// Tasks planned on the seven days, estimated or not (mac-r2 O-3: a week of unestimated tasks is not an empty week).
+    var taskCount: Int { days.reduce(0) { $0 + $1.ring.taskCount } }
+    /// At least one planned task has an estimate, so hours can be shown.
+    var hasEstimates: Bool { plannedMinutes > 0 }
+    /// No task is planned all week: the strip shows one line, `emptyLine`.
+    var isEmpty: Bool { taskCount == 0 }
     var emptyLine: String { "Nothing planned this week yet." }
     /// "19h 40m", the bold figure.
-    var figure: String { DayPlan.duration(doneMinutes) }
+    var figure: String { hasEstimates ? DayPlan.duration(doneMinutes) : (taskCount == 1 ? "1 task" : "\(taskCount) tasks") }
     /// "done of 28h 25m planned", beside the figure.
-    var rest: String { "done of \(DayPlan.duration(plannedMinutes)) planned" }
+    var rest: String { hasEstimates ? "done of \(DayPlan.duration(plannedMinutes)) planned" : "planned · add estimates to see the hours" }
     /// The caption above the rings: "This week · 9–15 Nov".
     var caption: String { "This week · " + rangeLabel }
     /// The day with the most planned time (first on a tie), when at least two days have planned work.
@@ -298,7 +302,7 @@ struct WeekSummary: Equatable, Sendable {
         return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
     var accessibilityLabel: String {
-        isEmpty ? emptyLine : "\(DayPlan.spoken(doneMinutes)) done of \(DayPlan.spoken(plannedMinutes)) planned, \(rangeLabel)." + (sentence.map { " " + $0 } ?? "")
+        isEmpty ? emptyLine : !hasEstimates ? "\(figure) planned, no estimates yet, \(rangeLabel)." + (sentence.map { " " + $0 } ?? "") : "\(DayPlan.spoken(doneMinutes)) done of \(DayPlan.spoken(plannedMinutes)) planned, \(rangeLabel)." + (sentence.map { " " + $0 } ?? "")
     }
 }
 

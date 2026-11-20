@@ -10,7 +10,7 @@ struct SidebarView: View {
     @AppStorage("mac.sidebar.projectsExpanded") private var projectsExpanded = true
     @AppStorage("mac.sidebar.filtersExpanded") private var filtersExpanded = false
     @AppStorage("mac.sidebar.labelsExpanded") private var labelsExpanded = false
-    @AppStorage("mac.sidebar.browseExpanded") private var browseExpanded = false
+    @AppStorage("mac.sidebar.browseExpanded") private var browseExpanded = true
     private var today: String { Dates.day(Date()) }
     private var somedayListed: Set<String> { Planning.listedSomeday(rows: store.rows(Planning.table), account: store.userID) }
     /// "Assigned to me" belongs to team work: it shows once a project is shared or something is assigned (or while it is open).

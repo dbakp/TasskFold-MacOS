@@ -11,7 +11,8 @@ struct NamedEditor: View {
     @State private var workflowBinding: WorkspaceBinding?
     @State private var workflowBaseline: Record?
     @FocusState private var nameFocused: Bool
-    private let palette = [("Rose", "#e31e4b"), ("Red", "#ef4444"), ("Orange", "#f97316"), ("Green", "#22c55e"), ("Blue", "#3b82f6"), ("Purple", "#8b5cf6"), ("Teal", "#14b8a6"), ("Gray", "#6b7280")]
+    /// Exactly the identity hues the app draws (`ProjectPalette`), so a swatch looks the way the project will.
+    private var selectedHueID: String? { ProjectPalette.rgb(stored: record.string("color")).map { ProjectPalette.nearest($0).id } }
     private var isNew: Bool { store.record(table, id: record.id) == nil }
     private var noun: String { table == "projects" ? "Project" : "Label" }
     var body: some View {
@@ -23,11 +24,12 @@ struct NamedEditor: View {
                     .onSubmit { if canSave { save() } }
                 LabeledContent("Color") {
                     HStack(spacing: 8) {
-                        ForEach(palette, id: \.1) { name, hex in
-                            Button { record["color"] = .string(hex) } label: {
-                                Circle().fill(Color.project(hex)).frame(width: 20, height: 20)
-                                    .overlay { if record.string("color") == hex { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(.white) } }
-                            }.buttonStyle(.plain).accessibilityLabel(name).accessibilityAddTraits(record.string("color") == hex ? .isSelected : [])
+                        ForEach(ProjectPalette.hues) { hue in
+                            let selected = selectedHueID == hue.id
+                            Button { record["color"] = .string(hue.pair.light.hex) } label: {
+                                Circle().fill(hue.color).frame(width: 20, height: 20)
+                                    .overlay { if selected { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(.white) } }
+                            }.buttonStyle(.plain).help(hue.name).accessibilityLabel(hue.name).accessibilityAddTraits(selected ? .isSelected : [])
                         }
                     }
                 }

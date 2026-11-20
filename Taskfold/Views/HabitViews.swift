@@ -292,15 +292,17 @@ struct HabitDetailContent: View {
 // MARK: - Empty state and Today chip
 
 struct HabitsEmptyState: View {
+    var newHabit: () -> Void = {}
     var body: some View {
         VStack(spacing: DS.Space.m) {
             Image(systemName: "circle.hexagongrid").font(.system(size: 38)).foregroundStyle(DS.Palette.textTertiary).accessibilityHidden(true)
             Text("No habits yet").font(.title3.weight(.semibold))
-            Text("Open a repeating task and turn on Track as habit. Every check-in is just completing today's task.")
+            Text("Habits are repeating tasks you want to keep a streak on. Every check-in is just completing today's task.")
                 .font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            Button("New habit…", action: newHabit).buttonStyle(.borderedProminent).controlSize(.large).accessibilityIdentifier("newHabit")
         }
         .frame(maxWidth: 420).padding(DS.Space.xxl).frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine).accessibilityIdentifier("habitsEmpty")
+        .accessibilityElement(children: .contain).accessibilityIdentifier("habitsEmpty")
     }
 }
 
