@@ -399,10 +399,10 @@ struct RootView: View {
                         try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
                     }
                 } else if let state = option("capture-signin") {
-                    // The sign-in screen hosted alone: --capture-signin=signin|error|create|create-met|reset, or =sheet (the 440 pt sheet).
-                    let sheet = state == "sheet"
+                    // The sign-in screen hosted alone: --capture-signin=signin|error|create|create-met|reset|confirm, or =sheet / =sheet-confirm (the 440 pt sheet).
+                    let sheet = state.hasPrefix("sheet")
                     let size = sheet ? NSSize(width: 440, height: 430) : NSSize(width: 760, height: 560)
-                    let view = sheet ? AnyView(SignInSheet(preview: "signin")) : AnyView(AuthView(preview: state))
+                    let view = sheet ? AnyView(SignInSheet(preview: state == "sheet-confirm" ? "confirm" : "signin")) : AnyView(AuthView(preview: state))
                     let host = NSHostingView(rootView: view.environment(store).environment(workspace).environment(\.controlActiveState, .key).frame(width: size.width, height: sheet ? nil : size.height).background(Color(nsColor: .windowBackgroundColor)))
                     let fitted = sheet ? NSSize(width: size.width, height: ceil(host.fittingSize.height)) : size
                     host.frame = NSRect(origin: .zero, size: fitted)
