@@ -191,7 +191,7 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 ### A lighter Mac (19 November 2026)
 - **Done (design review mac-r1, recommended options 1–8):** grey sidebar glyphs with only Today crimson, a sidebar foot with the account chip and a "⋯" tools menu, toolbar reduced to View, search, New task and the inspector, Fraunces titles in the content, Compact 32 pt rows by default, crimson only for acting, overdue and P1, the inspector as a note card with "Add ⌄", one Quick Add panel, Settings as a native form with the system tint ([Mac #196](https://github.com/dbakp/TasskFold-MacOS/pull/196), [#197](https://github.com/dbakp/TasskFold-MacOS/pull/197), [#198](https://github.com/dbakp/TasskFold-MacOS/pull/198); this roadmap note: [iOS #210](https://github.com/dbakp/TaskFold-iOS/pull/210)).
 - **Fixed on the way:** the menu bar extra's `TimelineView` label looped at launch (100% CPU); the account menu printed over the sidebar's last rows; the preview fixture still wrote retired JSON subtasks.
-- **Next:** the day ring as Today's hero and a Plan-into-the-ring signature (owner decision 9) get their own design round. iPhone is unchanged.
+- **Done (owner decision 9, 20 November 2026):** the day ring leads Today's header at 72 pt, Plan ⌘P opens a tray to drag tasks into the ring, an overbooked day offers Fix it…, and a day without estimates stays quiet ([Mac #212](https://github.com/dbakp/TasskFold-MacOS/pull/212), shared Core [iOS #224](https://github.com/dbakp/TaskFold-iOS/pull/224)). iPhone gets the same ring next.
 
 ### Mac first run (design review mac-r2, 19 November 2026)
 - [x] **PR 1, first-run fixes** ([Mac #199](https://github.com/dbakp/TasskFold-MacOS/pull/199), [iOS #211](https://github.com/dbakp/TaskFold-iOS/pull/211)):
