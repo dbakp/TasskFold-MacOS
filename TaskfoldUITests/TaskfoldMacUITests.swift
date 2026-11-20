@@ -22,6 +22,23 @@ extension XCUIApplication {
         _ = item.waitForExistence(timeout: 5)
         item.click()
     }
+    /// Polls (no sleeping a fixed time) until the element's label equals `text`.
+    func eventuallyLabel(_ element: XCUIElement, _ text: String, timeout: TimeInterval = 5) -> Bool {
+        let done = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", text), object: element)
+        return XCTWaiter.wait(for: [done], timeout: timeout) == .completed
+    }
+    /// The Overdue header exposes one element that spans the whole row (hovering the header, or after a drag, widens it from the label to 720 pt),
+    /// but only the label is the button, so the element's centre is the empty spacer. Click inside the label, 24 pt from the left edge.
+    func clickOverdueToggle() {
+        let toggle = buttons["overdueToggle"]
+        _ = toggle.waitForExistence(timeout: 5)
+        toggle.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 24, dy: 8)).click()
+    }
+    /// Polls `condition` (no fixed sleep) until it holds or `timeout` passes.
+    func waitUntil(timeout: TimeInterval = 5, _ condition: @escaping () -> Bool) -> Bool {
+        let done = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in condition() }, object: nil)
+        return XCTWaiter.wait(for: [done], timeout: timeout) == .completed
+    }
     func textNamed(_ text: String) -> XCUIElement {
         staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@ OR value BEGINSWITH %@ OR label BEGINSWITH %@", text, text, text + ", ", text + ", ")).firstMatch
     }
@@ -202,7 +219,8 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeText(" retained")
         XCTAssertEqual(title.value as? String, raw + " retained")
         app.textViews["taskDescription"].click()
-        XCTAssertEqual(title.value as? String, raw + " retained")
+        // Leaving the title re-renders the inspector's title field for a moment; wait for it rather than reading it mid-refresh.
+        XCTAssertTrue(app.waitUntil { title.exists && (title.value as? String) == raw + " retained" }, "The title keeps the declined words: \(String(describing: title.exists ? title.value : nil))")
         XCTAssertFalse(app.descendants(matching: .any)["taskDuration"].exists)
     }
 
@@ -214,10 +232,10 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         XCTAssertTrue(input.waitForExistence(timeout: 5))
-        let actions: [(String, String, Bool)] = [
-            ("Space", " ", false),
-            ("Delete", XCUIKeyboardKey.delete.rawValue, false),
-            ("Escape", XCUIKeyboardKey.escape.rawValue, true)
+        let actions: [(String, XCUIKeyboardKey, Bool)] = [
+            ("Delete", .delete, false),
+            ("Space", .space, false),
+            ("Escape", .escape, true)
         ]
         for (name, key, retainsChip) in actions {
             input.click()
@@ -567,7 +585,10 @@ final class TaskfoldMacUITests: XCTestCase {
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click()
         let title = "Client proposal " + String(UUID().uuidString.prefix(6))
         input.typeText(title + #" #"Client Work" /"Next steps" +Alex @"Client notes""#)
-        XCTAssertTrue(app.buttons["decline-project_id"].waitForExistence(timeout: 5))
+        // Project and section no longer get chips: the footer's destination button shows where the task will land.
+        let destination = app.buttons["quickDestination"]
+        XCTAssertTrue(destination.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(app.eventuallyLabel(destination, "Destination, Client Work / Next steps"), "Destination reads \(destination.label)")
         app.buttons["quickAddSubmit"].click()
         app.outlines["Sidebar"].staticTexts["Client Work"].firstMatch.click()
         XCTAssertTrue(app.textNamed(title).waitForExistence(timeout: 5))
@@ -773,11 +794,14 @@ final class TaskfoldMacUITests: XCTestCase {
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Appearance and saved custom accent"; shot.lifetime = .keepAlways; self.add(shot)
         app.typeKey("w", modifierFlags: .command)
         XCTAssertTrue(first.waitForExistence(timeout: 5))
-        XCTAssertLessThan(first.frame.height, roomy - 3, "Compact must reduce the actual native row height")
+        // Compact is a 32 pt one-line row (DS.Size.rowMinHeight; Lighter Mac 2), a couple of points under the roomy row, not the old 4+ pt step.
+        XCTAssertLessThan(first.frame.height, roomy - 1, "Compact must reduce the actual native row height")
+        XCTAssertEqual(first.frame.height, 32, accuracy: 1, "A compact one-line row is 32 pt")
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         app.textNamed("Release workshop").firstMatch.click()
         XCTAssertTrue(first.waitForExistence(timeout: 5))
-        XCTAssertLessThan(first.frame.height, roomy - 3)
+        XCTAssertLessThan(first.frame.height, roomy - 1)
+        XCTAssertEqual(first.frame.height, 32, accuracy: 1)
     }
 
     @MainActor func testProjectCollapseBoardCreationAndMove() throws {
@@ -994,9 +1018,9 @@ final class TaskfoldMacUITests: XCTestCase {
             app.typeKey(key, modifierFlags: .command)
             let toggle = app.buttons["overdueToggle"]
             XCTAssertTrue(toggle.waitForExistence(timeout: 5))
-            toggle.click()
+            app.clickOverdueToggle()
             XCTAssertTrue(waitForDisappearance(overdue, timeout: 5))
-            toggle.click()
+            app.clickOverdueToggle()
             XCTAssertTrue(overdue.waitForExistence(timeout: 5))
         }
         app.typeKey("2", modifierFlags: .command)
@@ -1020,18 +1044,20 @@ final class TaskfoldMacUITests: XCTestCase {
         // Reordering this section must not change either task's due date.
         let source = first.frame.minY > second.frame.minY ? first : second
         let target = first.frame.minY > second.frame.minY ? second : first
-        source.click(forDuration: 0.4, thenDragTo: target)
-        sleep(1)
-        XCTAssertLessThan(source.frame.minY, target.frame.minY)
-        app.buttons["overdueToggle"].click()
+        // Drop on the upper edge of the target's title: a 32 pt compact row splits "before this task" / "after it" at its middle, and the title's
+        // centre is that middle, so dropping on the centre lands on the wrong side of the line when it rounds up.
+        // (click(forDuration:thenDragTo:) starts a native drag; press(forDuration:thenDragTo:) does not on macOS.)
+        source.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .click(forDuration: 0.4, thenDragTo: target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0)), withVelocity: .slow, thenHoldForDuration: 0.5)
+        XCTAssertTrue(app.waitUntil { source.frame.minY < target.frame.minY }, "Dropping above the other overdue task reorders it (\(source.frame.minY) vs \(target.frame.minY))")
+        app.clickOverdueToggle()
         XCTAssertTrue(waitForDisappearance(second, timeout: 5))
-        app.buttons["overdueToggle"].click()
+        app.clickOverdueToggle()
         app.typeKey("3", modifierFlags: .command)
         let tomorrow = app.staticTexts["title-drag-fixture-3"]
         XCTAssertTrue(tomorrow.waitForExistence(timeout: 5))
         second.click(forDuration: 0.4, thenDragTo: tomorrow)
-        sleep(1)
-        XCTAssertGreaterThan(second.frame.minY, first.frame.minY)
+        XCTAssertTrue(app.waitUntil { second.frame.minY > first.frame.minY }, "The dragged overdue task moves to tomorrow's group")
         let snapshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
         snapshot.name = "Upcoming after overdue drop"; snapshot.lifetime = .keepAlways; add(snapshot)
         app.typeKey("z", modifierFlags: .command)
@@ -1417,21 +1443,28 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testAccountLoginAndTodoistAreReachableFromSidebar() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
-        let account = app.menuButtons["accountMenu"]
-        XCTAssertTrue(account.waitForExistence(timeout: 10)); account.click()
-        app.menuItems["Account…"].click()
-        XCTAssertTrue(app.buttons["accountSignIn"].waitForExistence(timeout: 5))
-        app.buttons["accountSignIn"].click()
-        XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 5))
+        // Local mode: the sidebar foot is a "Not synced" card whose Sign In… opens the sign-in screen (it replaced the sidebar account menu).
+        XCTAssertTrue(app.descendants(matching: .any)["localSignInCard"].waitForExistence(timeout: 10), app.debugDescription)
+        let sidebarSignIn = app.buttons["sidebarSignIn"]
+        XCTAssertTrue(sidebarSignIn.waitForExistence(timeout: 5)); sidebarSignIn.click()
+        XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertTrue(app.secureTextFields["authPassword"].exists)
         XCTAssertTrue(app.buttons["googleSignIn"].exists)
-        app.buttons["Close"].click()
+        app.buttons["Cancel"].click()  // the sign-in sheet's only way out is Cancel (Esc)
+        // The Account menu's Manage Account… shows the Account pane with its own Sign In….
+        app.menuCommand("Account", "Manage Account…")
+        XCTAssertTrue(app.buttons["accountSignIn"].waitForExistence(timeout: 5), app.debugDescription)
+        app.buttons["accountSignIn"].click()
+        XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 10))
+        app.buttons["Cancel"].click()  // the sign-in sheet's only way out is Cancel (Esc)
         app.menuBars.menuBarItems["Account"].click()
         app.menuItems["Import from Todoist…"].click()
         XCTAssertTrue(app.descendants(matching: .any)["todoistImportSettings"].waitForExistence(timeout: 5))
-        app.buttons["Sign In…"].click()
-        XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 5))
-        app.buttons["Close"].click()
+        // The Import pane's own Sign In… (the sidebar card has one with the same title, so exclude it by identifier).
+        let importSignIn = app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "Sign In…", "sidebarSignIn")).firstMatch
+        XCTAssertTrue(importSignIn.waitForExistence(timeout: 5), app.debugDescription); importSignIn.click()
+        XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 10))
+        app.buttons["Cancel"].click()  // the sign-in sheet's only way out is Cancel (Esc)
     }
 
     @MainActor func testPastingCommentImageSavesAttachmentAndPreservesText() throws {
