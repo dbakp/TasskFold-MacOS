@@ -33,6 +33,11 @@ verify_jwt = true
 [functions.task-file-maintenance]
 verify_jwt = true
 
+# Requires a user JWT at the gateway; the handler re-checks the Auth user, the
+# invitation's inviter/owner and its pending state before any email is sent.
+[functions.send-invitation-email]
+verify_jwt = true
+
 # --- Custom credentials, so the gateway JWT check must be off --------------
 
 # Authenticates with the x-cron-secret header (constant-time compare, fails

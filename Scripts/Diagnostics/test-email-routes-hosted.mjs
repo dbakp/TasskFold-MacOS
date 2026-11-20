@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 import { runNativeEmailFixture } from "./email-native-hosted.mjs";
 // Genuine Auth -> hosted email gateway -> PostgREST -> SQL. No inbound provider,
 // copied user data, fake token, or source replacement. Owned no-data branch only.

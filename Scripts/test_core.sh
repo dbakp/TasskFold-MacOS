@@ -3,4 +3,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 Scripts/check_test_storage.py --path /tmp
+python3 Scripts/check_test_isolation.py
+python3 Scripts/test_test_isolation.py
 exec swift test --disable-index-store --jobs 1 --scratch-path "${TASKFOLD_CORE_BUILD:-$HOME/Library/Caches/TaskfoldBuild/core-mac}" "$@"

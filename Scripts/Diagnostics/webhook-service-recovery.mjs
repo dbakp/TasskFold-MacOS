@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 // Hosted, no-data preview acceptance. Faults exist only in temporary entrypoints;
 // the handler, dispatcher, Auth, SQL, encryption and TLS receiver stay real.
 import assert from "node:assert/strict";

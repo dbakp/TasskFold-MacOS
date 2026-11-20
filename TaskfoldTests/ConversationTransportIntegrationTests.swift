@@ -7,6 +7,7 @@ final class ConversationTransportIntegrationTests: XCTestCase {
     struct Account: Decodable { let userID: String; let emailIdentity: String; let email: String; let password: String }
     @MainActor func testSharedCommentRetryReviewPaginationAndRecipientReadState() async throws {
         guard let path = ProcessInfo.processInfo.environment["TASKFOLD_CONVERSATION_LIVE_FIXTURE"] else { throw XCTSkip("Disposable shared-conversation accounts required") }
+        try XCTSkipUnless(HostedBackendGuard.isOptedIn(), "Hosted live test: a human must set TASKFOLD_ALLOW_HOSTED_TESTS=1 (see docs/TESTING_ISOLATION.md)")
         let fixture = try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
         guard fixture.accounts.count == 2, fixture.url == "https://zqxflydiyfjeedqvyova.supabase.co", fixture.accounts.allSatisfy({ UUID(uuidString: $0.userID) != nil && UUID(uuidString: $0.emailIdentity) != nil && $0.email == "taskfold-continuity-" + $0.emailIdentity + "@example.invalid" }) else { throw AppFailure(message: "Synthetic conversation accounts required") }
         func check<T: Equatable>(_ actual: T, _ expected: T, _ message: String = "", file: StaticString = #filePath, line: UInt = #line) { XCTAssertEqual(actual, expected, message, file: file, line: line) }

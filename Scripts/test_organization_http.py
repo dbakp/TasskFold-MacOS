@@ -5,6 +5,7 @@ Never uses real task data or service-role credentials. Delete both accounts afte
 """
 import argparse, json, plistlib, uuid
 from pathlib import Path
+import test_isolation; test_isolation.install_network_guard()  # refuses hosted backends unless --remote (docs/TESTING_ISOLATION.md)
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 

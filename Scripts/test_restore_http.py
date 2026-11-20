@@ -5,6 +5,7 @@ Operator-provided fixture JSON: users [uuid, uuid], password. Login emails are
 """
 import argparse,json,plistlib,uuid
 from pathlib import Path
+import test_isolation; test_isolation.install_network_guard()  # refuses hosted backends unless --remote (docs/TESTING_ISOLATION.md)
 from urllib.request import Request,urlopen
 from urllib.error import HTTPError
 from urllib.parse import urlencode

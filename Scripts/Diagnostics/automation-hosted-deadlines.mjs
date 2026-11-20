@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 import { randomUUID } from "node:crypto";
 
 // Invoked only by the branch-guarded hosted runner after its real Auth/CRUD cases.

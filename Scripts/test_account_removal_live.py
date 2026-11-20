@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 URL = 'https://zqxflydiyfjeedqvyova.supabase.co'
+import test_isolation; test_isolation.require_remote(URL, what='test_account_removal_live.py')  # creates and removes real Auth users: needs --remote
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, *args, **kwargs):
         raise RuntimeError('Redirect refused')
