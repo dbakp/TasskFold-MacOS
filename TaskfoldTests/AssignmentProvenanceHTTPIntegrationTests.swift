@@ -7,6 +7,7 @@ final class AssignmentProvenanceHTTPIntegrationTests: XCTestCase {
     struct Fixture: Decodable { let users:[String]; let password:String }
     @MainActor func testLiveAssignmentReadsReassignmentRetryRevocationAndFilters() async throws {
         guard let path = ProcessInfo.processInfo.environment["TASKFOLD_ASSIGNMENT_LIVE_FIXTURE"] else { throw XCTSkip("Disposable assignment HTTP accounts required") }
+        try XCTSkipUnless(HostedBackendGuard.isOptedIn(), "Hosted live test: a human must set TASKFOLD_ALLOW_HOSTED_TESTS=1 (see docs/TESTING_ISOLATION.md)")
         let fixture = try JSONDecoder().decode(Fixture.self,from:Data(contentsOf:URL(fileURLWithPath:path)))
         guard fixture.users.count == 3, fixture.users.allSatisfy({ UUID(uuidString:$0) != nil }) else { throw AppFailure(message:"Invalid disposable assignment fixture") }
         let source = URL(fileURLWithPath:#filePath).deletingLastPathComponent().deletingLastPathComponent()

@@ -49,6 +49,9 @@ def main():
     output.mkdir()
     for name in ('Taskfold', 'TaskfoldWidgets', 'TaskfoldShare', 'TaskfoldUITests', 'Scripts'):
         shutil.copytree(source / name, output / name, ignore=shutil.ignore_patterns('__pycache__'))
+    # Test hosts never keep the hosted Backend.plist unless a human sets TASKFOLD_ALLOW_HOSTED_TESTS=1.
+    import sys; sys.path.insert(0, str(Path(__file__).resolve().parent)); import test_isolation
+    test_isolation.isolate_backend_plist(output / 'Taskfold')
     (output / 'Taskfold.xcodeproj/xcshareddata/xcschemes').mkdir(parents=True)
     shutil.copy2(source / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme', output / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme')
     # Namespaces only: preserve app behavior, synchronization contracts and test actions.

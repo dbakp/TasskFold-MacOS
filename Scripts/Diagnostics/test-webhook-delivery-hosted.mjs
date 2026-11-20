@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 import { runWebhookServiceRecovery } from "./webhook-service-recovery.mjs";
 // Actual Auth -> Edge -> PostgREST -> encrypted outbox -> pinned TLS receiver.
 // Refuses main/data-bearing branches. Only fixed synthetic accounts/tasks.

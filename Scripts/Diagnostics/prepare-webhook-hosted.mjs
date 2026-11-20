@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 // No-data preview branch only. Credentials never appear in output or source.
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";

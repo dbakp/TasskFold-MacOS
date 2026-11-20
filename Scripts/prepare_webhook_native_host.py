@@ -5,6 +5,7 @@ from pathlib import Path
 p=argparse.ArgumentParser(description=__doc__)
 mode=p.add_mutually_exclusive_group(required=True)
 mode.add_argument('--connection',type=Path)
+p.add_argument('--remote',action='store_true',help='Required with --connection: the branch is a hosted Supabase project')
 mode.add_argument('--local',action='store_true',help='Local synthetic peer only; no hosted credentials')
 p.add_argument('--output',required=True,type=Path)
 p.add_argument('--feature',choices=['webhooks','automation','email'],default='webhooks')
@@ -20,6 +21,7 @@ else:
  assert a.connection.stat().st_mode & 0o077 == 0, 'Owner-private branch connection required'
  c=json.loads(a.connection.read_text());url=c['SUPABASE_URL']
  assert re.fullmatch(r'https://[a-z]{20}\.supabase\.co',url) and 'zqxflydiyfjeedqvyova' not in url, 'Disposable branch only'
+ import test_isolation;test_isolation.require_remote(url,what='prepare_webhook_native_host.py')  # hosted branch: needs --remote
  assert c['SUPABASE_ANON_KEY'] and c['SUPABASE_ANON_KEY'] != c['SUPABASE_SERVICE_ROLE_KEY']
 target.mkdir(parents=True,mode=0o700)
 for name in ['Taskfold.xcodeproj','Taskfold','TaskfoldWidgets','TaskfoldShare','TaskfoldUITests','TaskfoldTests','Config','TestSupport']:

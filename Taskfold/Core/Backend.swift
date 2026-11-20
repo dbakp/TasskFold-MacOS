@@ -11,6 +11,78 @@ struct AppFailure: LocalizedError {
     var errorDescription: String? { message }
 }
 
+/// Test isolation: automated runs must never reach the hosted Supabase project.
+///
+/// A "test context" is any XCTest / `swift test` process, any launch with a `--` argument
+/// (`--uitesting`, `--preview`, `--live-auth-ui-test`, `--capture`, every fixture flag), or an
+/// isolated test-host bundle. In a test context `Backend` refuses a URL whose host is
+/// `*.supabase.co` (or the hosted project) unless a human exports `TASKFOLD_ALLOW_HOSTED_TESTS=1`
+/// for a deliberate live test. Refusal is loud (stderr + log, and a DEBUG precondition for an
+/// explicitly supplied URL). The bundled `Backend.plist` is replaced by an unroutable stub.
+/// See docs/TESTING_ISOLATION.md.
+enum HostedBackendGuard {
+    static let hostedProjectHost = "zqxflydiyfjeedqvyova.supabase.co"
+    static let optInVariable = "TASKFOLD_ALLOW_HOSTED_TESTS"
+    /// Unroutable (RFC 2606 `.invalid`): a blocked run fails to connect instead of reaching production.
+    static let blockedOrigin = "https://hosted-backend-blocked-in-tests.invalid"
+    private static let hostedSuffixes = [".supabase.co", ".supabase.in", ".supabase.red", ".supabase.net"]
+
+    static func isHosted(_ origin: String) -> Bool {
+        let lowered = origin.lowercased()
+        guard var host = URL(string: lowered)?.host ?? URLComponents(string: lowered)?.host else {
+            return lowered.contains("supabase.") // unparseable: fail closed
+        }
+        while host.hasSuffix(".") { host.removeLast() }
+        return host == hostedProjectHost || host == "supabase.co" || hostedSuffixes.contains { host.hasSuffix($0) }
+    }
+
+    static func isTestContext(arguments: [String] = ProcessInfo.processInfo.arguments,
+                              environment: [String: String] = ProcessInfo.processInfo.environment,
+                              bundleIdentifier: String? = Bundle.main.bundleIdentifier,
+                              xctestLoaded: Bool = NSClassFromString("XCTestCase") != nil) -> Bool {
+        if xctestLoaded || environment["TASKFOLD_TEST_CONTEXT"] == "1" { return true }
+        if ["XCTestConfigurationFilePath", "XCTestBundlePath", "XCTestSessionIdentifier", "XCInjectBundleInto"].contains(where: { environment[$0] != nil }) { return true }
+        if arguments.dropFirst().contains(where: { $0.hasPrefix("--") }) { return true }
+        if let id = bundleIdentifier?.lowercased(), id.contains("tests") || id.contains(".p0") { return true }
+        return false
+    }
+
+    static func isOptedIn(environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        environment[optInVariable] == "1"
+    }
+
+    /// Called on refusal. DEBUG test runs stop here for an explicit hosted URL; tests replace it.
+    static var onRefusal: (String) -> Void = { message in
+        FileHandle.standardError.write(Data((message + "\n").utf8))
+        NSLog("%@", message)
+    }
+    static var trapExplicitRefusals = true
+
+    static func refusalMessage(_ origin: String) -> String {
+        "TASKFOLD TEST ISOLATION: refused hosted backend (" + (URL(string: origin)?.host ?? "unparseable URL") + ") in a test/preview/fixture run. "
+            + "Use 127.0.0.1 (supabase start) or an unroutable stub. A deliberate live test needs a human to set " + optInVariable + "=1."
+    }
+
+    /// `explicit` is true when the caller passed a configuration, false for the bundled `Backend.plist`.
+    static func vetted(_ configuration: [String: String], explicit: Bool,
+                       testContext: Bool = isTestContext(), optedIn: Bool = isOptedIn()) -> [String: String] {
+        guard testContext, let origin = configuration["URL"], isHosted(origin), !optedIn else { return configuration }
+        let message = refusalMessage(origin)
+        onRefusal(message)
+        #if DEBUG
+        if explicit && trapExplicitRefusals { preconditionFailure(message) }
+        #endif
+        return ["URL": blockedOrigin, "Key": "blocked-by-test-isolation"]
+    }
+
+    /// Last line of defense on the wire, independent of how the configuration was built.
+    static func permitsRequest(to url: URL, testContext: Bool = isTestContext(), optedIn: Bool = isOptedIn()) -> Bool {
+        guard testContext, isHosted(url.absoluteString), !optedIn else { return true }
+        onRefusal(refusalMessage(url.absoluteString))
+        return false
+    }
+}
+
 /// A rejected session requires explicit sign-in; never surface server details.
 struct AccountSessionAuthorizationRequired: LocalizedError {
     var errorDescription: String? { "Sign in again to continue." }
@@ -328,10 +400,10 @@ final class Backend: NSObject {
         #endif
         self.session = session
         self.saveSession = persistSession
-        if let configuration { config = configuration }
+        if let configuration { config = HostedBackendGuard.vetted(configuration, explicit: true) }
         else if let url = Bundle.main.url(forResource: "Backend", withExtension: "plist"),
                 let data = try? Data(contentsOf: url),
-                let value = try? PropertyListDecoder().decode([String: String].self, from: data) { config = value }
+                let value = try? PropertyListDecoder().decode([String: String].self, from: data) { config = HostedBackendGuard.vetted(value, explicit: false) }
         else { config = [:] }
         super.init()
     }
@@ -415,6 +487,7 @@ final class Backend: NSObject {
         guard let url = URL(string: baseURL + path), url.scheme == "https" else {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
+        guard HostedBackendGuard.permitsRequest(to: url) else { throw AppFailure(message: "Hosted backend refused in a test run.") }
         if let workflowReadLimit { guard (1...4_200_000).contains(workflowReadLimit) else { throw TeamWorkflowRunCommand.invalid } }
         let workflowRead = workflowReadLimit != nil && !["/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery"].contains(path)
         let workflowRun = path == "/rest/v1/rpc/taskfold_team_workflow_run"

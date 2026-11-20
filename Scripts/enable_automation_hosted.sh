@@ -24,8 +24,10 @@ DRY=0
 YES=0
 ROTATE=0
 DISABLE=0
+REMOTE=0
 for arg in "$@"; do
   case "$arg" in
+    --remote) REMOTE=1 ;;
     --dry-run) DRY=1 ;;
     --yes) YES=1 ;;
     --rotate-worker-token) ROTATE=1 ;;
@@ -40,6 +42,12 @@ for arg in "$@"; do
       ;;
   esac
 done
+# Test isolation (docs/TESTING_ISOLATION.md): this script changes or probes the LINKED hosted project.
+# Refuse by default, without prompting; a human must pass --remote deliberately.
+if [ "$REMOTE" != 1 ]; then
+  echo "REFUSED: $(basename "$0") talks to the hosted Supabase project. Re-run with --remote if that is intended." >&2
+  exit 2
+fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
