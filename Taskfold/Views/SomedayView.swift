@@ -31,6 +31,7 @@ struct SomedayView: View {
     @State private var pickerDate = Date()
     @State private var picking = false
     @FocusState private var ideaFocused: Bool
+    @FocusState private var listFocused: Bool
 
     private var all: [Record] { store.somedayTasks }
     private var prompt: Planning.Review? { Planning.review(all, now: Date(), lastReviewed: lastReview > 0 ? Date(timeIntervalSince1970: lastReview) : nil) }
@@ -47,6 +48,11 @@ struct SomedayView: View {
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
+            // The same in-content title as every other list (mac-r2 L-3).
+            ListTitleHeader(title: "Someday", subtitle: subtitle)
+                .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.xxl).padding(.top, DS.Space.l).padding(.bottom, DS.Space.xs)
+                .padding(.horizontal, DS.Space.l)
+                .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             HStack(spacing: DS.Space.s) {
                 Image(systemName: "plus.circle").foregroundStyle(DS.Palette.textSecondary).accessibilityHidden(true)
                 TextField("Add an idea for someday", text: $idea)
@@ -86,6 +92,7 @@ struct SomedayView: View {
                 .environment(\.taskRowScope, .all)
                 .accessibilityIdentifier("somedayList")
                 .listStyle(.inset).scrollContentBackground(.hidden)
+                .focused($listFocused)
                 .frame(maxWidth: DS.Size.contentMaxWidth).frame(maxWidth: .infinity)
                 .contextMenu(forSelectionType: String.self) { ids in menu(ids) } primaryAction: { ids in if let id = ids.first, ids.count == 1 { workspace.open(id) } }
                 .onDeleteCommand { workspace.delete(workspace.selection) }
@@ -96,7 +103,11 @@ struct SomedayView: View {
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation) } }
         .animation(Transitions.Ease.smoothOut, value: workspace.confirmation)
         .animation(layout, value: prompt)
-        .onAppear { if workspace.section == .someday { workspace.navigationSubtitle = subtitle } }
+        .onAppear {
+            guard workspace.section == .someday else { return }
+            workspace.navigationSubtitle = subtitle
+            listFocused = true // like Calendar: focus moves out of the sidebar so its selection keeps one colour (mac-r2 L-4)
+        }
         .onChange(of: subtitle) { _, value in if workspace.section == .someday { workspace.navigationSubtitle = value } }
         .onChange(of: workspace.searchPresented) { _, requested in if requested && workspace.section == .someday { ideaFocused = false } }
         .sheet(isPresented: $picking) {

@@ -376,9 +376,11 @@ enum DayPlan {
 
     /// The Today header: a gentle prompt to plan until the day is planned, a shutdown prompt once working hours
     /// are over, and a quiet confirmation afterwards. Nil when there is nothing to offer.
-    static func prompt(state: DayPlanState, now: Date, hours: WorkingHours?, hasWork: Bool, calendar: Calendar = .current) -> DayPlanPrompt? {
+    /// Shut down is offered only after working hours and only for a day that has something to close: it was planned, or a
+    /// task was completed today (`completedToday`). A fresh day with nothing done is not asked to shut down (mac-r2 L-10).
+    static func prompt(state: DayPlanState, now: Date, hours: WorkingHours?, hasWork: Bool, completedToday: Int = 0, calendar: Calendar = .current) -> DayPlanPrompt? {
         if state.shutDown { return .shutDown }
-        if isAfterWorkingHours(now: now, hours: hours, calendar: calendar) { return hasWork || state.planned ? .shutdown : nil }
+        if isAfterWorkingHours(now: now, hours: hours, calendar: calendar) { return state.planned || completedToday > 0 ? .shutdown : nil }
         if state.planned { return .planned }
         return hasWork ? .plan : nil
     }
@@ -702,5 +704,32 @@ extension DayPlan {
         let ring = TodayRing(segments: segments, plannedMinutes: planned, doneMinutes: done, freeMinutes: planned, hasWorkingHours: true,
                              taskCount: mine.count, doneCount: mine.filter(\.completed).count, unestimatedCount: 0)
         return ProjectWeekRing(ring: ring, plannedMinutes: planned, doneMinutes: done, weekPlannedMinutes: week.reduce(0) { $0 + ($1.durationMinutes ?? 0) })
+    }
+}
+
+/// Upcoming's quiet days (mac-r2 L-7): a run of two or more days with nothing planned reads as one line,
+/// "Mon 23 – Fri 27 · nothing planned", instead of repeating "Nothing planned" under every day header.
+enum UpcomingDayRuns {
+    enum Item: Equatable {
+        case day(String)
+        /// Consecutive empty days; `first` and `last` are the day keys at either end, `count` is how many days.
+        case quiet(first: String, last: String, count: Int)
+    }
+    /// `days` are day keys in order with whether each has nothing planned. Days in `keeping` (today) are never folded
+    /// into a run, and `minimumRun` is how many consecutive empty days it takes to fold.
+    static func collapse(_ days: [(day: String, isEmpty: Bool)], keeping: Set<String> = [], minimumRun: Int = 2) -> [Item] {
+        var items: [Item] = []
+        var run: [String] = []
+        func flush() {
+            if run.count >= minimumRun, let first = run.first, let last = run.last { items.append(.quiet(first: first, last: last, count: run.count)) }
+            else { items.append(contentsOf: run.map(Item.day)) }
+            run = []
+        }
+        for entry in days {
+            if entry.isEmpty && !keeping.contains(entry.day) { run.append(entry.day) }
+            else { flush(); items.append(.day(entry.day)) }
+        }
+        flush()
+        return items
     }
 }

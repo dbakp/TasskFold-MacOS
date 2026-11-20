@@ -166,6 +166,8 @@ struct ProjectSectionHeader: View {
     let count: String
     @Binding var collapsed: Bool
     let add: () -> Void
+    /// Shown on hover next to "+": adds a section to the project (mac-r2 L-8).
+    var addSection: (() -> Void)? = nil
     @State private var hovering = false
     var body: some View {
         // Ink, 13 pt semibold; the chevron and "+" show on hover (and stay reachable by VoiceOver).
@@ -179,6 +181,10 @@ struct ProjectSectionHeader: View {
             }
                 .buttonStyle(.plain).accessibilityIdentifier("section-collapse-" + key).accessibilityValue(collapsed ? "Collapsed" : "Expanded")
             Spacer()
+            if let addSection {
+                Button("Add section", action: addSection).buttonStyle(.plain).font(DS.Font.badge).foregroundStyle(DS.Palette.textSecondary)
+                    .opacity(hovering ? 1 : 0).help("Add a section to this project").accessibilityIdentifier("section-new-" + key)
+            }
             Button(action: add) { Image(systemName: "plus").frame(width: 20, height: 20).contentShape(.rect) }.buttonStyle(.plain).foregroundStyle(DS.Palette.textSecondary)
                 .opacity(hovering ? 1 : 0).help("Add task to \(title)").accessibilityLabel("Add task to \(title)").accessibilityIdentifier("section-add-" + key)
         }.contentShape(.rect).onHover { hovering = $0 }.modifier(DayHeaderDrop(day: key))

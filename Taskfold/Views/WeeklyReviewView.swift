@@ -135,7 +135,8 @@ struct WeeklyReviewView: View {
         #if os(macOS)
         VStack(spacing: 0) {
             HStack { Text("Weekly review").font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader); Spacer()
-                Button(phase == .done ? "Done" : "Close") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("weeklyReviewClose") }
+                // The intro has a standard sheet footer (Cancel, Start Review); every other page keeps the Close button here.
+                if phase != .intro { Button(phase == .done ? "Done" : "Close") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("weeklyReviewClose") } }
                 .padding(.horizontal, DS.Space.xl).padding(.top, DS.Space.xl).padding(.bottom, DS.Space.s)
             pageScroll
             footer
@@ -206,9 +207,11 @@ struct WeeklyReviewView: View {
                     .accessibilityElement(children: .combine)
                 }
             }
+            #if !os(macOS)
             Button(action: begin) {
                 Label("Start review", systemImage: "play.fill").frame(maxWidth: .infinity, minHeight: target)
             }.buttonStyle(.borderedProminent).tint(DS.Palette.accentFill).disabled(!available).accessibilityIdentifier("weeklyReviewStart")
+            #endif
             reminderSection
         }
     }
@@ -308,6 +311,18 @@ struct WeeklyReviewView: View {
     }
 
     @ViewBuilder private var footer: some View {
+        #if os(macOS)
+        if phase == .intro {
+            // A standard sheet footer (mac-r2 O-3): Cancel, and Start Review as the prominent default button.
+            HStack(spacing: DS.Space.m) {
+                Spacer(minLength: DS.Space.s)
+                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("weeklyReviewClose")
+                Button("Start Review", action: begin).keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
+                    .disabled(!available).accessibilityIdentifier("weeklyReviewStart")
+            }
+            .padding(.horizontal, DS.Space.xl).padding(.vertical, DS.Space.m).background(.bar)
+        }
+        #endif
         if case .step(let index) = phase, available {
             let work = hasWork(steps[index])
             let finalStep = index + 1 == steps.count

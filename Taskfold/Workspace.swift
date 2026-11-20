@@ -193,6 +193,8 @@ final class Workspace {
     var titleFocusRequest = 0
     var newProjectRequest = 0
     var newLabelRequest = 0
+    /// ⌥⌘N: the open project's sections editor (mac-r2 L-8).
+    var newSectionRequest = 0
     var newFilterRequest = 0
     /// Tools that live in menus (the sidebar foot, the menu bar) rather than in the sidebar or toolbar. RootView presents them.
     enum Tool: String, Identifiable { case mentions, weeklyReview, insights, templates, sharedDrafts, archivedProjects, multipleTasks, pinnedNotes, projectPulse, focus; var id: String { rawValue } }
@@ -565,7 +567,8 @@ final class Workspace {
                 let tasks = try ids.sorted().map { try store.selectionRecord($0) }, now = Date()
                 let completed = tasks.contains { !$0.completed }
                 guard runSelection(tasks, name: completed ? "Complete Tasks" : "Reopen Tasks", action: { _ in .completion(completed, now) }) else { return }
-                Feedback.complete(); confirm(completed ? "Completed selected tasks" : "Reopened selected tasks")
+                let verb = completed ? "Completed" : "Reopened"
+                Feedback.complete(); confirm(tasks.count == 1 ? "\(verb) “\(tasks[0].title)”" : "\(verb) \(tasks.count) tasks")
             } catch { store.error = error.localizedDescription }
             return
         }

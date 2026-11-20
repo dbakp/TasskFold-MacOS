@@ -130,4 +130,14 @@ final class BrandTests: XCTestCase {
             }
         }
     }
+
+    /// mac-r2 L-2: the editor offers exactly the palette hues, and each one is drawn as itself, so no two swatches collapse into one colour.
+    func testEveryPaletteHueRoundTripsThroughItsStoredHex() {
+        for hue in ProjectPalette.hues {
+            let stored = hue.pair.light.hex
+            XCTAssertEqual(ProjectPalette.hue(stored: stored, projectID: "x").id, hue.id, "\(hue.name) saved as \(stored)")
+            XCTAssertEqual(ProjectPalette.rgb(stored: stored).map { ProjectPalette.nearest($0).id }, hue.id)
+        }
+        XCTAssertEqual(Set(ProjectPalette.hues.map { ProjectPalette.nearest(ProjectPalette.rgb(stored: $0.pair.light.hex)!).id }).count, ProjectPalette.hues.count)
+    }
 }
