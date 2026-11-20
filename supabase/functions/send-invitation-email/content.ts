@@ -1,6 +1,7 @@
 // Email content is built only from values the server read itself. Every
-// interpolated value is HTML-escaped (in the plain-text part too) and stripped of
-// control characters, so no name can inject markup, headers or extra lines.
+// interpolated value is stripped of control characters (so no name can add
+// headers or extra lines) and HTML-escaped in the HTML part. The plain-text part
+// is not HTML, so it keeps names as written ("A & B", not "A &amp; B").
 export const OPEN_URL = "taskfold://invitations";
 const defaultColor = "#3b82f6";
 
@@ -50,7 +51,8 @@ export function buildInvitationEmail(input: InvitationEmailInput) {
 <p style="margin:0 0 24px"><a href="${OPEN_URL}" style="background:#1c1c1e;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:15px;display:inline-block">Open invitation</a></p>
 <p style="margin:0;font-size:13px;line-height:1.5;color:#6b6b70">Open Taskfold and sign in with this email address, then choose Invitations to accept. If you were not expecting this, you can ignore this email.</p>
 </td></tr></table></td></tr></table></body></html>`;
-  const text = `${who} invited you to collaborate on "${what}" in Taskfold.
+  const text =
+    `${inviter} invited you to collaborate on "${project}" in Taskfold.
 
 Open Taskfold and sign in with this email address, then choose Invitations to accept: ${OPEN_URL}
 

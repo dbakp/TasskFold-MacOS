@@ -344,16 +344,24 @@ Deno.test("missing sender or provider key fails closed with 503", async () => {
   );
 });
 
-Deno.test("names are escaped in html and text, and cannot add lines", () => {
+Deno.test("names are escaped in html, plain in text, and cannot add lines", () => {
   const hostile = `<script>alert(1)</script>"'&\r\nBcc: x@y.test`;
   const mail = buildInvitationEmail({
     inviterName: hostile,
     projectName: hostile,
     projectColor: `red;"><b>`,
   });
-  for (const part of [mail.html, mail.text]) {
-    assert(!part.includes("<script>"), "script tag escaped");
-    assert(part.includes("&lt;script&gt;"), "escaped form present");
+  assert(!mail.html.includes("<script>"), "script tag escaped in html");
+  assert(mail.html.includes("&lt;script&gt;"), "escaped form present in html");
+  assert(
+    !mail.text.includes("&lt;") && !mail.text.includes("&amp;"),
+    "text part is not entity-escaped",
+  );
+  for (const part of [mail.html, mail.text, mail.subject]) {
+    assert(
+      !/Bcc: x@y\.test\r?\n/.test(part) && !part.includes("\r"),
+      "no injected lines",
+    );
   }
   assert(
     !mail.html.includes('"><b>') && mail.html.includes("#3b82f6"),
