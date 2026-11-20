@@ -1,12 +1,12 @@
-import { createHandler, type Config } from "./handler.ts";
-const config: Config = { url: "https://backend.test", serviceKey: "service-fixture", cronSecret: "private-cron-fixture", appID: "provider-fixture", providerKey: "private-provider-fixture" };
+import { createHandler, equal, type Config } from "./handler.ts";
+const config: Config = { url: "https://backend.test", serviceKey: "service-fixture", cronSecret: "private-cron-fixture-0123456789abcdef", appID: "provider-fixture", providerKey: "private-provider-fixture" };
 const request = (secret = config.cronSecret, method = "POST") => new Request("https://worker.test", { method, headers: { "x-cron-secret": secret } });
 const assert = (value: boolean, message: string) => { if (!value) throw new Error(message); };
 const response = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
 Deno.test("missing, empty, wrong and oversized secrets reject before transport", async () => {
   let calls = 0;
   const send = async () => { calls++; return response([]); };
-  for (const secret of ["", "wrong", "x".repeat(513)]) assert((await createHandler(config, { send })(request(secret))).status === 401, "Unauthorized call accepted");
+  for (const secret of ["", "wrong", "x".repeat(513), config.cronSecret.slice(0, -1), config.cronSecret + "x"]) assert((await createHandler(config, { send })(request(secret))).status === 401, "Unauthorized call accepted");
   assert((await createHandler({ ...config, cronSecret: "" }, { send })(request())).status === 401, "Missing configuration accepted");
   assert(calls === 0, "Unauthorized request accessed data/provider");
 });
@@ -55,4 +55,35 @@ Deno.test("provider rejection stays unmarked and raw errors do not leave the han
   assert(marked === 0 && JSON.parse(body).failed === 1 && !body.includes("PRIVATE"), "Rejected provider result mishandled");
   const failure = await createHandler(config, { send: () => { throw new Error("PRIVATE SERVICE CREDENTIAL"); } })(request());
   assert(failure.status === 502 && !(await failure.text()).includes("PRIVATE"), "Exception leaked");
+});
+Deno.test("a configured secret shorter than 32 characters is rejected even when presented exactly", async () => {
+  let calls = 0;
+  const send = async () => { calls++; return response([]); };
+  const short = "s".repeat(31);
+  assert((await createHandler({ ...config, cronSecret: short }, { send })(request(short))).status === 401, "Short secret accepted");
+  const ok = "s".repeat(32);
+  assert((await createHandler({ ...config, cronSecret: ok }, { send })(request(ok))).status === 200, "32-character secret refused");
+  assert(calls === 1, "Unexpected transport count");
+});
+Deno.test("comparison is length-independent and exact", async () => {
+  const secret = "k".repeat(40);
+  assert(await equal(secret, secret), "Equal secrets differ");
+  assert(!(await equal(secret.slice(0, 39), secret)), "Prefix accepted");
+  assert(!(await equal(secret + "k", secret)), "Longer value accepted");
+  assert(!(await equal("k".repeat(39) + "j", secret)), "Different value accepted");
+  assert(!(await equal("", "")), "Empty secret accepted");
+});
+Deno.test("task and profile queries are bounded and fetch default carries a timeout", async () => {
+  const seen: URL[] = [];
+  const send = async (req: Request) => {
+    const url = new URL(req.url); seen.push(url);
+    if (url.pathname.endsWith("profiles")) return response([]);
+    return response([{ id: "t", user_id: "u", title: "x" }]);
+  };
+  await createHandler(config, { send })(request());
+  assert(seen.length === 2 && seen.every((u) => Number(u.searchParams.get("limit")) > 0 && Number(u.searchParams.get("limit")) <= 1000), "Query not row-limited");
+  const original = globalThis.fetch; let signalled = false;
+  globalThis.fetch = ((_input: Request, init?: RequestInit) => { signalled = init?.signal instanceof AbortSignal; return Promise.resolve(response([])); }) as typeof fetch;
+  try { await createHandler(config)(request()); } finally { globalThis.fetch = original; }
+  assert(signalled, "Default transport has no timeout signal");
 });

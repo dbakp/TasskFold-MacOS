@@ -61,6 +61,8 @@ export function publicWebhookAddress(address: string): boolean {
       globalV6Exceptions.check(address, "ipv6"));
 }
 
+/** Receivers may only listen on HTTPS's default port or the conventional alternate 8443. */
+export const allowedWebhookPorts: readonly number[] = [443, 8443];
 export function webhookTarget(value: string) {
   if (
     typeof value !== "string" || value.length > 4096 ||
@@ -74,7 +76,7 @@ export function webhookTarget(value: string) {
   const url = new URL(value);
   if (
     url.protocol !== "https:" || url.username || url.password || url.hash ||
-    url.port === "0"
+    (url.port !== "" && !allowedWebhookPorts.includes(Number(url.port)))
   ) {
     throw new Error("Invalid webhook destination");
   }

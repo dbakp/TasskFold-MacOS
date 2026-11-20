@@ -4,18 +4,21 @@ interface Task { id: string; title: string; user_id: string }
 interface Profile { user_id: string; onesignal_player_id: string | null; preferences: { notifications?: { enabled?: boolean } } | null }
 type Transport = (request: Request) => Promise<Response>;
 const json = (status: number, value: unknown) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
-function equal(a: string, b: string): boolean {
-  // Bounded comparison without an early mismatch exit. This secret is for service calls only.
-  if (a.length !== b.length || b.length < 1 || b.length > 512) return false;
+const MIN_SECRET = 32, MAX_SECRET = 512, FETCH_TIMEOUT_MS = 8000, ROW_LIMIT = 500;
+const digest = async (value: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
+/** Compares fixed-length SHA-256 digests so length never short-circuits the comparison. */
+export async function equal(a: string, b: string): Promise<boolean> {
+  const [x, y] = await Promise.all([digest(a), digest(b)]);
   let difference = 0;
-  for (let i = 0; i < b.length; i++) difference |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return difference === 0;
+  for (let i = 0; i < x.length; i++) difference |= x[i] ^ y[i];
+  // Length policy is evaluated after the comparison, not as an early exit.
+  return difference === 0 && b.length >= MIN_SECRET && b.length <= MAX_SECRET;
 }
 export function createHandler(config: Config, options: { send?: Transport; now?: () => Date } = {}) {
-  const send = options.send ?? ((request: Request) => fetch(request));
+  const send = options.send ?? ((request: Request) => fetch(request, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }));
   const now = options.now ?? (() => new Date());
   return async (req: Request): Promise<Response> => {
-    if (!config.cronSecret || !equal(req.headers.get("x-cron-secret") ?? "", config.cronSecret)) return json(401, { error: "Unauthorized" });
+    if (!(await equal(req.headers.get("x-cron-secret") ?? "", config.cronSecret))) return json(401, { error: "Unauthorized" });
     if (req.method !== "POST") return json(405, { error: "Use POST" });
     if (!config.serviceKey || !config.appID || !config.providerKey || !/^https:\/\//.test(config.url)) return json(503, { error: "Delivery configuration unavailable" });
     const db = async (path: string, init: RequestInit = {}) => {
@@ -29,12 +32,12 @@ export function createHandler(config: Config, options: { send?: Transport; now?:
       const time = now();
       // Preserve the existing web worker's UTC minute model while the versioned worker is built.
       const day = time.toISOString().slice(0, 10), clock = time.toISOString().slice(11, 16);
-      const query = new URLSearchParams({ select: "id,title,user_id", due_date: "eq." + day, due_time: "eq." + clock, completed: "eq.false", notification_sent_at: "is.null" });
+      const query = new URLSearchParams({ select: "id,title,user_id", due_date: "eq." + day, due_time: "eq." + clock, completed: "eq.false", notification_sent_at: "is.null", order: "id.asc", limit: String(ROW_LIMIT) });
       const tasks: Task[] = await (await db("tasks?" + query)).json();
       if (!Array.isArray(tasks)) throw new Error("database");
       if (tasks.length === 0) return json(200, { message: "No tasks due soon", count: 0 });
       const users = [...new Set(tasks.map((t) => t.user_id))];
-      const profiles: Profile[] = await (await db("profiles?" + new URLSearchParams({ select: "user_id,onesignal_player_id,preferences", user_id: "in.(" + users.join(",") + ")", onesignal_player_id: "not.is.null" }))).json();
+      const profiles: Profile[] = await (await db("profiles?" + new URLSearchParams({ select: "user_id,onesignal_player_id,preferences", user_id: "in.(" + users.join(",") + ")", onesignal_player_id: "not.is.null", limit: String(ROW_LIMIT) }))).json();
       if (!Array.isArray(profiles)) throw new Error("database");
       const recipients = new Map(profiles.filter((p) => p.onesignal_player_id && p.preferences?.notifications?.enabled !== false).map((p) => [p.user_id, p.onesignal_player_id!]));
       let sent = 0, failed = 0;
