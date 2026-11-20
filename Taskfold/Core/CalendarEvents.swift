@@ -161,6 +161,16 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
         guard let result=await combinedWindow(window,titles:showTitles,publishCalendars:true,current:current),current() else {return}
         events=result.events;ready=result.state=="ready";status=result.status
     }
+    /// Several days in one read, for the iPad Calendar's week grid. The same rules as `refresh(on:)`; whichever read starts
+    /// last wins, so Day's own read replaces it when Day is shown.
+    func refresh(window:DateInterval) async {
+        let token=UUID();generation=token;events=[];ready=false
+        let binding=accountGeneration,settings=revision
+        func current()->Bool {generation==token && accountGeneration==binding && settings==revision && !Task.isCancelled}
+        guard !account.isEmpty else {return}
+        guard let result=await combinedWindow(window,titles:showTitles,publishCalendars:true,current:current),current() else {return}
+        events=result.events;ready=result.state=="ready";status=result.status
+    }
     /// An independent eight-day read never replaces the planner's visible day. Event names never enter capacity snapshots.
     func capacityWindow(now:Date=Date(),calendar input:Calendar = .current) async ->CalendarCapacityWindow? {
         let token=UUID();capacityGeneration=token
