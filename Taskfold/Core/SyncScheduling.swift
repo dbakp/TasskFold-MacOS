@@ -51,7 +51,7 @@ enum SyncTiming {
 /// `realtime.subscription` row and is decoded from the WAL for every connected client, so only tables whose
 /// changes a visible screen needs within seconds belong here. Saved views, favourites, view preferences and
 /// orders, project templates and reminder preferences are not: the foreground sync and the periodic reconcile
-/// read them. Keep this list equal to the `supabase_realtime` publication (see the disk IO budget migration).
+/// read them. Every table here must be in the `supabase_realtime` publication; the publication may hold more for older clients.
 enum RealtimeSubscriptions {
     static let tables = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles",
                          "focus_sessions", "task_comments", "task_mentions", "task_dependencies"]

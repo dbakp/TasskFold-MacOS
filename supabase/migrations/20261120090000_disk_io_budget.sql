@@ -8,8 +8,6 @@ begin;
 --     response row, edge function boot, scheduler row rewritten twice) for an empty outbox;
 --   * the audio maintenance scheduler did the same every 15 minutes;
 --   * the one-hour time zone cache refresh rewrote all ~1,200 rows each time;
---   * six low-value tables were decoded by Realtime's WAL poller although no screen
---     needs them live (the periodic reconcile and every foreground sync read them).
 -- Each scheduler now answers "is there work?" with indexed EXISTS probes and returns
 -- before it locks or writes anything. Webhook delivery semantics are unchanged: when
 -- there is due work the tick behaves exactly as before.
@@ -153,21 +151,9 @@ end $$;
 revoke all on function taskfold_private.refresh_reminder_time_zones(boolean) from public,anon,authenticated;
 grant execute on function taskfold_private.refresh_reminder_time_zones(boolean) to service_role;
 
--- 5. Realtime: stop decoding tables no screen needs live. Saved views, favourites,
--- view preferences and orders, project templates and reminder preferences change rarely
--- and are re-read by the foreground sync and the periodic reconcile (at most nine
--- minutes). Clients no longer subscribe to them (the join list in Backend.watchChanges
--- matches this publication). tasks, projects, sections, labels, collaborators, profiles,
--- focus sessions, comments, mentions and dependencies stay live.
-do $$ declare t text; begin
- if exists(select 1 from pg_publication where pubname='supabase_realtime') then
-  foreach t in array array['saved_views','favorites','view_preferences','view_orders','project_templates','reminder_preferences'] loop
-   if exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename=t) then
-    execute format('alter publication supabase_realtime drop table public.%I',t);
-   end if;
-  end loop;
- end if;
-end $$;
+-- 5. Realtime publication is unchanged: current clients join only the tables they need
+-- live (Backend.watchChanges), and older installed builds that still join all sixteen
+-- keep working. Narrowing the publication can follow once every client has updated.
 
 -- 6. Cron history: the per-minute webhook job writes two run rows a minute, and retention
 -- scanned 7 days of them. Keep two days (plenty to debug a failure) so the table stays tiny.
