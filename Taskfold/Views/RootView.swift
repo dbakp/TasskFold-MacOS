@@ -166,7 +166,7 @@ struct RootView: View {
         .modifier(HandoffAdvertising())
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         #if DEBUG
-        .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel() } }
+        .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel().environment(\.openURL, OpenURLAction { handleExternalURL($0); return .handled }) } }  // the fixture's links stay in this process; the isolated test host registers no taskfold:// scheme, so the system would hand them to an installed Taskfold
         #endif
         .modifier(CivilDayRefresh())
         #if DEBUG
