@@ -1,0 +1,5 @@
+{
+  "nodeModulesDir": "none",
+  "compilerOptions": { "types": ["npm:@types/node@22.20.5"] },
+  "lock": "./deno.lock"
+}

@@ -183,10 +183,12 @@ struct CollaboratorsView: View {
         busy = true; message = nil
         let invitee = email.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            _ = try await store.backend.request("/rest/v1/project_collaborators", method: "POST", body: ["project_id": .string(project.id), "invited_email": .string(invitee), "invited_by": .string(store.userID)])
+            let created = try await store.backend.request("/rest/v1/project_collaborators", method: "POST", body: ["project_id": .string(project.id), "invited_email": .string(invitee), "invited_by": .string(store.userID)], extra: ["Prefer": "return=representation"])
+            // The server derives every name, colour and link from this row; the app sends only its id.
+            let invitationID = (try? TaskfoldJSONDecoder().decode([Record].self, from: created))?.first?.id
             email = ""; message = "Invitation created."
             do {
-                _ = try await store.backend.request("/functions/v1/send-invitation-email", method: "POST", body: ["inviteeEmail": .string(invitee), "projectName": .string(project.name), "projectColor": project["color"], "inviterName": .string(store.profile.string("display_name").isEmpty ? store.email : store.profile.string("display_name")), "inviterEmail": .string(store.email), "appUrl": .string("taskfold://invitations")])
+                _ = try await store.backend.request("/functions/v1/send-invitation-email", method: "POST", body: invitationID.map { ["invitationId": .string($0)] } ?? ["inviteeEmail": .string(invitee)])
                 message = "Invitation sent."
             } catch { message = "Invitation created, but its email could not be delivered. The invite is available in Taskfold." }
         } catch { message = error.localizedDescription }
