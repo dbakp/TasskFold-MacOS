@@ -136,6 +136,9 @@ struct HourlyPlannerView: View {
                     Button(usesAgenda ? "Show timeline" : "Show readable list") { changeLayout() }.font(.caption).frame(minHeight: 44).accessibilityIdentifier("plannerLargeTextLayout")
                 }
             } else {
+                #if os(macOS)
+                macHeader(reading)
+                #else
                 HStack(alignment: .firstTextBaseline) {
                     Text(day.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())).font(.headline)
                     Spacer(minLength: 8)
@@ -145,8 +148,13 @@ struct HourlyPlannerView: View {
                     Button {changeLayout()} label: {Image(systemName:usesAgenda ? "calendar.day.timeline.left":"list.bullet").frame(width:44,height:44)}
                         .accessibilityLabel(usesAgenda ? "Show timeline":"Show readable list").accessibilityIdentifier("plannerLayoutToggle")
                 }
+                #endif
             }
+            #if os(macOS)
+            if textSize.isAccessibilitySize { capacityRing }
+            #else
             capacityRing
+            #endif
             capacityDetails(reading.capacity)
             if work.incomplete {
                 Label("Some grouped tasks need review. Capacity includes readable estimates only.", systemImage: "exclamationmark.circle")
@@ -160,6 +168,40 @@ struct HourlyPlannerView: View {
         }.modifier(PlannerSummarySurface())
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+    #if os(macOS)
+    /// One 36 pt row (mac-r2 CAL-6): the date, a 20 pt ring with the planned/free line, and one "Schedule" menu that holds
+    /// every other action. The all-day strip below it stays a single quiet band.
+    private func macHeader(_ reading: PlannerDayReading) -> some View {
+        let ring = DayPlan.capacityRing(dayTasks, events: events, on: day, hours: hours, calendar: calendar)
+        let tint = ring.isOver ? DS.Palette.caution : DS.Palette.accent
+        let allDay = reading.allDay.count + reading.allDayEvents.count
+        return HStack(spacing: DS.Space.m) {
+            Text(day.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())).font(.system(size: 15, weight: .semibold))
+            HStack(spacing: DS.Space.s) {
+                ZStack {
+                    Circle().stroke(DS.Palette.surfaceSunken, lineWidth: 3)
+                    Circle().trim(from: 0, to: max(ring.fraction, ring.plannedMinutes > 0 && ring.hasWorkingHours ? 0.02 : 0))
+                        .stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: .round)).rotationEffect(.degrees(-90))
+                }.frame(width: 20, height: 20)
+                Text(ring.label).font(.caption).monospacedDigit().foregroundStyle(ring.isOver ? DS.Palette.caution : Color.secondary).lineLimit(1)
+            }
+            .accessibilityElement(children: .ignore).accessibilityLabel(ring.accessibilityLabel).accessibilityIdentifier("capacityRing")
+            Spacer(minLength: 8)
+            Menu {
+                Button("Schedule a task…", systemImage: "clock.badge.plus") { choose(nil) }.accessibilityIdentifier("plannerSchedule")
+                if ring.offersFit, fitDay != nil { Button("Fit my day", systemImage: "sparkles") { proposeFit() }.accessibilityIdentifier("capacityRingFit") }
+                Button("Show all-day (\(allDay))") { allDayRequest += 1 }.accessibilityIdentifier("plannerShowAllDay")
+                Button(usesAgenda ? "Show timeline" : "Show readable list") { changeLayout() }.accessibilityIdentifier("plannerLayoutToggle")
+                Divider()
+                Button("Planner settings…", systemImage: "slider.horizontal.3") { settings = true }.accessibilityIdentifier("plannerSettings")
+                if reading.capacity.unknownTasks > 0 { Text(reading.capacity.unknownTasks == 1 ? "1 task has no estimate" : "\(reading.capacity.unknownTasks) tasks have no estimate") }
+            } label: { Text("Schedule") }
+            .menuStyle(.button).controlSize(.regular).fixedSize()
+            .accessibilityLabel("Schedule").accessibilityIdentifier("plannerScheduleMenu")
+        }
+        .frame(height: 36)
+    }
+    #endif
     private var fitTitle: String { "Fit my day?" }
     private func fitMessage(_ fit: DayPlanFit) -> String {
         let moved = fit.placements.count == 1 ? "1 task" : "\(fit.placements.count) tasks"

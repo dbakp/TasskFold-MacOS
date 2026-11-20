@@ -548,8 +548,8 @@ struct TaskInspectorForm: View {
                     HStack(spacing: DS.Space.xs) {
                         Text(reminderSummary).foregroundStyle(reminders == 0 ? DS.Palette.textTertiary : DS.Palette.textPrimary)
                         if reminders > 0 && !store.remindersEnabled {
-                            Image(systemName: "bell.slash").foregroundStyle(DS.Palette.textSecondary)
-                                .help("Reminders are off on this Mac. Turn on delivery in Settings ▸ General.").accessibilityLabel("Delivery off on this Mac")
+                            Label("Delivery off", systemImage: "bell.slash").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+                                .help("Reminders are off on this Mac. Turn on delivery in Settings ▸ General.").accessibilityLabel("Reminder delivery is off on this Mac")
                         }
                     }
                 }
@@ -627,6 +627,12 @@ struct TaskInspectorForm: View {
         guard let project else { return "Inbox" }
         return [project, section].compactMap { $0 }.joined(separator: " / ")
     }
+    /// Assigning only makes sense when someone else can take the task: a team task or a project with an accepted collaborator.
+    private var projectIsShared: Bool {
+        if isTeamTask { return true }
+        let project = draft.string("project_id")
+        return !project.isEmpty && store.rows("project_collaborators").contains { $0.string("project_id") == project && $0.string("status") == "accepted" }
+    }
     /// "Add ⌄": every property and section that is not shown yet.
     private var addMenu: some View {
         Menu {
@@ -638,7 +644,7 @@ struct TaskInspectorForm: View {
             if draft.deadline == nil { Button("Deadline", systemImage: "flag.checkered") { draft["deadline_date"] = .string(Dates.day(Date())); DispatchQueue.main.async { openChip = .deadline } } }
             if draft.durationMinutes == nil { Button("Estimate", systemImage: "hourglass") { draft["duration_minutes"] = .number(30); DispatchQueue.main.async { openChip = .estimate } } }
             if !draft["is_recurring"].flag { Button("Repeat", systemImage: "repeat") { repeatExpanded = !isTeamTask; reveal("when", open: .date) } }
-            if draft.string("assigned_to").isEmpty && !assigneeRequested { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
+            if draft.string("assigned_to").isEmpty && !assigneeRequested && projectIsShared { Button("Assignee", systemImage: "person.crop.circle.badge.plus") { if isTeamTask { openTeamAssignee() } else { assigneeRequested = true } } }
             Divider()
             if rowsMode && store.canEditSubtasks(of: taskID) { Button("Subtask", systemImage: "list.bullet") { revealSection("subtasks", field: .subtask) }.accessibilityIdentifier("addSubtaskSection") }
             if !isCreating, !isTeamTask, store.supportsDependencies(taskID: taskID) {
@@ -702,7 +708,8 @@ struct TaskInspectorForm: View {
     }
 
     @ViewBuilder private var subtasksSection: some View {
-        if rowsMode, store.childProgress(of: taskID).total > 0 || revealed.contains("subtasks") {
+        // Always present on a saved task (mac-r2 IQ-6): with no subtasks it is just the header and one "Add subtask" field.
+        if rowsMode, store.canEditSubtasks(of: taskID) || store.childProgress(of: taskID).total > 0 {
             let progress = store.childProgress(of: taskID)
             block("subtasks", "Subtasks", summary: progress.total == 0 ? nil : "\(progress.completed) of \(progress.total)") {
                 ChildRowsList(parentID: taskID, flush: { saveTask?.cancel(); return saveNow() }, canAdd: store.canEditSubtasks(of: taskID))
@@ -742,7 +749,8 @@ struct TaskInspectorForm: View {
 
     @ViewBuilder private var commentsSection: some View {
         let count = draft["comments"].list.count
-        if count > 0 || revealed.contains("comments") || !comment.isEmpty {
+        // The comment field is always there on a personal task (mac-r2 IQ-6); shared tasks show comments only once they exist.
+        if count > 0 || revealed.contains("comments") || !comment.isEmpty || !isTeamTask {
         block("comments", "Comments", summary: count > 0 ? "\(count)" : nil) {
             ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
                 let row = Record(value.object)

@@ -13,7 +13,7 @@ struct PrivacySettings: View {
                 if store.signedIn, !store.localMode { control(PrivacyFacts.control("local")) }
                 if store.signedIn, !store.localMode { control(PrivacyFacts.control("delete")) }
                 if !store.signedIn || store.localMode {
-                    Text("You’re using TaskFold on this Mac without a cloud account. Nothing syncs.").font(.callout).foregroundStyle(.secondary)
+                    Text("You’re using Taskfold on this Mac without a cloud account. Nothing syncs.").font(.callout).foregroundStyle(.secondary)
                 }
             }
             Section { Text(PrivacyFacts.footer).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }

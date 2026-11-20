@@ -255,6 +255,8 @@ struct TaskfoldCommands: Commands {
             Button("New Project…") { workspace.newProjectRequest += 1 }.keyboardShortcut("n", modifiers: [.command, .shift])
             Button("New Filter…") { workspace.newFilterRequest += 1 }.disabled(!store.signedIn)
             Button("New Label…") { workspace.newLabelRequest += 1 }.disabled(!store.signedIn)
+            Button("New Section…") { workspace.newSectionRequest += 1 }.keyboardShortcut("n", modifiers: [.command, .option])
+                .disabled({ if case .project = workspace.section { return false }; return true }())
             Divider()
             Button("Add Multiple Tasks…") { workspace.toolRequest = .multipleTasks }.disabled(!store.signedIn)
             Button("Brain Dump…") { workspace.openBrainDump() }.keyboardShortcut("b", modifiers: [.command, .option]).disabled(!store.signedIn)

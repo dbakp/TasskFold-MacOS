@@ -21,7 +21,7 @@ extension Store {
             let due = task.string("due_date")
             return !task.completed && !due.isEmpty && due <= today && TaskKind.mayComplete(task)
         }
-        return DayPlan.prompt(state: dayPlanState, now: now, hours: workingHours, hasWork: hasWork)
+        return DayPlan.prompt(state: dayPlanState, now: now, hours: workingHours, hasWork: hasWork, completedToday: completedTodayRoots(now: now))
     }
 
     /// Tasks still open after today's work: due today, or in today's plan and not moved on.

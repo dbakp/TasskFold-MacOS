@@ -76,7 +76,7 @@ final class PrivacyFactsTests: XCTestCase {
         XCTAssertTrue(try XCTUnwrap(PrivacyFacts.item("voice")).points.joined().contains("on-device speech recognition"))
         let links = try XCTUnwrap(PrivacyFacts.item("links"))
         XCTAssertTrue(links.points.joined().contains("project that isn’t shared"))
-        XCTAssertTrue(links.points.joined().contains("not through TaskFold’s server") || links.points.joined().contains("does not go through TaskFold’s server"))
+        XCTAssertTrue(links.points.joined().contains("not through Taskfold’s server") || links.points.joined().contains("does not go through Taskfold’s server"))
     }
 
     func testControlsAndIdentifiers() {
@@ -92,7 +92,7 @@ final class PrivacyFactsTests: XCTestCase {
             XCTAssertFalse(lowered.contains(word), word)
         }
         XCTAssertFalse(allText.contains("Ask Cody"))
-        XCTAssertFalse(allText.replacingOccurrences(of: "calendar named Taskfold", with: "").contains("Taskfold"), "The product is spelled TaskFold")
+        XCTAssertFalse(allText.contains("TaskFold"), "The product is spelled Taskfold")
         XCTAssertFalse(allText.contains("as the app works today"))
     }
 

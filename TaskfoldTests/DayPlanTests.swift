@@ -270,7 +270,9 @@ final class DayPlanTests: XCTestCase {
         XCTAssertNil(DayPlan.prompt(state: fresh, now: morning, hours: hours, hasWork: false, calendar: c), "Nothing to plan, nothing to say")
         XCTAssertEqual(DayPlan.prompt(state: planned, now: afternoon, hours: hours, hasWork: true, calendar: c), .planned)
         XCTAssertEqual(DayPlan.prompt(state: planned, now: evening, hours: hours, hasWork: true, calendar: c), .shutdown)
-        XCTAssertEqual(DayPlan.prompt(state: fresh, now: evening, hours: hours, hasWork: true, calendar: c), .shutdown, "No nagging to plan after hours")
+        XCTAssertNil(DayPlan.prompt(state: fresh, now: evening, hours: hours, hasWork: true, calendar: c), "A fresh day with nothing done is not asked to shut down (mac-r2 L-10)")
+        XCTAssertEqual(DayPlan.prompt(state: fresh, now: evening, hours: hours, hasWork: true, completedToday: 1, calendar: c), .shutdown, "A task done today makes the shutdown worth offering")
+        XCTAssertNotEqual(DayPlan.prompt(state: fresh, now: afternoon, hours: hours, hasWork: false, completedToday: 2, calendar: c), .shutdown, "Never before working hours end")
         XCTAssertEqual(DayPlan.prompt(state: closed, now: evening, hours: hours, hasWork: true, calendar: c), .shutDown)
         XCTAssertEqual(DayPlan.prompt(state: closed, now: morning, hours: hours, hasWork: true, calendar: c), .shutDown)
         let saturday = day("2026-11-14", c)
@@ -356,5 +358,15 @@ final class DayPlanTests: XCTestCase {
         XCTAssertEqual(DayPlan.streakText(summary(goal: true, length: 7)), "7-day streak")
         XCTAssertEqual(DayPlan.streakText(summary(goal: true, length: 1)), "1-day streak")
         XCTAssertNil(DayPlan.streakText(summary(goal: true, length: 0))); XCTAssertNil(DayPlan.streakText(summary(goal: false, length: 7))); XCTAssertNil(DayPlan.streakText(nil))
+    }
+
+    func testUpcomingFoldsRunsOfEmptyDaysIntoOneLine() {
+        let days: [(day: String, isEmpty: Bool)] = [("2026-11-18", false), ("2026-11-19", true), ("2026-11-20", true), ("2026-11-21", true), ("2026-11-22", false), ("2026-11-23", true), ("2026-11-24", false)]
+        XCTAssertEqual(UpcomingDayRuns.collapse(days), [.day("2026-11-18"), .quiet(first: "2026-11-19", last: "2026-11-21", count: 3), .day("2026-11-22"), .day("2026-11-23"), .day("2026-11-24")],
+                       "A lone empty day keeps its own header")
+        XCTAssertEqual(UpcomingDayRuns.collapse(days, keeping: ["2026-11-19"]), [.day("2026-11-18"), .day("2026-11-19"), .quiet(first: "2026-11-20", last: "2026-11-21", count: 2), .day("2026-11-22"), .day("2026-11-23"), .day("2026-11-24")], "Today is never folded away")
+        let quiet = (0..<14).map { (day: "d\($0)", isEmpty: true) }
+        XCTAssertEqual(UpcomingDayRuns.collapse(quiet), [.quiet(first: "d0", last: "d13", count: 14)])
+        XCTAssertEqual(UpcomingDayRuns.collapse([]), [])
     }
 }

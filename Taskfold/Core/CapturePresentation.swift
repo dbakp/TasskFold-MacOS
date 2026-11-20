@@ -25,3 +25,9 @@ struct CapturePresentationQueue {
     }
     mutating func cancel() { pending = nil }
 }
+
+/// The "Draft restored · Clear" notice in Quick Add. A composer reopened with text means an earlier session closed with an
+/// unsent draft (an empty or sent composer is cleared on close), so the notice shows only for non-blank opening text.
+enum QuickAddDraftNotice {
+    static func isRestored(openingText: String) -> Bool { !openingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+}

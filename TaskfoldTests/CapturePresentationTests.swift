@@ -38,4 +38,9 @@ final class CapturePresentationTests: XCTestCase {
         queue.request(destination: "inbox", workspace: WorkspaceBinding(account: "", generation: workspace.generation))
         XCTAssertNil(queue.pending)
     }
+    func testDraftRestoredNoticeOnlyForNonBlankOpeningText() {
+        XCTAssertTrue(QuickAddDraftNotice.isRestored(openingText: "Call Sam"))
+        XCTAssertFalse(QuickAddDraftNotice.isRestored(openingText: ""))
+        XCTAssertFalse(QuickAddDraftNotice.isRestored(openingText: "  \n "))
+    }
 }

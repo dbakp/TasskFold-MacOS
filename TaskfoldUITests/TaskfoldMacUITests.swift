@@ -13,6 +13,15 @@ extension XCUIApplication {
         _ = command.waitForExistence(timeout: 5)
         command.click()
     }
+    /// The Day header's single "Schedule" menu (one row since the polish pass) holds Schedule a task…, Show all-day, layout and settings.
+    var plannerScheduleMenu: XCUIElement { descendants(matching: .any)["plannerScheduleMenu"].firstMatch }
+    func plannerMenuCommand(_ id: String) {
+        _ = plannerScheduleMenu.waitForExistence(timeout: 10)
+        plannerScheduleMenu.click()
+        let item = menuItems[id]
+        _ = item.waitForExistence(timeout: 5)
+        item.click()
+    }
     func textNamed(_ text: String) -> XCUIElement {
         staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@ OR value BEGINSWITH %@ OR label BEGINSWITH %@", text, text, text + ", ", text + ", ")).firstMatch
     }
@@ -572,15 +581,15 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testHourlyPlannerScheduleAndUndo() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--planner-fixture"]; app.launch()
-        XCTAssertTrue(app.buttons["plannerSchedule"].waitForExistence(timeout: 10))
-        app.buttons["plannerShowAllDay"].click()
+        XCTAssertTrue(app.plannerScheduleMenu.waitForExistence(timeout: 10))
+        app.plannerMenuCommand("plannerShowAllDay")
         XCTAssertTrue(app.buttons["plannerAllDay-planner-report"].waitForExistence(timeout: 5))
         app.buttons["plannerAllDay-planner-report"].click()
         XCTAssertTrue(app.textFields["plannerEstimate"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.textFields["plannerEstimate"].value as? String, "25")
         app.buttons["plannerSave"].click()
         XCTAssertTrue(app.buttons["plannerUndo"].waitForExistence(timeout: 5)); app.buttons["plannerUndo"].click()
-        app.buttons["plannerShowAllDay"].click()
+        app.plannerMenuCommand("plannerShowAllDay")
         XCTAssertTrue(app.buttons["plannerAllDay-planner-report"].waitForExistence(timeout: 5))
         app.buttons["plannerAllDay-planner-report"].click(); app.buttons["plannerSave"].click()
         app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day"]; app.launch()
@@ -590,7 +599,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testPlannerEstimateValidationCancelAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--planner-fixture"]; app.launch(); defer { app.terminate() }
-        XCTAssertTrue(app.buttons["plannerShowAllDay"].waitForExistence(timeout: 10)); app.buttons["plannerShowAllDay"].click()
+        XCTAssertTrue(app.plannerScheduleMenu.waitForExistence(timeout: 10)); app.plannerMenuCommand("plannerShowAllDay")
         let report = app.buttons["plannerAllDay-planner-report"]; XCTAssertTrue(report.waitForExistence(timeout: 5)); report.click()
         let estimate = app.textFields["plannerEstimate"]; XCTAssertTrue(estimate.waitForExistence(timeout: 5)); XCTAssertEqual(estimate.value as? String, "25")
         estimate.click(); estimate.typeKey("a", modifierFlags: .command); estimate.typeText("0")
@@ -599,7 +608,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["plannerSave"].isEnabled); XCTAssertFalse(app.staticTexts["plannerEstimateValidation"].exists)
         app.buttons["Cancel"].click(); XCTAssertTrue(report.waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["plannerUndo"].exists)
         app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day"]; app.launch()
-        app.outlines["Sidebar"].staticTexts["Calendar"].firstMatch.click(); XCTAssertTrue(app.buttons["plannerShowAllDay"].waitForExistence(timeout: 10)); app.buttons["plannerShowAllDay"].click()
+        app.outlines["Sidebar"].staticTexts["Calendar"].firstMatch.click(); XCTAssertTrue(app.plannerScheduleMenu.waitForExistence(timeout: 10)); app.plannerMenuCommand("plannerShowAllDay")
         XCTAssertTrue(report.waitForExistence(timeout: 5)); report.click(); XCTAssertEqual(estimate.value as? String, "25"); app.buttons["Cancel"].click()
     }
 
@@ -904,7 +913,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.shownText, "Work 480 · Tasks 90 · Unknown 1 · Calendar off")
         app.links["capacityOpenTomorrow"].click(); XCTAssertTrue(app.descendants(matching: .any)["hourlyPlanner"].firstMatch.waitForExistence(timeout: 10))
         XCTAssertEqual(app.staticTexts["plannerCapacity"].shownText, "30 min estimated · 0 without estimates")
-        app.buttons["plannerShowAllDay"].click(); XCTAssertTrue(app.buttons["plannerAllDay-capacity-tomorrow"].waitForExistence(timeout: 5))
+        app.plannerMenuCommand("plannerShowAllDay"); XCTAssertTrue(app.buttons["plannerAllDay-capacity-tomorrow"].waitForExistence(timeout: 5))
         app.links["capacityOpenToday"].click()
         let capacity = app.staticTexts["plannerCapacity"]
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR label == %@", "90 min estimated · 1 without estimates", "90 min estimated · 1 without estimates"), object: capacity)], timeout: 5), .completed, capacity.shownText)
@@ -2007,7 +2016,7 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(day.waitForExistence(timeout: 5)); day.click()
         XCTAssertTrue(calendarModeSelected(app, "Day"), "Calendar view should be Day")
         XCTAssertTrue(app.descendants(matching: .any)["hourlyPlanner"].firstMatch.waitForExistence(timeout: 5))
-        app.buttons["plannerShowAllDay"].click()
+        app.plannerMenuCommand("plannerShowAllDay")
         let task = app.buttons["Prepare report"]
         XCTAssertTrue(task.waitForExistence(timeout: 5)); task.click()
         let title = app.textFields["taskTitle"]

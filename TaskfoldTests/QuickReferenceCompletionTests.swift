@@ -15,6 +15,26 @@ final class QuickReferenceCompletionTests: XCTestCase {
         let parsed = QuickEntry(chosen.text, context: c)
         XCTAssertEqual(parsed.title, "Plan"); XCTAssertEqual(parsed.updates["project_id"], .string("home")); XCTAssertTrue(parsed.warnings.isEmpty)
     }
+    func testUnknownLabelOffersCreateAndInsertsQuotedReference() {
+        let result = QuickReferenceCompletion("Call mum @Family", context: context())
+        XCTAssertEqual(result.options.count, 1)
+        let option = result.options[0]
+        XCTAssertTrue(option.createsLabel)
+        XCTAssertEqual(option.name, "＋ Create label “Family”")
+        XCTAssertEqual(option.reference, "@\"Family\"")
+        let chosen = result.choosing(option, in: "Call mum @Family")!
+        XCTAssertEqual(chosen.text, "Call mum @\"Family\" ")
+        XCTAssertEqual(QuickEntry(chosen.text, context: context()).updates["labels"]?.list.map(\.text), ["Family"])
+        XCTAssertTrue(QuickReferenceCompletion("Call #Family", context: context()).options[0].createsLabel)
+    }
+    func testCreateLabelIsNotOfferedWhenAnythingMatchesOrNameIsUnusable() {
+        XCTAssertFalse(QuickReferenceCompletion("Plan @Client", context: context()).options.contains { $0.createsLabel })
+        XCTAssertTrue(QuickReferenceCompletion("Plan @", context: context()).options.allSatisfy { !$0.createsLabel })
+        XCTAssertTrue(QuickReferenceCompletion("Plan #project:Nope", context: context()).options.isEmpty)
+        XCTAssertNil(QuickReferenceCompletion.newLabelName("  "))
+        XCTAssertNil(QuickReferenceCompletion.newLabelName(String(repeating: "x", count: 61)))
+        XCTAssertEqual(QuickReferenceCompletion.newLabelName(" Family "), "Family")
+    }
     func testPartialQuotedNamesAndUnicodeCursorPreserveSuffix() {
         let input = "☎️ Review #\"Client W\" tomorrow p1"
         let caret = (input as NSString).range(of: "W\"").location + 1

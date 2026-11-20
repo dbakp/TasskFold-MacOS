@@ -19,10 +19,13 @@ struct HabitsView: View {
         VStack(spacing: 0) {
             if let id = detail, let reading = readings.first(where: { $0.habitID == id }) {
                 detailView(reading, calendar: calendar)
-            } else if readings.isEmpty {
-                HabitsEmptyState()
             } else {
-                list(readings, calendar: calendar)
+                // The same in-content title as every other list (mac-r2 L-3).
+                ListTitleHeader(title: "Habits", subtitle: subtitle(readings.count))
+                    .padding(.leading, DS.Space.s).padding(.trailing, DS.Space.xxl).padding(.top, DS.Space.l).padding(.bottom, DS.Space.xs)
+                    .padding(.horizontal, DS.Space.xl)
+                    .frame(maxWidth: 680).frame(maxWidth: .infinity)
+                if readings.isEmpty { HabitsEmptyState(newHabit: newHabit) } else { list(readings, calendar: calendar) }
             }
         }
         .background(Color(nsColor: .textBackgroundColor))
@@ -37,6 +40,13 @@ struct HabitsView: View {
         .onChange(of: readings.count) { _, count in if workspace.section == .habits { workspace.navigationSubtitle = subtitle(count) } }
         .onChange(of: detail) { _, _ in focused = true }
         .accessibilityIdentifier("habitsView")
+    }
+    /// Quick Add in Inbox, pre-filled with "every day " so the task repeats and can be tracked as a habit (mac-r2 L-5).
+    private func newHabit() {
+        workspace.section = .inbox
+        workspace.quickAdd = "every day "
+        workspace.quickAddPrefilled = true
+        workspace.quickAddFocusRequest += 1
     }
     private func subtitle(_ count: Int) -> String { count == 1 ? "1 habit" : "\(count) habits" }
 
