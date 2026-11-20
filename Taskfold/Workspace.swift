@@ -1068,7 +1068,7 @@ enum CalendarMode: String, CaseIterable, Identifiable {
     var days: Int? { switch self { case .day: return 1; case .threeDay: return 3; case .fiveDay: return 5; case .week: return 7; default: return nil } }
 }
 
-enum SettingsTab: String { case general, appearance, account, privacy, imports, invitations, swipes }
+enum SettingsTab: String { case general, appearance, account, privacy, imports, invitations }
 
 extension Workspace {
     /// Subtasks are rows: depth is the number of ancestors by `parent_id`.

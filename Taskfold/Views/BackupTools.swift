@@ -179,15 +179,17 @@ struct BackupTools: View {
                     ui.confirmingRepair=true
                 }.accessibilityIdentifier("preserveUnreadableWorkspace")
             }
-            if store.audioDraftsEnabled {
+            if store.audioDraftsEnabled && store.signedIn && !store.localMode && store.audioLibraryScope() != nil {
                 Button("Private recordings", systemImage: "waveform") {
                     if let scope = store.audioLibraryScope() { audioLibrary = .init(scope: scope) }
                 }.disabled(store.audioLibraryScope() == nil).accessibilityIdentifier("openPrivateAudioLibrary")
                     .sheet(item: $audioLibrary) { PrivateAudioLibraryView(request: $0) }
             }
-            Button("Saved team drafts",systemImage:"doc.text") {showingTeamDrafts=true}
-                .disabled(store.teamDraftVault == nil).accessibilityIdentifier("savedTeamDrafts")
-                .sheet(isPresented:$showingTeamDrafts){SavedTeamDraftsView()}
+            if store.teamDraftVault != nil {
+                Button("Saved team drafts",systemImage:"doc.text") {showingTeamDrafts=true}
+                    .accessibilityIdentifier("savedTeamDrafts")
+                    .sheet(isPresented:$showingTeamDrafts){SavedTeamDraftsView()}
+            }
             Button("Back up now", systemImage: "externaldrive.badge.checkmark") { run { _ = try await store.makeRecoveryBackup(); await refreshHistory(); message = "Recovery copy saved on this device." } }
                 .accessibilityIdentifier("backupNow").disabled(store.workspaceNeedsRepair)
             Button("Export workspace", systemImage: "square.and.arrow.up") {

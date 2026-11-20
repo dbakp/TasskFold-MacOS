@@ -15,7 +15,6 @@ struct SettingsView: View {
             AccountRemovalRecoveryBanner()
             TabView(selection: $workspace.settingsTab) {
                 GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(SettingsTab.general)
-                MacSwipeSettings().tabItem { Label("Swipes", systemImage: "hand.draw") }.tag(SettingsTab.swipes)
                 AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag(SettingsTab.appearance)
                 AccountSettings().tabItem { Label("Account", systemImage: "person.crop.circle") }.tag(SettingsTab.account)
                 PrivacySettings().tabItem { Label("Privacy", systemImage: "hand.raised") }.tag(SettingsTab.privacy)
@@ -24,11 +23,43 @@ struct SettingsView: View {
             }
         }
         .frame(width: 620, height: 560)
+        #if DEBUG
+        .task { await captureSettingsPane() }
+        #endif
         .alert("Something needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
             Button("OK") { store.error = nil }
         } message: { Text(store.error ?? "") }
     }
 }
+
+#if DEBUG
+extension SettingsView {
+    /// `--open-settings=<tab> --capture-settings=general|appearance|account|privacy|import|invitations[:name.png]`: hosts that pane alone, offscreen,
+    /// and writes a PNG to the temp directory (the Settings window itself cannot be captured).
+    @MainActor fileprivate func captureSettingsPane() async {
+        guard let spec = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--capture-settings=") }).map({ String($0.dropFirst(19)) }) else { return }
+        let parts = spec.split(separator: ":").map(String.init)
+        let pane: AnyView
+        switch parts[0] {
+        case "appearance": pane = AnyView(AppearanceSettings())
+        case "account": pane = AnyView(AccountSettings())
+        case "privacy": pane = AnyView(PrivacySettings())
+        case "import": pane = AnyView(ImportSettings())
+        case "invitations": pane = AnyView(AccountToolsSettings())
+        default: pane = AnyView(GeneralSettings())
+        }
+        try? await Task.sleep(for: .seconds(2))
+        let size = NSSize(width: 620, height: 520)
+        let host = NSHostingView(rootView: pane.environment(store).environment(workspace).environment(\.controlActiveState, .key).frame(width: size.width, height: size.height).background(Color(nsColor: .windowBackgroundColor)))
+        host.frame = NSRect(origin: .zero, size: size)
+        let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+        panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+        try? await Task.sleep(for: .seconds(1.5))
+        let name = parts.count > 1 ? parts[1] : "settings-\(parts[0]).png"
+        if let png = DebugCapture.upright(host) { try? png.write(to: FileManager.default.temporaryDirectory.appending(path: name)) }
+    }
+}
+#endif
 
 struct GeneralSettings: View {
     @Environment(Store.self) private var store
@@ -72,6 +103,7 @@ struct GeneralSettings: View {
                 Text("Open a workspace to change date and reminder preferences.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            MacSwipeSettings()
             Section {
                 Button("Show Starter Project") { workspace.openStarterProject(); NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
                     .disabled(!store.signedIn)
@@ -326,9 +358,10 @@ struct ImportSettings: View {
     @Environment(Store.self) private var store
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Import from Todoist").accessibilityIdentifier("todoistImportSettings").font(.title2.weight(.semibold)).padding(.horizontal, 20).padding(.top, 16)
+            Text("Import from Todoist").accessibilityIdentifier("todoistImportSettings").font(.title2.weight(.semibold)).frame(maxWidth: .infinity, alignment: (store.localMode || !store.signedIn) && !store.todoistImportFixture ? .center : .leading).padding(.horizontal, 20).padding(.top, 16)
             if (store.localMode || !store.signedIn) && !store.todoistImportFixture {
                 AccountRequiredView(title: "Bring your tasks to Taskfold", detail: "Sign in to preview and import your Todoist projects, sections, labels, tasks, subtasks, and comments.")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else { TodoistImportView() }
         }
     }

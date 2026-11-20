@@ -19,9 +19,16 @@ struct AppearanceSettings: View {
                 Toggle("Day ring", isOn: $showDayRing).accessibilityIdentifier("showDayRingToggle").help(DayRingSetting.footer)
             }
             Section("Accent") {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
-                    ForEach(Color.accents, id: \.key) { option in swatch(option.key, option.name, option.color) }
-                }.padding(.vertical, 5)
+                let rows = Color.accents.chunked(into: 4)
+                Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
+                    ForEach(rows.indices, id: \.self) { row in
+                        GridRow {
+                            ForEach(rows[row], id: \.key) { option in
+                                swatch(option.key, option.name, option.color).gridColumnAlignment(.leading)
+                            }
+                        }
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
                 LabeledContent("Custom") {
                     // A custom colour applies as you pick it, and is kept in the recent colours below.
                     Button {
@@ -84,5 +91,11 @@ struct AppearanceSettings: View {
         NSColorPanel.shared.setTarget(nil)
         NSColorPanel.shared.setAction(nil)
         changed = nil
+    }
+}
+
+private extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map { Array(self[$0..<Swift.min($0 + size, count)]) }
     }
 }
