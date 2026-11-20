@@ -205,7 +205,14 @@ I'd finish the subtask migration, because it protects data. The rest should ship
     - The period subtitles show the exact dates.
   - [x] L-1: click a row, then press Space to complete it.
   - [x] IQ-1: Add ▸ Subtask, Comment, Waiting on and Blocker focus their own field.
-- **Next:** PR 2 (sign-in screen and account entry points) and PR 3 (starter-project onboarding) wait for your mockup review. PR 4 is polish.
+- [x] **PR 2, sign-in screen and account entry points** (OA-2 to OA-10, OA-12, OA-13, S-6, O-2; Mac and iOS):
+  - [x] Two-pane Mac sign-in (Fraunces headings, no watermark) and a compact "Sign in to sync" sheet; iOS gets the equivalent screen and sheet.
+  - [x] Create account with a live password rule, Forgot password by 6-digit code (Core `Backend.verifyRecovery`), plain-word errors, separate Google and email spinners.
+  - [x] Google is gated on `Backend.authProviders()` (cached 24 hours; offline leaves it enabled).
+  - [x] Local mode: "Not synced / Sign in" card (Mac sidebar, iOS Browse and Settings), ⌘⇧L, "Close Local Workspace" instead of the red "Leave", and an offer to bring local tasks into the account (`LocalWorkspaceTransfer`).
+  - [x] The always-on "Synced" label is gone. A dot on the account button appears only for a sync problem, explained in its menu or Settings (`SyncIssue`, `NWPathMonitor`, no polling).
+  - [ ] Owner: the hosted password-reset email template must include `{{ .Token }}` for the code flow; until then the emailed link is the fallback. Turning on Google in hosted Supabase is also the owner's call.
+- **Next:** PR 3 (starter-project onboarding). PR 4 is polish.
 
 ## Phase 0 outcome (10 November 2026)
 - **Baseline.**

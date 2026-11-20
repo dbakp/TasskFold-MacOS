@@ -117,7 +117,7 @@ struct SidebarView: View {
             } header: { Text("Browse") }
         }
         .listStyle(.sidebar)
-        SyncFooter(foot: true)
+        SyncFooter()
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $labelEditor) { NamedEditor(table: "labels", record: $0) }
@@ -211,69 +211,57 @@ struct TaskDropTarget<Content: View>: View {
     }
 }
 
-/// The sync line at the foot of the sidebar: online state, pending changes, and a retry when sync pauses.
+/// The sidebar foot. Signed in: the account chip and the tools menu, with no sync text; a problem shows as a dot on the
+/// chip and is explained in its menu. Local mode: a calm "Not synced" card that leads to the sign-in sheet.
 struct SyncFooter: View {
     @Environment(Store.self) private var store
-    /// Screenshot fixture (`--capture-sync-status=synced|syncing|offline|pending`); nil in the app.
+    @Environment(Workspace.self) private var workspace
+    /// Screenshot fixture (`--capture-sidebar-foot=local|signed`); nil in the app.
     var preview: String? = nil
-    /// The sidebar foot: the account chip leads, and the tools menu ("⋯") trails the sync line.
-    var foot = false
+    private var isLocal: Bool { preview != nil ? preview == "local" : store.localMode }
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Divider()
-            HStack(spacing: foot ? 8 : 6) {
-                if foot && preview == nil { AccountMenu(compact: true) }
-                Button { Task { await store.sync() } } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: symbol)
-                            .foregroundStyle(store.notice != nil && preview == nil ? .orange : .secondary)
-                            .symbolEffect(.pulse, options: .repeating, isActive: presentation.state == .syncing) // opacity only: no spinning
-                            .id(symbol).transition(.iconSwap)
-                        Group {
-                            if presentation.state == .syncing { ShimmerText(text: status) }
-                            else { Text(status).lineLimit(2).fixedSize(horizontal: false, vertical: true).id(status).transition(.textSwap) }
-                        }
-                        Spacer(minLength: 0)
-                    }.contentShape(.rect)
+            if isLocal { LocalSignInCard(preview: preview != nil) }
+            else {
+                Divider()
+                HStack(spacing: 8) {
+                    if preview == nil { AccountMenu(compact: true) }
+                    Spacer(minLength: 0)
+                    if preview == nil { SidebarToolsMenu() }
                 }
-                .buttonStyle(.plain).disabled(!canSyncNow)
-                .accessibilityLabel(status).accessibilityValue(presentation.help ?? "")
-                .accessibilityIdentifier("syncStatus")
-                if preview == nil {
-                    // Conflicts merge automatically (latest edit wins); there is nothing to review.
-                    if store.canSignInForSync { SyncSignInButton().buttonStyle(.link).font(.caption) }
-                    else if store.notice != nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
-                }
-                if foot && preview == nil { SidebarToolsMenu() }
+                .padding(.horizontal, 12).padding(.vertical, 8)
             }
-            .font(.caption).foregroundStyle(.secondary)
-            .padding(.horizontal, foot ? 12 : 14).padding(.vertical, 8)
-            .animation(Transitions.Ease.smoothOut, value: symbol)
-            .animation(Transitions.Ease.smoothOut, value: status)
-            .help(helpText)
             if preview == nil { TeamAudioRestoreRecoveryButton().buttonStyle(.link).font(.caption).padding(.horizontal, 14).padding(.bottom, 8) }
         }
-        .background(foot ? AnyShapeStyle(.clear) : AnyShapeStyle(.bar))
     }
-    private var canSyncNow: Bool { preview != nil || (!store.localMode && store.signedIn && store.online && !store.syncing) }
-    private var presentation: SyncStatus.Presentation {
-        #if DEBUG
-        if let preview {
-            return SyncStatus.presentation(local: false, online: preview != "offline", syncing: preview == "syncing", needsAttention: false,
-                                           pending: preview == "offline" ? 3 : preview == "pending" ? 2 : 0, lastSync: Date())
+}
+
+/// Local mode's way back to sign-in (OA-2): "Not synced", where the tasks are, and a Sign In… button.
+struct LocalSignInCard: View {
+    @Environment(Workspace.self) private var workspace
+    var preview = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Image(systemName: "laptopcomputer").foregroundStyle(DS.Palette.textSecondary)
+                Text("Not synced").font(.system(size: 13, weight: .semibold))
+                Spacer(minLength: 0)
+                if !preview { SidebarToolsMenu() }
+            }
+            Text("Tasks are saved only on this Mac.").font(.system(size: 11)).foregroundStyle(DS.Palette.textSecondary).padding(.leading, 26)
+            HStack {
+                Button("Sign In…") { workspace.presentSignIn() }
+                    .buttonStyle(.bordered).controlSize(.small).accessibilityIdentifier("sidebarSignIn")
+                Spacer()
+                Text("⇧⌘L").font(.system(size: 11)).foregroundStyle(DS.Palette.textTertiary)
+            }.padding(.leading, 26).padding(.top, 4)
         }
-        #endif
-        return SyncStatus.presentation(local: store.localMode, online: store.online, syncing: store.syncIndicatorVisible,
-                                       needsAttention: store.notice != nil || store.canSignInForSync, pending: store.pendingCount, lastSync: store.lastSync)
+        .padding(12)
+        .background(DS.Palette.surfaceRaised, in: .rect(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(DS.Palette.separator.opacity(0.6), lineWidth: 0.5))
+        .padding(.horizontal, 8).padding(.bottom, 8)
+        .accessibilityElement(children: .contain).accessibilityIdentifier("localSignInCard")
     }
-    private var helpText: String {
-        if preview == nil, let notice = store.notice { return notice }
-        if store.localMode && preview == nil { return "Tasks are stored only on this Mac." }
-        let detail = presentation.help ?? presentation.title
-        return canSyncNow && presentation.state != .syncing ? detail + ". Click to sync now (⌘R)." : detail
-    }
-    private var symbol: String { presentation.symbol }
-    private var status: String { presentation.title }
 }
 
 /// A sidebar section header with a "+" that appears on hover (still reachable by VoiceOver and the keyboard).
@@ -305,11 +293,17 @@ struct SidebarToolsMenu: View {
     var body: some View {
         let unread = store.mentionUnreadCount ?? 0
         Menu {
-            Button(unread > 0 ? "Mentions (\(unread) unread)" : "Mentions", systemImage: "at") { workspace.toolRequest = .mentions }.accessibilityIdentifier("openMentions")
+            if store.localMode {
+                Button("Sign In to Sync…", systemImage: "person.crop.circle") { workspace.presentSignIn() }.accessibilityIdentifier("toolsSignIn")
+            } else {
+                Button(unread > 0 ? "Mentions (\(unread) unread)" : "Mentions", systemImage: "at") { workspace.toolRequest = .mentions }.accessibilityIdentifier("openMentions")
+            }
             Button("Weekly review", systemImage: "checklist") { workspace.toolRequest = .weeklyReview }.accessibilityIdentifier("openWeeklyReview")
             Button("Insights", systemImage: "chart.xyaxis.line") { workspace.toolRequest = .insights }.accessibilityIdentifier("openInsights")
             Button("Templates", systemImage: "square.stack.3d.up") { workspace.toolRequest = .templates }.accessibilityIdentifier("openTemplates")
-            Button(store.sharedCaptureDraftCount > 0 ? "Shared drafts (\(store.sharedCaptureDraftCount))" : "Shared drafts", systemImage: "square.and.arrow.down") { workspace.toolRequest = .sharedDrafts }.accessibilityIdentifier("openSharedDrafts")
+            if !store.localMode {
+                Button(store.sharedCaptureDraftCount > 0 ? "Shared drafts (\(store.sharedCaptureDraftCount))" : "Shared drafts", systemImage: "square.and.arrow.down") { workspace.toolRequest = .sharedDrafts }.accessibilityIdentifier("openSharedDrafts")
+            }
             Divider()
             Button("Pinned notes", systemImage: "pin") { workspace.toolRequest = .pinnedNotes }.accessibilityIdentifier("openPinnedNotes")
             Button("Project pulse", systemImage: "chart.bar") { workspace.toolRequest = .projectPulse }.accessibilityIdentifier("openProjectPulse")
