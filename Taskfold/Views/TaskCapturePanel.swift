@@ -300,6 +300,7 @@ struct TaskCapturePanel: View {
         .onKeyPress(.space) { guard !tokens.isEmpty else { return .ignored }; declineAll(tokens); return .handled }
         .onKeyPress(.delete) { guard !tokens.isEmpty else { return .ignored }; declineAll(tokens); return .handled }
         .onKeyPress(.deleteForward) { guard !tokens.isEmpty else { return .ignored }; declineAll(tokens); return .handled }
+        .onDeleteCommand { guard !tokens.isEmpty else { return }; declineAll(tokens) }
         .onKeyPress(.return) { guard !tokens.isEmpty else { return .ignored }; action(); return .handled }
         .onKeyPress(.escape) { guard !tokens.isEmpty else { return .ignored }; resumeDraftFromChip(); return .handled }
         .accessibilityElement(children: .contain)
