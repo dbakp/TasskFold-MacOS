@@ -213,6 +213,13 @@ final class Workspace {
     var planning: PlanKind?
     /// Presents the end-of-day shutdown review.
     var shuttingDown = false
+    /// Today's "Plan your day" tray (day-ring frame C): candidates to drag onto the ring. ⌘P on Today toggles it.
+    var planTrayShown = false
+    /// A task held over Today's ring: its ids and where the pointer is in the header. Nil when nothing is over the ring.
+    struct RingDrop: Equatable { var ids: [String]; var location: CGPoint? }
+    var ringDrop: RingDrop?
+    /// The task just planned onto the ring; its segment fills in once (frame D), then this clears.
+    var justPlanned: String?
     /// Brain dump and Smart reschedule: on-device proposals the person reviews before anything is saved.
     var brainDump: BrainDumpRequest?
     var smartReschedule: SmartRescheduleRequest?
@@ -661,19 +668,52 @@ final class Workspace {
         } catch { store.error = error.localizedDescription }
         return true
     }
-    func reschedule(_ ids: Set<String>, to day: String?, label: String) {
+    func reschedule(_ ids: Set<String>, to day: String?, label: String, message: String? = nil) {
         if reviewSharedPlanning(ids, title: day == nil ? "Remove dates" : "Move to \(label)", fields: { TeamTaskBatch.dateFields(task: $0, day: day) }) { return }
         if hierarchyPresentation {
             guard runSelection(ids, name: "Reschedule", action: { task in .patch(day.map { TaskPlanner.dayFields(task: task, day: $0) } ?? ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null]) }) else { return }
-            Feedback.drop(); confirm(day == nil ? "Removed dates" : "Moved to \(label)"); return
+            Feedback.drop(); confirm(message ?? (day == nil ? "Removed dates" : "Moved to \(label)")); return
         }
         let changes = ids.compactMap { taskRecord($0) }.map { task in
             Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: day.map { TaskPlanner.dayFields(task: task, day: $0) } ?? ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null])
         }.filter { !$0.fields.isEmpty }
         withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { run("Reschedule") { if !changes.isEmpty { store.commit(changes) } } }
         Feedback.drop()
-        confirm(day == nil ? "Removed dates" : ids.count == 1 ? "Moved to \(label)" : "Moved \(ids.count) tasks to \(label)")
+        confirm(message ?? (day == nil ? "Removed dates" : ids.count == 1 ? "Moved to \(label)" : "Moved \(ids.count) tasks to \(label)"))
     }
+    // MARK: Plan into the ring (day-ring frames C, D and E)
+
+    /// Tasks in `ids` that are not already planned for today, in list order.
+    func ringPlannable(_ ids: [String]) -> [Record] {
+        let today = store.calendarContext.today
+        return ids.compactMap { taskRecord($0) }.filter { Planning.eligible($0) && TaskPlanner.plannedDay($0) != today }
+    }
+    /// Drop onto the ring: schedules the tasks for today, one undo step, with "Planned “title” for today · 45m" and Undo.
+    @discardableResult
+    func planIntoToday(_ ids: [String]) -> Bool {
+        let tasks = ringPlannable(ids)
+        guard let first = tasks.first else { return false }
+        let today = store.calendarContext.today
+        let message = tasks.count == 1 ? DayPlan.plannedToast(title: first.title, minutes: first.durationMinutes) : "Planned \(tasks.count) tasks for today"
+        reschedule(Set(tasks.map(\.id)), to: today, label: "Today", message: message)
+        guard tasks.contains(where: { TaskPlanner.plannedDay(taskRecord($0.id) ?? $0) == today }) else { return false }
+        justPlanned = first.id
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.6))
+            if self?.justPlanned == first.id { self?.justPlanned = nil }
+        }
+        return true
+    }
+    /// "Fix it…" on an overbooked day (frame E): moves the suggested tasks to tomorrow as one undo step.
+    func fixOverbooked(_ tasks: [Record]) {
+        guard !tasks.isEmpty else { return }
+        if reviewSharedPlanning(Set(tasks.map(\.id)), title: "Move to Tomorrow", fields: { TaskPlanner.tomorrowFields(task: $0) }) { return }
+        var saved = false
+        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { run("Move to Tomorrow") { saved = store.moveToTomorrow(tasks) } }
+        guard saved else { return }
+        Feedback.drop(); confirm(DayPlan.overflowFixToast(tasks))
+    }
+
     // MARK: This Evening and Someday
 
     private func inListOrder(_ ids: Set<String>) -> [String] { store.tasks.map(\.id).filter(ids.contains) }

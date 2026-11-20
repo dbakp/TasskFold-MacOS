@@ -51,6 +51,10 @@ Use `.continuous` style for every rounded rectangle.
 | `chip` | `.caption.weight(.medium)` |
 | `badge` | `.caption2.weight(.semibold).monospacedDigit()` |
 | `inspectorLabel` | `.subheadline` (Mac) / `.body` (iOS) |
+| `heroTitle` (Mac only) | `Font.custom("Fraunces-SemiBold", size: 30, relativeTo: .largeTitle)`, Today's title beside the 72 pt day ring |
+| `heroFigure` / `heroFigureRest` (Mac only) | `.title3.weight(.semibold)` / `.body`, both tabular: "**4h 30m** of 7h 30m" |
+| `heroMeta` (Mac only) | `.callout`, tabular: "3h free · 1h 30m done", the overbooked suggestion and the empty day's teaching line |
+| `rowEstimate` (Mac only) | `.footnote`, tabular: the "45m" at the end of a Today row and on Plan your day's rows |
 
 ### Screen-title face: Fraunces
 - Screen titles use Fraunces, a display serif. Everything else, including task titles, buttons and controls, stays SF.
@@ -80,6 +84,10 @@ Use `.continuous` style for every rounded rectangle.
 | `accentSecondary` | teal. Quick Add highlight for `#project` and `/section` |
 | `label` | purple. Quick Add highlight for `@label` |
 | `selectionFill` | accent at 0.14 opacity (light) / 0.22 opacity (dark). The selected row keeps primary text colour, never white on light grey. |
+| `hoverFill` (Mac only) | ink at 0.05 / 0.06: a hovered Today row, while its ring segment lifts |
+| `chipFill` (Mac only) | ink at 0.07 / 0.10: an inline chip such as the "30m" in the empty day's line |
+| `tooltip` / `onTooltip` (Mac only) | ink / ground: the "Drop to plan" tooltip over the day ring |
+| `tray` / `card` (Mac only) | ink at 0.045 / 0.04 over `surface` / `Brand.surface`: the Plan your day tray and its rows |
 
 Priority, accent and project palettes keep their current values and stay where they are. `DS.Palette` gets `priority(_:)` and `accent` passthroughs.
 
@@ -92,6 +100,9 @@ Priority, accent and project palettes keep their current values and stay where t
 | `rowVerticalPadding` roomy / compact | 8 / 4 | 10 / 6 |
 | `rowHorizontalPadding` | `Space.m` | `Space.l` |
 | `contentMaxWidth` | 860 | — |
+| `planTrayWidth` | 290 | — |
+| `estimatePip` | 3 × 16, 0.55 opacity while open, 1 when done (`estimatePipOpenOpacity`) | — |
+| `ringDropScale` | 1.08: the day ring while a task is held over it | — |
 
 ## Motion
 Keep each platform's existing `Motion` values; Mac stays shorter and subtler on purpose. Add these aliases so code reads the same on both platforms:

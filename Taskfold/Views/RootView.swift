@@ -532,6 +532,7 @@ struct RootView: View {
                 try store.persist(); workspace.section = .today
             } catch { store.error = error.localizedDescription }
         }
+        if arguments.contains("--uitesting") && DayRingFixture.frame != nil { store.startLocal(persist: false); DayRingFixture.apply(store: store, workspace: workspace) }
         if arguments.contains("--uitesting") && arguments.contains("--workflow-diagnostics") { try? store.persist() }
         if arguments.contains("--uitesting") && arguments.contains("--quick-entry-fixture") {
             store.startLocal(persist: false); store.snapshot = Snapshot.quickEntryFixture(user: store.userID); workspace.section = .inbox
@@ -792,6 +793,8 @@ struct RootView: View {
                 store.snapshot.tables["tasks"] = DayPlanFixture.tasks(user: store.userID, shutdown: DayPlanFixture.step == "shutdown")
                 store.snapshot.tables["projects"] = (store.snapshot.tables["projects"] ?? []).filter { !$0.id.hasPrefix("dayplan-") } + DayPlanFixture.projects(user: store.userID)
             }
+            // Day-ring captures: --day-ring-fixture=a|c|d|e|f replaces the samples with the approved mockup's day (see DayRingFixture).
+            DayRingFixture.apply(store: store, workspace: workspace)
             // On-device AI captures: --ai-fixture seeds seven overdue tasks and two for today, keyed to today's date.
             if AIFixture.enabled { store.snapshot.tables["tasks"] = AIFixture.tasks(user: store.userID, today: store.calendarContext.today) }
             // Momentum captures: --momentum-fixture=streak|vacation|milestone adds a recorded history and goals.

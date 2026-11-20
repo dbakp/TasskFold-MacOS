@@ -248,7 +248,9 @@ struct TaskfoldCommands: Commands {
                 .disabled(NSApp.keyWindow?.firstResponder?.undoManager?.canRedo != true)
         }
         CommandGroup(replacing: .printItem) {
-            Button("Print or Export…") { printAction?.perform() }.keyboardShortcut("p", modifiers: .command).disabled(printAction?.isEnabled != true)
+            // On Today, ⌘P is Plan (day-ring design); Print or Export stays in this menu and keeps ⌘P everywhere else.
+            Button("Print or Export…") { printAction?.perform() }
+                .keyboardShortcut(workspace.section == .today ? nil : KeyboardShortcut("p", modifiers: .command)).disabled(printAction?.isEnabled != true)
         }
         CommandGroup(replacing: .newItem) {
             Button("New Task") { workspace.quickAddFocusRequest += 1 }.keyboardShortcut("n", modifiers: .command)
@@ -362,6 +364,9 @@ struct TaskfoldCommands: Commands {
                     .disabled(!workspace.availableLayouts.contains(layout))
             }
             Divider()
+            Button(workspace.planTrayShown ? "Done Planning" : "Plan Into the Ring") { workspace.planTrayShown.toggle() }
+                .keyboardShortcut(workspace.section == .today ? KeyboardShortcut("p", modifiers: .command) : nil)
+                .disabled(!store.signedIn || workspace.section != .today)
             Button("Plan Your Day…") { workspace.planning = .day }.keyboardShortcut("p", modifiers: [.command, .option]).disabled(!store.signedIn)
             Button("Review This Week…") { workspace.planning = .week }.keyboardShortcut("w", modifiers: [.command, .option]).disabled(!store.signedIn)
             Button("Reschedule Overdue Smartly…") { workspace.openSmartReschedule() }.disabled(!store.signedIn)

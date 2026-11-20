@@ -28,6 +28,12 @@ struct TodayRingView: View {
     var flight: FoldFlight? = nil
     /// An overbooked day (Upcoming, Weekly review): the ring is closed and a thin crimson arc outside it is as long as the overflow.
     var showsOverflow = false
+    /// The segment of a hovered row (day-ring frame A): it stays at full strength and lifts; the others dim to 45%.
+    var focusID: String? = nil
+    /// The segment a task held over the ring would fill (frame C): drawn lit and hollow, with a glow in its colour.
+    var ghostID: String? = nil
+    /// A segment just planned (frame D): it fills in along the arc, lit, then settles. Not with Reduce Motion.
+    var freshID: String? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Stroke widths scale with the ring, so a 28pt Calendar ring keeps the same proportions as the 72pt one.
@@ -50,21 +56,29 @@ struct TodayRingView: View {
                     .stroke(DS.Palette.textTertiary, style: StrokeStyle(lineWidth: CGFloat(Brand.Ring.remainderWidth), lineCap: .round, dash: [2, 3]))
             }
             ForEach(ring.segments) { segment in
+                let ghost = segment.id == ghostID
                 let done = (segment.done && !pending.contains(segment.id)) || filling.contains(segment.id)
-                let width = done ? doneWidth : openWidth
+                let width = ghost ? doneWidth * 1.05 : done ? doneWidth : openWidth
                 // Round caps reach half a stroke past each end, so inset by that plus half the 2pt gap.
                 let inset = (Double(Brand.Ring.gap) * Double(scale) / 2 + Double(width) / 2) / circumference
                 let gapless = ring.segments.count == 1 && segment.length >= 0.999
                 let mid = segment.start + segment.length / 2
                 let from = gapless ? 0 : min(mid, segment.start + inset), to = gapless ? 1 : max(mid, segment.start + segment.length - inset)
                 let colour = hue(segment.projectID).color
-                let arc = Circle().trim(from: from, to: to).rotation(.degrees(-90))
-                ZStack {
-                    arc.stroke(colour, style: StrokeStyle(lineWidth: width, lineCap: gapless ? .butt : .round))
-                    // Done segments are lit: a highlight from the top left, within the hue.
-                    arc.stroke(LinearGradient(colors: [.white.opacity(0.42), .white.opacity(0)], startPoint: .topLeading, endPoint: .center),
-                               style: StrokeStyle(lineWidth: width, lineCap: gapless ? .butt : .round))
-                        .opacity(done ? 1 : 0)
+                if ghost {
+                    // The ghost: lit in the project colour with a soft glow, hollowed by a ground-coloured core.
+                    let arc = Circle().trim(from: from, to: to).rotation(.degrees(-90))
+                    ZStack {
+                        arc.stroke(colour.opacity(0.9), style: StrokeStyle(lineWidth: width, lineCap: .round))
+                            .shadow(color: colour.opacity(0.7), radius: size / 18)
+                        arc.stroke(DS.Palette.surface, style: StrokeStyle(lineWidth: max(1, doneWidth * 0.38), lineCap: .round))
+                    }
+                    .transition(.opacity)
+                } else {
+                    RingSegmentArc(from: from, to: to, width: width, openWidth: openWidth, colour: colour, done: done, gapless: gapless,
+                                   fresh: segment.id == freshID && !reduceMotion)
+                        .opacity(focusID == nil || focusID == segment.id ? 1 : 0.45)
+                        .shadow(color: focusID == segment.id ? colour.opacity(0.45) : .clear, radius: focusID == segment.id ? 3 : 0)
                 }
             }
         }
@@ -91,7 +105,50 @@ struct TodayRingView: View {
         .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.45, bounce: 0.18), value: ring)
         .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.4, bounce: 0.3), value: filling)
         .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.4, bounce: 0.3), value: pending)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: focusID)
+        .animation(reduceMotion ? nil : .spring(duration: 0.3, bounce: 0.2), value: ghostID)
         .accessibilityHidden(true)
+    }
+}
+
+/// One segment of the ring. A fresh segment (just planned onto the ring) grows along its arc, wide and lit, then settles
+/// to its open width; otherwise it is drawn as it is.
+private struct RingSegmentArc: View {
+    var from: Double
+    var to: Double
+    var width: CGFloat
+    var openWidth: CGFloat
+    var colour: Color
+    var done: Bool
+    var gapless: Bool
+    var fresh: Bool
+    /// 0: not yet grown, 1: grown and lit, 2: settled.
+    @State private var phase: Int
+    init(from: Double, to: Double, width: CGFloat, openWidth: CGFloat, colour: Color, done: Bool, gapless: Bool, fresh: Bool) {
+        self.from = from; self.to = to; self.width = width; self.openWidth = openWidth; self.colour = colour
+        self.done = done; self.gapless = gapless; self.fresh = fresh
+        _phase = State(initialValue: fresh ? 0 : 2)
+    }
+    var body: some View {
+        let lit = done || phase == 1
+        let end = phase == 0 ? from : to
+        let stroke = phase == 1 ? max(width, openWidth * 10 / 6) : width
+        let arc = Circle().trim(from: from, to: end).rotation(.degrees(-90))
+        ZStack {
+            arc.stroke(colour, style: StrokeStyle(lineWidth: stroke, lineCap: gapless ? .butt : .round))
+            // Done segments are lit: a highlight from the top left, within the hue.
+            arc.stroke(LinearGradient(colors: [.white.opacity(0.42), .white.opacity(0)], startPoint: .topLeading, endPoint: .center),
+                       style: StrokeStyle(lineWidth: stroke, lineCap: gapless ? .butt : .round))
+                .opacity(lit ? 1 : 0)
+        }
+        .task(id: fresh) {
+            guard fresh else { return }
+            phase = 0
+            try? await Task.sleep(for: .milliseconds(30))
+            withAnimation(.easeOut(duration: 0.45)) { phase = 1 }
+            try? await Task.sleep(for: .milliseconds(900))
+            withAnimation(.spring(duration: 0.4, bounce: 0.2)) { phase = 2 }
+        }
     }
 }
 
@@ -353,6 +410,8 @@ enum FoldMotion {
     private(set) var flights: [Flight] = []
     /// Segments whose row has arrived. A landed segment widens and lights.
     private(set) var landed: Set<String> = []
+    /// The Today row under the pointer: its segment lifts and the others dim (day-ring frame A).
+    var hoveredID: String?
     @ObservationIgnored var ringFrame: CGRect = .zero
     @ObservationIgnored var ring: TodayRing?
     /// Called when a strip lands (the medium haptic).

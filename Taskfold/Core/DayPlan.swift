@@ -733,3 +733,185 @@ enum UpcomingDayRuns {
         return items
     }
 }
+
+// MARK: - The day ring as Today's hero, and Plan into the ring (day-ring design round, frames A, C, D, E, F)
+
+/// What the Today hero says to the right of its 72pt ring: a figure ("4h 30m of 7h 30m", or "1h 15m over · 8h 45m of
+/// 7h 30m" with the lead in crimson) over one quieter line ("3h free · 1h 30m done"). An empty day (no estimates) has
+/// no figure: the header teaches instead (`isEmpty`).
+struct DayHeroFigure: Equatable, Sendable {
+    var figure: DayFigure
+    var meta: String
+    var isEmpty: Bool { figure.text.isEmpty }
+}
+
+/// The figures a drag over the ring previews: the ring with the task's lit ghost segment appended, the tooltip
+/// "Drop to plan · +45m → 5h 15m of 7h 30m", and the header figure as it would read after the drop.
+struct RingDropPreview: Equatable, Sendable {
+    /// The ring as it would be after the drop; `ghostID` names the segment to draw as the ghost (nil without an estimate).
+    var ring: TodayRing
+    var ghostID: String?
+    var addedMinutes: Int?
+    var tooltip: String
+    var hero: DayHeroFigure
+}
+
+/// Candidates for Plan your day's tray, under three headings. Every task is open, ordinary and top-level, not in
+/// Someday and not already in Today (due today, or overdue by less than `DayPlan.waitingOverdueDays`).
+struct PlanCandidates: Equatable, Sendable {
+    /// "Inbox": unscheduled work added recently (undated, created within `DayPlan.waitingUndatedDays`), newest first.
+    var inbox: [Record]
+    /// "Tomorrow": planned for tomorrow, in the given order.
+    var tomorrow: [Record]
+    /// "Waiting a while": undated for `waitingUndatedDays` or more, or overdue by `waitingOverdueDays` or more, oldest first.
+    var waiting: [Record]
+    var isEmpty: Bool { inbox.isEmpty && tomorrow.isEmpty && waiting.isEmpty }
+    var all: [Record] { inbox + tomorrow + waiting }
+}
+
+extension TodayRing {
+    /// This ring with one more task appended as the last segment. The circle is rescaled exactly as `DayPlan.ring(for:)`
+    /// would: the larger of free and planned time (planned alone without working hours). Zero or nil minutes add nothing.
+    func adding(id: String, projectID: String, minutes: Int?) -> TodayRing {
+        guard let minutes, minutes > 0 else { return self }
+        var copy = self
+        copy.plannedMinutes += minutes
+        copy.taskCount += 1
+        let whole = hasWorkingHours ? max(freeMinutes, copy.plannedMinutes) : copy.plannedMinutes
+        guard whole > 0 else { return copy }
+        var cursor = 0.0
+        copy.segments = (segments + [RingSegment(id: id, projectID: projectID, minutes: minutes, done: false, start: 0, length: 0)]).map { segment in
+            var next = segment
+            next.start = cursor
+            next.length = Double(segment.minutes) / Double(whole)
+            cursor += next.length
+            return next
+        }
+        return copy
+    }
+}
+
+extension DayPlan {
+    /// "Inbox" holds undated work younger than this many days; older undated work is "Waiting a while".
+    static let waitingUndatedDays = 14
+    /// Overdue work this many days or more is "Waiting a while"; more recent overdue work is already in Today.
+    static let waitingOverdueDays = 7
+    /// Each tray heading shows at most this many tasks.
+    static let candidateLimit = 8
+
+    /// Frame A's right-hand figure. Within the hours: "4h 30m" + " of 7h 30m" over "3h free · 1h 30m done". Overbooked
+    /// (frame E): "1h 15m over" (alert) + " · 8h 45m of 7h 30m"; the second line is then the fix suggestion, which the
+    /// caller supplies. Without working hours: "4h 30m" + " planned". Nothing estimated: empty (frame F).
+    static func heroFigure(_ ring: TodayRing, suggestion: String? = nil) -> DayHeroFigure {
+        guard ring.plannedMinutes > 0 else { return DayHeroFigure(figure: DayFigure(lead: "", rest: ""), meta: "") }
+        let done = ring.doneMinutes > 0 ? duration(ring.doneMinutes) + " done" : nil
+        guard ring.hasWorkingHours else {
+            return DayHeroFigure(figure: DayFigure(lead: ring.figure, rest: " planned"), meta: done ?? "")
+        }
+        if ring.overMinutes > 0 {
+            return DayHeroFigure(figure: DayFigure(lead: duration(ring.overMinutes) + " over", leadIsAlert: true, rest: " · \(ring.figure) of \(duration(ring.freeMinutes))"),
+                                 meta: suggestion ?? done ?? "")
+        }
+        let free = ring.freeMinutes - ring.plannedMinutes
+        let freeText = free > 0 ? duration(free) + " free" : "No free time left"
+        return DayHeroFigure(figure: DayFigure(lead: ring.figure, rest: " of " + duration(ring.freeMinutes)), meta: [freeText, done].compactMap { $0 }.joined(separator: " · "))
+    }
+
+    /// Frame C: a task held over the ring. Its estimate joins the ring as a ghost segment, the tooltip reads
+    /// "Drop to plan · +45m → 5h 15m of 7h 30m" and the header previews "5h 15m of 7h 30m" over "2h 15m free after this".
+    /// Without an estimate there is no ghost and the tooltip reads "Drop to plan · no estimate yet".
+    static func dropPreview(_ ring: TodayRing, id: String, projectID: String, minutes: Int?) -> RingDropPreview {
+        guard let minutes, minutes > 0 else {
+            return RingDropPreview(ring: ring, ghostID: nil, addedMinutes: nil, tooltip: "Drop to plan · no estimate yet", hero: heroFigure(ring))
+        }
+        let after = ring.adding(id: id, projectID: projectID, minutes: minutes)
+        let total = after.hasWorkingHours ? "\(after.figure) of \(duration(after.freeMinutes))" : "\(after.figure) planned"
+        let meta: String
+        if !after.hasWorkingHours { meta = "\(after.figure) planned after this" }
+        else if after.overMinutes > 0 { meta = "\(duration(after.overMinutes)) over after this" }
+        else if after.freeMinutes > after.plannedMinutes { meta = "\(duration(after.freeMinutes - after.plannedMinutes)) free after this" }
+        else { meta = "No free time left after this" }
+        let figure = after.hasWorkingHours ? DayFigure(lead: after.figure, rest: " of " + duration(after.freeMinutes)) : DayFigure(lead: after.figure, rest: " planned")
+        return RingDropPreview(ring: after, ghostID: id, addedMinutes: minutes, tooltip: "Drop to plan · +\(duration(minutes)) → \(total)",
+                               hero: DayHeroFigure(figure: figure, meta: meta))
+    }
+
+    /// Frame D's toast: "Planned “Draft the newsletter intro” for today · 45m".
+    static func plannedToast(title: String, minutes: Int?) -> String {
+        let name = title.isEmpty ? "Untitled task" : title
+        return "Planned \u{201C}\(name)\u{201D} for today" + (minutes.map { $0 > 0 ? " · " + duration($0) : "" } ?? "")
+    }
+
+    /// The tray's candidates on `today`. See `PlanCandidates` for the three headings and their order. `someday` is the
+    /// listed Someday ids (they stay out); each heading is capped at `limit`.
+    static func planCandidates(_ tasks: [Record], today: Date, someday: Set<String> = [], limit: Int = candidateLimit, calendar: Calendar = .current) -> PlanCandidates {
+        let todayKey = TaskPlanner.dayKey(today, calendar: calendar)
+        let start = calendar.startOfDay(for: today)
+        let tomorrowKey = calendar.date(byAdding: .day, value: 1, to: start).map { TaskPlanner.dayKey($0, calendar: calendar) } ?? ""
+        let overdueCutoff = calendar.date(byAdding: .day, value: -waitingOverdueDays, to: start).map { TaskPlanner.dayKey($0, calendar: calendar) } ?? ""
+        let undatedCutoff = calendar.date(byAdding: .day, value: -waitingUndatedDays, to: start) ?? start
+        var inbox: [(Record, String)] = [], tomorrow: [Record] = [], waiting: [(Record, String)] = []
+        for task in tasks where Planning.eligible(task) && task.string("parent_id").isEmpty && !Planning.isSomeday(task, listed: someday, calendar: calendar) {
+            let day = TaskPlanner.plannedDay(task, calendar: calendar)
+            let created = TaskPlanning.instant(task.string("created_at"))
+            if day == tomorrowKey {
+                tomorrow.append(task)
+            } else if day.isEmpty {
+                if let created, created < undatedCutoff { waiting.append((task, TaskPlanner.dayKey(created, calendar: calendar))) }
+                else { inbox.append((task, task.string("created_at"))) }
+            } else if day < todayKey && day <= overdueCutoff {
+                waiting.append((task, day))
+            }
+        }
+        let newestFirst = inbox.enumerated().sorted { $0.element.1 == $1.element.1 ? $0.offset < $1.offset : $0.element.1 > $1.element.1 }.map(\.element.0)
+        let oldestFirst = waiting.enumerated().sorted { $0.element.1 == $1.element.1 ? $0.offset < $1.offset : $0.element.1 < $1.element.1 }.map(\.element.0)
+        return PlanCandidates(inbox: Array(newestFirst.prefix(limit)), tomorrow: Array(tomorrow.prefix(limit)), waiting: Array(oldestFirst.prefix(limit)))
+    }
+
+    /// Frame E: the smallest set of today's open, unscheduled (untimed), estimated tasks whose move to tomorrow brings
+    /// the day back within its hours. One task is preferred: the smallest that is big enough on its own (the later one
+    /// on a tie). Otherwise the fewest tasks, largest first, with the last pick swapped for the smallest that still
+    /// covers the overflow. If even every candidate is not enough, all of them. Empty when the day is not over.
+    /// The result keeps the given order.
+    static func overflowFix(_ tasks: [Record], ring: TodayRing, on day: Date, calendar: Calendar = .current) -> [Record] {
+        let over = ring.overMinutes
+        guard over > 0 else { return [] }
+        let key = TaskPlanner.dayKey(day, calendar: calendar)
+        let candidates = tasks.enumerated().filter { _, task in
+            Planning.eligible(task) && TaskPlanner.plannedDay(task, calendar: calendar) == key && (task.durationMinutes ?? 0) > 0
+                && !isTimed(task, calendar: calendar) && task.string("due_time").isEmpty
+        }.map { (offset: $0.offset, task: $0.element, minutes: $0.element.durationMinutes ?? 0) }
+        guard !candidates.isEmpty else { return [] }
+        func ordered(_ picks: [(offset: Int, task: Record, minutes: Int)]) -> [Record] { picks.sorted { $0.offset < $1.offset }.map(\.task) }
+        if let single = candidates.filter({ $0.minutes >= over }).min(by: { $0.minutes == $1.minutes ? $0.offset > $1.offset : $0.minutes < $1.minutes }) {
+            return [single.task]
+        }
+        let largest = candidates.sorted { $0.minutes == $1.minutes ? $0.offset > $1.offset : $0.minutes > $1.minutes }
+        var picks: [(offset: Int, task: Record, minutes: Int)] = []
+        var total = 0
+        for candidate in largest where total < over { picks.append(candidate); total += candidate.minutes }
+        guard total >= over else { return ordered(picks) }
+        // Same count, less moved: swap the last pick for the smallest unpicked task that still covers the overflow.
+        let last = picks.removeLast(); total -= last.minutes
+        let chosen = Set(picks.map(\.offset))
+        let swap = candidates.filter { !chosen.contains($0.offset) && total + $0.minutes >= over }
+            .min { $0.minutes == $1.minutes ? $0.offset > $1.offset : $0.minutes < $1.minutes } ?? last
+        return ordered(picks + [swap])
+    }
+
+    /// Frame E's suggestion line: "Move “Rewrite the pitch deck” to tomorrow?", "Move “A” and “B” to tomorrow?", or
+    /// "Move 3 tasks to tomorrow?". Nil when there is nothing to move.
+    static func overflowSuggestion(_ tasks: [Record]) -> String? {
+        func quoted(_ task: Record) -> String { "\u{201C}" + (task.title.isEmpty ? "Untitled task" : task.title) + "\u{201D}" }
+        switch tasks.count {
+        case 0: return nil
+        case 1: return "Move \(quoted(tasks[0])) to tomorrow?"
+        case 2: return "Move \(quoted(tasks[0])) and \(quoted(tasks[1])) to tomorrow?"
+        default: return "Move \(tasks.count) tasks to tomorrow?"
+        }
+    }
+    /// The toast after Fix it: "Moved “Rewrite the pitch deck” to tomorrow" or "Moved 2 tasks to tomorrow".
+    static func overflowFixToast(_ tasks: [Record]) -> String {
+        tasks.count == 1 ? "Moved \u{201C}\(tasks[0].title.isEmpty ? "Untitled task" : tasks[0].title)\u{201D} to tomorrow" : "Moved \(tasks.count) tasks to tomorrow"
+    }
+}
