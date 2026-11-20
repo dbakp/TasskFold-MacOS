@@ -44,7 +44,8 @@ for path in sorted((ROOT / 'Scripts').rglob('*')):
         problems.append(f'{rel}: names the hosted project without the --remote / test_isolation guard')
 
 for plist in sorted(ROOT.rglob('Backend.plist')):
-    if '.worktrees' in plist.parts or '.build' in plist.parts:
+    # Hidden folders (.worktrees, .claude/worktrees, .build, .git) hold other checkouts or build output, not this tree.
+    if any(part.startswith('.') for part in plist.relative_to(ROOT).parts[:-1]):
         continue
     if str(plist.relative_to(ROOT)) != 'Taskfold/Backend.plist':
         problems.append(f'{plist.relative_to(ROOT)}: unexpected extra Backend.plist')
