@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 
 /// Named timings for keeping devices in step. The REST snapshot stays the source of truth;
 /// these only decide when to ask for it.
@@ -21,8 +22,17 @@ enum SyncTiming {
     static let activityOverlap: TimeInterval = 600
     /// Poll while realtime is down.
     static let pollIntervalRealtimeDown: TimeInterval = 60
+    /// Safety-net poll while the realtime socket is deliberately closed because the app sat idle (macOS only).
+    static let pollIntervalRealtimeSuspended: TimeInterval = 900
     static let reconnectBase: TimeInterval = 1
-    static let reconnectCap: TimeInterval = 30
+    /// A persistent failure (an outage, a refused join) must not reconnect twice a minute: every join writes and
+    /// deletes one `realtime.subscription` row per table and restarts the server's WAL polling for this client.
+    /// A restored connection (`RealtimeSupervisor.wake`) cuts the wait short, so the cap only bounds a real outage.
+    static let reconnectCap: TimeInterval = 300
+    /// iOS keeps the socket through a brief trip to the background (app switcher, a call) and drops it after this.
+    static let realtimeBackgroundGrace: Duration = .seconds(20)
+    /// macOS keeps the socket while the app is not frontmost for this long, then closes it until the app is active again.
+    static let realtimeInactiveGrace: Duration = .seconds(300)
     /// A sync shorter than this never shows a "Syncing" indicator, so quick syncs do not flicker.
     static let syncingIndicatorDelay: Duration = .milliseconds(500)
     /// How long a remotely changed row keeps its tint before it fades out.
@@ -31,8 +41,68 @@ enum SyncTiming {
     /// Local edits are not echoed back as "remote" for this long after they were made.
     static let localEditEchoWindow: TimeInterval = 15
 
-    static func pollInterval(realtimeConnected: Bool) -> TimeInterval {
-        realtimeConnected ? pollIntervalRealtimeJoined : pollIntervalRealtimeDown
+    static func pollInterval(realtimeConnected: Bool, realtimeSuspended: Bool = false) -> TimeInterval {
+        if realtimeSuspended { return pollIntervalRealtimeSuspended }
+        return realtimeConnected ? pollIntervalRealtimeJoined : pollIntervalRealtimeDown
+    }
+}
+
+/// The postgres_changes subscriptions of the one realtime channel. Each entry costs the server one
+/// `realtime.subscription` row and is decoded from the WAL for every connected client, so only tables whose
+/// changes a visible screen needs within seconds belong here. Saved views, favourites, view preferences and
+/// orders, project templates and reminder preferences are not: the foreground sync and the periodic reconcile
+/// read them. Keep this list equal to the `supabase_realtime` publication (see the disk IO budget migration).
+enum RealtimeSubscriptions {
+    static let tables = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles",
+                         "focus_sessions", "task_comments", "task_mentions", "task_dependencies"]
+    /// Tables whose rows belong to exactly one account, so the server can drop other accounts' changes before it
+    /// checks row-level security. Shared tables (tasks, projects ...) must stay unfiltered: a collaborator's edit
+    /// is owned by someone else and is only visible through RLS.
+    static let ownerColumn: [String: String] = ["focus_sessions": "user_id"]
+    static func filter(table: String, account: String) -> String? {
+        guard let column = ownerColumn[table], UUID(uuidString: account) != nil else { return nil }
+        return "\(column)=eq.\(account.lowercased())"
+    }
+    /// The `postgres_changes` entries for the join payload.
+    static func entries(account: String) -> [[String: String]] {
+        tables.map { table in
+            var entry = ["event": "*", "schema": "public", "table": table]
+            if let filter = filter(table: table, account: account) { entry["filter"] = filter }
+            return entry
+        }
+    }
+}
+
+/// Decides when the realtime socket should be held open. The server polls the write-ahead log for every joined
+/// client, so a socket nobody is looking at is pure disk IO. Becoming inactive starts a grace period (a quick
+/// app switch must not reconnect); becoming active again cancels it at once. `held` is what views key their
+/// realtime task on.
+@MainActor
+@Observable
+final class RealtimeIdleGate {
+    typealias Sleeper = @Sendable (Duration) async throws -> Void
+    private(set) var held: Bool
+    @ObservationIgnored private let grace: Duration
+    @ObservationIgnored private let sleep: Sleeper
+    @ObservationIgnored private var timer: Task<Void, Never>?
+    init(grace: Duration, held: Bool = false, sleep: @escaping Sleeper = { try await Task.sleep(for: $0) }) {
+        self.grace = grace; self.held = held; self.sleep = sleep
+    }
+    func setActive(_ active: Bool) {
+        if active {
+            timer?.cancel(); timer = nil
+            if !held { held = true }
+            return
+        }
+        guard held, timer == nil else { return }
+        if grace <= .zero { held = false; return }
+        let grace = grace, sleep = sleep
+        timer = Task { [weak self] in
+            do { try await sleep(grace) } catch { return }
+            guard !Task.isCancelled, let self else { return }
+            self.timer = nil
+            self.held = false
+        }
     }
 }
 

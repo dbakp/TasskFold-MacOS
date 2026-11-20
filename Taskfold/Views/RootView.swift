@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.undoManager) private var undoManager
     @Environment(\.scenePhase) private var phase
+    @State private var realtimeGate = RealtimeIdleGate(grace: SyncTiming.realtimeInactiveGrace, held: true)
     @State private var pinnedNote: PinnedNoteRequest?
     @State private var pulseRequest: ProjectPulseRequest?
     @State private var mentionsRequest: MentionsRequest?
@@ -114,8 +115,15 @@ struct RootView: View {
                 await store.syncAutomatically()
             }
         }
-        .task(id: "realtime-\(store.signedIn)-\(store.localMode)") {
-            guard store.signedIn, !store.localMode else { return }
+        // The server polls the write-ahead log for every joined socket. Keep it while the app is in use and for a few
+        // minutes after, then close it until the app is frontmost again; polling relaxes meanwhile and the socket's
+        // join catches up with one sync.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in realtimeGate.setActive(true) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in realtimeGate.setActive(false) }
+        .onAppear { realtimeGate.setActive(NSApp.isActive) }
+        .onChange(of: realtimeGate.held) { _, held in store.realtimeSuspended = !held }
+        .task(id: "realtime-\(store.signedIn)-\(store.localMode)-\(realtimeGate.held)") {
+            guard store.signedIn, !store.localMode, realtimeGate.held else { return }
             await store.runRealtime()
         }
         .task(id: "focus-finished-\(NotificationRoute.shared.focusReceipt?.signature ?? "")-\(store.workspaceGeneration)-\(store.widgetPublicationRevision)") {
