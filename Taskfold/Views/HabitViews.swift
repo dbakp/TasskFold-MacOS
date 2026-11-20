@@ -292,14 +292,17 @@ struct HabitDetailContent: View {
 // MARK: - Empty state and Today chip
 
 struct HabitsEmptyState: View {
-    var newHabit: () -> Void = {}
+    /// Shown as a "New habit…" button only where the platform wires it (Mac opens Quick Add pre-filled).
+    var newHabit: (() -> Void)? = nil
     var body: some View {
         VStack(spacing: DS.Space.m) {
             Image(systemName: "circle.hexagongrid").font(.system(size: 38)).foregroundStyle(DS.Palette.textTertiary).accessibilityHidden(true)
             Text("No habits yet").font(.title3.weight(.semibold))
-            Text("Habits are repeating tasks you want to keep a streak on. Every check-in is just completing today's task.")
+            Text(newHabit == nil
+                 ? "Open a repeating task and turn on Track as habit. Every check-in is just completing today's task."
+                 : "Habits are repeating tasks you want to keep a streak on. Every check-in is just completing today's task.")
                 .font(DS.Font.taskNote).foregroundStyle(DS.Palette.textSecondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-            Button("New habit…", action: newHabit).buttonStyle(.borderedProminent).controlSize(.large).accessibilityIdentifier("newHabit")
+            if let newHabit { Button("New habit…", action: newHabit).buttonStyle(.borderedProminent).controlSize(.large).accessibilityIdentifier("newHabit") }
         }
         .frame(maxWidth: 420).padding(DS.Space.xxl).frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .contain).accessibilityIdentifier("habitsEmpty")
