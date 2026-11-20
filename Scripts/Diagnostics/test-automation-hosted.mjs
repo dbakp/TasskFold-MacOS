@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 import { checkHostedDeadlines } from "./automation-hosted-deadlines.mjs";
 // Real Auth -> Edge -> PostgREST acceptance. Only a data-excluding preview branch.
 // Credentials are read from an owner-private CLI export, never arguments or output.

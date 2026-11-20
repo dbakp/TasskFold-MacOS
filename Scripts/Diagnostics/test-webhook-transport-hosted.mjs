@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 // Runs only the owned synthetic transport probe. CLI credentials remain in
 // memory; output projects fixed booleans/statuses, never keys or response bodies.
 import assert from "node:assert/strict";

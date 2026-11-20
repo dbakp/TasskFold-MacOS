@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 // One-use hosted header probe. Private signing key stays in memory. No task/Auth/
 // storage/database access, service key reads or project settings mutations.
 import assert from "node:assert/strict";

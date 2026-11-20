@@ -4,6 +4,7 @@
 - This repository owns its Mac code, resources, tests and release scripts. Do not add build dependencies on the iOS repository. Preserve unrelated work in other checkouts; implement and test relevant data-contract fixes in each app repository independently.
 - Keep `docs/ROADMAP.md` current as updates land.
 - Use isolated debug fixtures for UI tests; do not modify real task data for testing.
+- Tests, previews, fixtures and captures must never reach the hosted Supabase project or any `*.supabase.co` host: use `127.0.0.1` (`supabase start`) or an unroutable stub. `Backend` refuses hosted URLs in test contexts unless a human sets `TASKFOLD_ALLOW_HOSTED_TESTS=1`; scripts that talk to a remote backend need `--remote`. See `docs/TESTING_ISOLATION.md`.
 
 - Before heavy local builds, Simulator runs or Docker fixtures, run `python3 Scripts/check_test_storage.py --path /tmp` and require its default 20 GiB free-space floor. Reuse current test hosts/products, run resource-heavy platforms sequentially, and prune approved obsolete outputs after retaining concise evidence. Never reset Docker volumes or erase real app data as cleanup.
 

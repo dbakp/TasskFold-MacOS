@@ -1,3 +1,4 @@
+import "./remote-guard.mjs"; // refuses unless --remote (docs/TESTING_ISOLATION.md)
 // Private controller only. App HTTP/Auth/Keychain are never intercepted.
 import assert from "node:assert/strict";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
