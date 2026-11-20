@@ -460,7 +460,7 @@ struct AuthFormView: View {
     private func useLocally() {
         guard !switchingLocal else { return }
         switchingLocal = true; notice = nil
-        let needsCredentialClear = busy || store.backend.session != nil
+        let needsCredentialClear = busyEmail || busyGoogle || store.backend.session != nil
         password = "" // Local entry is not a successful password sign-in.
         Task {
             defer { switchingLocal = false }
