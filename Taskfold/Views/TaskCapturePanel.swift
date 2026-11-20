@@ -122,7 +122,8 @@ struct TaskCapturePanel: View {
         }
         .onAppear {
             workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true; placeNames = LocationPlaceRequest.knownNames(in: store.rows("tasks"))
-            if QuickAddDraftNotice.isRestored(openingText: text) { restoredDraft = text }
+            if !workspace.quickAddPrefilled, QuickAddDraftNotice.isRestored(openingText: text) { restoredDraft = text }
+            workspace.quickAddPrefilled = false
             installSelectAll()
         }
         .task(id: parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) }

@@ -252,7 +252,7 @@ struct WeeklyReviewView: View {
         let on = reminderOn, day = reminderWeekday, minutes = reminderMinutes
         Task {
             let scheduled = await WeeklyReviewReminder.apply(enabled: on, weekday: day, minutes: minutes)
-            if on && !scheduled { reminderOn = false; reminderNote = "Notifications are off for TaskFold. Turn them on in Settings to get a reminder." }
+            if on && !scheduled { reminderOn = false; reminderNote = "Notifications are off for Taskfold. Turn them on in Settings to get a reminder." }
             else { reminderNote = nil }
         }
     }

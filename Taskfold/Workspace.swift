@@ -127,6 +127,8 @@ final class Workspace {
     var teamTaskCreationText = ""
     var teamTaskCreation: TaskEditorOpening?
     var quickAdd = ""
+    /// Set when a view pre-fills Quick Add on purpose (e.g. New habit…), so it isn't announced as a restored draft.
+    var quickAddPrefilled = false
     /// Properties chosen by hand in the Quick Add composer (date, priority, labels, reminders, destination...).
     /// They are applied to the new task before the typed text is parsed, so they win over a parsed token.
     var quickAddManual: [String: JSON] = [:]

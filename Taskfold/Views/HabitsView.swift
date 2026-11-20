@@ -45,6 +45,7 @@ struct HabitsView: View {
     private func newHabit() {
         workspace.section = .inbox
         workspace.quickAdd = "every day "
+        workspace.quickAddPrefilled = true
         workspace.quickAddFocusRequest += 1
     }
     private func subtitle(_ count: Int) -> String { count == 1 ? "1 habit" : "\(count) habits" }
