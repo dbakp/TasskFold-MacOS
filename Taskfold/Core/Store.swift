@@ -409,6 +409,8 @@ final class Store {
     private(set) var syncIndicatorVisible = false
     /// Whether the realtime socket is joined. Drives the polling interval and nothing in the data path.
     private(set) var realtimeConnected = false
+    /// The socket is closed on purpose because the app has been idle; polling relaxes instead of falling back to the 60 s down-poll.
+    var realtimeSuspended = false
     var online = true { didSet { if online && !oldValue { connectivityRestored() }; if online != oldValue { onlineChangedForBadge() } } }
     /// True once the connection has been down for `SyncIssue.offlineGrace`. One timer per outage, no polling.
     private(set) var offlineLongEnough = false
@@ -2990,7 +2992,7 @@ final class Store {
         }
     }
     /// Seconds between safety-net polls: relaxed while realtime is joined.
-    var pollInterval: TimeInterval { SyncTiming.pollInterval(realtimeConnected: realtimeConnected) }
+    var pollInterval: TimeInterval { SyncTiming.pollInterval(realtimeConnected: realtimeConnected, realtimeSuspended: realtimeSuspended) }
     private func syncingChanged() {
         syncIndicatorTask?.cancel(); syncIndicatorTask = nil
         if syncing {

@@ -47,17 +47,17 @@ private func waitUntil(_ condition: @MainActor () -> Bool, timeout: TimeInterval
 }
 
 final class ReconnectBackoffTests: XCTestCase {
-    func testDelaysDoubleFromOneSecondAndStopAtThirty() {
-        // Jitter 0 gives the nominal (full) step; the nominal sequence is 1, 2, 4, 8, 16, then the 30 s cap.
-        let nominal = (0..<9).map { ReconnectBackoff.delay(forAttempt: $0, jitter: 0) }
-        XCTAssertEqual(nominal, [1, 2, 4, 8, 16, 30, 30, 30, 30])
+    func testDelaysDoubleFromOneSecondAndStopAtFiveMinutes() {
+        // Jitter 0 gives the nominal (full) step; the nominal sequence is 1, 2, 4 ... 256, then the 300 s cap.
+        let nominal = (0..<12).map { ReconnectBackoff.delay(forAttempt: $0, jitter: 0) }
+        XCTAssertEqual(nominal, [1, 2, 4, 8, 16, 32, 64, 128, 256, 300, 300, 300])
     }
     func testJitterOnlyShortensAndNeverExceedsTheCap() {
         for attempt in 0..<40 {
             let nominal = ReconnectBackoff.delay(forAttempt: attempt, jitter: 0)
             for jitter in stride(from: 0.0, through: 1.0, by: 0.1) {
                 let value = ReconnectBackoff.delay(forAttempt: attempt, jitter: jitter)
-                XCTAssertLessThanOrEqual(value, min(30, nominal) + 0.000_001)
+                XCTAssertLessThanOrEqual(value, min(300, nominal) + 0.000_001)
                 XCTAssertGreaterThanOrEqual(value, nominal * 0.75 - 0.000_001)
             }
         }
@@ -71,6 +71,86 @@ final class ReconnectBackoffTests: XCTestCase {
     func testPollingRelaxesOnlyWhileRealtimeIsJoined() {
         XCTAssertEqual(SyncTiming.pollInterval(realtimeConnected: true), 600)
         XCTAssertEqual(SyncTiming.pollInterval(realtimeConnected: false), 60)
+    }
+    func testAnIdleSuspendedSocketPollsRarelyInsteadOfEveryMinute() {
+        XCTAssertEqual(SyncTiming.pollInterval(realtimeConnected: false, realtimeSuspended: true), 900)
+        XCTAssertEqual(SyncTiming.pollInterval(realtimeConnected: true, realtimeSuspended: true), 900)
+    }
+}
+
+final class RealtimeSubscriptionsTests: XCTestCase {
+    func testOnlyLiveTablesAreSubscribedAndLowValueTablesAreNot() {
+        let tables = RealtimeSubscriptions.entries(account: "11111111-2222-4333-8444-555555555555").compactMap { $0["table"] }
+        XCTAssertEqual(tables.count, 10)
+        XCTAssertEqual(Set(tables).count, tables.count, "one subscription per table")
+        for table in ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "focus_sessions", "task_comments", "task_mentions", "task_dependencies"] {
+            XCTAssertTrue(tables.contains(table), table)
+        }
+        for table in ["saved_views", "favorites", "view_preferences", "view_orders", "project_templates", "reminder_preferences"] {
+            XCTAssertFalse(tables.contains(table), table)
+        }
+    }
+    func testEveryEntryListensToAllEventsInPublicSchema() {
+        for entry in RealtimeSubscriptions.entries(account: "11111111-2222-4333-8444-555555555555") {
+            XCTAssertEqual(entry["event"], "*"); XCTAssertEqual(entry["schema"], "public")
+        }
+    }
+    func testOnlyAccountOwnedTablesAreFilteredToTheAccount() {
+        let account = "ABCDEF12-2222-4333-8444-555555555555"
+        let entries = RealtimeSubscriptions.entries(account: account)
+        XCTAssertEqual(entries.first { $0["table"] == "focus_sessions" }?["filter"], "user_id=eq.abcdef12-2222-4333-8444-555555555555")
+        // Shared tables stay unfiltered so a collaborator's edit (owned by someone else) still arrives through RLS.
+        for table in ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "task_comments", "task_mentions", "task_dependencies"] {
+            XCTAssertNil(entries.first { $0["table"] == table }?["filter"], table)
+        }
+    }
+    func testAnInvalidAccountNeverBuildsAFilter() {
+        XCTAssertNil(RealtimeSubscriptions.filter(table: "focus_sessions", account: "x\" or 1=1"))
+        XCTAssertNil(RealtimeSubscriptions.filter(table: "focus_sessions", account: ""))
+    }
+}
+
+@MainActor
+final class RealtimeIdleGateTests: XCTestCase {
+    func testStaysHeldThroughAQuickAppSwitch() async {
+        let sleeper = ManualSleeper()
+        let gate = RealtimeIdleGate(grace: .seconds(20), held: true, sleep: { try await sleeper.sleep($0) })
+        gate.setActive(false)
+        XCTAssertTrue(gate.held, "the grace period has not elapsed")
+        let started = await waitUntil { sleeper.pending == 1 }
+        XCTAssertTrue(started)
+        gate.setActive(true)
+        XCTAssertTrue(gate.held); XCTAssertEqual(sleeper.pending, 0, "coming back cancels the countdown")
+    }
+    func testReleasesTheSocketOnlyAfterTheGracePeriod() async {
+        let sleeper = ManualSleeper()
+        let gate = RealtimeIdleGate(grace: .seconds(20), held: true, sleep: { try await sleeper.sleep($0) })
+        gate.setActive(false)
+        let started = await waitUntil { sleeper.pending == 1 }
+        XCTAssertTrue(started)
+        XCTAssertEqual(sleeper.requested, [.seconds(20)])
+        sleeper.releaseAll()
+        let released = await waitUntil { !gate.held }
+        XCTAssertTrue(released)
+        gate.setActive(true)
+        XCTAssertTrue(gate.held, "becoming active again holds it at once")
+    }
+    func testRepeatedInactiveSignalsDoNotExtendTheGracePeriod() async {
+        let sleeper = ManualSleeper()
+        let gate = RealtimeIdleGate(grace: .seconds(20), held: true, sleep: { try await sleeper.sleep($0) })
+        gate.setActive(false); gate.setActive(false); gate.setActive(false)
+        let started = await waitUntil { sleeper.pending == 1 }
+        XCTAssertTrue(started)
+        XCTAssertEqual(sleeper.requested.count, 1)
+    }
+    func testZeroGraceReleasesImmediatelyAndAnIdleGateStaysReleased() {
+        let gate = RealtimeIdleGate(grace: .zero, held: true)
+        gate.setActive(false)
+        XCTAssertFalse(gate.held)
+        gate.setActive(false)
+        XCTAssertFalse(gate.held)
+        let fresh = RealtimeIdleGate(grace: .seconds(20))
+        XCTAssertFalse(fresh.held, "a gate starts released until the app reports it is active")
     }
 }
 
