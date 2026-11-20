@@ -92,13 +92,12 @@ private struct GoogleGlyph: View {
 private struct AuthNotice: Equatable {
     var text: String
     var outlines = false
-    var resend = false
     var isError = true
 }
 
 struct AuthFormView: View {
     enum Style { case page, sheet }
-    enum Mode { case signIn, create, resetRequest, resetCode }
+    enum Mode { case signIn, create, resetRequest, resetCode, confirmCode }
     let style: Style
     var preview: String? = nil
     var cancel: (() -> Void)? = nil
@@ -120,6 +119,8 @@ struct AuthFormView: View {
     @State private var resendAvailableAt = Date.distantPast
     @State private var codeSentTo = ""
     @State private var recoveryVerified = false
+    /// Where "Use a different email" returns to: Create account after a sign-up, Sign in after an unconfirmed sign-in.
+    @State private var confirmFromSignUp = false
     @FocusState private var focus: Field?
     enum Field { case name, email, password, code }
 
@@ -131,6 +132,7 @@ struct AuthFormView: View {
         case "create": mode = .create; email = "maya.lind@example.com"; password = "abcdef"
         case "create-met": mode = .create; email = "maya.lind@example.com"; password = "abcdefghijkl"
         case "reset": mode = .resetCode; email = "maya.lind@example.com"; password = "correct horse"; code = "4719"
+        case "confirm": mode = .confirmCode; email = "maya.lind@example.com"; code = "4719"
         default: break
         }
         _mode = State(initialValue: mode); _email = State(initialValue: email); _password = State(initialValue: password)
@@ -145,11 +147,11 @@ struct AuthFormView: View {
         case .signIn: return style == .sheet ? "Sign in to sync" : "Sign in to Taskfold"
         case .create: return "Create your account"
         case .resetRequest: return "Reset your password"
-        case .resetCode: return "Check your email"
+        case .resetCode, .confirmCode: return "Check your email"
         }
     }
     private var primaryTitle: String {
-        switch mode { case .signIn: return "Sign In"; case .create: return "Create Account"; case .resetRequest: return "Send Code"; case .resetCode: return "Set Password" }
+        switch mode { case .signIn: return "Sign In"; case .create: return "Create Account"; case .resetRequest: return "Send Code"; case .resetCode: return "Set Password"; case .confirmCode: return "Confirm Email" }
     }
     private var showsGoogle: Bool { mode == .signIn || mode == .create }
 
@@ -164,7 +166,12 @@ struct AuthFormView: View {
             providers = await store.backend.authProviders()
         }
         .onAppear { if preview == nil { focus = mode == .create ? .name : .email } }
-        .onChange(of: mode) { _, _ in notice = nil; showPassword = false; if preview == nil { focus = mode == .resetCode ? .code : mode == .create ? .name : .email } }
+        .onChange(of: mode) { _, _ in
+            // The code step arrives with its own note (an unconfirmed sign-in), so it keeps the one set with it.
+            if mode != .confirmCode { notice = nil }
+            showPassword = false
+            if preview == nil { focus = mode == .resetCode || mode == .confirmCode ? .code : mode == .create ? .name : .email }
+        }
         .background {
             Button("") { focus = .email }.keyboardShortcut("l", modifiers: .command).opacity(0).accessibilityHidden(true)
         }
@@ -214,6 +221,7 @@ struct AuthFormView: View {
         switch mode {
         case .resetRequest: resetRequestForm
         case .resetCode: resetCodeForm
+        case .confirmCode: confirmCodeForm
         default: form
         }
     }
@@ -306,7 +314,6 @@ struct AuthFormView: View {
                 Label { Text(notice.text).fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: notice.isError ? "exclamationmark.circle" : "info.circle") }
                     .font(.system(size: 12)).foregroundStyle(notice.isError ? Color.red : DS.Palette.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("authMessage").transition(.textSwap)
-                if notice.resend { Button("Resend confirmation email") { resendConfirmation() }.buttonStyle(.link).font(.system(size: 12)).disabled(busy) }
             }
         }
     }
@@ -343,19 +350,30 @@ struct AuthFormView: View {
         PasswordRuleCaption(password: password, showRemaining: false)
         noticeView
         if style == .page { primaryButton(fullWidth: true) }
-        resendRow
+        resendRow("Send a new code") { sendCode(resend: true) }
         backToSignIn
     }
 
-    private var resendRow: some View {
+    @ViewBuilder private var confirmCodeForm: some View {
+        Text("We sent a 6-digit code to \(RecoveryCode.masked(email: codeSentTo)). Enter it to confirm your email.")
+            .font(.system(size: 13)).foregroundStyle(DS.Palette.textSecondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+        RecoveryCodeField(code: $code, focus: $focus)
+        noticeView
+        if style == .page { primaryButton(fullWidth: true) }
+        resendRow("Resend code") { resendConfirmationCode() }
+        Button { mode = confirmFromSignUp ? .create : .signIn; password = ""; code = "" } label: { Label("Use a different email", systemImage: "chevron.left").labelStyle(.titleAndIcon) }
+            .buttonStyle(.plain).font(.system(size: 13)).foregroundStyle(DS.Palette.textSecondary).disabled(busyEmail).accessibilityIdentifier("useDifferentEmail")
+    }
+
+    private func resendRow(_ title: String, action: @escaping () -> Void) -> some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             let left = preview != nil ? 42 : max(0, Int(ceil(resendAvailableAt.timeIntervalSince(timeline.date))))
             HStack(spacing: 4) {
                 Text("Didn't get it?").foregroundStyle(DS.Palette.textTertiary)
                 if left > 0 {
-                    Text("Send a new code in \(left / 60):\(String(format: "%02d", left % 60))").foregroundStyle(DS.Palette.textTertiary).monospacedDigit()
+                    Text("\(title) in \(left / 60):\(String(format: "%02d", left % 60))").foregroundStyle(DS.Palette.textTertiary).monospacedDigit()
                 } else {
-                    Button("Send a new code") { sendCode(resend: true) }.buttonStyle(.plain).fontWeight(.medium).disabled(busy)
+                    Button(title, action: action).buttonStyle(.plain).fontWeight(.medium).disabled(busy).accessibilityIdentifier("resendCode")
                 }
             }.font(.system(size: 13))
         }
@@ -374,6 +392,7 @@ struct AuthFormView: View {
         case .signIn, .create: authenticate()
         case .resetRequest: sendCode(resend: false)
         case .resetCode: setPassword()
+        case .confirmCode: verifyConfirmation()
         }
     }
 
@@ -390,10 +409,11 @@ struct AuthFormView: View {
             defer { busyEmail = false }
             do {
                 if try await store.backend.signIn(email: address, password: password, signup: signup, displayName: display) { await finishSignIn() }
-                else { mode = .signIn; password = ""; notice = AuthNotice(text: "Check your email to confirm your account, then sign in.", resend: true, isError: false) }
+                else { enterConfirmation(email: address, fromSignUp: true) } // "Confirm email" is on: the account exists, the code is on its way.
             } catch {
                 guard let feedback = AuthFeedback.classify(error) else { return }
-                notice = AuthNotice(text: feedback.text, outlines: feedback.outlinesFields, resend: feedback.offersResend); if feedback.outlinesFields { shake += 1 }
+                if feedback == .unconfirmed && !signup { enterConfirmation(email: address, fromSignUp: false); return }
+                notice = AuthNotice(text: feedback.text, outlines: feedback.outlinesFields); if feedback.outlinesFields { shake += 1 }
             }
         }
     }
@@ -416,13 +436,36 @@ struct AuthFormView: View {
         }
     }
 
-    private func resendConfirmation() {
-        guard emailOK, !busy else { return }
-        busyEmail = true
+    /// Swaps the form for the "Check your email" step. After a sign-up the code was just sent, so the resend waits a minute;
+    /// after an unconfirmed sign-in nothing was sent, so the resend is offered at once.
+    private func enterConfirmation(email address: String, fromSignUp: Bool) {
+        codeSentTo = address; confirmFromSignUp = fromSignUp; code = ""; password = ""
+        resendAvailableAt = fromSignUp ? EmailCodeCooldown.availableAt() : .distantPast
+        notice = fromSignUp ? nil : AuthNotice(text: "Your email isn't confirmed yet. Enter the code from your email, or send a new one.", isError: false)
+        mode = .confirmCode
+    }
+
+    private func verifyConfirmation() {
+        guard RecoveryCode.isComplete(code) else { fail("Enter the 6-digit code from the email.", shake: false); return }
+        busyEmail = true; notice = nil
         Task {
             defer { busyEmail = false }
-            do { try await store.backend.resendConfirmation(email: email); notice = AuthNotice(text: "We sent the confirmation email again.", isError: false) }
-            catch { notice = AuthNotice(text: (AuthFeedback.classify(error) ?? .generic).text) }
+            do { try await store.backend.verifySignup(email: codeSentTo, code: code); await finishSignIn() }
+            catch { if let feedback = AuthFeedback.classify(error) { notice = AuthNotice(text: feedback.text) } }
+        }
+    }
+
+    private func resendConfirmationCode() {
+        guard !busy else { return }
+        busyEmail = true; notice = nil
+        Task {
+            defer { busyEmail = false }
+            do { try await store.backend.resendConfirmation(email: codeSentTo); resendAvailableAt = EmailCodeCooldown.availableAt(); code = ""; notice = AuthNotice(text: "We sent a new code.", isError: false) }
+            catch {
+                guard let feedback = AuthFeedback.classify(error) else { return }
+                if feedback == .emailRateLimited { resendAvailableAt = EmailCodeCooldown.availableAt() }
+                notice = AuthNotice(text: feedback.text)
+            }
         }
     }
 
@@ -434,7 +477,7 @@ struct AuthFormView: View {
             defer { busyEmail = false }
             do {
                 try await store.backend.sendPasswordReset(email: address)
-                codeSentTo = address; resendAvailableAt = Date().addingTimeInterval(60); recoveryVerified = false
+                codeSentTo = address; resendAvailableAt = EmailCodeCooldown.availableAt(); recoveryVerified = false
                 if resend { code = ""; notice = AuthNotice(text: "We sent a new code.", isError: false) } else { password = ""; mode = .resetCode }
             } catch { if let feedback = AuthFeedback.classify(error) { notice = AuthNotice(text: feedback.text) } }
         }

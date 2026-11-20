@@ -658,7 +658,8 @@ final class Backend: NSObject {
         let data = try await request(path, method: "POST", body: credentials, authenticated: false)
         try requireAuthentication(attempt)
         guard let next = try? Foundation.JSONDecoder().decode(Session.self, from: data) else {
-            if signup { return false }
+            // Sign-up with "Confirm email" on answers with the user and no session: the code step takes over (returns false).
+            if signup, SignUpResponse.parse(data) == .confirmationRequired { return false }
             throw AppFailure(message: "The sign-in response was incomplete. Please try again.")
         }
         try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
@@ -1690,15 +1691,16 @@ enum AuthProviderCache {
 
 /// Plain-words sign-in feedback. Raw service or system text is never shown.
 enum AuthFeedback: Equatable, Sendable {
-    case network, badCredentials, unconfirmed, accountExists, config, rateLimited, invalidCode, google, generic
+    case network, badCredentials, unconfirmed, accountExists, config, rateLimited, emailRateLimited, invalidCode, google, generic
     var text: String {
         switch self {
         case .network: return "Can't reach Taskfold. Check your connection and try again."
         case .badCredentials: return "That email and password don't match."
-        case .unconfirmed: return "Confirm your email first. We sent you a link."
+        case .unconfirmed: return "Confirm your email first. Enter the 6-digit code we sent you, or send a new one."
         case .accountExists: return "That email already has an account. Try signing in."
         case .config: return "Taskfold couldn't start sign-in. Please update the app."
         case .rateLimited: return "Too many attempts. Wait a minute and try again."
+        case .emailRateLimited: return "Too many emails — try again in a minute."
         case .invalidCode: return "That code didn't work. Check it or send a new one."
         case .google: return "Google sign-in didn't finish. Try again, or use email."
         case .generic: return "Something went wrong. Please try again."
@@ -1724,9 +1726,11 @@ enum AuthFeedback: Equatable, Sendable {
         if message.contains("supabase configuration") { return .config }
         if google { return .google }
         if message.contains("invalid login credentials") || message.contains("invalid_credentials") { return .badCredentials }
-        if message.contains("not confirmed") { return .unconfirmed }
+        if message.contains("not confirmed") || message.contains("email_not_confirmed") { return .unconfirmed }
         if message.contains("already registered") || message.contains("already been registered") { return .accountExists }
-        if message.contains("rate limit") || message.contains("too many") || message.contains("security purposes") { return .rateLimited }
+        // Sending limits (the built-in sender's hourly cap, or "only request this after N seconds") are about email, not the password.
+        if message.contains("email rate limit") || message.contains("security purposes") || message.contains("over_email_send_rate_limit") { return .emailRateLimited }
+        if message.contains("rate limit") || message.contains("too many") { return .rateLimited }
         if message.contains("expired or is invalid") || message.contains("otp") { return .invalidCode }
         return .generic
     }
@@ -1743,6 +1747,27 @@ struct PasswordRuleStatus: Equatable, Sendable {
         let left = ClientHardening.minimumPasswordLength - password.count
         remaining = !met && !password.isEmpty ? "\(left) more to go" : nil
     }
+}
+
+/// What a sign-up answered. With "Confirm email" off Supabase returns a session; with it on, the user and no session
+/// (the code step follows). A user it already knows is answered in the same shape, so nothing here reveals whether an
+/// address has an account.
+enum SignUpResponse: Equatable {
+    case session, confirmationRequired, invalid
+    static func parse(_ data: Data) -> SignUpResponse {
+        if (try? Foundation.JSONDecoder().decode(Session.self, from: data)) != nil { return .session }
+        guard let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return .invalid }
+        // The user is either the whole body or nested under "user".
+        let user = (object["user"] as? [String: Any]) ?? object
+        guard let id = user["id"] as? String, !id.isEmpty, object["access_token"] == nil else { return .invalid }
+        return .confirmationRequired
+    }
+}
+
+/// Timing shared by the password-reset and email-confirmation code steps.
+enum EmailCodeCooldown {
+    static let seconds: TimeInterval = 60
+    static func availableAt(from now: Date = Date()) -> Date { now.addingTimeInterval(seconds) }
 }
 
 /// The six digits of a password-reset code, however they were typed or pasted.
@@ -1857,11 +1882,14 @@ extension Backend {
     }
     /// Password reset by emailed code: verifies the recovery code (which signs the person in), then sets the new
     /// password. Returns once the session is saved; the caller then enters the account as for any sign-in.
-    func verifyRecovery(email: String, code: String) async throws {
+    func verifyRecovery(email: String, code: String) async throws { try await verifyEmailCode(type: "recovery", email: email, code: code) }
+    /// Confirms a new account by the emailed 6-digit code (Supabase `verifyOtp` type `signup`); that signs the person in.
+    func verifySignup(email: String, code: String) async throws { try await verifyEmailCode(type: "signup", email: email, code: code) }
+    private func verifyEmailCode(type: String, email: String, code: String) async throws {
         guard RecoveryCode.isComplete(code) else { throw AppFailure(message: "Token has expired or is invalid") }
         let attempt = beginAuthentication(); defer { endAuthentication(attempt) }
         let data = try await request("/auth/v1/verify", method: "POST", body: [
-            "type": .string("recovery"), "email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()),
+            "type": .string(type), "email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()),
             "token": .string(RecoveryCode.normalized(code))], authenticated: false)
         try requireAuthentication(attempt)
         guard let next = try? Foundation.JSONDecoder().decode(Session.self, from: data) else { throw AppFailure(message: "Token has expired or is invalid") }

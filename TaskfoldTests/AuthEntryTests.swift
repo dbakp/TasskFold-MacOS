@@ -91,13 +91,94 @@ final class AuthEntryTests: XCTestCase {
         XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "Email not confirmed")), .unconfirmed)
         XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "The Supabase configuration is missing.")), .config)
         XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "User already registered")), .accountExists)
-        XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "email rate limit exceeded")), .rateLimited)
+        XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "email rate limit exceeded")), .emailRateLimited)
+        XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "Request rate limit reached")), .rateLimited)
         XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "boom internal 500")), .generic)
         XCTAssertTrue(AuthFeedback.badCredentials.outlinesFields); XCTAssertFalse(AuthFeedback.network.outlinesFields)
         XCTAssertTrue(AuthFeedback.unconfirmed.offersResend)
         let cancelled = NSError(domain: "com.apple.AuthenticationServices.WebAuthenticationSession", code: 1)
         XCTAssertNil(AuthFeedback.classify(cancelled, google: true))
         XCTAssertEqual(AuthFeedback.classify(NSError(domain: "com.apple.AuthenticationServices.WebAuthenticationSession", code: 2), google: true)?.text, "Google sign-in didn't finish. Try again, or use email.")
+    }
+    private static let sessionJSON = #"{"access_token":"a","refresh_token":"r","expires_in":3600,"user":{"id":"u","email":"m@example.com"}}"#
+    private func sentBody(_ request: URLRequest) throws -> [String: String]? {
+        var raw = request.httpBody ?? Data()
+        if let stream = request.httpBodyStream { stream.open(); var buffer = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; raw.append(buffer, count: n) }; stream.close() }
+        return try JSONSerialization.jsonObject(with: raw) as? [String: String]
+    }
+    func testSignUpResponseParsing() {
+        // Confirm email off: a session comes back.
+        XCTAssertEqual(SignUpResponse.parse(Data(Self.sessionJSON.utf8)), .session)
+        // Confirm email on: the user, no session (bare, and an already-registered address answers in the same shape).
+        XCTAssertEqual(SignUpResponse.parse(Data(#"{"id":"u","email":"m@example.com","confirmation_sent_at":"2026-11-20T10:00:00Z","identities":[]}"#.utf8)), .confirmationRequired)
+        XCTAssertEqual(SignUpResponse.parse(Data(#"{"user":{"id":"u","email":"m@example.com"},"session":null}"#.utf8)), .confirmationRequired)
+        // Anything else is not a sign-up answer.
+        XCTAssertEqual(SignUpResponse.parse(Data("{}".utf8)), .invalid)
+        XCTAssertEqual(SignUpResponse.parse(Data(#"{"id":""}"#.utf8)), .invalid)
+        XCTAssertEqual(SignUpResponse.parse(Data("nope".utf8)), .invalid)
+        XCTAssertEqual(SignUpResponse.parse(Data("[]".utf8)), .invalid)
+    }
+    @MainActor func testSignUpReturnsSessionOrNeedsConfirmation() async throws {
+        let api = backend()
+        defer { AuthEntryHTTP.handler = nil }
+        AuthEntryHTTP.handler = { _ in (200, Data(#"{"id":"u","email":"m@example.com","confirmation_sent_at":"2026-11-20T10:00:00Z"}"#.utf8)) }
+        let confirmed = try await api.signIn(email: "m@example.com", password: "abcdefghijkl", signup: true)
+        XCTAssertFalse(confirmed); XCTAssertNil(api.session)
+        XCTAssertEqual(AuthEntryHTTP.requests.last?.url?.path, "/auth/v1/signup")
+        AuthEntryHTTP.handler = { _ in (200, Data(Self.sessionJSON.utf8)) }
+        let immediate = try await api.signIn(email: "m@example.com", password: "abcdefghijkl", signup: true)
+        XCTAssertTrue(immediate); XCTAssertEqual(api.session?.user.id, "u")
+    }
+    @MainActor func testSignUpWithAnUnreadableAnswerFailsAndSignInWithoutSessionFails() async {
+        let api = backend()
+        defer { AuthEntryHTTP.handler = nil }
+        AuthEntryHTTP.handler = { _ in (200, Data("{}".utf8)) }
+        do { _ = try await api.signIn(email: "m@example.com", password: "abcdefghijkl", signup: true); XCTFail("no user, no session") } catch { XCTAssertEqual(AuthFeedback.classify(error), .generic) }
+        // A password sign-in never "needs confirmation": the unconfirmed case arrives as an error.
+        AuthEntryHTTP.handler = { _ in (200, Data(#"{"id":"u"}"#.utf8)) }
+        do { _ = try await api.signIn(email: "m@example.com", password: "x", signup: false); XCTFail("sign-in without session") } catch { XCTAssertEqual(AuthFeedback.classify(error), .generic) }
+        XCTAssertNil(api.session)
+    }
+    @MainActor func testVerifySignupSendsSignupTypeAndSignsIn() async throws {
+        let api = backend()
+        AuthEntryHTTP.handler = { _ in (200, Data(Self.sessionJSON.utf8)) }
+        defer { AuthEntryHTTP.handler = nil }
+        try await api.verifySignup(email: " M@Example.com ", code: "471-912")
+        XCTAssertEqual(AuthEntryHTTP.requests[0].url?.path, "/auth/v1/verify")
+        XCTAssertEqual(try sentBody(AuthEntryHTTP.requests[0]), ["type": "signup", "email": "m@example.com", "token": "471912"])
+        XCTAssertEqual(api.session?.user.id, "u")
+        AuthEntryHTTP.requests = []
+        do { try await api.verifySignup(email: "m@example.com", code: "123"); XCTFail("short code") } catch { XCTAssertTrue(AuthEntryHTTP.requests.isEmpty); XCTAssertEqual(AuthFeedback.classify(error), .invalidCode) }
+    }
+    @MainActor func testWrongOrExpiredCodeAndNoSessionAreMappedToPlainWords() async {
+        let api = backend()
+        defer { AuthEntryHTTP.handler = nil }
+        AuthEntryHTTP.handler = { _ in (403, Data(#"{"code":403,"error_code":"otp_expired","msg":"Token has expired or is invalid"}"#.utf8)) }
+        do { try await api.verifySignup(email: "m@example.com", code: "471912"); XCTFail("expired") } catch {
+            XCTAssertEqual(AuthFeedback.classify(error), .invalidCode)
+            XCTAssertEqual(AuthFeedback.invalidCode.text, "That code didn't work. Check it or send a new one.")
+        }
+        AuthEntryHTTP.handler = { _ in (200, Data("{}".utf8)) }
+        do { try await api.verifySignup(email: "m@example.com", code: "471912"); XCTFail("no session") } catch { XCTAssertEqual(AuthFeedback.classify(error), .invalidCode) }
+        XCTAssertNil(api.session)
+    }
+    @MainActor func testResendConfirmationAndItsRateLimit() async {
+        let api = backend()
+        defer { AuthEntryHTTP.handler = nil }
+        AuthEntryHTTP.handler = { _ in (200, Data("{}".utf8)) }
+        try? await api.resendConfirmation(email: " M@Example.com ")
+        XCTAssertEqual(AuthEntryHTTP.requests[0].url?.path, "/auth/v1/resend")
+        XCTAssertEqual(try? sentBody(AuthEntryHTTP.requests[0]), ["type": "signup", "email": "m@example.com"])
+        AuthEntryHTTP.handler = { _ in (429, Data(#"{"code":429,"error_code":"over_email_send_rate_limit","msg":"For security purposes, you can only request this after 52 seconds."}"#.utf8)) }
+        do { try await api.resendConfirmation(email: "m@example.com"); XCTFail("limited") } catch { XCTAssertEqual(AuthFeedback.classify(error), .emailRateLimited) }
+    }
+    func testConfirmationFeedbackAndCooldown() {
+        XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "Email not confirmed")), .unconfirmed)
+        XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "For security purposes, you can only request this after 59 seconds.")), .emailRateLimited)
+        XCTAssertEqual(AuthFeedback.classify(AppFailure(message: "Token has expired or is invalid")), .invalidCode)
+        XCTAssertEqual(AuthFeedback.emailRateLimited.text, "Too many emails — try again in a minute.")
+        XCTAssertTrue(AuthFeedback.unconfirmed.offersResend); XCTAssertFalse(AuthFeedback.emailRateLimited.outlinesFields)
+        let now = Date(); XCTAssertEqual(EmailCodeCooldown.availableAt(from: now).timeIntervalSince(now), 60)
     }
     func testPasswordRuleCaption() {
         XCTAssertEqual(PasswordRuleStatus("").remaining, nil)
