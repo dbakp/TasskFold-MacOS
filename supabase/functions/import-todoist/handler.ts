@@ -11,7 +11,68 @@ const json = (body: unknown, status = 200) =>
     headers: { ...cors, "Content-Type": "application/json" },
   });
 type Config = { url: string; key: string; headingsEnabled?: boolean };
-export function createHandler(config: Config, fetcher: typeof fetch = fetch) {
+/** The legitimate request is a Todoist token plus small approval fields. */
+export const MAX_BODY_BYTES = 1_000_000;
+export const ADMISSION_WINDOW_MS = 10 * 60_000;
+export const ADMISSION_MAX_REQUESTS = 6;
+const ADMISSION_MAX_USERS = 2048;
+// deno-lint-ignore no-explicit-any
+async function readBounded(req: Request): Promise<any> {
+  const reader = req.body?.getReader();
+  if (!reader) throw new Error("empty");
+  const parts: Uint8Array[] = [];
+  let size = 0;
+  while (true) {
+    const item = await reader.read();
+    if (item.done) break;
+    size += item.value.length;
+    if (size > MAX_BODY_BYTES) {
+      await reader.cancel().catch(() => {});
+      throw new ImportError("The import request is too large.", 413);
+    }
+    parts.push(item.value);
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const part of parts) {
+    bytes.set(part, offset);
+    offset += part.length;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+export function createHandler(
+  config: Config,
+  fetcher: typeof fetch = fetch,
+  clock: () => number = Date.now,
+) {
+  // Best-effort per-isolate admission: one import per user at a time and a
+  // sliding request budget. Todoist and the database remain the durable limits.
+  const admissions = new Map<string, { at: number[]; active: number }>();
+  const admit = (user: string): number => {
+    const now = clock();
+    for (const [id, entry] of admissions) {
+      entry.at = entry.at.filter((t) => now - t < ADMISSION_WINDOW_MS);
+      if (!entry.active && !entry.at.length) admissions.delete(id);
+    }
+    const entry = admissions.get(user) ?? { at: [], active: 0 };
+    if (entry.active >= 1 || entry.at.length >= ADMISSION_MAX_REQUESTS) {
+      const wait = entry.active >= 1
+        ? 5_000
+        : ADMISSION_WINDOW_MS - (now - entry.at[0]);
+      return Math.max(1, Math.ceil(wait / 1000));
+    }
+    if (!admissions.has(user) && admissions.size >= ADMISSION_MAX_USERS) {
+      return 30;
+    }
+    entry.at.push(now);
+    entry.active++;
+    admissions.set(user, entry);
+    return 0;
+  };
+  const release = (user: string) => {
+    const entry = admissions.get(user);
+    if (entry) entry.active = Math.max(0, entry.active - 1);
+  };
   return async (req: Request): Promise<Response> => {
     if (req.method === "OPTIONS") return new Response(null, { headers: cors });
     if (req.method !== "POST") {
@@ -21,6 +82,11 @@ export function createHandler(config: Config, fetcher: typeof fetch = fetch) {
     if (!authorization?.startsWith("Bearer ")) {
       return json({ error: "Sign in to import from Todoist." }, 401);
     }
+    if (Number(req.headers.get("Content-Length") ?? 0) > MAX_BODY_BYTES) {
+      void req.body?.cancel().catch(() => {});
+      return json({ error: "The import request is too large." }, 413);
+    }
+    let admitted: string | null = null, streaming = false;
     try {
       const auth = await fetcher(`${config.url}/auth/v1/user`, {
         headers: { apikey: config.key, Authorization: authorization },
@@ -36,10 +102,24 @@ export function createHandler(config: Config, fetcher: typeof fetch = fetch) {
       if (typeof user?.id !== "string") {
         return json({ error: "Sign in to import from Todoist." }, 401);
       }
+      const wait = admit(user.id);
+      if (wait) {
+        void req.body?.cancel().catch(() => {});
+        const limited = json(
+          { error: "Too many import requests. Try again shortly." },
+          429,
+        );
+        limited.headers.set("Retry-After", String(wait));
+        return limited;
+      }
+      admitted = user.id;
       let body;
       try {
-        body = await req.json();
-      } catch {
+        body = await readBounded(req);
+      } catch (error) {
+        if (error instanceof ImportError) {
+          return json({ error: error.message }, error.status);
+        }
         return json({ error: "Invalid request body." }, 400);
       }
       if (
@@ -158,10 +238,12 @@ export function createHandler(config: Config, fetcher: typeof fetch = fetch) {
                   : "The import could not finish. Retry safely using the same account.",
               });
             } finally {
+              if (admitted) release(admitted);
               controller.close();
             }
           },
         });
+        streaming = true;
         return new Response(stream, {
           headers: {
             ...cors,
@@ -177,6 +259,8 @@ export function createHandler(config: Config, fetcher: typeof fetch = fetch) {
           ? error.message
           : "The import could not finish. Retry safely using the same account.",
       }, error instanceof ImportError ? error.status : 502);
+    } finally {
+      if (admitted && !streaming) release(admitted);
     }
   };
 }

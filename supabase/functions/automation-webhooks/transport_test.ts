@@ -131,6 +131,11 @@ Deno.test("webhook URLs canonicalize public identities and refuse userinfo, cont
       "https://metadata/",
       "https://receiver.example:0/",
       "https://receiver.example:65536/",
+      "https://receiver.example:80/",
+      "https://receiver.example:22/",
+      "https://receiver.example:6379/",
+      "https://receiver.example:8080/",
+      "https://receiver.example:9200/",
       "https://receiver.example/\nprivate",
       "https://receiver.example\\@127.0.0.1/",
       "https://receiver.example/" + "x".repeat(4096),
@@ -629,5 +634,31 @@ Deno.test("webhook actual TLS and HTTP receiver behavior", async (t) => {
     }
   } finally {
     await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("webhook destinations are limited to ports 443 and 8443", () => {
+  assert(
+    webhookTarget("https://receiver.example/").port === 443,
+    "Default port",
+  );
+  assert(
+    webhookTarget("https://receiver.example:443/x").port === 443,
+    "Explicit 443",
+  );
+  assert(
+    webhookTarget("https://receiver.example:8443/x").port === 8443,
+    "8443",
+  );
+  for (
+    const port of [1, 22, 25, 80, 3306, 5432, 6379, 8000, 8080, 9200, 65535]
+  ) {
+    let refused = false;
+    try {
+      webhookTarget("https://receiver.example:" + port + "/");
+    } catch {
+      refused = true;
+    }
+    assert(refused, "Port " + port + " accepted");
   }
 });

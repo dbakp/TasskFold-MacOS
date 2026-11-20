@@ -127,3 +127,18 @@ commands whose Auth is gone remain unprovable; cache deletion is never guessed.
 If Auth is gone but owned file metadata remains after receipt expiry, administrative
 repair is needed before the absence proof can confirm. Mac profile/runtime and
 broader concurrency/distribution acceptance remain separate.
+
+## Receipt timing and cancel (server hardening)
+
+`{"action":"prepare"}` no longer creates a receipt. It verifies a live Auth
+session (or an existing pending receipt, for retries) and returns the signed
+status proof. The seven-day irreversible receipt is created only by the execute
+call (`{}`), which verifies the JWT live with Auth and checks the active session
+in the service-only begin RPC. Upload fencing therefore starts at execute.
+
+`{"action":"cancel"}` (protocol 2 header, live JWT required) clears this
+account's pending, not-yet-completed receipts via
+`taskfold_account_removal_cancel` (migration `20261113090000`). It returns
+`{ "canceled": true }`, or 409 if removal already completed. It deletes nothing;
+files already removed by an interrupted execute are not restored. Existing
+clients need no change; none call cancel yet.

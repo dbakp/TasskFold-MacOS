@@ -184,13 +184,60 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       } catch {
         return json({ error: "Use an empty removal request." }, 400);
       }
-      const preparing = !!body && typeof body === "object" &&
-        !Array.isArray(body) && Object.keys(body).length === 1 &&
-        (body as { action?: unknown }).action === "prepare";
+      const action = !!body && typeof body === "object" &&
+          !Array.isArray(body) && Object.keys(body).length === 1
+        ? (body as { action?: unknown }).action
+        : undefined;
+      const preparing = action === "prepare", cancelling = action === "cancel";
       if (
         !body || typeof body !== "object" || Array.isArray(body) ||
-        (!preparing && Object.keys(body).length)
+        (!preparing && !cancelling && Object.keys(body).length)
       ) return json({ error: "Use a reviewed account-removal request." }, 400);
+      // A live, verified session is required to authorize anything destructive
+      // and to cancel. The JWT is checked by Auth itself, never trusted locally.
+      const verifyLive = async () => {
+        const authenticated = await api(
+          "/auth/v1/user",
+          "GET",
+          undefined,
+          token,
+        );
+        if (authenticated.status === 401 || authenticated.status === 403) {
+          throw new Refusal(401, "Sign in again to remove your account.");
+        }
+        if (authenticated.status !== 200) {
+          throw new Error("Authentication service unavailable");
+        }
+        const user = authenticated.value as { id?: string };
+        let claims: { sub?: string; session_id?: string };
+        try {
+          claims = JSON.parse(
+            atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
+          );
+        } catch {
+          throw new Refusal(401, "Sign in again to remove your account.");
+        }
+        if (
+          !user?.id || !uuid.test(user.id) || claims.sub !== user.id ||
+          !uuid.test(claims.session_id ?? "")
+        ) throw new Refusal(401, "Sign in again to remove your account.");
+        return { id: user.id, session: claims.session_id as string };
+      };
+      if (cancelling) {
+        // Cancel clears a pending (not yet completed) receipt so uploads are no
+        // longer fenced. It never deletes data.
+        const live = await verifyLive();
+        const result = await rpc("cancel", { _account: live.id }) as
+          | { canceled?: unknown; complete?: unknown }
+          | null;
+        if (!result || typeof result.complete !== "boolean") {
+          throw new Error("Invalid cancellation response");
+        }
+        if (result.complete) {
+          throw new Refusal(409, "This account has already been removed.");
+        }
+        return json({ canceled: true });
+      }
       const proofHeader = request.headers.get(
         "X-Taskfold-Account-Removal-Proof",
       );
@@ -253,32 +300,20 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         !authority && proofAccount &&
         await rpc("absent", { _account: proofAccount }) === true
       ) return json({ deleted: true });
-      if (!authority) {
-        const authenticated = await api(
-          "/auth/v1/user",
-          "GET",
-          undefined,
-          token,
+      if (preparing) {
+        // Preparation never creates a receipt. The seven-day irreversible
+        // authorization is minted only by the execute call below.
+        const account = authority?.account ?? (await verifyLive()).id;
+        const proof = await issueProof(
+          account,
+          origin,
+          now(),
+          (id) => rpc("proof_key", { _id: id }),
         );
-        if (authenticated.status === 401 || authenticated.status === 403) {
-          throw new Refusal(401, "Sign in again to remove your account.");
-        }
-        if (authenticated.status !== 200) {
-          throw new Error("Authentication service unavailable");
-        }
-        const user = authenticated.value as { id?: string };
-        let claims: { sub?: string; session_id?: string };
-        try {
-          claims = JSON.parse(
-            atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
-          );
-        } catch {
-          throw new Refusal(401, "Sign in again to remove your account.");
-        }
-        if (
-          !user?.id || !uuid.test(user.id) || claims.sub !== user.id ||
-          !uuid.test(claims.session_id ?? "")
-        ) throw new Refusal(401, "Sign in again to remove your account.");
+        return json({ prepared: true, account, proof });
+      }
+      if (!authority) {
+        const user = await verifyLive();
         if (proofAccount && user.id !== proofAccount) {
           throw new Refusal(401, "Removal authorization does not match.");
         }
@@ -286,19 +321,10 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           await rpc("begin", {
             ...key,
             _account: user.id,
-            _session: claims.session_id,
+            _session: user.session,
           }),
         );
         if (!authority) throw new Error("Missing authorization");
-      }
-      if (preparing) {
-        const proof = await issueProof(
-          authority.account,
-          origin,
-          now(),
-          (id) => rpc("proof_key", { _id: id }),
-        );
-        return json({ prepared: true, account: authority.account, proof });
       }
       // A hash receipt is an already-authorized irreversible command, not a new
       // deletion authorized by a revoked JWT. It also confirms a lost success reply.

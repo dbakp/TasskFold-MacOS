@@ -50,6 +50,7 @@ function fixture(
     absent?: boolean;
     proofOutage?: boolean;
     proofRevoked?: boolean;
+    cancelComplete?: boolean;
   } = {},
 ) {
   const calls: string[] = [];
@@ -147,6 +148,15 @@ function fixture(
     }
     if (path === "/auth/v1/admin/users/" + owner && req.method === "GET") {
       return response({ message: "No user" }, removed ? 404 : 200);
+    }
+    if (path.endsWith("_cancel")) {
+      assert((await req.json())._account === owner, "Wrong cancel account");
+      const had = authorized;
+      authorized = false;
+      return response({
+        canceled: had ? 1 : 0,
+        complete: options.cancelComplete ?? false,
+      });
     }
     if (path.endsWith("_complete")) {
       assert(removed, "Receipt confirmed before Auth deletion");
@@ -362,8 +372,12 @@ Deno.test("preparation authorizes and returns a status proof without deleting an
     "Invalid prepared proof",
   );
   assert(
-    f.calls.some((x) => x.endsWith("_begin")),
-    "Preparation skipped authorization",
+    f.calls.includes("GET /auth/v1/user"),
+    "Preparation skipped live JWT verification",
+  );
+  assert(
+    !f.calls.some((x) => x.endsWith("_begin")),
+    "Preparation minted a deletion receipt",
   );
   assert(
     !f.calls.some((x) =>
@@ -432,5 +446,77 @@ Deno.test("missing, revoked and tampered proofs refuse; key outages remain retry
   assert(
     outage.status === 503 && !(await outage.text()).includes("PRIVATE"),
     "Key outage was not retryable/private",
+  );
+});
+Deno.test("preparation needs a live JWT and never mints a receipt, even when refused", async () => {
+  const f = fixture({ auth: 401 }),
+    result = await f.handler(request({ action: "prepare" }));
+  assert(result.status === 401, "Revoked JWT could prepare");
+  assert(
+    !f.calls.some((x) => x.endsWith("_begin") || x.startsWith("DELETE")),
+    "Refused preparation mutated state",
+  );
+  const g = fixture({ beginDenied: true });
+  assert(
+    (await g.handler(request({ action: "prepare" }))).status === 200,
+    "Preparation should not depend on begin",
+  );
+  assert(!g.calls.some((x) => x.endsWith("_begin")), "Prepare called begin");
+});
+Deno.test("execute after prepare mints the receipt with the live-verified session", async () => {
+  const f = fixture();
+  assert(
+    (await f.handler(request({ action: "prepare" }))).status === 200,
+    "Prepare failed",
+  );
+  assert(!f.calls.some((x) => x.endsWith("_begin")), "Receipt too early");
+  const done = await f.handler(request());
+  assert(done.status === 200, "Execute failed");
+  assert(
+    f.calls.filter((x) => x.endsWith("_begin")).length === 1,
+    "Receipt not minted on execute",
+  );
+});
+Deno.test("cancel clears a pending receipt with a live JWT and deletes nothing", async () => {
+  const f = fixture({ pending: true }),
+    result = await f.handler(request({ action: "cancel" }));
+  assert(
+    result.status === 200 && (await result.json()).canceled === true,
+    "Cancel failed",
+  );
+  assert(
+    f.calls.includes("GET /auth/v1/user"),
+    "Cancel skipped live JWT check",
+  );
+  assert(
+    !f.calls.some((x) =>
+      x.startsWith("DELETE") || x.endsWith("_files") || x.endsWith("_begin")
+    ),
+    "Cancel deleted or started removal",
+  );
+});
+Deno.test("cancel refuses without a live JWT and after completion", async () => {
+  const f = fixture({ pending: true, auth: 401 });
+  assert(
+    (await f.handler(request({ action: "cancel" }))).status === 401,
+    "Dead JWT cancelled",
+  );
+  assert(
+    !f.calls.some((x) => x.endsWith("_cancel")),
+    "Cancel RPC reached without auth",
+  );
+  const g = fixture({ cancelComplete: true });
+  assert(
+    (await g.handler(request({ action: "cancel" }))).status === 409,
+    "Completed removal cancelled",
+  );
+  const h = fixture();
+  assert(
+    (await h.handler(request({ action: "cancel", extra: 1 }))).status === 400,
+    "Extra field accepted",
+  );
+  assert(
+    (await h.handler(request({ action: "nope" }))).status === 400,
+    "Unknown action accepted",
   );
 });
