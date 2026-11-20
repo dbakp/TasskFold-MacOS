@@ -8,7 +8,7 @@ const owner = "b0b0cafe-0000-4000-8000-000000000001",
 const config = {
   url: "https://invite.test",
   serviceKey: "service-fixture",
-  resendKey: "resend-fixture",
+  lettermintToken: "lm_fixture",
   from: "Taskfold <invites@mail.example.test>",
 };
 const assert = (value: unknown, message: string) => {
@@ -26,8 +26,8 @@ type Options = {
   projectName?: string;
   displayName?: string | null;
   claim?: Record<string, unknown>;
-  resend?: number;
-  resendThrows?: boolean;
+  provider?: number;
+  providerThrows?: boolean;
 };
 function fixture(options: Options = {}) {
   const calls: {
@@ -87,9 +87,12 @@ function fixture(options: Options = {}) {
     if (url.pathname === "/rest/v1/rpc/taskfold_release_invitation_email") {
       return reply(null, 204);
     }
-    if (url.hostname === "api.resend.com") {
-      if (options.resendThrows) throw new Error("network");
-      return reply({ id: "x" }, options.resend ?? 200);
+    if (url.hostname === "api.lettermint.co") {
+      if (options.providerThrows) throw new Error("network");
+      return reply(
+        { message_id: "x", status: "pending" },
+        options.provider ?? 202,
+      );
     }
     return reply({}, 500);
   };
@@ -111,7 +114,7 @@ const post = (
     body: method === "POST" ? JSON.stringify(body) : undefined,
   });
 const sentEmails = (calls: ReturnType<typeof fixture>["calls"]) =>
-  calls.filter((c) => new URL(c.url).hostname === "api.resend.com");
+  calls.filter((c) => new URL(c.url).hostname === "api.lettermint.co");
 
 Deno.test("method and bearer token are required", async () => {
   const f = fixture();
@@ -155,6 +158,7 @@ Deno.test("happy path sends one email derived only from server data", async () =
     subject: string;
     html: string;
     text: string;
+    tag: string;
   };
   assert(body.from === config.from, "fixed from");
   assert(
@@ -170,8 +174,14 @@ Deno.test("happy path sends one email derived only from server data", async () =
     "server names",
   );
   assert(
-    mail[0].headers.get("Authorization") === "Bearer resend-fixture",
+    mail[0].headers.get("x-lettermint-token") === "lm_fixture" &&
+      !mail[0].headers.has("Authorization"),
     "provider key",
+  );
+  assert(
+    new URL(mail[0].url).pathname === "/v1/send" && body.tag === "invitation" &&
+      Array.isArray(body.to),
+    "Lettermint send request",
   );
   assert(
     mail[0].headers.get("Idempotency-Key")?.includes(invitationId),
@@ -307,7 +317,7 @@ Deno.test("the per-user hourly limit returns 429 and sends nothing", async () =>
 });
 
 Deno.test("a provider failure releases the claim and reports 502", async () => {
-  for (const options of [{ resend: 500 }, { resendThrows: true }]) {
+  for (const options of [{ provider: 500 }, { providerThrows: true }]) {
     const f = fixture(options);
     const res = await f.handler()(post({ invitationId }));
     assert(res.status === 502, "502");
@@ -323,7 +333,7 @@ Deno.test("a provider failure releases the claim and reports 502", async () => {
 
 Deno.test("missing sender or provider key fails closed with 503", async () => {
   for (
-    const override of [{ from: "" }, { resendKey: "" }, {
+    const override of [{ from: "" }, { lettermintToken: "" }, {
       from: "a@b.test\r\nBcc: x@y.test",
     }]
   ) {
@@ -375,7 +385,7 @@ Deno.test("logs never contain addresses or content", async () => {
   const lines: string[] = [], original = console.error;
   console.error = (...args: unknown[]) => lines.push(args.join(" "));
   try {
-    await fixture({ resend: 500 }).handler()(post({ invitationId }));
+    await fixture({ provider: 500 }).handler()(post({ invitationId }));
   } finally {
     console.error = original;
   }
