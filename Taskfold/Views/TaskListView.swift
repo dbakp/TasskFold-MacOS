@@ -1023,7 +1023,7 @@ struct QuickReferenceCompletionModifier: ViewModifier {
     }
     private func choose(_ option: QuickReferenceCompletion.Option, using candidate: QuickEntryCompletion? = nil, input: String? = nil) {
         guard let result = (candidate ?? completion).choosing(option, in: input ?? text) else { return }
-        if ["project_id", "section_id", "labels", "assigned_to"].contains(option.group) { choices[option.reference] = option.recordID }
+        if !option.createsLabel, ["project_id", "section_id", "labels", "assigned_to"].contains(option.group) { choices[option.reference] = option.recordID }
         declined.remove(option.group)
         if option.group == "reminder_specs" {
             let accepted = QuickEntry(result.text, context: context, task: task)

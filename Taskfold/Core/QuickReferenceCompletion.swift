@@ -9,7 +9,9 @@ struct QuickReferenceCompletion {
         var name: String
         var detail: String
         var reference: String
-        var id: String { group + ":" + recordID }
+        /// True for the "＋ Create label" offer: nothing exists yet, the label is made when the task is saved.
+        var createsLabel = false
+        var id: String { createsLabel ? group + ":new:" + QuickEntryContext.key(name) : group + ":" + recordID }
     }
     private var source = ""
     var range: NSRange?
@@ -88,6 +90,13 @@ struct QuickReferenceCompletion {
         default: range = nil; return
         }
         let needle = QuickEntryContext.key(query)
+        // An unknown label name is not a dead end: offer to create it. Saving the task makes the label, as typing "@Family" does.
+        let isShared = !(context.members[base.currentProject] ?? []).isEmpty
+        if options.isEmpty, ["#", "@", "%"].contains(symbol), qualifier != "project", !isShared,
+           let name = Self.newLabelName(query), let raw = reference("@", name) {
+            options = [Option(group: "labels", recordID: "", name: "＋ Create label “" + name + "”", detail: "New label · made when you add the task", reference: raw, createsLabel: true)]
+            prompt = "Create a label"
+        }
         options.sort {
             let a = QuickEntryContext.key($0.name), b = QuickEntryContext.key($1.name)
             let ap = a.hasPrefix(needle), bp = b.hasPrefix(needle)
@@ -96,6 +105,12 @@ struct QuickReferenceCompletion {
             if $0.detail != $1.detail { return $0.detail < $1.detail }
             return $0.id < $1.id
         }
+    }
+    /// The name a "＋ Create label" offer would use for a typed query: trimmed, one line, no quotes, at most 60 characters.
+    static func newLabelName(_ query: String) -> String? {
+        let name = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name.count <= 60, !name.contains("\""), !name.contains(where: \.isNewline) else { return nil }
+        return name
     }
     /// Multi-line native fields can insert a newline for Done rather than emit onSubmit.
     /// Recognize only one inserted return, so pasting multiline work stays a draft.

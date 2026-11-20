@@ -32,6 +32,9 @@ struct TaskCapturePanel: View {
     /// Place names this account asked for before, read once when the composer opens.
     @State private var placeNames: [String] = []
     @FocusState private var focused: Bool
+    /// The text this composer opened with when it came back from an unsent draft; nil once edited or cleared.
+    @State private var restoredDraft: String?
+    @State private var selectAllMonitor: Any?
     @FocusState private var focusedChip: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -100,6 +103,7 @@ struct TaskCapturePanel: View {
                 titleField(parsed, effective: effective, dateTint: dateTint)
                 tokenRow(parsed, effective: effective).padding(.leading, DS.Size.checkbox + DS.Space.m)
                 placeOffer(parsed).padding(.leading, DS.Size.checkbox + DS.Space.m)
+                if restoredDraft != nil { draftNotice.padding(.leading, DS.Size.checkbox + DS.Space.m) }
                 ForEach(parsed.warnings, id: \.self) { warning in
                     Text(warning).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary).padding(.leading, DS.Size.checkbox + DS.Space.m).accessibilityIdentifier("quickEntryWarning")
                 }
@@ -116,11 +120,42 @@ struct TaskCapturePanel: View {
                 Button("Brain dump") { brainDump(effective) }.keyboardShortcut("b", modifiers: [.command, .shift]).hidden().accessibilityHidden(true)
             }
         }
-        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true; placeNames = LocationPlaceRequest.knownNames(in: store.rows("tasks")) }
+        .onAppear {
+            workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true; placeNames = LocationPlaceRequest.knownNames(in: store.rows("tasks"))
+            if QuickAddDraftNotice.isRestored(openingText: text) { restoredDraft = text }
+            installSelectAll()
+        }
         .task(id: parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? manual["project_id"]?.text ?? context.currentProject) }
         .onExitCommand { close() }
-        .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
-        .onDisappear { if text.isEmpty { setManual([:]) } }
+        .onChange(of: text) { _, value in
+            if value.isEmpty { declined = [] }
+            if value != restoredDraft { restoredDraft = nil }
+        }
+        .onDisappear {
+            if text.isEmpty { setManual([:]) }
+            if let selectAllMonitor { NSEvent.removeMonitor(selectAllMonitor) }; selectAllMonitor = nil
+        }
+    }
+    /// "Draft restored · Clear": an unsent draft from an earlier session is shown as such, and one click discards it.
+    private var draftNotice: some View {
+        HStack(spacing: DS.Space.xs) {
+            Text("Draft restored ·").font(DS.Font.taskMeta).foregroundStyle(DS.Palette.textSecondary)
+            Button("Clear") {
+                text = ""; declined = []; choices = [:]; setManual([:]); restoredDraft = nil; focused = true
+            }.buttonStyle(.plain).font(DS.Font.taskMeta).foregroundStyle(DS.Palette.accent).pointerStyle(.link).accessibilityIdentifier("quickAddClearDraft")
+        }.accessibilityElement(children: .contain).accessibilityIdentifier("quickAddDraftRestored")
+    }
+    /// ⌘A selects the title text while the field editor is active. Without this the Select All menu item can go to the
+    /// window's list instead of the field, so the field handles `selectAll:` first.
+    private func installSelectAll() {
+        guard selectAllMonitor == nil else { return }
+        selectAllMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.modifierFlags.intersection([.command, .shift, .option, .control]) == .command,
+                  event.charactersIgnoringModifiers?.lowercased() == "a",
+                  let editor = event.window?.firstResponder as? NSTextView, editor.isFieldEditor || editor.isEditable else { return event }
+            editor.selectAll(nil)
+            return nil
+        }
     }
     private func brainDump(_ effective: Record) {
         // The composer closes first, so the Brain dump sheet is presented by the window itself.
