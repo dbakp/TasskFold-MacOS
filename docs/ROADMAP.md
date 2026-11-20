@@ -205,7 +205,13 @@ I'd finish the subtask migration, because it protects data. The rest should ship
     - The period subtitles show the exact dates.
   - [x] L-1: click a row, then press Space to complete it.
   - [x] IQ-1: Add ▸ Subtask, Comment, Waiting on and Blocker focus their own field.
-- **Next:** PR 2 (sign-in screen and account entry points) and PR 3 (starter-project onboarding) wait for your mockup review. PR 4 is polish.
+- [x] **PR 3, starter-project onboarding** (branch `starter-onboarding` in both repos; OA-11, OA-14 and the onboarding redesign):
+  - [x] After the first sign-in (or choosing local mode): a skippable "Set up your day" sheet (working hours and where the app opens), then one welcome card with "Show me", replacing the five-page tour.
+  - [x] The starter project "Get to know Taskfold" (the app's Blue) has six real tasks that tick themselves off: add a task with a date or priority in Quick Add, drag the dated task to tomorrow, add a subtask, set working hours, connect a calendar, and open the account on the other platform. A progress card, a sidebar or Browse pill and an Undo toast show it; Help ▸ Show Starter Project (Mac) and Settings ▸ Show Starter Project (iPhone) bring it back.
+  - [x] Works for signed-in accounts as well as local mode. IDs are UUIDv5 of the account, "starter-v1" and a key, so two devices write the same rows. The "seeded" flag lives in the account's existing `profiles.preferences` JSON (`onboarding.starter`), with no hosted migration; local mode keeps it in the local profile row. An account that already has work is never given a starter project.
+  - Core: new `Onboarding.swift` (pure rules, tested) and `OnboardingStore.swift` (applies them to the Store); `Store.seedGettingStarted` is gone.
+  - Not done: the Holidays row of the mockup (no holiday setting exists to save it to), and carrying starter progress from local mode into an account (the starter project is left out of the PR 2 migration).
+- **Next:** PR 2 (sign-in screen and account entry points) waits for review. PR 4 is polish.
 
 ## Phase 0 outcome (10 November 2026)
 - **Baseline.**

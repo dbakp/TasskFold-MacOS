@@ -1,294 +1,228 @@
 import SwiftUI
 
-/// The welcome tour: five pages built from the app's own components (real chips, real check controls,
-/// the real accent), so what the tour shows is exactly what the app does. Dismissable at any point with
-/// Skip or Escape; ← → and Return move between pages; Settings ▸ General can show it again.
+/// First run (design review mac-r2, PR 3): "Set up your day", then one welcome card that opens the starter project.
+/// The starter project itself, its progress card and the sidebar pill live below; the rules that tick its tasks off are
+/// in `Core/Onboarding.swift`.
+
+// MARK: - Shared pieces
+
+enum StarterStyle {
+    /// The starter project's own hue (the app's Blue). Progress, the auto-complete toast and the pill all use it.
+    static var hue: ProjectHue { ProjectPalette.hue(stored: Onboarding.projectColor, projectID: "starter") }
+    static var tint: Color { hue.color }
+    static func title(_ size: CGFloat = 24) -> Font { .custom(DS.Font.screenTitleFace, size: size, relativeTo: .title) }
+}
+
+/// Six segments, one per starter task; filled segments take the project's hue.
+struct StarterProgressBar: View {
+    var count: Int
+    var total = Onboarding.Key.allCases.count
+    var tint: Color = StarterStyle.tint
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<total, id: \.self) { index in
+                Capsule().fill(index < count ? tint : Color.primary.opacity(0.12)).frame(height: 5)
+            }
+        }
+        .animation(Transitions.Ease.smoothOut, value: count)
+        .accessibilityElement(children: .ignore).accessibilityLabel("\(count) of \(total) done")
+    }
+}
+
+/// "2 of 6" beside the project in the sidebar.
+struct StarterProgressPill: View {
+    var count: Int
+    var total = Onboarding.Key.allCases.count
+    var body: some View {
+        Text("\(count) of \(total)").font(.caption.weight(.semibold)).monospacedDigit()
+            .foregroundStyle(StarterStyle.tint)
+            .padding(.horizontal, 8).padding(.vertical, 2)
+            .background(StarterStyle.tint.opacity(0.14), in: .capsule)
+            .accessibilityLabel("\(count) of \(total) starter tasks done").accessibilityIdentifier("starterProgressPill")
+    }
+}
+
+// MARK: - Set up your day
+
+struct SetUpYourDaySheet: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("defaultView") private var defaultView = "today"
+    @State private var start = 9 * 60
+    @State private var end = 17 * 60
+    /// Called once the sheet is closed by Skip or Continue.
+    var finished: () -> Void = {}
+
+    private func time(_ minutes: Int) -> String { String(format: "%02d:%02d", minutes / 60, minutes % 60) }
+    private func field(_ value: Binding<Int>, range: ClosedRange<Int>) -> some View {
+        HStack(spacing: 4) {
+            Text(time(value.wrappedValue)).font(.body.monospacedDigit()).frame(width: 58).padding(.vertical, 4)
+                .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: DS.Radius.s, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).strokeBorder(Color.primary.opacity(0.14)))
+            Stepper("", value: value, in: range, step: 30).labelsHidden()
+        }
+    }
+    private func row<Control: View>(_ title: String, _ note: String, @ViewBuilder control: () -> Control) -> some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 2) { Text(title); Text(note).font(.subheadline).foregroundStyle(.secondary) }
+            Spacer(minLength: 12)
+            control()
+        }.padding(.horizontal, 16).padding(.vertical, 12)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Set up your day").font(StarterStyle.title(24)).accessibilityAddTraits(.isHeader)
+                Text("Two quick choices so Taskfold fits your week. You can change them any time in Settings.")
+                    .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }.padding(.horizontal, 24).padding(.top, 24).padding(.bottom, 16)
+            VStack(spacing: 0) {
+                row("Working hours", "Your day is planned inside these.") {
+                    HStack(spacing: 8) {
+                        field($start, range: 0...(end - 30)).accessibilityLabel("Start of working hours")
+                        Text("to").foregroundStyle(.secondary)
+                        field($end, range: (start + 30)...1440).accessibilityLabel("End of working hours")
+                    }
+                }
+                Divider()
+                row("Start in", "Where Taskfold opens each day.") {
+                    Picker("Start in", selection: $defaultView) {
+                        Text("Today").tag(TaskScope.today.preferenceKey); Text("Inbox").tag(TaskScope.inbox.preferenceKey); Text("Upcoming").tag(TaskScope.upcoming.preferenceKey)
+                    }.pickerStyle(.segmented).labelsHidden().frame(width: 200).accessibilityIdentifier("setupStartIn")
+                }
+            }
+            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: DS.Radius.m, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))
+            .padding(.horizontal, 24)
+            Divider().padding(.top, 20)
+            HStack {
+                Button("Skip") { close() }.keyboardShortcut(.cancelAction).controlSize(.large).foregroundStyle(.primary).accessibilityIdentifier("setupSkip")
+                Spacer()
+                Button("Continue") { save(); close() }.buttonStyle(.borderedProminent).tint(.brandCrimson).controlSize(.large)
+                    .keyboardShortcut(.defaultAction).accessibilityIdentifier("setupContinue")
+            }.padding(.horizontal, 24).padding(.vertical, 14)
+        }
+        .frame(width: 520)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .onAppear {
+            // Start from what the account already has, so Continue never overwrites a choice.
+            if let hours = store.workingHours { start = hours.start; end = hours.end }
+        }
+    }
+    private func save() {
+        let binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+        // Saving the hours also ticks the starter task through the store's commit hook; the sheet's own close is the
+        // moment the person sees, so that toast is held back. An unchanged value writes nothing, so tick it directly.
+        _ = store.setWorkingHours(WorkingHours(start: start, end: end), workspace: binding)
+        store.observeOnboarding(.setupSaved)
+        store.onboardingAnnouncement = nil
+    }
+    private func close() { dismiss(); finished() }
+}
+
+// MARK: - Welcome card
+
+/// One 480 pt card that replaces the old five-page tour. "Show me" opens the starter project.
 struct OnboardingView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("onboardingSeen") private var onboardingSeen = false
-    @AppStorage("accent") private var accent = "rose"
-    @State private var page = 0
-    @State private var direction: CGFloat = 1
-    @FocusState private var focused: Bool
-    private let pages = 5
-    private var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
+
+    private var progress: Onboarding.Progress { store.starterProject == nil ? Onboarding.Progress() : store.starterProgress }
+    private var peek: [Record] {
+        let rows = store.starterTasks
+        return Onboarding.Key.allCases.compactMap { key in rows.first { Onboarding.key(forTask: $0.id, account: store.userID) == key } }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack {
-                illustration.id(page)
-                    .transition(reduceMotion ? .opacity : .asymmetric(
-                        insertion: .move(edge: direction > 0 ? .trailing : .leading).combined(with: .opacity),
-                        removal: .move(edge: direction > 0 ? .leading : .trailing).combined(with: .opacity)))
-            }
-            .frame(height: 300)
-            .frame(maxWidth: .infinity)
-            .background(
-                LinearGradient(colors: [Color.taskfold.opacity(0.16), Color.taskfold.opacity(0.03)], startPoint: .top, endPoint: .bottom)
-            )
-            .clipped()
-            .overlay(alignment: .topTrailing) {
-                Button("Skip") { finish() }.buttonStyle(.plain).foregroundStyle(.secondary).padding(16)
-                    .keyboardShortcut(.cancelAction).accessibilityIdentifier("skipOnboarding")
-            }
-            VStack(spacing: 10) {
-                Text(title).font(.title.weight(.semibold)).id("t\(page)").transition(.textSwap)
-                Text(body_).font(.body).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 440).fixedSize(horizontal: false, vertical: true)
-                    .id("b\(page)").transition(.textSwap)
-            }
-            .padding(.horizontal, 32).padding(.top, 26).padding(.bottom, 18)
-            .frame(minHeight: 130, alignment: .top)
-            .animation(Transitions.Ease.smoothOut, value: page)
-            HStack(spacing: 14) {
-                Button { move(-1) } label: { Image(systemName: "chevron.left") }.disabled(page == 0).accessibilityLabel("Previous page")
-                Spacer()
-                HStack(spacing: 7) {
-                    ForEach(0..<pages, id: \.self) { index in
-                        Button { direction = index > page ? 1 : -1; withAnimation(layout) { page = index } } label: {
-                            Capsule().fill(index == page ? Color.taskfold : Color.primary.opacity(0.15))
-                                .frame(width: index == page ? 22 : 7, height: 7)
-                        }.buttonStyle(.plain).accessibilityLabel("Page \(index + 1) of \(pages)").accessibilityAddTraits(index == page ? .isSelected : [])
-                    }
+            TaskfoldMark(size: 56).padding(.top, 32)
+            Text("Welcome to Taskfold").font(StarterStyle.title(28)).padding(.top, 18).accessibilityAddTraits(.isHeader)
+            Text("Your starter project will show you around. It takes about two minutes.")
+                .font(.body).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 340).fixedSize(horizontal: false, vertical: true).padding(.top, 6)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    StarterProgressBar(count: progress.count)
+                    (Text("\(progress.count)").fontWeight(.semibold).foregroundStyle(.primary) + Text(" of \(progress.total) done").foregroundStyle(.secondary)).font(.subheadline).monospacedDigit().fixedSize()
                 }
-                .animation(Transitions.Ease.smoothOut, value: page)
-                Spacer()
-                if page < pages - 1 {
-                    Button("Continue") { move(1) }.buttonStyle(.borderedProminent).controlSize(.large).keyboardShortcut(.defaultAction).accessibilityIdentifier("onboardingContinue")
-                } else {
-                    if store.signedIn && store.localMode {
-                        Button("Sign In…") { finish(); workspace.settingsTab = .account; workspace.signInRequested = true; NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) }
-                            .controlSize(.large)
-                    }
-                    Button("Get Started") { finish() }.buttonStyle(.borderedProminent).controlSize(.large).keyboardShortcut(.defaultAction).accessibilityIdentifier("finishOnboarding")
+                ForEach(peek.prefix(3)) { task in
+                    HStack(spacing: 10) {
+                        Image(systemName: task.completed ? "checkmark.circle.fill" : "circle").foregroundStyle(task.completed ? StarterStyle.tint : Color.secondary.opacity(0.7))
+                        Text(task.title).foregroundStyle(task.completed ? .secondary : .primary)
+                        Spacer(minLength: 0)
+                    }.font(.body)
                 }
             }
-            .padding(.horizontal, 24).padding(.bottom, 20)
+            .padding(16)
+            .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.75), .init(color: .black.opacity(0.35), location: 1)], startPoint: .top, endPoint: .bottom))
+            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: DS.Radius.m, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))
+            .padding(.horizontal, 32).padding(.top, 22)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Starter project, \(progress.count) of \(progress.total) done")
+            Button { show() } label: { Text("Show me").fontWeight(.semibold).frame(maxWidth: .infinity) }
+                .buttonStyle(.borderedProminent).tint(.brandCrimson).controlSize(.large)
+                .keyboardShortcut(.defaultAction).accessibilityIdentifier("onboardingShowMe")
+                .padding(.horizontal, 32).padding(.top, 22)
+            Button("I know my way around") { finish() }.buttonStyle(.plain).foregroundStyle(.secondary)
+                .keyboardShortcut(.cancelAction).accessibilityIdentifier("skipOnboarding").padding(.top, 14)
+            Text("You can bring it back from Help ▸ Show Starter Project.").font(.footnote).foregroundStyle(.tertiary).padding(.top, 10).padding(.bottom, 24)
         }
-        .frame(width: 640)
+        .frame(width: 480)
         .background(Color(nsColor: .windowBackgroundColor))
-        .focusable().focusEffectDisabled().focused($focused)
-        .onAppear { focused = true }
-        .onMoveCommand { direction in
-            if direction == .right { move(1) } else if direction == .left { move(-1) }
-        }
-        .onExitCommand { finish() }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Welcome tour, page \(page + 1) of \(pages)")
+        .accessibilityLabel("Welcome to Taskfold")
     }
-
-    private func move(_ delta: Int) {
-        let next = min(max(page + delta, 0), pages - 1)
-        guard next != page else { return }
-        direction = CGFloat(delta)
-        withAnimation(layout) { page = next }
-    }
+    private func show() { finish(); workspace.openStarterProject() }
     private func finish() {
         #if DEBUG
-        // A forced tour in a fixture run must not mark the real app's tour as seen.
+        // A forced card in a fixture run must not mark the real app's welcome as seen.
         if FixtureDefaults.isFixtureRun { FixtureDefaults.set(true, forKey: "onboardingSeen"); dismiss(); return }
         #endif
         onboardingSeen = true; dismiss()
     }
-
-    private var title: String {
-        ["Welcome to Taskfold", "Capture in one line", "Order that stays put", "Plan the day, then move fast", "Make it yours"][page]
-    }
-    private var body_: String {
-        ["A calm place for today's tasks. This short tour shows how the Mac app works; skip it anytime.",
-         "Type naturally. Dates, times, priorities, and #labels become chips as you write. Press ✕ on a chip to keep those words in the title instead.",
-         "Lists sort by priority band, and your own order holds inside each band. Drag anywhere; the task lands in its band and a hint tells you why.",
-         "Plan Your Day walks overdue and today's tasks one card at a time. In lists, Space completes, Return edits, ⌘N adds, ⌘Z undoes anything.",
-         "Pick an accent. Sign in to sync with Taskfold on iPhone and the web, add a Today widget, and use Shortcuts."][page]
-    }
-
-    @ViewBuilder private var illustration: some View {
-        switch page {
-        case 0: WelcomeIllustration()
-        case 1: CaptureIllustration()
-        case 2: BandsIllustration()
-        case 3: PlanIllustration()
-        default: AccentIllustration(accent: $accent)
-        }
-    }
 }
 
-// MARK: - Illustrations
+// MARK: - The starter project's header card
 
-private struct WelcomeIllustration: View {
-    @State private var shown = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+/// Sits under the project title: the one-line promise, six progress segments and the "⋯" menu.
+struct StarterHeaderCard: View {
+    @Environment(Store.self) private var store
+    @Environment(Workspace.self) private var workspace
+    @State private var confirmDelete = false
     var body: some View {
-        VStack(spacing: 18) {
-            TaskfoldMark(size: 112)
-                .scaleEffect(shown || reduceMotion ? 1 : 0.6).opacity(shown || reduceMotion ? 1 : 0)
-                .rotationEffect(.degrees(shown || reduceMotion ? 0 : -6))
-            HStack(spacing: 10) {
-                ForEach(Array(["Today", "Inbox", "Upcoming", "Calendar"].enumerated()), id: \.offset) { index, name in
-                    Label(name, systemImage: ["sun.max", "tray", "calendar.day.timeline.left", "calendar"][index])
-                        .font(.callout.weight(.medium)).padding(.horizontal, 12).padding(.vertical, 7)
-                        .background(Color(nsColor: .controlBackgroundColor), in: .capsule)
-                        .opacity(shown || reduceMotion ? 1 : 0).offset(y: shown || reduceMotion ? 0 : Transitions.Distance.medium)
-                        .animation(Transitions.Ease.smoothOut(Transitions.Duration.slow).delay(0.25 + Double(index) * Transitions.Duration.micro), value: shown)
-                }
-            }
-        }
-        .animation(Transitions.Ease.bounce(Transitions.Duration.verySlow), value: shown)
-        .onAppear { shown = true }
-        .accessibilityHidden(true)
-    }
-}
-
-/// Types a sentence the parser understands and lets the real chips appear as the words land.
-private struct CaptureIllustration: View {
-    private let sentence = "Call the studio tomorrow at 14.30 p2 #calls"
-    @State private var typed = ""
-    @State private var task: Task<Void, Never>?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    var body: some View {
-        let parsed = QuickEntry(typed)
+        let progress = store.starterProgress
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "plus.circle.fill").foregroundStyle(Color.taskfold).font(.title3)
-                Text(typed.isEmpty ? "Add a task…" : typed).foregroundStyle(typed.isEmpty ? .tertiary : .primary)
-                    .font(.body)
-                Rectangle().fill(Color.taskfold).frame(width: 1.5, height: 18).opacity(typed.count < sentence.count ? 1 : 0)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 10, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.taskfold.opacity(0.5), lineWidth: 1.5))
-            HStack {
-                QuickEntryChips(tokens: parsed.tokens, decline: { _ in })
-                Spacer()
-            }.frame(height: 28)
-            Text(parsed.tokens.isEmpty ? " " : "Title becomes “\(parsed.title)”").font(.caption).foregroundStyle(.secondary).contentTransition(.opacity)
-        }
-        .padding(.horizontal, 60)
-        .onAppear {
-            guard !reduceMotion else { typed = sentence; return }
-            task = Task {
-                for index in sentence.indices {
-                    try? await Task.sleep(for: .milliseconds(55))
-                    if Task.isCancelled { return }
-                    typed = String(sentence[...index])
+            HStack(alignment: .firstTextBaseline) {
+                if progress.finished {
+                    Text("You're all set.").fontWeight(.semibold) + Text(" Delete this project whenever you like.").foregroundStyle(.secondary)
+                } else {
+                    Text("Learn Taskfold by doing.").fontWeight(.semibold) + Text(" Each task checks itself off when you do it.").foregroundStyle(.secondary)
                 }
-            }
-        }
-        .onDisappear { task?.cancel() }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Typing \(sentence) turns tomorrow, 14:30, P2, and #calls into chips.")
-    }
-}
-
-/// Three rows in two bands; a P3 row drifts toward the P1 band and snaps back with the hint.
-private struct BandsIllustration: View {
-    @State private var lifted = false
-    @State private var hint = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    private let rows: [(String, Int)] = [("Send the revised proposal", 1), ("Make time for the big idea", 1), ("A walk, without the phone", 3)]
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                if index == 2 { InsertionIndicator(hint: hint ? "Stays with P3" : nil).opacity(hint || lifted ? 1 : 0) }
-                HStack(spacing: 10) {
-                    CheckMark(checked: false, color: Color.priority(row.1), emphasized: row.1 < 4)
-                    Text(row.0)
-                    Spacer()
-                    Image(systemName: "flag.fill").font(.caption2).foregroundStyle(Color.priority(row.1))
+                Spacer(minLength: 8)
+                if progress.finished {
+                    Button("Delete project…") { confirmDelete = true }.controlSize(.small).accessibilityIdentifier("starterDeleteProject")
                 }
-                .padding(.horizontal, 14).padding(.vertical, 9)
-                .modifier(CardSurface(radius: 9, elevated: index == 2 && lifted))
-                .offset(y: index == 2 && lifted ? -74 : 0)
-                .scaleEffect(index == 2 && lifted ? 1.02 : 1)
-                .zIndex(index == 2 ? 1 : 0)
+                Menu {
+                    Button("Hide Project") { if store.hideStarterProject() { workspace.section = .today } }
+                    Button("Delete Project…", role: .destructive) { confirmDelete = true }
+                } label: { Image(systemName: "ellipsis").foregroundStyle(.secondary) }
+                    .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().accessibilityLabel("Starter project options").accessibilityIdentifier("starterMenu")
             }
-        }
-        .padding(.horizontal, 90)
-        .task {
-            guard !reduceMotion else { hint = true; return }
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(0.9)); if Task.isCancelled { return }
-                withAnimation(Motion.lift) { lifted = true }
-                try? await Task.sleep(for: .seconds(0.9)); if Task.isCancelled { return }
-                withAnimation(Transitions.Ease.smoothOut(Transitions.Duration.quick)) { hint = true }
-                try? await Task.sleep(for: .seconds(1.4)); if Task.isCancelled { return }
-                withAnimation(Motion.settle) { lifted = false }
-                try? await Task.sleep(for: .seconds(0.6)); if Task.isCancelled { return }
-                withAnimation(Transitions.Ease.smoothOut(Transitions.Duration.quick)) { hint = false }
-                try? await Task.sleep(for: .seconds(1.6))
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("A priority 3 task dragged above priority 1 tasks lands at the top of its own band; a hint reads Stays with P3.")
-    }
-}
-
-private struct PlanIllustration: View {
-    private let keys: [(String, String)] = [("Space", "Complete"), ("↩", "Edit"), ("⌘N", "New task"), ("⌘Z", "Undo"), ("T · M · D", "Today · Tomorrow · Date")]
-    @State private var shown = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    var body: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack { Text("Plan Your Day").font(.headline); Spacer(); Text("2 of 5").font(.caption).monospacedDigit().foregroundStyle(.secondary) }
-                Capsule().fill(Color.primary.opacity(0.08)).frame(height: 5).overlay(alignment: .leading) { Capsule().fill(Color.taskfold).frame(width: 96, height: 5) }
-                HStack(spacing: 8) {
-                    Label("P1", systemImage: "flag.fill").font(.caption.weight(.semibold)).foregroundStyle(.red)
-                    Text("Send the revised proposal").font(.body.weight(.semibold))
-                    Spacer()
-                    Text("1 day overdue").font(.caption.weight(.medium)).foregroundStyle(.red)
-                }
-            }
-            .padding(14).modifier(CardSurface(radius: 12, elevated: true)).frame(width: 400)
-            HStack(spacing: 10) {
-                ForEach(Array(keys.enumerated()), id: \.offset) { index, key in
-                    VStack(spacing: 4) {
-                        Text(key.0).font(.callout.weight(.semibold)).monospaced()
-                            .padding(.horizontal, 10).padding(.vertical, 6)
-                            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 7, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color.primary.opacity(0.12), lineWidth: 1))
-                            .shadow(color: .black.opacity(0.08), radius: 1, y: 1)
-                        Text(key.1).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                    }
-                    .opacity(shown || reduceMotion ? 1 : 0).offset(y: shown || reduceMotion ? 0 : Transitions.Distance.base)
-                    .animation(Transitions.Ease.smoothOut(Transitions.Duration.slow).delay(Double(index) * Transitions.Duration.micro), value: shown)
-                }
-            }
-        }
-        .onAppear { shown = true }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Plan Your Day card with keyboard shortcuts: Space completes, Return edits, Command N adds, Command Z undoes, T M D reschedule.")
-    }
-}
-
-private struct AccentIllustration: View {
-    @Binding var accent: String
-    var body: some View {
-        VStack(spacing: 22) {
+            .font(.body)
             HStack(spacing: 14) {
-                ForEach(Color.accents, id: \.key) { option in
-                    Button { withAnimation(Transitions.Ease.smoothOut(Transitions.Duration.quick)) { accent = option.key } } label: {
-                        Circle().fill(option.color).frame(width: 34, height: 34)
-                            .overlay { if accent == option.key { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundStyle(.white) } }
-                            .scaleEffect(accent == option.key ? 1.12 : 1)
-                            .shadow(color: option.color.opacity(accent == option.key ? 0.45 : 0), radius: 8, y: 3)
-                    }
-                    .buttonStyle(.plain).pointerStyle(.link)
-                    .help(option.name).accessibilityLabel(option.name).accessibilityAddTraits(accent == option.key ? .isSelected : [])
-                }
-            }
-            HStack(spacing: 28) {
-                ForEach(Array([("iphone", "iPhone & iPad"), ("macbook", "Mac"), ("rectangle.grid.2x2", "Widgets"), ("sparkles.rectangle.stack", "Shortcuts")].enumerated()), id: \.offset) { _, item in
-                    VStack(spacing: 6) {
-                        Image(systemName: item.0).font(.system(size: 26, weight: .medium)).symbolRenderingMode(.hierarchical).foregroundStyle(Color.taskfold)
-                        Text(item.1).font(.caption).foregroundStyle(.secondary)
-                    }.frame(width: 90)
-                }
+                StarterProgressBar(count: progress.count)
+                (Text("\(progress.count)").fontWeight(.semibold).foregroundStyle(.primary) + Text(" of \(progress.total) done").foregroundStyle(.secondary)).font(.subheadline).monospacedDigit().fixedSize()
             }
         }
-        .accessibilityElement(children: .contain)
+        .padding(.horizontal, 16).padding(.vertical, 14)
+        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: DS.Radius.l, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))
+        .accessibilityElement(children: .contain).accessibilityIdentifier("starterHeaderCard")
+        .confirmationDialog("Delete the starter project?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete Project", role: .destructive) { workspace.section = .today; store.deleteStarterProject() }
+        } message: { Text("This removes its six tasks. Tasks you added to it move to Inbox. You can bring it back from Help ▸ Show Starter Project.") }
     }
 }

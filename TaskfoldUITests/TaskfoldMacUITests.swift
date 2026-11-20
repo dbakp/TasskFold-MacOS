@@ -1237,16 +1237,25 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "Skipped tasks are untouched")
     }
 
-    /// The welcome tour pages with Continue and →, and Escape dismisses it for good.
-    @MainActor func testOnboardingPagesAndDismisses() throws {
+    /// The welcome card offers "Show me" and "I know my way around"; Escape dismisses it and the list stays usable.
+    @MainActor func testWelcomeCardDismisses() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture", "--onboarding"]; app.launch()
-        let next = app.buttons["onboardingContinue"]
-        XCTAssertTrue(next.waitForExistence(timeout: 10), "The tour appears on request")
-        next.click()
-        app.typeKey(.rightArrow, modifierFlags: [])
-        XCTAssertTrue(app.textNamed("Order that stays put").waitForExistence(timeout: 5), "Continue and → advance pages")
+        let skip = app.buttons["skipOnboarding"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 10), "The welcome card appears on request")
+        XCTAssertTrue(app.buttons["onboardingShowMe"].exists, "Show me is offered")
         app.typeKey(.escape, modifierFlags: [])
-        XCTAssertTrue(waitForDisappearance(next, timeout: 5), "Escape dismisses the tour")
+        XCTAssertTrue(waitForDisappearance(skip, timeout: 5), "Escape dismisses the card")
+        XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "The list is usable afterwards")
+    }
+
+    /// "Set up your day" can be skipped or continued, and neither blocks the app.
+    @MainActor func testSetUpYourDaySheetSkips() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture", "--onboarding-setup"]; app.launch()
+        let skip = app.buttons["setupSkip"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 10), "The sheet appears on request")
+        XCTAssertTrue(app.buttons["setupContinue"].exists)
+        skip.click()
+        XCTAssertTrue(waitForDisappearance(skip, timeout: 5), "Skip closes the sheet")
         XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "The list is usable afterwards")
     }
 
@@ -1475,16 +1484,12 @@ final class TaskfoldMacUITests: XCTestCase {
             try png.write(to: URL(fileURLWithPath: directory).appending(path: "\(name).png"))
             app.terminate()
         }
-        // Welcome tour pages.
-        for page in 0..<5 {
-            let tour = XCUIApplication(); tour.launchArguments = ["--preview", "--onboarding", "--appearance=light"]; tour.launch()
-            XCTAssertTrue(tour.buttons["skipOnboarding"].waitForExistence(timeout: 10))
-            for _ in 0..<page { tour.buttons["onboardingContinue"].click() }
-            sleep(page == 1 ? 4 : 2)
-            let sheet = tour.sheets.firstMatch.exists ? tour.sheets.firstMatch : tour.windows.firstMatch
-            try sheet.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: directory).appending(path: "onboarding-\(page + 1).png"))
-            tour.terminate()
-        }
+        // The welcome card and "Set up your day".
+        let tour = XCUIApplication(); tour.launchArguments = ["--preview", "--onboarding", "--appearance=light"]; tour.launch()
+        XCTAssertTrue(tour.buttons["skipOnboarding"].waitForExistence(timeout: 10)); sleep(2)
+        let sheet = tour.sheets.firstMatch.exists ? tour.sheets.firstMatch : tour.windows.firstMatch
+        try sheet.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: directory).appending(path: "onboarding-welcome.png"))
+        tour.terminate()
         // Quick-add with chips: type a sentence the parser understands, capture before submitting.
         let chips = XCUIApplication(); chips.launchArguments = ["--preview", "--section=today", "--appearance=light"]; chips.launch()
         XCTAssertTrue(chips.windows.firstMatch.waitForExistence(timeout: 10)); sleep(1)

@@ -359,6 +359,17 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
                     }
+                } else if let which = option("capture-starter") {
+                    // The first-run sheets hosted alone (a sheet cannot be captured with the window): =setup or =welcome.
+                    let size = NSSize(width: which == "setup" ? 520 : 480, height: which == "setup" ? 330 : 560)
+                    let content: AnyView = which == "setup" ? AnyView(SetUpYourDaySheet().environment(store)) : AnyView(OnboardingView().environment(store).environment(workspace))
+                    let host = NSHostingView(rootView: content.frame(width: size.width, height: size.height).background(Color(nsColor: .windowBackgroundColor)))
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(1.5))
+                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
+                    }
                 } else if option("capture-toast") != nil {
                     // The bottom bar hosted alone: --capture-toast=goal shows the daily-goal celebration.
                     // =streak shows a milestone alone, =combined a goal that lands with one, =level a level-up.
@@ -775,6 +786,20 @@ struct RootView: View {
                 }
             }
         }
+        // Starter-onboarding captures: an empty workspace that the real first-run check seeds. --starter-setup-saved starts
+        // with working hours already set (the welcome card then shows 1 of 6), --starter-open shows the project without
+        // the sheets, and --starter-demo=quickadd ticks a task through the real Quick Add rule.
+        if arguments.contains("--preview"), arguments.contains("--starter-onboarding") {
+            store.snapshot = Snapshot()
+            if arguments.contains("--starter-setup-saved") {
+                store.snapshot.tables["view_preferences"] = [Record(["id": .string("planner"), "user_id": .string(store.userID), "working_hours": WorkingHours().document])]
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1200))
+                if arguments.contains("--starter-open") { workspace.section = .project(Onboarding.projectID(account: store.userID)) }
+                if option("starter-demo") == "quickadd" { store.observeOnboardingQuickAdd(taskID: "demo", groups: ["due_date", "priority"]) }
+            }
+        }
         // Applied after every fixture: they call startLocal() and reset navigation to Today while they seed.
         if let value = option("section") { workspace.section = SidebarItem(key: value) }
         #endif
@@ -858,19 +883,42 @@ struct WorkspaceView: View {
         .sheet(isPresented: $workspace.shuttingDown) { DayPlanShutdownView() }
         .sheet(item: $workspace.brainDump) { BrainDumpView(request: $0) }
         .sheet(item: $workspace.smartReschedule) { SmartRescheduleView(request: $0) }
+        .sheet(isPresented: $workspace.setupDay) { SetUpYourDaySheet { store.onboardingStage = .welcome } }
         .sheet(isPresented: $workspace.onboarding) { OnboardingView() }
         .onAppear {
-            // First launch shows the tour once; fixtures opt in with --onboarding so tests stay deterministic.
+            // Fixtures opt in with --onboarding (the welcome card) or --onboarding-setup, so tests stay deterministic.
             #if DEBUG
             let arguments = ProcessInfo.processInfo.arguments
-            let fixture = arguments.contains("--uitesting") || arguments.contains("--preview")
-            let forced = arguments.contains("--onboarding")
-            #else
-            let fixture = false, forced = false
+            if arguments.contains("--onboarding-setup") { workspace.setupDay = true }
+            else if arguments.contains("--onboarding") { Task { try? await Task.sleep(for: .milliseconds(600)); workspace.onboarding = true } }
             #endif
-            if forced || (!fixture && !UserDefaults.standard.bool(forKey: "onboardingSeen")) {
-                Task { try? await Task.sleep(for: .milliseconds(600)); workspace.onboarding = true }
+            store.starterOnboardingCheck()
+        }
+        // First run: a new account (or the local workspace) is given its starter project once, after its first read.
+        .onChange(of: store.lastSync) { _, _ in store.starterOnboardingCheck() }
+        .onChange(of: store.signedIn) { _, _ in store.starterOnboardingCheck() }
+        .onChange(of: store.onboardingStage) { _, stage in
+            guard let stage else { return }
+            store.onboardingStage = nil
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--starter-open") { return }
+            #endif
+            Task { @MainActor in
+                // The sheet that just closed needs a beat before the next one can open.
+                switch stage {
+                case .setup: workspace.setupDay = true
+                case .welcome: try? await Task.sleep(for: .milliseconds(450)); workspace.onboarding = true
+                case .openProject: workspace.openStarterProject()
+                }
             }
+        }
+        .onChange(of: store.onboardingAnnouncement) { _, announcement in
+            guard let announcement else { return }
+            store.onboardingAnnouncement = nil
+            workspace.confirm(announcement.message, undoable: true, celebration: announcement.detail, tint: StarterStyle.tint)
+        }
+        .onChange(of: CalendarBusyStore.shared.revision) { _, _ in
+            if CalendarBusyStore.shared.onboardingConnected { store.observeOnboarding(.calendarConnected) }
         }
         .modifier(KeyRouter())
         .environment(printCommand)

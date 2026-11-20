@@ -73,7 +73,7 @@ struct GeneralSettings: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section {
-                Button("Show welcome tour…") { workspace.onboarding = true; NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
+                Button("Show Starter Project") { workspace.openStarterProject(); NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
                     .disabled(!store.signedIn)
             }
         }

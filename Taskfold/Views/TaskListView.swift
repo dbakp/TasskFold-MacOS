@@ -33,7 +33,8 @@ struct TaskListView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let scope: TaskScope
     let preferenceKey: String
-    private var showCompleted: Bool { get { store.viewValue(scope, field: "include_completed", fallback: .bool(false)).flag } nonmutating set { store.setViewValue(scope, field: "include_completed", value: .bool(newValue)) } }
+    /// The starter project keeps finished tasks in place, so the list keeps teaching.
+    private var showCompleted: Bool { get { isStarterProject || store.viewValue(scope, field: "include_completed", fallback: .bool(false)).flag } nonmutating set { store.setViewValue(scope, field: "include_completed", value: .bool(newValue)) } }
     private var priorityFilter: Int { get { store.viewValue(scope, field: "priority_filter", fallback: .number(0)).integer } nonmutating set { store.setViewValue(scope, field: "priority_filter", value: .number(Double(newValue))) } }
     private var sortBy: String { get { store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text } nonmutating set { store.setViewValue(scope, field: "sort_by", value: .string(newValue)) } }
     @AppStorage("defaultView") private var defaultView = "today"
@@ -449,12 +450,14 @@ struct TaskListView: View {
     }
 
     private func hue(_ project: String) -> ProjectHue { DS.Palette.project(project.isEmpty ? nil : store.record("projects", id: project)) }
+    private var isStarterProject: Bool { if case .project(let id) = scope { return store.isStarterProject(id) }; return false }
     private var contentTitle: String { workspace.section == .assigned ? "Assigned to me" : scope == .all ? "All tasks" : title }
     /// Under the title: Today's date, Upcoming's horizon, otherwise the count.
     private var contentSubtitle: String {
         if store.filterError(scope) != nil { return "Filter unavailable" }
         if scope == .today { let now = Date(); return now.formatted(.dateTime.weekday(.wide)) + " " + now.formatted(.dateTime.day().month(.wide)) }
         let count = remaining == 1 ? "1 task" : "\(remaining) tasks"
+        if isStarterProject { return "\(Onboarding.Key.allCases.count) tasks · about two minutes" }
         if scope == .upcoming { return "Next 14 days · " + count }
         if scope == .completed { return "\(filtered.count) completed" }
         return count
@@ -471,6 +474,7 @@ struct TaskListView: View {
                 }
             }
         case .project(let id):
+            VStack(alignment: .leading, spacing: DS.Space.l) {
             ListTitleHeader(title: contentTitle, subtitle: contentSubtitle, dot: store.record("projects", id: id).map { DS.Palette.project($0) }) {
                 if let week = projectWeek, !boardLayout, !calendarLayout, week.plannedMinutes > 0 {
                     HStack(spacing: DS.Space.s) {
@@ -480,6 +484,8 @@ struct TaskListView: View {
                     }
                     .accessibilityElement(children: .ignore).accessibilityLabel(week.accessibilityLabel).accessibilityIdentifier("projectWeekRing")
                 }
+            }
+            if store.isStarterProject(id) { StarterHeaderCard() }
             }
         default:
             ListTitleHeader(title: contentTitle, subtitle: contentSubtitle)
@@ -847,7 +853,11 @@ struct ConfirmationBar: View {
     @State private var sparkle = false
     var body: some View {
         HStack(spacing: DS.Space.m) {
-            if confirmation.celebration != nil {
+            if let tint = confirmation.tint {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(tint).id(confirmation.id).transition(.iconSwap).accessibilityHidden(true)
+                Text(confirmation.message).fontWeight(.semibold).lineLimit(1).id(confirmation.id).transition(.textSwap)
+                Text(confirmation.celebration ?? "").foregroundStyle(DS.Palette.textSecondary).lineLimit(1)
+            } else if confirmation.celebration != nil {
                 Image(systemName: "sparkles").foregroundStyle(DS.Palette.accent)
                     .scaleEffect(sparkle ? 1 : 0.4).rotationEffect(.degrees(sparkle || reduceMotion ? 0 : -20))
                     .symbolEffect(.bounce, options: .nonRepeating, isActive: sparkle && !reduceMotion)
