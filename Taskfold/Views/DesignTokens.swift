@@ -56,6 +56,15 @@ enum DS {
         static let dateLine = SwiftUI.Font.body
         /// Times on time-grid blocks.
         static let blockTime = SwiftUI.Font.caption.weight(.semibold).width(.expanded).monospacedDigit()
+        /// Today's hero title beside the 72 pt day ring: Fraunces SemiBold 30 (the opsz 72 cut), relative to largeTitle.
+        static let heroTitle = SwiftUI.Font.custom(displayTitleFace, size: 30, relativeTo: .largeTitle)
+        /// The hero figure's lead, "4h 30m": 15 pt semibold, tabular. Its rest, " of 7h 30m", is `heroFigureRest`.
+        static let heroFigure = SwiftUI.Font.title3.weight(.semibold).monospacedDigit()
+        static let heroFigureRest = SwiftUI.Font.body.monospacedDigit()
+        /// The line under the hero figure, "3h free · 1h 30m done", and the empty day's teaching line: 12 pt.
+        static let heroMeta = SwiftUI.Font.callout.monospacedDigit()
+        /// The estimate at the end of a Today row, "45m", and the tooltip over the ring.
+        static let rowEstimate = SwiftUI.Font.footnote.monospacedDigit()
     }
 
     /// Semantic colour, from Core/Brand.swift. Crimson owns "act / today" only; dates are ink except overdue.
@@ -89,6 +98,16 @@ enum DS {
         /// Neutral ink at 0.06 (light) / 0.10 (dark), with the title kept in ink (design review mac-r1: crimson is for acting
         /// and for "late", not for selection).
         static var selectionFill: Color { Color(brand: Brand.ink, opacity: 0.06, darkOpacity: 0.10) }
+        /// A hovered Today row (day-ring frame A): ink at 0.05 / 0.06.
+        static var hoverFill: Color { Color(brand: Brand.ink, opacity: 0.05, darkOpacity: 0.06) }
+        /// A small chip inside running text, such as the "30m" in the empty day's teaching line: ink at 0.07 / 0.10.
+        static var chipFill: Color { Color(brand: Brand.ink, opacity: 0.07, darkOpacity: 0.10) }
+        /// The dark tooltip over the ring ("Drop to plan · +45m → …"): ink, with ground-coloured text.
+        static var tooltip: Color { Color(brand: Brand.ink) }
+        static var onTooltip: Color { Color(brand: Brand.ground) }
+        /// The Plan your day tray: ink at 0.045 / 0.04 over `surface`, the sidebar's quieter ground. Its rows are `card`.
+        static var tray: Color { Color(brand: Brand.ink, opacity: 0.045, darkOpacity: 0.04) }
+        static var card: Color { Color(brand: Brand.surface) }
         /// A project's identity hue: its stored colour mapped to the nearest palette pair (stored data is never
         /// rewritten), or a stable hue from its id when it has none. Inbox work is ink.
         static func project(_ record: Record?) -> ProjectHue {
@@ -112,6 +131,13 @@ enum DS {
         static let rowHorizontalPadding: CGFloat = Space.m
         /// The list column is capped so lines stay readable in a wide window.
         static let contentMaxWidth: CGFloat = 720
+        /// Today's Plan your day tray (day-ring frame C).
+        static let planTrayWidth: CGFloat = 290
+        /// The colour pip after a Today row's estimate: 3 × 16 pt, full strength when done, dimmer while open.
+        static let estimatePip = CGSize(width: 3, height: 16)
+        static let estimatePipOpenOpacity = 0.55
+        /// A day ring with a task held over it grows by this much (frame C).
+        static let ringDropScale: CGFloat = 1.08
     }
 
     /// Aliases onto the existing `Motion` vocabulary (the Mac values stay shorter and subtler on purpose).

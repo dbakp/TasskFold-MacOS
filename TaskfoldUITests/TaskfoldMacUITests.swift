@@ -1272,6 +1272,44 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "Skipped tasks are untouched")
     }
 
+    /// Day ring (frames A, C, D): the hero figure, ⌘P opens Plan your day, planning a candidate shows the toast and Undo
+    /// takes it back out of Today.
+    @MainActor func testDayRingPlanTrayPlansAndUndoes() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-ring-fixture=a"]; app.launch()
+        let figure = app.descendants(matching: .any)["todayRing"]
+        XCTAssertTrue(figure.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(figure.label.contains("4 hours 30 minutes planned of 7 hours 30 minutes free"), figure.label)
+        XCTAssertTrue(app.descendants(matching: .any)["duration-dr-sketch"].exists, "Today rows carry their estimate")
+        app.typeKey("p", modifierFlags: .command)
+        let tray = app.descendants(matching: .any)["planTray"]
+        XCTAssertTrue(tray.waitForExistence(timeout: 5), "⌘P opens the tray")
+        XCTAssertEqual(app.buttons["planDay"].label, "Done planning")
+        let candidate = app.buttons["planCandidate-dr-newsletter"]
+        XCTAssertTrue(candidate.waitForExistence(timeout: 5))
+        candidate.click()
+        let toast = app.descendants(matching: .any)["confirmationToast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textNamed("Planned \u{201C}Draft the newsletter intro\u{201D} for today · 45m").waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["title-dr-newsletter"].waitForExistence(timeout: 5), "The task joins Today")
+        XCTAssertTrue(waitForDisappearance(candidate, timeout: 5), "and leaves the tray")
+        app.buttons["undoConfirmation"].click()
+        XCTAssertTrue(waitForDisappearance(app.staticTexts["title-dr-newsletter"], timeout: 5), "Undo takes it back out of Today")
+        app.typeKey("p", modifierFlags: .command)
+        XCTAssertTrue(waitForDisappearance(tray, timeout: 5), "⌘P again closes the tray")
+    }
+
+    /// Day ring (frame E): an overbooked day suggests the smallest task that brings it back under; Fix it moves it to tomorrow.
+    @MainActor func testDayRingOverbookedFixMovesSuggestionToTomorrow() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-ring-fixture=e"]; app.launch()
+        let suggestion = app.descendants(matching: .any)["overflowSuggestion"]
+        XCTAssertTrue(suggestion.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(suggestion.shownText, "Move \u{201C}Rewrite the pitch deck\u{201D} to tomorrow?")
+        app.buttons["fixOverbooked"].click()
+        XCTAssertTrue(waitForDisappearance(app.staticTexts["title-dr-deck"], timeout: 5), "The suggested task leaves Today")
+        XCTAssertTrue(app.descendants(matching: .any)["confirmationToast"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForDisappearance(app.buttons["fixOverbooked"], timeout: 5), "The day is back within its hours")
+    }
+
     /// The welcome card offers "Show me" and "I know my way around"; Escape dismisses it and the list stays usable.
     @MainActor func testWelcomeCardDismisses() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture", "--onboarding"]; app.launch()
@@ -5425,7 +5463,8 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(title.label == "Today" || title.value as? String == "Today")
         app.buttons["closePrintReview"].click()
         XCTAssertTrue(title.waitForNonExistence(timeout: 8))
-        app.typeKey("p", modifierFlags: .command)
+        // On Today ⌘P is Plan (day-ring design); Print or Export stays in the File menu.
+        app.menuCommand("File", "Print or Export…")
         XCTAssertTrue(title.waitForExistence(timeout: 10))
         XCTAssertTrue(title.label == "Today" || title.value as? String == "Today")
         app.buttons["closePrintReview"].click()

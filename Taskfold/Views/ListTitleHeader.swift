@@ -61,55 +61,6 @@ struct InlineDayRing: View {
     }
 }
 
-/// Today's trailing title content: the ring, "0m of 8h" in tabular SF, and one text button, Plan, which becomes
-/// "Shut down" once working hours are over (owner decision 3). Without working hours it offers "Set hours".
-struct TodayTitleTrailing: View {
-    @Environment(Store.self) private var store
-    var ring: TodayRing
-    var hue: (String) -> ProjectHue
-    var pending: Set<String> = []
-    var flight: FoldFlight? = nil
-    let plan: () -> Void
-    let shutdown: () -> Void
-    let setHours: () -> Void
-    var body: some View {
-        HStack(alignment: .center, spacing: DS.Space.s + DS.Space.xxs) {
-            if ring.segments.isEmpty && ring.plannedMinutes == 0 {
-                // Before any estimates exist a ring and "0m of 8h" say nothing; say what fills the day instead (mac-r2 L-10).
-                Text("Add estimates to see your day fill up").font(DS.Font.ringFigure).foregroundStyle(DS.Palette.textSecondary)
-                    .lineLimit(1).fixedSize().accessibilityIdentifier("todayRing")
-            } else {
-                InlineDayRing(ring: ring, hue: hue, pending: pending, flight: flight)
-                (Text(ring.figure).fontWeight(.semibold).foregroundStyle(DS.Palette.textPrimary)
-                 + Text(" " + (ring.capacity ?? "planned")).foregroundStyle(DS.Palette.textSecondary))
-                    .font(DS.Font.ringFigure).lineLimit(1).fixedSize()
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(ring.accessibilityLabel)
-                    .accessibilityIdentifier("todayRing")
-            }
-            TimelineView(.periodic(from: .now, by: 60)) { context in
-                let prompt = store.dayPlanPrompt(now: context.date)
-                if !ring.hasWorkingHours {
-                    textButton("Set hours", identifier: "setWorkingHours", hint: "Sets your working hours so the ring can show free time", action: setHours)
-                } else if prompt == .shutdown {
-                    textButton("Shut down", identifier: "dayShutdown", hint: "Review today and close it", action: shutdown)
-                } else {
-                    textButton("Plan", identifier: "planDay", hint: "Opens Plan your day", quiet: prompt == .planned || prompt == .shutDown, action: plan)
-                }
-            }
-        }
-    }
-    private func textButton(_ title: String, identifier: String, hint: String, quiet: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(DS.Font.ringFigure.weight(.semibold))
-                .foregroundStyle(quiet ? DS.Palette.textSecondary : Color.brandCrimson)
-                .padding(.leading, DS.Space.xs).frame(minHeight: 28).contentShape(.rect)
-        }
-        .buttonStyle(.plain).pointerStyle(.link)
-        .accessibilityHint(hint).accessibilityIdentifier(identifier)
-    }
-}
-
 /// A list's group header: 13 pt semibold ink with a tertiary count, "Today  4". Only Overdue is crimson.
 struct ListGroupHeader: View {
     var title: String

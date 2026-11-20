@@ -300,6 +300,7 @@ struct TaskListView: View {
             titleHeader
                 .padding(.leading, 0).padding(.trailing, DS.Space.xxl).padding(.top, DS.Space.l).padding(.bottom, DS.Space.xs) // flush with the day headers below (mac-r2 L-7)
                 .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+                .zIndex(1) // the ring's drop tooltip draws over the list
                 .sheet(isPresented: $hoursSettings) { PlannerSettingsView(busy: ringBusy) }
             if let failure = store.filterError(scope) {
                 ScrollView {
@@ -393,6 +394,12 @@ struct TaskListView: View {
             }
         }
         .background(DS.Palette.surface)
+        .safeAreaInset(edge: .trailing, spacing: 0) {
+            if scope == .today && workspace.planTrayShown && workspace.search.isEmpty {
+                PlanTray(hue: hue).transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(Motion.respecting(reduceMotion, Transitions.Ease.smoothOut), value: workspace.planTrayShown)
         .modifier(TodayFoldFlight(enabled: scope == .today, flight: flight))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation) } }
         .animation(Transitions.Ease.smoothOut, value: workspace.confirmation)
@@ -474,13 +481,15 @@ struct TaskListView: View {
     @ViewBuilder private var titleHeader: some View {
         switch scope {
         case .today:
-            ListTitleHeader(title: contentTitle, subtitle: contentSubtitle) {
-                if workspace.search.isEmpty {
-                    TodayTitleTrailing(ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), hue: hue,
-                                       // Segments wait for their folding row to land (round 3); with Reduce Motion they fill at once.
-                                       pending: reduceMotion ? [] : Set(workspace.lingering.keys).subtracting(flight.landed), flight: flight,
-                                       plan: { workspace.planning = .day }, shutdown: { workspace.shuttingDown = true }, setHours: { hoursSettings = true })
-                }
+            if workspace.search.isEmpty {
+                // The day ring leads the title line (day-ring frame A); Plan opens the tray beside the list (frame C).
+                TodayHero(title: contentTitle, subtitle: contentSubtitle,
+                          ring: DayPlan.todayRing(store.tasks, events: ringBusy.events, on: Date(), hours: store.workingHours), hue: hue,
+                          // Segments wait for their folding row to land (round 3); with Reduce Motion they fill at once.
+                          pending: reduceMotion ? [] : Set(workspace.lingering.keys).subtracting(flight.landed), flight: flight,
+                          shutdown: { workspace.shuttingDown = true }, setHours: { hoursSettings = true })
+            } else {
+                ListTitleHeader(title: contentTitle, subtitle: contentSubtitle)
             }
         case .project(let id):
             VStack(alignment: .leading, spacing: DS.Space.l) {
@@ -916,6 +925,7 @@ struct ConfirmationBar: View {
         .background(.bar)
         .overlay(alignment: .top) { Divider() }
         .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("confirmationToast")
         .onHover { workspace.confirmationHovering = $0 }
         .onDisappear { workspace.confirmationHovering = false }
         .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))

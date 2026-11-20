@@ -57,6 +57,8 @@ struct TaskRowView: View {
     @State private var hovering = false
     @State private var checkHover = false
     @Environment(\.taskRowScope) private var rowScope
+    /// Today's ring: hovering a row lifts its segment (day-ring frame A).
+    @Environment(\.foldFlight) private var ringFlight
     @Environment(\.boardCard) private var card
     @State private var choosingDate = false
     @Environment(\.appearsActive) private var appearsActive
@@ -204,11 +206,16 @@ struct TaskRowView: View {
                     .overlay { RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : hovering ? DS.Palette.surfaceSunken.opacity(0.5) : Color.clear) }
                     .overlay { RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).strokeBorder(DS.Palette.separator.opacity(0.6), lineWidth: 0.5) }
             } else {
-                RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : Color.clear)
+                RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(isSelected ? DS.Palette.selectionFill : todayRingRow && ringFlight?.hoveredID == task.id ? DS.Palette.hoverFill : Color.clear)
             }
         }
         .contentShape(.rect)
-        .onHover { hovering = $0 }
+        .onHover { over in
+            hovering = over
+            guard todayRingRow, let ringFlight else { return }
+            if over { ringFlight.hoveredID = task.id } else if ringFlight.hoveredID == task.id { ringFlight.hoveredID = nil }
+        }
+        .onDisappear { if ringFlight?.hoveredID == task.id { ringFlight?.hoveredID = nil } }
         .popover(isPresented: $choosingDate) { TaskDatePopover(task: task) }
         .animation(workspace.layout, value: checked)
         .accessibilityElement(children: .contain)
@@ -282,6 +289,8 @@ struct TaskRowView: View {
     }
     /// A plain list row (not a board card, not the inspector's subtask list).
     private var listRow: Bool { card == nil && !inInspector }
+    /// A row in Today's list, where the estimate reads "45m" with a pip in its segment's colour (day-ring frame A).
+    private var todayRingRow: Bool { listRow && rowScope == .today }
     /// The row's project dot: in lists that mix projects only.
     private var rowProject: Record? {
         guard rowScopeMixesProjects else { return nil }
@@ -395,7 +404,18 @@ struct TaskRowView: View {
                 .accessibilityLabel(task["comments"].list.count == 1 ? "1 comment" : "\(task["comments"].list.count) comments")
         }
         // Not in the spec's list, kept so estimates and attachments stay visible.
-        if TaskKind.mayComplete(task), let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
+        if TaskKind.mayComplete(task), let minutes = task.durationMinutes {
+            if todayRingRow {
+                HStack(spacing: 6) {
+                    Text(DayPlan.duration(minutes)).font(DS.Font.rowEstimate)
+                    EstimatePip(hue: DS.Palette.project(store.record("projects", id: task.string("project_id"))), done: task.completed)
+                }
+                .accessibilityElement(children: .ignore).accessibilityLabel(DayPlan.spoken(minutes) + " estimated")
+                .accessibilityIdentifier("duration-" + task.id)
+            } else {
+                Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id)
+            }
+        }
         if !task["attachments"].list.isEmpty {
             Image(systemName: "paperclip")
                 .accessibilityLabel(task["attachments"].list.count == 1 ? "1 attachment" : "\(task["attachments"].list.count) attachments")
