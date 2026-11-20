@@ -52,7 +52,7 @@ final class ChildRowsUITests: XCTestCase {
         XCTAssertTrue(circle.waitForExistence(timeout: 6), app.debugDescription); circle.click()
         XCTAssertTrue(app.buttons["reopen-" + invite].waitForExistence(timeout: 6), "The subtask is completed")
         let summary = element(app, "childSummary-" + parent)
-        XCTAssertTrue(eventually { summary.label.contains("1 of 5") }, "Parent progress reads 1 of 5, got \(summary.label)")
+        XCTAssertTrue(eventually { summary.shownText.contains("1 of 5") }, "Parent progress reads 1 of 5, got \(summary.shownText)")
         shot(app, "Inspector with subtasks")
     }
 
