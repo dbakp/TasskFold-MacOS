@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.undoManager) private var undoManager
     @Environment(\.scenePhase) private var phase
+    @State private var realtimeGate = RealtimeIdleGate(grace: SyncTiming.realtimeInactiveGrace, held: true)
     @State private var pinnedNote: PinnedNoteRequest?
     @State private var pulseRequest: ProjectPulseRequest?
     @State private var mentionsRequest: MentionsRequest?
@@ -42,6 +43,11 @@ struct RootView: View {
             }
         }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
+        .sheet(isPresented: Binding(get: { workspace.signInRequested && store.localMode }, set: { workspace.signInRequested = $0 })) { SignInSheet() }
+        .alert("Bring your tasks over?", isPresented: Binding(get: { store.localTransferOffer != nil }, set: { if !$0 { store.declineLocalTransfer() } })) {
+            Button("Bring them over") { store.acceptLocalTransfer() }.keyboardShortcut(.defaultAction)
+            Button("Keep them separate", role: .cancel) { store.declineLocalTransfer() }
+        } message: { Text("Bring \(store.localTransferOffer?.summary ?? "your tasks") from this Mac into your account? Starter tasks are left out.") }
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; workspace.workspaceChanged(account: store.userID, generation: store.workspaceGeneration); seed() }
         .onChange(of: store.userID) { _, _ in workspace.workspaceChanged(account: store.userID, generation: store.workspaceGeneration) }
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
@@ -114,8 +120,15 @@ struct RootView: View {
                 await store.syncAutomatically()
             }
         }
-        .task(id: "realtime-\(store.signedIn)-\(store.localMode)") {
-            guard store.signedIn, !store.localMode else { return }
+        // The server polls the write-ahead log for every joined socket. Keep it while the app is in use and for a few
+        // minutes after, then close it until the app is frontmost again; polling relaxes meanwhile and the socket's
+        // join catches up with one sync.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in realtimeGate.setActive(true) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in realtimeGate.setActive(false) }
+        .onAppear { realtimeGate.setActive(NSApp.isActive) }
+        .onChange(of: realtimeGate.held) { _, held in store.realtimeSuspended = !held }
+        .task(id: "realtime-\(store.signedIn)-\(store.localMode)-\(realtimeGate.held)") {
+            guard store.signedIn, !store.localMode, realtimeGate.held else { return }
             await store.runRealtime()
         }
         .task(id: "focus-finished-\(NotificationRoute.shared.focusReceipt?.signature ?? "")-\(store.workspaceGeneration)-\(store.widgetPublicationRevision)") {
@@ -385,16 +398,30 @@ struct RootView: View {
                     if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
                         try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
                     }
-                } else if let state = option("capture-sync-status") {
-                    // The sidebar footer hosted alone: --capture-sync-status=synced|syncing|offline|pending.
-                    let host = NSHostingView(rootView: SyncFooter(preview: state).environment(store).environment(workspace).frame(width: 260).background(Color(nsColor: .windowBackgroundColor)))
+                } else if let state = option("capture-signin") {
+                    // The sign-in screen hosted alone: --capture-signin=signin|error|create|create-met|reset, or =sheet (the 440 pt sheet).
+                    let sheet = state == "sheet"
+                    let size = sheet ? NSSize(width: 440, height: 430) : NSSize(width: 760, height: 560)
+                    let view = sheet ? AnyView(SignInSheet(preview: "signin")) : AnyView(AuthView(preview: state))
+                    let host = NSHostingView(rootView: view.environment(store).environment(workspace).environment(\.controlActiveState, .key).frame(width: size.width, height: sheet ? nil : size.height).background(Color(nsColor: .windowBackgroundColor)))
+                    let fitted = sheet ? NSSize(width: size.width, height: ceil(host.fittingSize.height)) : size
+                    host.frame = NSRect(origin: .zero, size: fitted)
+                    let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: fitted.width, height: fitted.height), styleMask: [.borderless], backing: .buffered, defer: false)
+                    panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
+                    try? await Task.sleep(for: .seconds(1.5))
+                    if let png = DebugCapture.upright(host) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
+                    }
+                } else if let state = option("capture-sidebar-foot") {
+                    // The sidebar foot hosted alone: --capture-sidebar-foot=local.
+                    let host = NSHostingView(rootView: SyncFooter(preview: state).environment(store).environment(workspace).environment(\.controlActiveState, .key).frame(width: 260).background(Color(nsColor: .windowBackgroundColor)))
                     let size = NSSize(width: 260, height: ceil(host.fittingSize.height))
                     host.frame = NSRect(origin: .zero, size: size)
                     let panel = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: size.width, height: size.height), styleMask: [.borderless], backing: .buffered, defer: false)
                     panel.appearance = NSApp.appearance; panel.contentView = host; panel.orderBack(nil)
                     try? await Task.sleep(for: .seconds(1.5))
-                    if let png = DebugCapture.image(of: host).tiffRepresentation.flatMap({ NSBitmapImageRep(data: $0) })?.representation(using: .png, properties: [:]) {
-                        try? png.write(to: FileManager.default.temporaryDirectory.appending(path: path))
+                    if let png = DebugCapture.upright(host) {
+                        try? png.write(to: path.hasPrefix("/") ? URL(fileURLWithPath: path) : FileManager.default.temporaryDirectory.appending(path: path))
                     }
                 } else if let spec = option("capture-layout"), spec.hasPrefix("picker:") {
                     // The View Options menu cannot be captured offscreen, so host its Layout control alone for the scope after "picker:".
@@ -945,6 +972,14 @@ enum FixtureDefaults {
 }
 
 enum DebugCapture {
+    /// A view hosted alone in an offscreen window renders upside down through `layer.render`; this returns it upright as PNG data.
+    @MainActor static func upright(_ root: NSView) -> Data? {
+        guard let tiff = image(of: root).tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let cg = rep.cgImage,
+              let context = CGContext(data: nil, width: cg.width, height: cg.height, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        context.translateBy(x: 0, y: CGFloat(cg.height)); context.scaleBy(x: 1, y: -1)
+        context.draw(cg, in: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
+        return context.makeImage().flatMap { NSBitmapImageRep(cgImage: $0).representation(using: .png, properties: [:]) }
+    }
     /// Cache-displays the window frame, then repaints each visual-effect region with a solid background and
     /// its own subviews, because material backdrops cannot be rendered offscreen.
     @MainActor static func image(of root: NSView) -> NSImage {

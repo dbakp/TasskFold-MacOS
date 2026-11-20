@@ -288,8 +288,8 @@ struct TaskfoldCommands: Commands {
         #endif
         CommandMenu("Account") {
             Button("Manage Account…") { workspace.settingsTab = .account; openSettings() }
-            if store.localMode || !store.signedIn {
-                Button("Sign In…") { workspace.settingsTab = .account; workspace.signInRequested = true; openSettings() }
+            if store.localMode {
+                Button("Sign In…") { workspace.signInRequested = true }.keyboardShortcut("l", modifiers: [.command, .shift])
             }
             Button("Import from Todoist…") { workspace.settingsTab = .imports; openSettings() }
             Button("Invitations…") { workspace.settingsTab = .invitations; openSettings() }

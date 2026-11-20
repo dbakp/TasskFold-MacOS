@@ -115,16 +115,19 @@ struct ConnectionSignInSheet: View {
 struct SyncSignInButton: View {
     @Environment(Store.self) private var store
     @State private var request: Request?
+    /// Lets a menu item open the same sheet; reset to false once it has.
+    var trigger: Binding<Bool>? = nil
     private struct Request: Identifiable {
         let context: AccountReauthentication
         let workspace: WorkspaceBinding
         var id: UUID { context.id }
     }
+    private func open() {
+        guard let context = try? store.syncSignInContext() else { return }
+        request = Request(context:context,workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))
+    }
     var body: some View {
-        Button("Sign in again") {
-            guard let context = try? store.syncSignInContext() else { return }
-            request = Request(context:context,workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))
-        }
+        Button("Sign in again") { open() }
         .disabled(store.syncing || !store.canSignInForSync)
         .accessibilityIdentifier("syncSignIn")
         .sheet(item:$request) { value in
@@ -132,6 +135,7 @@ struct SyncSignInButton: View {
                 Task { await store.resumeSyncAfterSignIn(workspace:value.workspace) }
             }
         }
+        .onChange(of:trigger?.wrappedValue ?? false) { _,value in if value { trigger?.wrappedValue = false; open() } }
         .onChange(of:store.workspaceGeneration) { _,_ in request = nil }
         .onChange(of:store.signingOut) { _,value in if value { request = nil } }
         .onChange(of:store.accountRemovalBlocked) { _,value in if value { request = nil } }

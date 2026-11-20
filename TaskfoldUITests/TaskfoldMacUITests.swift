@@ -2335,13 +2335,13 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Mac held backup before leaving Account settings")
         app.buttons["General"].firstMatch.click()
         app.buttons["Account"].firstMatch.click()
-        let leave = app.buttons["Leave Local Workspace…"]
+        let leave = app.buttons["Close Local Workspace…"]
         for _ in 0..<5 where !leave.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
         XCTAssertTrue(leave.isHittable); leave.click()
-        XCTAssertTrue(app.sheets.buttons["Leave"].firstMatch.waitForExistence(timeout: 5)); app.sheets.buttons["Leave"].firstMatch.click()
+        XCTAssertTrue(app.sheets.buttons["Close"].firstMatch.waitForExistence(timeout: 5)); app.sheets.buttons["Close"].firstMatch.click()
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary, before)
         app.windows["Account"].buttons["_XCUI:CloseWindow"].click()
-        let local = app.links["useLocally"]
+        let local = app.buttons["useLocally"]
         XCTAssertTrue(local.waitForExistence(timeout: 5)); local.click()
         XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 5))
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary, before)
@@ -2471,7 +2471,7 @@ extension TaskfoldMacUITests {
         let path = folder.appendingPathComponent("local.json")
         // The runner can read but cannot write the other app's sandbox on macOS.
         // Fixture removal belongs to the isolated-build orchestration, after termination.
-        let local = app.links["useLocally"]
+        let local = app.buttons["useLocally"]
         XCTAssertTrue(local.waitForExistence(timeout: 10)); XCTAssertTrue(local.isEnabled)
         app.textFields["authEmail"].click(); app.textFields["authEmail"].typeText("pending@example.invalid")
         app.secureTextFields["authPassword"].click(); app.secureTextFields["authPassword"].typeText("synthetic-password")
@@ -3279,7 +3279,7 @@ extension TaskfoldMacUITests {
         let settings = app.windows["Account"]
         let accountTab = app.buttons["Account"].firstMatch
         XCTAssertTrue(accountTab.waitForExistence(timeout: 10)); accountTab.click()
-        let label = phase == "first" ? "Leave Local Workspace…" : "Sign Out…"
+        let label = phase == "first" ? "Close Local Workspace…" : "Sign Out…"
         let leave = settings.buttons[label]
         XCTAssertTrue(leave.waitForExistence(timeout: 10))
         let scroll = settings.scrollViews.firstMatch
@@ -3289,13 +3289,13 @@ extension TaskfoldMacUITests {
         }
         XCTAssertTrue(scroll.frame.contains(leave.frame))
         leave.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
-        let confirmation = app.sheets.buttons[phase == "first" ? "Leave" : "Sign Out"].firstMatch
+        let confirmation = app.sheets.buttons[phase == "first" ? "Close" : "Sign Out"].firstMatch
         XCTAssertTrue(confirmation.waitForExistence(timeout: 5)); confirmation.click()
         let close = settings.buttons["_XCUI:CloseWindow"]
         XCTAssertTrue(close.waitForExistence(timeout: 10)); close.click()
         XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 15))
         if phase == "local" {
-            app.links["useLocally"].click()
+            app.buttons["useLocally"].click()
             XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 20))
             try localUnchanged()
         } else {

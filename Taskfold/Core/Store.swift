@@ -409,7 +409,40 @@ final class Store {
     private(set) var syncIndicatorVisible = false
     /// Whether the realtime socket is joined. Drives the polling interval and nothing in the data path.
     private(set) var realtimeConnected = false
-    var online = true { didSet { if online && !oldValue { connectivityRestored() } } }
+    /// The socket is closed on purpose because the app has been idle; polling relaxes instead of falling back to the 60 s down-poll.
+    var realtimeSuspended = false
+    var online = true { didSet { if online && !oldValue { connectivityRestored() }; if online != oldValue { onlineChangedForBadge() } } }
+    /// True once the connection has been down for `SyncIssue.offlineGrace`. One timer per outage, no polling.
+    private(set) var offlineLongEnough = false
+    @ObservationIgnored private var offlineGraceTask: Task<Void, Never>?
+    private func onlineChangedForBadge() {
+        offlineGraceTask?.cancel(); offlineGraceTask = nil; offlineLongEnough = false
+        guard !online else { return }
+        offlineGraceTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(SyncIssue.offlineGrace))
+            guard !Task.isCancelled else { return }
+            self?.offlineLongEnough = true
+        }
+    }
+    /// What the account button flags (a dot), or nil when sync is fine. There is no always-on "Synced" label.
+    var syncIssue: SyncIssue? {
+        SyncIssue.current(local: localMode, signedIn: signedIn, online: online, offlineLongEnough: offlineLongEnough, pending: pendingCount,
+                          needsSignIn: canSignInForSync, failed: notice != nil)
+    }
+    /// Set after a first sign-in from a local workspace that holds tasks; the UI asks whether to bring them over.
+    var localTransferOffer: LocalWorkspaceTransfer?
+    private var localTransferAccount: String?
+    private func localTransferKey(_ account: String) -> String { "taskfold.localTransfer.v1." + account }
+    func acceptLocalTransfer() {
+        guard let offer = localTransferOffer, let account = localTransferAccount, account == userID else { localTransferOffer = nil; return }
+        localTransferOffer = nil
+        UserDefaults.standard.set(true, forKey: localTransferKey(account))
+        commit(offer.mutations, remember: false)
+    }
+    func declineLocalTransfer() {
+        if let account = localTransferAccount { UserDefaults.standard.set(true, forKey: localTransferKey(account)) }
+        localTransferOffer = nil
+    }
     /// Bumped when a sync brought in remote changes, so lists can animate that one update.
     private(set) var remoteChangeGeneration = 0
     /// Tasks another device or a collaborator just changed. Cleared shortly after, which fades the row tint.
@@ -1061,7 +1094,7 @@ final class Store {
         }
         return backend.session?.user.id ?? ""
     }
-    var email: String { backend.session?.user.email ?? "On this iPhone" }
+    var email: String { AccountCopy.email(session: backend.session?.user.email) }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
     private var filterCollaborators: [Record]? { presentedTables["project_collaborators"] ?? (localMode ? [] : nil) }
     @ObservationIgnored private var cachedAssignments: (rows:[Record]?,scope:String?,catalog:TaskAssignmentProvenance.Catalog)?
@@ -2033,10 +2066,16 @@ final class Store {
             resetRemovedWorkspaceIfSignedOut(); return
         }
         googleAvatarURL = backend.session?.user.googleAvatarURL; avatarMetadataLoaded = false
+        let leavingLocal = localMode && workspaceCacheReadable, leavingSnapshot = snapshot
         accountGeneration = UUID(); localMode = false; signedIn = true; syncConflict = nil; focusSyncConflict = nil
         CalendarBusyStore.shared.bind(account: userID)
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
+        localTransferOffer = nil; localTransferAccount = nil
+        if leavingLocal, !userID.isEmpty, !UserDefaults.standard.bool(forKey: localTransferKey(userID)) {
+            let plan = LocalWorkspaceTransfer.plan(local: leavingSnapshot, account: userID, existingLabelNames: Set(labels.map(\.name)))
+            if !plan.isEmpty { localTransferAccount = userID; localTransferOffer = plan }
+        }
     }
     func permitsTeamTemplateTransfer(_ review: TeamTemplateTransferReview) -> Bool {
         teamOrganizationReadable && review.workspace.matches(account: userID, generation: workspaceGeneration)
@@ -2931,7 +2970,7 @@ final class Store {
         }
     }
     /// Seconds between safety-net polls: relaxed while realtime is joined.
-    var pollInterval: TimeInterval { SyncTiming.pollInterval(realtimeConnected: realtimeConnected) }
+    var pollInterval: TimeInterval { SyncTiming.pollInterval(realtimeConnected: realtimeConnected, realtimeSuspended: realtimeSuspended) }
     private func syncingChanged() {
         syncIndicatorTask?.cancel(); syncIndicatorTask = nil
         if syncing {

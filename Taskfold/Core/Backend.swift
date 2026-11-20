@@ -649,11 +649,13 @@ final class Backend: NSObject {
         session = live
     }
 
-    func signIn(email: String, password: String, signup: Bool, reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws -> Bool {
+    func signIn(email: String, password: String, signup: Bool, reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil, displayName: String? = nil) async throws -> Bool {
         guard context == nil || !signup else { throw CancellationError() }
         let attempt = try startAuthentication(reauthenticating:context); defer { endAuthentication(attempt) }
         let path = signup ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password"
-        let data = try await request(path, method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()), "password": .string(password)], authenticated: false)
+        var credentials: [String: JSON] = ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()), "password": .string(password)]
+        if signup, let name = displayName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty { credentials["data"] = .object(["full_name": .string(name), "name": .string(name)]) }
+        let data = try await request(path, method: "POST", body: credentials, authenticated: false)
         try requireAuthentication(attempt)
         guard let next = try? Foundation.JSONDecoder().decode(Session.self, from: data) else {
             if signup { return false }
@@ -1362,7 +1364,8 @@ extension Backend {
         let socket = URLSession.shared.webSocketTask(with: components.url!)
         socket.resume()
         defer { socket.cancel(with: .goingAway, reason: nil); changeLedger.noteDisconnected() }
-        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", SharedComment.table, SharedMention.table, TaskDependencies.table].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
+        // One channel, only the tables a screen needs live (see `RealtimeSubscriptions`); the rest ride the foreground sync.
+        let subscriptions: [JSON] = RealtimeSubscriptions.entries(account: session.user.id).map { .object($0.mapValues { .string($0) }) }
         let join: [String: JSON] = ["topic": .string("realtime:taskfold-ios"), "event": .string("phx_join"), "ref": .string("1"), "join_ref": .string("1"), "payload": .object(["access_token": .string(session.access_token), "config": .object(["postgres_changes": .array(subscriptions)])])]
         try await socket.send(.string(String(decoding: TaskfoldJSONEncoder().encode(join), as: UTF8.self)))
         let heartbeat = Task { @MainActor in
@@ -1645,5 +1648,223 @@ extension Backend: ProjectFilePreparationService {
         case .copy(let plan, _): return try ProjectFilePreparationPage(fields, request: request, plan: plan)
         default: return try ProjectFilePreparationPage(fields, request: request)
         }
+    }
+}
+
+// MARK: - Sign-in entry points (design review mac-r2, PR 2)
+
+/// Which sign-in providers the hosted project offers, from GoTrue's unauthenticated `GET /auth/v1/settings`.
+struct AuthProviderAvailability: Equatable, Sendable {
+    enum State: Equatable, Sendable { case available, unavailable, unknown }
+    var google: State
+    static let unknown = AuthProviderAvailability(google: .unknown)
+    static let cacheLifetime: TimeInterval = 24 * 60 * 60
+    static let googleUnavailableCaption = "Google sign-in is coming soon. Use email for now."
+    /// Only a definite "off" disables the button; an unreadable answer (offline) leaves it enabled.
+    var googleEnabled: Bool { google != .unavailable }
+    init(google: State) { self.google = google }
+    init?(settings data: Data) {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let external = root["external"] as? [String: Any], let google = external["google"] as? Bool else { return nil }
+        self.google = google ? .available : .unavailable
+    }
+}
+
+/// Remembers the provider answer for 24 hours so sign-in does not ask the server on every launch.
+enum AuthProviderCache {
+    static func key(origin: String) -> String { "taskfold.authProviders.v1." + origin }
+    static func read(origin: String, defaults: UserDefaults = .standard) -> (availability: AuthProviderAvailability, fetchedAt: Date)? {
+        guard let stored = defaults.dictionary(forKey: key(origin: origin)), let google = stored["google"] as? Bool,
+              let at = stored["at"] as? Double else { return nil }
+        return (AuthProviderAvailability(google: google ? .available : .unavailable), Date(timeIntervalSince1970: at))
+    }
+    static func write(_ value: AuthProviderAvailability, origin: String, now: Date, defaults: UserDefaults = .standard) {
+        guard value.google != .unknown else { return }
+        defaults.set(["google": value.google == .available, "at": now.timeIntervalSince1970], forKey: key(origin: origin))
+    }
+    static func isFresh(fetchedAt: Date, now: Date) -> Bool {
+        let age = now.timeIntervalSince(fetchedAt)
+        return age >= 0 && age < AuthProviderAvailability.cacheLifetime
+    }
+}
+
+/// Plain-words sign-in feedback. Raw service or system text is never shown.
+enum AuthFeedback: Equatable, Sendable {
+    case network, badCredentials, unconfirmed, accountExists, config, rateLimited, invalidCode, google, generic
+    var text: String {
+        switch self {
+        case .network: return "Can't reach Taskfold. Check your connection and try again."
+        case .badCredentials: return "That email and password don't match."
+        case .unconfirmed: return "Confirm your email first. We sent you a link."
+        case .accountExists: return "That email already has an account. Try signing in."
+        case .config: return "Taskfold couldn't start sign-in. Please update the app."
+        case .rateLimited: return "Too many attempts. Wait a minute and try again."
+        case .invalidCode: return "That code didn't work. Check it or send a new one."
+        case .google: return "Google sign-in didn't finish. Try again, or use email."
+        case .generic: return "Something went wrong. Please try again."
+        }
+    }
+    /// Only a credential error outlines the fields.
+    var outlinesFields: Bool { self == .badCredentials }
+    var offersResend: Bool { self == .unconfirmed }
+    /// A closed Google sheet is not a failure.
+    static func isGoogleCancellation(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        let value = error as NSError
+        if value.domain == "com.apple.AuthenticationServices.WebAuthenticationSession" && value.code == 1 { return true }
+        return (error as? AppFailure)?.message == "Sign-in was cancelled."
+    }
+    /// nil means "say nothing" (cancelled).
+    static func classify(_ error: Error, google: Bool = false) -> AuthFeedback? {
+        if error is CancellationError { return nil }
+        if google && isGoogleCancellation(error) { return nil }
+        let value = error as NSError
+        if value.domain == NSURLErrorDomain { return .network }
+        let message = ((error as? AppFailure)?.message ?? value.localizedDescription).lowercased()
+        if message.contains("supabase configuration") { return .config }
+        if google { return .google }
+        if message.contains("invalid login credentials") || message.contains("invalid_credentials") { return .badCredentials }
+        if message.contains("not confirmed") { return .unconfirmed }
+        if message.contains("already registered") || message.contains("already been registered") { return .accountExists }
+        if message.contains("rate limit") || message.contains("too many") || message.contains("security purposes") { return .rateLimited }
+        if message.contains("expired or is invalid") || message.contains("otp") { return .invalidCode }
+        return .generic
+    }
+}
+
+/// The live password rule caption on Create account and Reset password.
+struct PasswordRuleStatus: Equatable, Sendable {
+    let met: Bool
+    let text: String
+    let remaining: String?
+    init(_ password: String) {
+        met = ClientHardening.passwordIsAcceptable(password)
+        text = "Use \(ClientHardening.passwordRequirement)."
+        let left = ClientHardening.minimumPasswordLength - password.count
+        remaining = !met && !password.isEmpty ? "\(left) more to go" : nil
+    }
+}
+
+/// The six digits of a password-reset code, however they were typed or pasted.
+enum RecoveryCode {
+    static let length = 6
+    static func normalized(_ input: String) -> String { String(input.filter { $0.isASCII && $0.isNumber }.prefix(length)) }
+    static func isComplete(_ input: String) -> Bool { normalized(input).count == length }
+    /// "maya.lind@example.com" -> "m…@example.com"
+    static func masked(email: String) -> String {
+        let trimmed = email.trimmingCharacters(in: .whitespaces)
+        guard let at = trimmed.firstIndex(of: "@"), at != trimmed.startIndex else { return trimmed }
+        return String(trimmed[trimmed.startIndex]) + "…" + trimmed[at...]
+    }
+}
+
+/// How the account is named in the UI where there is no email, per device.
+enum AccountCopy {
+    static var device: String {
+        #if os(macOS)
+        return "this Mac"
+        #elseif canImport(UIKit)
+        return UIDevice.current.userInterfaceIdiom == .pad ? "this iPad" : "this iPhone"
+        #else
+        return "this device"
+        #endif
+    }
+    static func email(session: String?, device: String = AccountCopy.device) -> String {
+        if let session, !session.isEmpty { return session }
+        return "On " + device
+    }
+}
+
+/// What the account button should flag. nil means everything is fine and nothing is shown.
+enum SyncIssue: Equatable, Sendable {
+    case cantSync, offline, signInAgain
+    var detail: String {
+        switch self {
+        case .cantSync: return "Can't sync — will retry"
+        case .offline: return "Offline — changes saved on this device"
+        case .signInAgain: return "Sign in again"
+        }
+    }
+    /// Offline is flagged only with unsent changes, or after a little while without a connection.
+    static func current(local: Bool, signedIn: Bool, online: Bool, offlineLongEnough: Bool, pending: Int, needsSignIn: Bool, failed: Bool) -> SyncIssue? {
+        guard signedIn, !local else { return nil }
+        if needsSignIn { return .signInAgain }
+        if !online { return pending > 0 || offlineLongEnough ? .offline : nil }
+        return failed ? .cantSync : nil
+    }
+    static let offlineGrace: TimeInterval = 90
+}
+
+/// Local tasks that can move into a new account (OA-10). Starter tasks are left out, and every row gets a new id so the
+/// same Mac can feed more than one account.
+struct LocalWorkspaceTransfer: Equatable {
+    var mutations: [Mutation]
+    var taskCount: Int
+    var projectCount: Int
+    var isEmpty: Bool { taskCount == 0 && projectCount == 0 }
+    static func plan(local: Snapshot, account: String, existingLabelNames: Set<String> = [], makeID: () -> String = { UUID().uuidString.lowercased() }) -> LocalWorkspaceTransfer {
+        // Starter rows are the older "Getting started" project and the starter project, whose IDs are fixed per account (local mode's is "local").
+        let seedProjects = Set((local.tables["projects"] ?? []).filter {
+            LocalModeDefaults.isFixtureRow($0) || $0.id == Onboarding.projectID(account: "local")
+                || ($0.string("name") == LocalModeDefaults.gettingStartedProject && $0.string("description") == LocalModeDefaults.gettingStartedDescription)
+        }.map(\.id))
+        let projects = (local.tables["projects"] ?? []).filter { !seedProjects.contains($0.id) }
+        let tasks = (local.tables["tasks"] ?? []).filter {
+            !LocalModeDefaults.isFixtureRow($0) && !seedProjects.contains($0.string("project_id")) && !LocalModeDefaults.gettingStartedTitles.contains($0.string("title"))
+                && Onboarding.key(forTask: $0.id, account: "local") == nil
+        }
+        let sections = (local.tables["sections"] ?? []).filter { !seedProjects.contains($0.string("project_id")) }
+        let labels = (local.tables["labels"] ?? []).filter { !existingLabelNames.contains($0.string("name")) }
+        var ids: [String: String] = [:]
+        for row in projects + sections + labels + tasks { ids[row.id] = makeID() }
+        func move(_ table: String, _ rows: [Record]) -> [Mutation] {
+            rows.map { row in
+                var copy = row
+                copy["id"] = .string(ids[row.id] ?? makeID()); copy["user_id"] = .string(account)
+                for field in ["project_id", "section_id", "parent_id"] { let old = row[field].text; if !old.isEmpty { copy[field] = ids[old].map(JSON.string) ?? .null } }
+                return Mutation(table: table, recordID: copy.id, method: "POST", fields: copy.fields)
+            }
+        }
+        return LocalWorkspaceTransfer(mutations: move("projects", projects) + move("labels", labels) + move("sections", sections) + move("tasks", tasks),
+                                      taskCount: tasks.count, projectCount: projects.count)
+    }
+    /// "12 tasks and 2 projects"
+    var summary: String {
+        func part(_ n: Int, _ one: String) -> String { "\(n) \(one)\(n == 1 ? "" : "s")" }
+        if projectCount == 0 { return part(taskCount, "task") }
+        if taskCount == 0 { return part(projectCount, "project") }
+        return part(taskCount, "task") + " and " + part(projectCount, "project")
+    }
+}
+
+extension Backend {
+    /// Whether Google sign-in is switched on for this project. Cached for 24 hours; a failed check (offline) falls
+    /// back to the last answer, else to "unknown", which leaves the button enabled.
+    func authProviders(now: Date = Date(), defaults: UserDefaults = .standard) async -> AuthProviderAvailability {
+        let origin = baseURL
+        let cached = AuthProviderCache.read(origin: origin, defaults: defaults)
+        if let cached, AuthProviderCache.isFresh(fetchedAt: cached.fetchedAt, now: now) { return cached.availability }
+        do {
+            let data = try await request("/auth/v1/settings", authenticated: false)
+            guard let fresh = AuthProviderAvailability(settings: data) else { return cached?.availability ?? .unknown }
+            AuthProviderCache.write(fresh, origin: origin, now: now, defaults: defaults)
+            return fresh
+        } catch { return cached?.availability ?? .unknown }
+    }
+    /// Sends the sign-up confirmation email again.
+    func resendConfirmation(email: String) async throws {
+        _ = try await request("/auth/v1/resend", method: "POST", body: ["type": .string("signup"), "email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)
+    }
+    /// Password reset by emailed code: verifies the recovery code (which signs the person in), then sets the new
+    /// password. Returns once the session is saved; the caller then enters the account as for any sign-in.
+    func verifyRecovery(email: String, code: String) async throws {
+        guard RecoveryCode.isComplete(code) else { throw AppFailure(message: "Token has expired or is invalid") }
+        let attempt = beginAuthentication(); defer { endAuthentication(attempt) }
+        let data = try await request("/auth/v1/verify", method: "POST", body: [
+            "type": .string("recovery"), "email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()),
+            "token": .string(RecoveryCode.normalized(code))], authenticated: false)
+        try requireAuthentication(attempt)
+        guard let next = try? Foundation.JSONDecoder().decode(Session.self, from: data) else { throw AppFailure(message: "Token has expired or is invalid") }
+        try await acceptAuthentication(next, attempt: attempt, reauthenticating: nil)
     }
 }
