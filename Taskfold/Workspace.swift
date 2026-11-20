@@ -72,6 +72,8 @@ struct Confirmation: Equatable {
     var historyRequest: EditHistoryRequest?
     /// Second line for a celebration toast, such as "5 of 5 today".
     var celebration: String? = nil
+    /// A tinted check and a second line, for the starter project's "Nice, that's how you add tasks".
+    var tint: Color? = nil
 }
 
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
@@ -221,8 +223,16 @@ final class Workspace {
         guard store.signedIn else { return }
         smartReschedule = SmartRescheduleRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
     }
-    /// Presents the welcome tour.
+    /// Presents the welcome card (first run, or `--onboarding`).
     var onboarding = false
+    /// Presents "Set up your day", which comes before the welcome card.
+    var setupDay = false
+    /// Opens the starter project, bringing it back first if it was hidden or deleted (Help ▸ Show Starter Project).
+    func openStarterProject() {
+        guard store.signedIn else { return }
+        guard store.showStarterProject() else { return }
+        section = .project(Onboarding.projectID(account: store.userID))
+    }
     var confirmation: Confirmation?
     /// True while the pointer rests on the confirmation bar; the bar stays until it leaves.
     var confirmationHovering = false
@@ -367,10 +377,10 @@ final class Workspace {
         }
     }
 
-    func confirm(_ message: String, undoable: Bool = true, celebration: String? = nil) {
+    func confirm(_ message: String, undoable: Bool = true, celebration: String? = nil, tint: Color? = nil) {
         confirmationTimer?.cancel()
         confirmationHovering = false
-        withAnimation(toastAnimation) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil, celebration: celebration) }
+        withAnimation(toastAnimation) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil, celebration: celebration, tint: tint) }
         confirmationTimer = Task { [weak self] in
             let delay = Self.toastLifetime
             // The countdown only advances while the pointer is away from the bar.
@@ -864,6 +874,7 @@ final class Workspace {
         }
         var created = false
         run("Add Task") { withAnimation(layout) { created = store.save("tasks", task, alongside: planningRows) } }
+        if created { store.observeOnboardingQuickAdd(taskID: task.id, groups: parsed.tokens.map(\.group)) }
         let scope = override ?? self.scope
         if created, let slot { confirm(slot == .evening ? "Added to This Evening" : "Added to Someday"); return task.id }
         if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true, historyRequest: store.captureHistoryRequest()) }

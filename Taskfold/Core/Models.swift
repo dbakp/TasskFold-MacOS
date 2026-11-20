@@ -3340,7 +3340,7 @@ enum LocalModeDefaults {
     static func recordStart(persist: Bool, defaults: UserDefaults = .standard) {
         if persist { defaults.set(true, forKey: key) }
     }
-    /// The getting-started project and tasks that `Store.seedGettingStarted` writes on either platform.
+    /// The older getting-started project and tasks that `Store.seedGettingStarted` wrote on either platform (the starter project replaced it).
     static let gettingStartedProject = "Getting started"
     static let gettingStartedDescription = "A few tasks to try Taskfold with. Delete them whenever you like."
     static let gettingStartedTitles: Set<String> = [
@@ -3350,7 +3350,7 @@ enum LocalModeDefaults {
         "Tap + and type “Call Mum tomorrow 9am p1”", "Open the Calendar tab and drag it upward",
     ]
     /// Logs and view settings that follow from other rows; they are never something a person made on their own.
-    static let derivedTables: Set<String> = ["view_preferences", "_local_day_order", "task_activity", "task_activity_epoch", "task_node_activity", "task_node_activity_epoch"]
+    static let derivedTables: Set<String> = ["view_preferences", "profiles", "_local_day_order", "task_activity", "task_activity_epoch", "task_node_activity", "task_node_activity_epoch"]
     static func isFixtureRow(_ row: Record) -> Bool {
         ["preview", "ui-testing"].contains(row.string("user_id")) || row.id.hasPrefix("preview-")
     }
@@ -3359,11 +3359,14 @@ enum LocalModeDefaults {
         var seedProjects = Set<String>()
         for project in snapshot.tables["projects"] ?? [] {
             if isFixtureRow(project) { seedProjects.insert(project.id); continue }
+            // The starter project (Core/Onboarding.swift) has a fixed ID per account; local mode's account is "local".
+            if project.id == Onboarding.projectID(account: "local") { seedProjects.insert(project.id); continue }
             guard project.string("name") == gettingStartedProject, project.string("description") == gettingStartedDescription else { return false }
             seedProjects.insert(project.id)
         }
         for (table, rows) in snapshot.tables where table != "projects" && !derivedTables.contains(table) {
             for row in rows where !isFixtureRow(row) {
+                if table == "tasks", Onboarding.key(forTask: row.id, account: "local") != nil, seedProjects.contains(row.string("project_id")) { continue }
                 guard table == "tasks", gettingStartedTitles.contains(row.string("title")), seedProjects.contains(row.string("project_id")) else { return false }
             }
         }

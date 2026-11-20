@@ -147,5 +147,12 @@ final class AuthEntryTests: XCTestCase {
         XCTAssertEqual(parent.fields["project_id"], plan.mutations.first { $0.table == "projects" }.map { .string($0.recordID) })
         XCTAssertNotEqual(parent.recordID, task.id)
         XCTAssertTrue(LocalWorkspaceTransfer.plan(local: Snapshot(tables: ["projects": [seed], "tasks": [starter]]), account: "a").isEmpty)
+        // The starter project and its tasks are recognised by their fixed IDs, even when a starter task has moved to another project.
+        let starterProject = Record(["id": .string(Onboarding.projectID(account: "local")), "user_id": .string("local"), "name": .string(Onboarding.projectName)])
+        var starterTask = Record.task(user: "local", project: starterProject.id); starterTask["id"] = .string(Onboarding.taskID(account: "local", key: Onboarding.Key.allCases[0]))
+        var movedStarter = starterTask; movedStarter["id"] = .string(Onboarding.taskID(account: "local", key: Onboarding.Key.allCases[1])); movedStarter["project_id"] = .string("p1")
+        XCTAssertTrue(LocalWorkspaceTransfer.plan(local: Snapshot(tables: ["projects": [starterProject], "tasks": [starterTask]]), account: "a").isEmpty)
+        let mixed = LocalWorkspaceTransfer.plan(local: Snapshot(tables: ["projects": [starterProject, project], "tasks": [starterTask, movedStarter, task]]), account: "a")
+        XCTAssertEqual(mixed.projectCount, 1); XCTAssertEqual(mixed.taskCount, 1)
     }
 }

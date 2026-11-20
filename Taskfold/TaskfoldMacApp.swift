@@ -369,7 +369,7 @@ struct TaskfoldCommands: Commands {
             Divider()
         }
         CommandGroup(replacing: .help) {
-            Button("Welcome Tour") { workspace.onboarding = true }.disabled(!store.signedIn)
+            Button("Show Starter Project") { workspace.openStarterProject() }.disabled(!store.signedIn).accessibilityIdentifier("showStarterProject")
             Button("Taskfold Help") { NSWorkspace.shared.open(URL(string: "https://github.com/dbakp/TasskFold-MacOS")!) }
         }
     }

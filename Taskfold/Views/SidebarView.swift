@@ -61,7 +61,8 @@ struct SidebarView: View {
                             HStack {
                                 Text(project.name).lineLimit(1)
                                 Spacer()
-                                count(navigationCounts.project(project.id), incomplete: reading.incompleteProjects.contains(project.id.lowercased()))
+                                if store.isStarterProject(project.id) { StarterProgressPill(count: store.starterProgress.count) }
+                                else { count(navigationCounts.project(project.id), incomplete: reading.incompleteProjects.contains(project.id.lowercased())) }
                             }
                         } icon: { ProjectPebble(hue: DS.Palette.project(project), size: 8) }
                     }

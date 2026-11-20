@@ -507,6 +507,11 @@ final class Store {
     @ObservationIgnored private var autoMerging = false
     @ObservationIgnored private var autoMergeScheduled = false
     var lastSync: Date?
+    /// Starter-project onboarding state (Core/OnboardingStore.swift).
+    var onboardingAnnouncement: OnboardingAnnouncement?
+    var onboardingStage: OnboardingStage?
+    @ObservationIgnored var onboardingBusy = false
+    @ObservationIgnored var onboardingApplying = false
     var undoStack: [EditHistory] = []
     var redoStack: [EditHistory] = []
     let backend: Backend
@@ -2047,39 +2052,11 @@ final class Store {
         // Re-entering the current workspace is not an account switch. Preserve its
         // session-bound routes and already scheduled one-shot snoozes.
         guard !localMode || !signedIn || !workspaceCacheReadable else { return }
-        let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)
         if !remoteReminderTestWorkspace {
             do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
         }
         accountGeneration = UUID(); localMode = true; signedIn = true; LocalModeDefaults.recordStart(persist: persist); load()
         CalendarBusyStore.shared.bind(account: userID)
-        if firstRun && userID == "local" && tasks.isEmpty { seedGettingStarted() }
-    }
-    /// A small sample project so the first screen teaches the gestures instead of being empty.
-    private func seedGettingStarted() {
-        let project = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(userID), "name": .string("Getting started"), "color": .string("#e31e4b"), "order_index": .number(0), "description": .string("A few tasks to try Taskfold with. Delete them whenever you like.")])
-        #if os(macOS)
-        let samples: [(String, String, Int)] = [
-            ("Press Space to complete this task", "Or click the circle. Undo with ⌘Z or the confirmation strip.", 1),
-            ("Drag me onto Tomorrow in Upcoming", "Drops land inside the task's priority group; an indicator shows where.", 2),
-            ("Press ⌘N and type “Call Mum tomorrow 9am p1”", "Dates, times, priorities, and #labels are picked out of the text as chips.", 3),
-            ("Open Calendar and switch to Week", "Select a day to see its tasks beside the grid; ⌘T jumps back to today.", 4),
-        ]
-        #else
-        let samples: [(String, String, Int)] = [
-            ("Swipe right to complete this task", "Or tap the circle. An Undo pill appears for a few seconds.", 1),
-            ("Press and hold, then drag me to tomorrow", "Rows lift under your finger and a gap opens where they will land.", 2),
-            ("Tap + and type “Call Mum tomorrow 9am p1”", "Dates, times, priorities, and #labels are picked out of the text as chips.", 3),
-            ("Open the Calendar tab and drag it upward", "The calendar collapses into a week strip so the day gets the screen.", 4),
-        ]
-        #endif
-        var changes = [Mutation(table: "projects", recordID: project.id, method: "POST", fields: project.fields)]
-        for (title, notes, priority) in samples {
-            var task = Record.task(user: userID, project: project.id, date: Date())
-            task["title"] = .string(title); task["description"] = .string(notes); task["priority"] = .number(Double(priority))
-            changes.append(Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields))
-        }
-        commit(changes, remember: false)
     }
     func authenticated() async {
         // A newer authenticated session supersedes an in-flight sign-out.
@@ -2640,6 +2617,7 @@ final class Store {
         // Push first: reminder scheduling must never delay sending the edit.
         Task { await syncAutomatically() }
         Task { await reschedule() }
+        observeOnboarding(.mutations(changes))
         return true
     }
     @discardableResult

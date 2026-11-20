@@ -1803,12 +1803,15 @@ struct LocalWorkspaceTransfer: Equatable {
     var projectCount: Int
     var isEmpty: Bool { taskCount == 0 && projectCount == 0 }
     static func plan(local: Snapshot, account: String, existingLabelNames: Set<String> = [], makeID: () -> String = { UUID().uuidString.lowercased() }) -> LocalWorkspaceTransfer {
+        // Starter rows are the older "Getting started" project and the starter project, whose IDs are fixed per account (local mode's is "local").
         let seedProjects = Set((local.tables["projects"] ?? []).filter {
-            LocalModeDefaults.isFixtureRow($0) || ($0.string("name") == LocalModeDefaults.gettingStartedProject && $0.string("description") == LocalModeDefaults.gettingStartedDescription)
+            LocalModeDefaults.isFixtureRow($0) || $0.id == Onboarding.projectID(account: "local")
+                || ($0.string("name") == LocalModeDefaults.gettingStartedProject && $0.string("description") == LocalModeDefaults.gettingStartedDescription)
         }.map(\.id))
         let projects = (local.tables["projects"] ?? []).filter { !seedProjects.contains($0.id) }
         let tasks = (local.tables["tasks"] ?? []).filter {
             !LocalModeDefaults.isFixtureRow($0) && !seedProjects.contains($0.string("project_id")) && !LocalModeDefaults.gettingStartedTitles.contains($0.string("title"))
+                && Onboarding.key(forTask: $0.id, account: "local") == nil
         }
         let sections = (local.tables["sections"] ?? []).filter { !seedProjects.contains($0.string("project_id")) }
         let labels = (local.tables["labels"] ?? []).filter { !existingLabelNames.contains($0.string("name")) }

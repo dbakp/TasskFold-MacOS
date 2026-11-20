@@ -212,7 +212,13 @@ I'd finish the subtask migration, because it protects data. The rest should ship
   - [x] Local mode: "Not synced / Sign in" card (Mac sidebar, iOS Browse and Settings), ⌘⇧L, "Close Local Workspace" instead of the red "Leave", and an offer to bring local tasks into the account (`LocalWorkspaceTransfer`).
   - [x] The always-on "Synced" label is gone. A dot on the account button appears only for a sync problem, explained in its menu or Settings (`SyncIssue`, `NWPathMonitor`, no polling).
   - [ ] Owner: the hosted password-reset email template must include `{{ .Token }}` for the code flow; until then the emailed link is the fallback. Turning on Google in hosted Supabase is also the owner's call.
-- **Next:** PR 3 (starter-project onboarding). PR 4 is polish.
+- [x] **PR 3, starter-project onboarding** (branch `starter-onboarding` in both repos; OA-11, OA-14 and the onboarding redesign):
+  - [x] After the first sign-in (or choosing local mode): a skippable "Set up your day" sheet (working hours and where the app opens), then one welcome card with "Show me", replacing the five-page tour.
+  - [x] The starter project "Get to know Taskfold" (the app's Blue) has six real tasks that tick themselves off: add a task with a date or priority in Quick Add, drag the dated task to tomorrow, add a subtask, set working hours, connect a calendar, and open the account on the other platform. A progress card, a sidebar or Browse pill and an Undo toast show it; Help ▸ Show Starter Project (Mac) and Settings ▸ Show Starter Project (iPhone) bring it back.
+  - [x] Works for signed-in accounts as well as local mode. IDs are UUIDv5 of the account, "starter-v1" and a key, so two devices write the same rows. The "seeded" flag lives in the account's existing `profiles.preferences` JSON (`onboarding.starter`), with no hosted migration; local mode keeps it in the local profile row. An account that already has work is never given a starter project.
+  - Core: new `Onboarding.swift` (pure rules, tested) and `OnboardingStore.swift` (applies them to the Store); `Store.seedGettingStarted` is gone.
+  - Not done: the Holidays row of the mockup (no holiday setting exists to save it to), and carrying starter progress from local mode into an account (the starter project is left out of the PR 2 migration).
+- **Next:** PR 4 is polish.
 
 ## Phase 0 outcome (10 November 2026)
 - **Baseline.**
