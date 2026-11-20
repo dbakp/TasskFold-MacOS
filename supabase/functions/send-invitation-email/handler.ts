@@ -3,7 +3,7 @@ import { buildInvitationEmail, clean } from "./content.ts";
 type Config = {
   url: string;
   serviceKey: string;
-  resendKey: string;
+  lettermintToken: string;
   from: string;
 };
 type Dependencies = {
@@ -266,7 +266,9 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         throw new Refusal(403, "Only the project owner can send invitations.");
       }
 
-      if (!config.resendKey || !config.from || /[\r\n]/.test(config.from)) {
+      if (
+        !config.lettermintToken || !config.from || /[\r\n]/.test(config.from)
+      ) {
         throw new Refusal(503, "Invitation email is temporarily unavailable.");
       }
 
@@ -308,10 +310,10 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       });
       let delivered = false;
       try {
-        const sent = await call("https://api.resend.com/emails", {
+        const sent = await call("https://api.lettermint.co/v1/send", {
           method: "POST",
           headers: {
-            Authorization: "Bearer " + config.resendKey,
+            "x-lettermint-token": config.lettermintToken,
             "Idempotency-Key": "taskfold-invitation-" + invitation.id + "-" +
               claim.claim,
           },
@@ -321,6 +323,7 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
             subject: email.subject,
             html: email.html,
             text: email.text,
+            tag: "invitation",
           },
         });
         delivered = sent.status >= 200 && sent.status < 300;

@@ -29,6 +29,21 @@ stay 6 (`RecoveryCode.length`).
 project, so with confirmation on, sign-ups would be refused ("Too many emails") almost at once. Configure a custom SMTP
 sender (Dashboard > Authentication > Emails > SMTP Settings) and send yourself a test before going further.
 
+Taskfold sends all email through **Lettermint** (Lettermint B.V., Netherlands; data processed and stored in the EU).
+In the Lettermint project, verify the sending domain and turn on **Enable SMTP**, then enter in Supabase:
+
+| Field    | Value                                               |
+|----------|-----------------------------------------------------|
+| Host     | `smtp.lettermint.co`                                |
+| Port     | `465` (implicit TLS)                                |
+| Username | `lettermint`                                        |
+| Password | the Lettermint project API token (`lm_...`)         |
+| Sender   | an address on the verified domain                   |
+
+The invitation function (`functions/send-invitation-email`) uses the same project through Lettermint's HTTP API.
+Its secrets are `LETTERMINT_API_TOKEN` (the project token) and `TASKFOLD_EMAIL_FROM` (for example
+`Taskfold <invites@your-domain>`). Without either, the function answers 503 and sends nothing.
+
 To apply the template and turn confirmation on, use a scratch workdir (never the main `supabase/config.toml`) whose
 config.toml declares only:
 
