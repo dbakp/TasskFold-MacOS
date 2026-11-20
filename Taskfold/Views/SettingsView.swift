@@ -158,7 +158,6 @@ private struct MacNotificationInspectionView: View {
 struct AccountSettings: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
-    @State private var showLogin = false
     @State private var profileDraft = ProfileNameDraft()
     @State private var confirmSignOut = false
     @State private var importingAvatar = false
@@ -178,12 +177,13 @@ struct AccountSettings: View {
     var body: some View {
         Form {
             Section("Account") {
-                LabeledContent("Signed in as", value: !store.signedIn ? "Not signed in" : store.localMode ? "Local workspace on this Mac" : store.email)
                 if store.localMode || !store.signedIn {
-                    Text("Sign in to sync your tasks, manage your profile, and import from Todoist. Your local workspace stays saved separately on this Mac.").font(.callout).foregroundStyle(.secondary)
-                    Button("Sign In or Create Account…") { showLogin = true }
-                        .buttonStyle(.borderedProminent).accessibilityIdentifier("accountSignIn")
-                }
+                    LabeledContent("Account") { VStack(alignment: .trailing, spacing: 2) { Text("Not signed in"); Text("Tasks are saved only on this Mac").font(.caption).foregroundStyle(.secondary) } }
+                    HStack {
+                        Button("Sign In…") { requestSignIn() }.buttonStyle(.borderedProminent).tint(DS.Palette.accentFill).accessibilityIdentifier("accountSignIn")
+                        Button("Create Account…") { requestSignIn() }.accessibilityIdentifier("accountCreate")
+                    }
+                } else { LabeledContent("Signed in as", value: store.email) }
                 if store.signedIn && !store.localMode {
                     HStack(spacing: 14) {
                         PersonAvatar(person: store.accountIdentity, size: 48)
@@ -234,18 +234,15 @@ struct AccountSettings: View {
             BackupTools()
             if store.signedIn {
                 Section {
-                    Button(store.localMode ? "Leave Local Workspace…" : "Sign Out…", role: .destructive) { confirmSignOut = true }
+                    Button(store.localMode ? "Close Local Workspace…" : "Sign Out…", role: store.localMode ? nil : .destructive) { confirmSignOut = true }
                 }
             }
         }
         .modifier(BackupPresentation())
         .formStyle(.grouped)
-        .onAppear { refreshProfileDraft(); consumeSignInRequest() }
+        .onAppear { refreshProfileDraft() }
         .onChange(of: store.workspaceGeneration) { _, _ in refreshProfileDraft(); avatarWorkspace = nil; avatarUploadID = UUID(); uploading = false; importingAvatar = false }
         .onChange(of: store.accountName) { _, _ in refreshProfileDraft() }
-        .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
-        .onChange(of: store.localMode) { _, local in if !local && store.signedIn { showLogin = false } }
-        .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
         .sheet(isPresented: $emailCapture) { NavigationStack { EmailCaptureView() } }
         .sheet(isPresented: $webhookAccess) { NavigationStack { WebhookAccessView() } }
         .sheet(isPresented: $teamsPresented) { NavigationStack { TeamOrganizationView() } }
@@ -253,12 +250,6 @@ struct AccountSettings: View {
         .sheet(isPresented: $changingEmail) { ChangeEmailSheet() }
         .sheet(isPresented: $changingPassword) { ChangePasswordSheet() }
         .sheet(isPresented: $deletingAccount) { if let request = deletionWorkspace { DeleteAccountSheet(workspace: request) } }
-        .sheet(isPresented: $showLogin) {
-            VStack(spacing: 0) {
-                HStack { Spacer(); Button("Close") { showLogin = false }.keyboardShortcut(.cancelAction) }.padding(12)
-                AuthView()
-            }.frame(width: 820, height: 550)
-        }
         .fileImporter(isPresented: $importingAvatar, allowedContentTypes: [.image]) { result in
             guard let owner = avatarWorkspace, store.signedIn, !store.localMode, owner.matches(account: store.userID, generation: store.workspaceGeneration) else { return }
             let operation = UUID(); avatarUploadID = operation
@@ -294,9 +285,9 @@ struct AccountSettings: View {
                 ProgressView("Signing out…").padding(20).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
             }
         }
-        .confirmationDialog(store.localMode ? "Leave this workspace?" : "Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-            Button(store.localMode ? "Leave" : "Sign Out", role: .destructive) { Task { await store.signOut() } }
-        } message: { Text("Saved tasks and pending changes stay on this Mac for your next sign-in.") }
+        .confirmationDialog(store.localMode ? "Close this workspace?" : "Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+            Button(store.localMode ? "Close" : "Sign Out", role: store.localMode ? nil : .destructive) { Task { await store.signOut() } }
+        } message: { Text(store.localMode ? "Your tasks stay on this Mac. You can open them again from the sign-in screen." : "Saved tasks and pending changes stay on this Mac for your next sign-in.") }
     }
     private func sendReset() {
         sendingReset = true; resetMessage = nil
@@ -306,11 +297,7 @@ struct AccountSettings: View {
             catch { resetMessage = error.localizedDescription }
         }
     }
-    private func consumeSignInRequest() {
-        guard workspace.signInRequested else { return }
-        workspace.signInRequested = false
-        showLogin = true
-    }
+    private func requestSignIn() { workspace.presentSignIn() }
     private func refreshProfileDraft() {
         profileDraft.refresh(account: store.userID, generation: store.workspaceGeneration, name: store.accountName)
     }
@@ -355,23 +342,32 @@ struct AccountRequiredView: View {
         ContentUnavailableView {
             Label(title, systemImage: "person.crop.circle")
         } description: { Text(detail) } actions: {
-            Button("Sign In…") { workspace.settingsTab = .account; workspace.signInRequested = true }
+            Button("Sign In…") { workspace.presentSignIn() }
                 .buttonStyle(.borderedProminent)
         }
     }
 }
 
-/// Always-visible access to account and application tools, including in local mode.
+/// Always-visible access to account and application tools, including in local mode. A dot on the avatar flags a sync
+/// problem (and only a problem); the menu explains it.
 struct AccountMenu: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.openSettings) private var openSettings
+    @State private var reauthenticate = false
     /// The sidebar foot shows the initials chip alone.
     var compact = false
     var body: some View {
+        let issue = store.syncIssue
         Menu {
+            if let issue {
+                Button(issue.detail, systemImage: issue == .offline ? "wifi.slash" : "exclamationmark.circle") {}.disabled(true)
+                if issue == .signInAgain { Button("Sign in again…", systemImage: "person.crop.circle.badge.exclamationmark") { reauthenticate = true } }
+                if issue == .cantSync { Button("Try Again", systemImage: "arrow.clockwise") { Task { await store.sync() } } }
+                Divider()
+            }
             if store.localMode || !store.signedIn {
-                Button("Sign In…", systemImage: "person.crop.circle") { show(.account); workspace.signInRequested = true }
+                Button("Sign In…", systemImage: "person.crop.circle") { workspace.presentSignIn() }
             }
             Button("Account…", systemImage: "person.crop.circle") { show(.account) }
             Button("Import from Todoist…", systemImage: "square.and.arrow.down") { show(.imports) }
@@ -381,19 +377,30 @@ struct AccountMenu: View {
         } label: {
             if compact {
                 PersonAvatar(person: store.accountIdentity, size: 22).accessibilityHidden(true)
+                    .overlay(alignment: .topTrailing) { if issue != nil { SyncIssueDot().offset(x: 3, y: -3) } }
             } else {
                 HStack(spacing: 8) {
                     PersonAvatar(person: store.accountIdentity, size: 26).accessibilityHidden(true)
+                        .overlay(alignment: .topTrailing) { if issue != nil { SyncIssueDot().offset(x: 3, y: -3) } }
                     Text(store.accountName).lineLimit(1)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .menuStyle(.borderlessButton).menuIndicator(compact ? .hidden : .automatic).fixedSize(horizontal: compact, vertical: false)
         .padding(.horizontal, compact ? 0 : 14).padding(.vertical, compact ? 0 : 10)
-        .help(store.accountName)
-        .accessibilityIdentifier("accountMenu").accessibilityLabel(store.accountName + ", Account")
+        .help(issue?.detail ?? store.accountName)
+        .accessibilityIdentifier("accountMenu").accessibilityLabel(store.accountName + ", Account" + (issue.map { ". " + $0.detail } ?? ""))
+        .background { SyncSignInButton(trigger: $reauthenticate).opacity(0).frame(width: 0, height: 0).accessibilityHidden(true) }
     }
     private func show(_ tab: SettingsTab) { workspace.settingsTab = tab; openSettings() }
+}
+
+/// The small badge that marks an account button when sync needs a word.
+struct SyncIssueDot: View {
+    var body: some View {
+        Circle().fill(Color.orange).frame(width: 8, height: 8)
+            .overlay(Circle().strokeBorder(DS.Palette.surface, lineWidth: 1.5)).accessibilityIdentifier("syncIssueDot")
+    }
 }
 
 private struct AccountRemovalRecoveryRequestDocument: FileDocument {

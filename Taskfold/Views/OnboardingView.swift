@@ -59,7 +59,7 @@ struct OnboardingView: View {
                     Button("Continue") { move(1) }.buttonStyle(.borderedProminent).controlSize(.large).keyboardShortcut(.defaultAction).accessibilityIdentifier("onboardingContinue")
                 } else {
                     if store.signedIn && store.localMode {
-                        Button("Sign In…") { finish(); workspace.settingsTab = .account; workspace.signInRequested = true; NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) }
+                        Button("Sign In…") { finish(); workspace.presentSignIn() }
                             .controlSize(.large)
                     }
                     Button("Get Started") { finish() }.buttonStyle(.borderedProminent).controlSize(.large).keyboardShortcut(.defaultAction).accessibilityIdentifier("finishOnboarding")
