@@ -71,11 +71,11 @@ Run preparation from the iOS repo, then build the copied project in Debug. Choos
 ```sh
 python3 Scripts/prepare_cold_notification_fixture.py --output /tmp/taskfold-cold-fixture
 cd /tmp/taskfold-cold-fixture
-xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/taskfold-cold-fixture-build CODE_SIGNING_ALLOWED=NO build-for-testing
-xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination 'platform=iOS Simulator,id=<isolated-device-uuid>' -derivedDataPath /tmp/taskfold-cold-fixture-build -parallel-testing-enabled NO -only-testing:TaskfoldUITests/TaskfoldUITests/testTerminatedProcessSystemSnoozeAndTaskOpening CODE_SIGNING_ALLOWED=NO test-without-building
+xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/taskfold-cold-fixture-build CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO build-for-testing
+xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination 'platform=iOS Simulator,id=<isolated-device-uuid>' -derivedDataPath /tmp/taskfold-cold-fixture-build -parallel-testing-enabled NO -only-testing:TaskfoldUITests/TaskfoldUITests/testTerminatedProcessSystemSnoozeAndTaskOpening CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO test-without-building
 ```
 
-Wait for each command to finish. Preserve result bundles/logs before removing the temporary app/device. This unsigned Simulator procedure does not test signed physical deployment.
+Wait for each command to finish. Preserve result bundles/logs before removing the temporary app/device. Ad hoc signing keeps the Simulator Keychain entitlement (an unsigned build gets -34018 from every Keychain read). This Simulator procedure does not test signed physical deployment.
 
 
 ## 22 October — shared capacity and precise acknowledgement
