@@ -235,3 +235,99 @@ extension AccountRemovalTests {
         XCTAssertFalse(updated.confirmed)
     }
 }
+
+/// Fails every read like a locked or unentitled Keychain, until allowed.
+private final class RemovalLockedReadIO: CalendarSecureItemIO, @unchecked Sendable {
+    private let lock = NSLock()
+    private var data: Data?
+    private var locked = true
+    private(set) var reads = 0
+    func unlock() { lock.lock(); locked = false; lock.unlock() }
+    func read(key: String) throws -> Data? {
+        lock.lock(); defer { lock.unlock() }; reads += 1
+        if locked { throw CalendarReadFailure.unavailable }; return data
+    }
+    func write(_ value: Data, key: String) throws { lock.lock(); defer { lock.unlock() }; if locked { throw CalendarReadFailure.unavailable }; data = value }
+    func remove(key: String) throws { lock.lock(); defer { lock.unlock() }; if locked { throw CalendarReadFailure.unavailable }; data = nil }
+}
+
+@MainActor
+extension AccountRemovalTests {
+    private func isolatedDefaults() -> UserDefaults {
+        let suite = "taskfold-removal-resume-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        addTeardownBlock { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+        return defaults
+    }
+    func testFailedVaultReadWithoutLocalEvidenceDefersQuietlyAndKeepsWatchUnready() async throws {
+        let io = RemovalLockedReadIO(), vault = AccountRemovalVault(io: io), directory = try root(), defaults = isolatedDefaults()
+        var resume = AccountRemovalResume()
+        let read = await AccountRemovalResume.read(vault) {
+            AccountRemovalResume.hasLocalEvidence(pendingAccounts: [], defaults: defaults, directory: directory, account: owner)
+        }
+        XCTAssertEqual(read, .deferred)
+        let status = resume.record(read, status: nil)
+        XCTAssertNil(status, "No removal began on this device, so nothing may claim one is paused")
+        XCTAssertTrue(resume.readDeferred)
+        XCTAssertFalse(resume.watchReady(status: status), "An unread vault must keep the watch closed")
+        XCTAssertFalse(AccountRemovalDisk(directory: directory, account: owner).removed, "A failed read must not fence or erase anything")
+        XCTAssertEqual(io.reads, 1)
+    }
+    func testFailedVaultReadWithLocalEvidenceStillShowsPausedRemoval() async throws {
+        let directory = try root()
+        let evidence: [(Set<String>, UserDefaults, String)] = [
+            ([owner], isolatedDefaults(), "in-memory pending account"),
+            ([], { let d = isolatedDefaults(); d.set(true, forKey: AccountRemovalResume.pendingPrefix + other); return d }(), "remembered pending flag for another account"),
+        ]
+        for (pending, defaults, label) in evidence {
+            var resume = AccountRemovalResume()
+            let read = await AccountRemovalResume.read(AccountRemovalVault(io: RemovalLockedReadIO())) {
+                AccountRemovalResume.hasLocalEvidence(pendingAccounts: pending, defaults: defaults, directory: directory, account: owner)
+            }
+            XCTAssertEqual(read, .unreadable, label)
+            let status = resume.record(read, status: nil)
+            XCTAssertEqual(status, AccountRemovalResume.attention, label)
+            XCTAssertFalse(resume.readDeferred, label)
+            XCTAssertFalse(resume.watchReady(status: status), label)
+        }
+        // The current account's server-confirmed removal fence is also evidence.
+        try AccountRemovalDisk(directory: directory, account: owner).removeCache()
+        var resume = AccountRemovalResume(); let defaults = isolatedDefaults()
+        let read = await AccountRemovalResume.read(AccountRemovalVault(io: RemovalLockedReadIO())) {
+            AccountRemovalResume.hasLocalEvidence(pendingAccounts: [], defaults: defaults, directory: directory, account: owner)
+        }
+        XCTAssertEqual(read, .unreadable)
+        XCTAssertEqual(resume.record(read, status: nil), AccountRemovalResume.attention)
+        XCTAssertFalse(AccountRemovalResume.hasLocalEvidence(pendingAccounts: [], defaults: defaults, directory: directory, account: other))
+    }
+    func testDeferredReadRetriedAfterUnlockClearsDeferralAndReadiesWatch() async throws {
+        let io = RemovalLockedReadIO(), vault = AccountRemovalVault(io: io), directory = try root(), defaults = isolatedDefaults()
+        var resume = AccountRemovalResume()
+        let evidence = { AccountRemovalResume.hasLocalEvidence(pendingAccounts: [], defaults: defaults, directory: directory, account: self.owner) }
+        let first = await AccountRemovalResume.read(vault, hasLocalEvidence: evidence)
+        XCTAssertEqual(first, .deferred)
+        var status = resume.record(first, status: nil)
+        XCTAssertTrue(resume.readDeferred); XCTAssertFalse(resume.watchReady(status: status))
+        io.unlock()
+        let retry = await AccountRemovalResume.read(vault, hasLocalEvidence: evidence)
+        XCTAssertEqual(retry, .commands([]))
+        status = resume.record(retry, status: status)
+        XCTAssertNil(status)
+        XCTAssertFalse(resume.readDeferred)
+        XCTAssertTrue(resume.watchReady(status: status))
+    }
+    func testReadableVaultAlwaysSurfacesPendingCommandWithoutDeviceEvidence() async throws {
+        let io = RemovalLockedReadIO(), vault = AccountRemovalVault(io: io), directory = try root(), defaults = isolatedDefaults()
+        var resume = AccountRemovalResume()
+        let evidence = { AccountRemovalResume.hasLocalEvidence(pendingAccounts: [], defaults: defaults, directory: directory, account: self.owner) }
+        let locked = await AccountRemovalResume.read(vault, hasLocalEvidence: evidence)
+        _ = resume.record(locked, status: nil)
+        XCTAssertTrue(resume.readDeferred)
+        io.unlock(); let saved = try await vault.begin(command())
+        // Missing device evidence (for example fresh UserDefaults) never hides
+        // a command the vault itself still holds.
+        let read = await AccountRemovalResume.read(vault, hasLocalEvidence: evidence)
+        XCTAssertEqual(read, .commands([saved]))
+        _ = resume.record(read, status: nil); XCTAssertFalse(resume.readDeferred)
+    }
+}

@@ -286,3 +286,52 @@ struct AccountRemovalRecoveryScope: Equatable, Sendable {
     let workspace: WorkspaceBinding
     let session: UUID
 }
+
+/// Launch and Retry start by reading the private removal vault. A failed read
+/// never proves that no removal exists, so it can neither erase anything nor
+/// claim completion, and the watch stays unready either way.
+///
+/// The read fails for reasons unrelated to removal: before first unlock or
+/// while locked (errSecInteractionNotAllowed), or in a build without the
+/// Keychain entitlement. When this device also holds no local evidence that a
+/// removal began, showing "Account removal paused" would be false, so the read
+/// is deferred quietly and retried once protected data is available. Any local
+/// evidence keeps the paused banner visible: a real removal is never hidden.
+struct AccountRemovalResume: Equatable, Sendable {
+    static let attention = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+    static let pendingPrefix = "accountRemoval.pending."
+    enum Read: Equatable, Sendable {
+        case commands([AccountRemovalCommand])
+        /// Unreadable, and nothing on this device says a removal began.
+        case deferred
+        /// Unreadable while local evidence of a removal exists.
+        case unreadable
+    }
+    /// True only while the last launch/Retry read failed without evidence.
+    private(set) var readDeferred = false
+    /// Evidence is checked on the main actor, after the failed read returns.
+    @MainActor static func read(_ vault: AccountRemovalVault, hasLocalEvidence: @MainActor () -> Bool) async -> Read {
+        do { return .commands(try await vault.pending()) }
+        catch { return failure(hasLocalEvidence: hasLocalEvidence()) }
+    }
+    static func failure(hasLocalEvidence: Bool) -> Read { hasLocalEvidence ? .unreadable : .deferred }
+    /// Records a read outcome and returns the status to show. A deferred read
+    /// leaves the status as it was; it never clears a visible removal.
+    mutating func record(_ read: Read, status: String?) -> String? {
+        switch read {
+        case .commands: readDeferred = false; return status
+        case .deferred: readDeferred = true; return status
+        case .unreadable: readDeferred = false; return Self.attention
+        }
+    }
+    /// The watch may start only after a successful read with nothing pending.
+    func watchReady(status: String?) -> Bool { status == nil && !readDeferred }
+    /// Keychain-free evidence that a removal began on this device: an
+    /// in-memory pending account, a remembered pending flag for any account,
+    /// or the current account's removal fence on disk.
+    static func hasLocalEvidence(pendingAccounts: Set<String>, defaults: UserDefaults, directory: URL, account: String) -> Bool {
+        if !pendingAccounts.isEmpty { return true }
+        if defaults.dictionaryRepresentation().keys.contains(where: { $0.hasPrefix(pendingPrefix) }) { return true }
+        return UUID(uuidString: account) != nil && AccountRemovalDisk(directory: directory, account: account).removed
+    }
+}

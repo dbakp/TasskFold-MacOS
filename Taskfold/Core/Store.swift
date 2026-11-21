@@ -2130,6 +2130,10 @@ final class Store {
     private(set) var accountRemovalStatus: String?
     private var removalPendingAccounts = Set<String>()
     private var removalRecoveryRunning = false
+    /// Set while the launch/Retry vault read failed without local evidence of
+    /// a removal. The banner stays hidden, but every gate stays as closed as
+    /// when the status is set, until a deferred retry reads the vault.
+    @ObservationIgnored private var accountRemovalResume = AccountRemovalResume()
     var accountRemovalBusy: Bool { signingOut || removalRecoveryRunning }
     var accountRemovalBlocked: Bool {
         !localMode && (removalPendingAccounts.contains(userID) || UserDefaults.standard.bool(forKey: "accountRemoval.pending." + userID) ||
@@ -2159,8 +2163,12 @@ final class Store {
     func resumeAccountRemovals() async {
         guard !removalRecoveryRunning, !signingOut else { return }
         removalRecoveryRunning = true; defer { removalRecoveryRunning = false; Task { await reschedule() } }
+        // A failed read never erases or claims completion. Without local
+        // evidence of a removal it is deferred instead of shown as paused.
+        let read = await AccountRemovalResume.read(accountRemovalVault, hasLocalEvidence: accountRemovalLocalEvidence)
+        accountRemovalStatus = accountRemovalResume.record(read, status: accountRemovalStatus)
+        guard case .commands(let commands) = read else { return }
         do {
-            let commands = try await accountRemovalVault.pending()
             var needsAttention = false
             for command in commands {
                 markRemovalPending(command.account)
@@ -2185,7 +2193,18 @@ final class Store {
             if needsAttention || !removalPendingAccounts.isEmpty {
                 accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
             } else { accountRemovalStatus = nil }
-        } catch { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish." }
+        } catch {
+            accountRemovalStatus = accountRemovalResume.record(AccountRemovalResume.failure(hasLocalEvidence: accountRemovalLocalEvidence()), status: accountRemovalStatus)
+        }
+    }
+    /// Cheap and idempotent: re-reads the vault only after a deferred read,
+    /// when protected data becomes available or the app becomes active.
+    func resumeAccountRemovalsIfDeferred() async {
+        guard accountRemovalResume.readDeferred else { return }
+        await resumeAccountRemovals()
+    }
+    private func accountRemovalLocalEvidence() -> Bool {
+        AccountRemovalResume.hasLocalEvidence(pendingAccounts: removalPendingAccounts, defaults: .standard, directory: cacheURL.deletingLastPathComponent(), account: userID)
     }
     /// A successful, locked vault read plus the server-confirmed disk fence
     /// can acknowledge another process's completed cleanup. A missing receipt

@@ -79,6 +79,10 @@ struct TaskfoldMacApp: App {
                     #endif
                     await store.resumeAccountRemovals()
                 }
+                // A launch that could not read the removal vault retries when the app becomes active.
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    Task { await store.resumeAccountRemovalsIfDeferred() }
+                }
                 .environment(store)
                 .environment(workspace)
                 .tint(tint)

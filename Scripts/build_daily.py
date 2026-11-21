@@ -35,7 +35,7 @@ def main():
     parser.add_argument("--team", help="Existing development team for the app and all extensions; defaults to the project's sole configured team")
     parser.add_argument("--build-number", type=int, help="Increment the app/extension build number together for a new daily update")
     parser.add_argument("--configuration", choices=("Release", "Debug"), default="Release", help="Optimized daily-use build by default; Debug is available explicitly for diagnostics")
-    parser.add_argument("--simulator", action="store_true", help="iOS only: build an unsigned Simulator app")
+    parser.add_argument("--simulator", action="store_true", help="iOS only: build an ad hoc signed Simulator app")
     parser.add_argument("--device", help="iOS only: build for an already registered device identifier")
     args = parser.parse_args()
     if args.cached_profiles and (args.allow_provisioning or args.simulator):
@@ -111,7 +111,9 @@ def main():
     if args.build_number is not None:
         command.append("CURRENT_PROJECT_VERSION=" + str(args.build_number))
     if args.simulator:
-        command.extend(["CODE_SIGNING_ALLOWED=NO", "ONLY_ACTIVE_ARCH=YES", "ARCHS=" + platform.machine()])
+        # Ad hoc signing embeds the Simulator entitlements; an unsigned app gets
+        # errSecMissingEntitlement (-34018) from every Keychain-backed feature.
+        command.extend(["CODE_SIGNING_ALLOWED=YES", "CODE_SIGN_IDENTITY=-", "CODE_SIGNING_REQUIRED=NO", "ONLY_ACTIVE_ARCH=YES", "ARCHS=" + platform.machine()])
     with log.open("w") as output:
         result = subprocess.run(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
     if PLATFORM == "mac":
