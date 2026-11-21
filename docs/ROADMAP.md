@@ -199,7 +199,11 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 - [x] The task editor opens at form size from everywhere ([iOS #231](https://github.com/dbakp/TaskFold-iOS/pull/231)).
 - [x] Calendar: a 7-day week time grid, month cells with titles, and side columns for the selected day in landscape ([iOS #230](https://github.com/dbakp/TaskFold-iOS/pull/230), Core [Mac #215](https://github.com/dbakp/TasskFold-MacOS/pull/215)).
 - [x] Settings and Weekly review at 640 pt ([iOS #231](https://github.com/dbakp/TaskFold-iOS/pull/231)).
-- [ ] Next: a Mac-style task detail pane in landscape (needs autosave or ask-before-switching rules), large titles aligned over the reading column, swipe between weeks, and dragging all-day tasks into the week grid.
+- [x] A task detail pane beside the list on wide iPads (380 pt, like the Mac's inspector; saves as you go; team text saves on leaving the field), and large titles over the reading column ([iOS #233](https://github.com/dbakp/TaskFold-iOS/pull/233)).
+- [x] Calendar: swipe between weeks, drag all-day tasks onto an hour and back, and a daylight-saving fix for the week grid ([iOS #232](https://github.com/dbakp/TaskFold-iOS/pull/232), Core [Mac #217](https://github.com/dbakp/TasskFold-MacOS/pull/217)).
+- [x] One sidebar in every orientation instead of the portrait top tab bar: Today, Inbox, Upcoming, Calendar, Browse and Projects; overlays below 1100 pt; "+" in the toolbar; ⌘1–4 as on the Mac ([iOS #234](https://github.com/dbakp/TaskFold-iOS/pull/234)).
+- [ ] Check on a real iPad with a keyboard: Esc closing the pane and the overlay sidebar; the edge swipe on a pushed board.
+- [ ] Next: keep sections alive when switching (scroll and Calendar week), filters and labels in the sidebar, and the team-text save rule on the Mac inspector.
 
 
 ### Mac first run (design review mac-r2, 19 November 2026)
