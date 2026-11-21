@@ -31,7 +31,7 @@ struct QuickPlanningCompletion {
         let prefix = String(input[prefixRange])
         // Protection consumes complete references, quotes, escaped words and URLs first.
         let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:every(?:\s+[\p{L}\p{N}:.,-]*)*|[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|(?:\d+|one)\s+(?:days?|weeks?)\s+(?:before|after)(?:\s+[\p{L}\p{N}, -]*)?|ev(?:e(?:r(?:y!?)?)?)?(?![\p{L}\p{N}_])(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|this(?:\s+[\p{L}]*)?|in(?:\s+(?:the(?:\s+[\p{L}]*)?|\d*(?:\s+[\p{L}]*)?))?|at(?:\s+[\p{L}\p{N}:.]*)?|[\p{L}]{2,})"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+        guard let regex = QuickPatternCache.caseInsensitive(pattern),
               let match = regex.matches(in: prefix, range: NSRange(prefix.startIndex..., in: prefix)).last,
               match.range.location + match.range.length == caret, match.range(at: 1).location != NSNotFound,
               let matched = Range(match.range(at: 1), in: prefix) else { return }
@@ -123,7 +123,7 @@ struct QuickPlanningCompletion {
             literalGroups = Set(full.tokens.filter { $0.group.hasPrefix("reminder_specs:") && $0.text.lowercased() == whole.lowercased() }.map(\.group))
         }
     }
-    private static let placeTrigger = try? NSRegularExpression(pattern: #"(?<!\S)(arrive\s+at|arrive|leave\s+at|leave|at)\s+"#, options: .caseInsensitive)
+    private static let placeTrigger = QuickPatternCache.caseInsensitive(#"(?<!\S)(arrive\s+at|arrive|leave\s+at|leave|at)\s+"#)
     private static func fold(_ text: String) -> String { text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX")) }
     /// "Arrive at <Place>" and "Leave <Place>" for saved places whose name starts with the words typed after
     /// "at ", "arrive at " or "leave ". Names come from the context and are never stored. No parse runs here.
