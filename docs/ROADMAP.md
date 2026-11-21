@@ -203,7 +203,11 @@ I'd finish the subtask migration, because it protects data. The rest should ship
 - [x] Calendar: swipe between weeks, drag all-day tasks onto an hour and back, and a daylight-saving fix for the week grid ([iOS #232](https://github.com/dbakp/TaskFold-iOS/pull/232), Core [Mac #217](https://github.com/dbakp/TasskFold-MacOS/pull/217)).
 - [x] One sidebar in every orientation instead of the portrait top tab bar: Today, Inbox, Upcoming, Calendar, Browse and Projects; overlays below 1100 pt; "+" in the toolbar; ⌘1–4 as on the Mac ([iOS #234](https://github.com/dbakp/TaskFold-iOS/pull/234)).
 - [ ] Check on a real iPad with a keyboard: Esc closing the pane and the overlay sidebar; the edge swipe on a pushed board.
-- [ ] Next: keep sections alive when switching (scroll and Calendar week), filters and labels in the sidebar, and the team-text save rule on the Mac inspector.
+- [x] Sections keep their place when switching: scroll, Calendar's week and mode, an Upcoming board, the detail pane and the Plan tray; Inbox is its own iPad section. Pushed Browse screens come back rebuilt (scroll resets) and Someday, Habits and All tasks return to Browse's first screen ([iOS #236](https://github.com/dbakp/TaskFold-iOS/pull/236)).
+- [x] Favorites, Projects, Filters and Labels in the sidebar in the Mac's order: collapsible, hidden when empty, lazy for hundreds of rows ([iOS #237](https://github.com/dbakp/TaskFold-iOS/pull/237)).
+- [x] Mac inspector: a team task's title and notes save on leaving the field, Return, switching tasks, closing and quit, not on each typing pause ([Mac #219](https://github.com/dbakp/TasskFold-MacOS/pull/219)).
+- [ ] Calendar: the left edge no longer turns the week, but in the Simulator the edge swipe still does not open the sidebar over the week grid. Check on a device.
+- [ ] Next: Browse sits about 22 pt lower since #236 (inline bar); dark-mode captures of the new sidebar sections.
 
 
 ### Mac first run (design review mac-r2, 19 November 2026)
