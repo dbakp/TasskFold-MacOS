@@ -4961,11 +4961,17 @@ private struct AccountRemovalStatusDetails: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("accountRemovalStatus")
-                    VStack(alignment: .leading, spacing: 8) { AccountRemovalActions(recovering: $recovering) }
-                        .buttonStyle(.bordered)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
+            }
+            // The actions stay pinned under the message, so Retry is reachable without scrolling at any text size.
+            .safeAreaInset(edge: .bottom) {
+                VStack(alignment: .leading, spacing: 8) { AccountRemovalActions(recovering: $recovering) }
+                    .buttonStyle(.bordered)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(.bar)
             }
             .navigationTitle("Account removal")
             #if os(iOS)
