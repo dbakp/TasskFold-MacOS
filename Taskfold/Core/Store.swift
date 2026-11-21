@@ -4872,38 +4872,110 @@ extension Store {
 
 
 
+/// The paused/finishing account-removal notice. At accessibility text sizes the full
+/// banner (three-line title, explanation and buttons) does not fit the height-capped
+/// status area above the workspace, so it becomes a one-line bar that opens a sheet
+/// with the full message, Retry and recovery options; every control stays reachable.
 struct AccountRemovalRecoveryBanner: View {
     @Environment(Store.self) private var store
     @Environment(\.dynamicTypeSize) private var textSize
     @State private var recovering = false
+    @State private var details = false
     var body: some View {
         if let status = store.accountRemovalStatus {
-            let layout = textSize.isAccessibilitySize
-                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
-                : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
-            layout {
-                VStack(alignment: .leading, spacing: 4) {
-                    Label(store.accountRemovalBusy ? "Finishing account removal…" : "Account removal paused", systemImage: "person.crop.circle.badge.exclamationmark")
-                        .font(.callout.weight(.semibold))
-                    if !store.accountRemovalBusy {
-                        Text("Remaining device copies stay saved.").font(.footnote).foregroundStyle(.secondary)
+            if textSize.isAccessibilitySize {
+                Button { details = true } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "person.crop.circle.badge.exclamationmark")
+                        Text(store.accountRemovalBusy ? "Finishing removal…" : "Removal paused")
+                            .lineLimit(1).minimumScaleFactor(0.5)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").imageScale(.small)
                     }
+                    .font(.callout.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement(children: .ignore)
+                .buttonStyle(.plain)
+                .padding(.horizontal).padding(.vertical, 6).background(.regularMaterial)
                 .accessibilityLabel(status)
-                .accessibilityIdentifier("accountRemovalStatus")
-                if store.accountRemovalRecoveryEnabled {
-                    Button("Recovery options…") { recovering = true }.frame(minWidth:44,minHeight:44).disabled(store.accountRemovalBusy).accessibilityIdentifier("accountRemovalRecoveryOptions")
-                }
-                Button("Retry") { Task { await store.resumeAccountRemovals() } }
-                    .frame(minWidth: 44, minHeight: 44)
-                    .disabled(store.accountRemovalBusy)
-                    .accessibilityIdentifier("retryAccountRemoval")
-            }.padding().background(.regularMaterial)
-                .sheet(isPresented: $recovering) { AccountRemovalRecoveryOptionsView() }
+                .accessibilityHint("Shows Retry and recovery options")
+                .accessibilityIdentifier("accountRemovalDetails")
+                .sheet(isPresented: $details) { AccountRemovalStatusDetails(status: status) }
+            } else {
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label(store.accountRemovalBusy ? "Finishing account removal…" : "Account removal paused", systemImage: "person.crop.circle.badge.exclamationmark")
+                            .font(.callout.weight(.semibold))
+                        if !store.accountRemovalBusy {
+                            Text("Remaining device copies stay saved.").font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(status)
+                    .accessibilityIdentifier("accountRemovalStatus")
+                    AccountRemovalActions(recovering: $recovering)
+                }.padding().background(.regularMaterial)
+                    .sheet(isPresented: $recovering) { AccountRemovalRecoveryOptionsView() }
+            }
         }
+    }
+}
+
+/// Retry and (when enabled) recovery options, shared by the banner and its details sheet.
+private struct AccountRemovalActions: View {
+    @Environment(Store.self) private var store
+    @Binding var recovering: Bool
+    var body: some View {
+        if store.accountRemovalRecoveryEnabled {
+            Button("Recovery options…") { recovering = true }.frame(minWidth:44,minHeight:44).disabled(store.accountRemovalBusy).accessibilityIdentifier("accountRemovalRecoveryOptions")
+        }
+        Button("Retry") { Task { await store.resumeAccountRemovals() } }
+            .frame(minWidth: 44, minHeight: 44)
+            .disabled(store.accountRemovalBusy)
+            .accessibilityIdentifier("retryAccountRemoval")
+    }
+}
+
+/// The full removal notice at accessibility sizes: scrollable, so the explanation and
+/// both actions are reachable at any text size. It closes itself once removal finishes.
+private struct AccountRemovalStatusDetails: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var recovering = false
+    let status: String
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Label(store.accountRemovalBusy ? "Finishing account removal…" : "Account removal paused", systemImage: "person.crop.circle.badge.exclamationmark")
+                        .font(.headline)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(store.accountRemovalStatus ?? status)
+                        if !store.accountRemovalBusy {
+                            Text("Remaining device copies stay saved.").foregroundStyle(.secondary)
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("accountRemovalStatus")
+                    VStack(alignment: .leading, spacing: 8) { AccountRemovalActions(recovering: $recovering) }
+                        .buttonStyle(.bordered)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+            }
+            .navigationTitle("Account removal")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+        .environment(store)
+        .sheet(isPresented: $recovering) { AccountRemovalRecoveryOptionsView().environment(store) }
+        .onChange(of: store.accountRemovalStatus == nil) { _, finished in if finished { dismiss() } }
     }
 }
 
