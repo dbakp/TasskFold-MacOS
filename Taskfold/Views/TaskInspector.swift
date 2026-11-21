@@ -119,6 +119,7 @@ struct TaskInspectorForm: View {
     @State private var titleSelection: TextSelection?
     @State private var referenceChoices: [String: String] = [:]
     @FocusState private var titleFocused: Bool
+    @FocusState private var descriptionFocused: Bool
     @State private var titleChipFocused = false
     /// Parsing runs while the title differs from the saved one; Return (or leaving the field) applies it.
     private var suggestions: QuickEntry? {
@@ -370,6 +371,8 @@ struct TaskInspectorForm: View {
                             Text("Notes").font(DS.Font.taskTitle).foregroundStyle(DS.Palette.textTertiary).padding(.top, DS.Space.xs).padding(.leading, DS.Space.xs + 1).allowsHitTesting(false)
                         }
                     }
+                    .focused($descriptionFocused)
+                    .onChange(of: descriptionFocused) { _, focused in if !focused { saveTask?.cancel(); saveNow() } }
                     .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
             }
     }
@@ -857,7 +860,7 @@ struct TaskInspectorForm: View {
                 return failure
             }
         }
-        .onChange(of: draft) { _, _ in checkpoint();scheduleSave() }
+        .onChange(of: draft) { old, new in checkpoint();scheduleSave(from: old, to: new) }
         .onChange(of: currentGeneration) { _, _ in stopEditing() }
         .onChange(of: current) { _, value in
             // Untouched fields follow sync; the user's in-progress edits win.
@@ -942,10 +945,13 @@ struct TaskInspectorForm: View {
             store.error = nil; checkpoint()
         }
     }
-    private func scheduleSave() {
+    private func scheduleSave(from old: Record, to new: Record) {
         saveTask?.cancel()
         if isCreating { checkpoint(); return }
         guard editorAvailable else {checkpoint();return}
+        // Team title and notes commit on blur, Return, switching tasks, closing and quit (see InspectorTextSave).
+        let changed = Set(old.fields.keys).union(new.fields.keys).filter { old[$0] != new[$0] }
+        if InspectorTextSave.defersAutosave(isTeamTask: isTeamTask, textFieldFocused: titleFocused || descriptionFocused, changedKeys: changed) { return }
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
     }
     private var teamDeletionClean: Bool { draft == original && subtask.isEmpty && comment.isEmpty && notePin == nil }

@@ -25,6 +25,11 @@ let package = Package(
             path: "Taskfold/GlobalQuickAdd",
             sources: ["QuickAddShortcut.swift"]
         ),
-        .testTarget(name: "TaskfoldCoreTests", dependencies: ["TaskfoldCore", "WidgetModel", "QuickAddShortcutModel"], path: "TaskfoldTests", resources: [.copy("Fixtures")])
+        .target(
+            name: "InspectorTextSaveModel",
+            path: "Taskfold/Views",
+            sources: ["InspectorTextSave.swift"]
+        ),
+        .testTarget(name: "TaskfoldCoreTests", dependencies: ["TaskfoldCore", "WidgetModel", "QuickAddShortcutModel", "InspectorTextSaveModel"], path: "TaskfoldTests", resources: [.copy("Fixtures")])
     ]
 )
