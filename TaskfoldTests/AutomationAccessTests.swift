@@ -23,9 +23,14 @@ final class AutomationAccessTests: XCTestCase {
     let owner="f091cafe-0000-4000-8000-000000000001", other="f091cafe-0000-4000-8000-000000000002"
     let keyID="f091cafe-0000-4000-8000-000000000021", origin="https://automation-native.test"
     func draft() throws -> AutomationKeyDraft { try AutomationKeyDraft(account: owner, origin: origin, name: "Build script", scopes: [.create,.read], days: 30, id: UUID(uuidString:keyID)!, entropy: { Data(0..<32) }) }
+    /// The key was created a day ago and lasts the draft's 30 days, so it is active now whenever the suite runs
+    /// (registration refuses a key that is not active at `Date()`); a revoked key was revoked an hour after creation.
+    /// Fixed calendar dates here expired the fixture on 21 November 2026.
+    let created = Date(timeIntervalSince1970: (Date().timeIntervalSince1970 / 86400).rounded(.down) * 86400 - 86400)
+    func stamp(_ date: Date) -> String { ISO8601DateFormatter().string(from: date) }
     func row(_ id: String? = nil, revoked: Bool = false) -> [String: JSON] {
         let id=id ?? keyID
-        return ["id":.string(id),"name":.string("Build script"),"prefix":.string("tfk_v1_" + id.replacingOccurrences(of:"-",with:"").prefix(8)),"scopes":.array([.string("tasks:create"),.string("tasks:read")]),"created_at":.string("2026-10-22T12:00:00+00:00"),"expires_at":.string("2026-11-21T12:00:00+00:00"),"revoked_at":revoked ? .string("2026-10-23T12:00:00Z") : .null,"last_used_at":.null]
+        return ["id":.string(id),"name":.string("Build script"),"prefix":.string("tfk_v1_" + id.replacingOccurrences(of:"-",with:"").prefix(8)),"scopes":.array([.string("tasks:create"),.string("tasks:read")]),"created_at":.string(stamp(created)),"expires_at":.string(stamp(created.addingTimeInterval(30 * 86400))),"revoked_at":revoked ? .string(stamp(created.addingTimeInterval(3600))) : .null,"last_used_at":.null]
     }
     func testSecretIsBoundToIDAndOnlyHashEntersRegistration() throws {
         let draft=try draft(), expected="tfk_v1_" + keyID.replacingOccurrences(of:"-",with:"") + "_AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
