@@ -177,9 +177,9 @@ final class ChildRowSatellitesTests: XCTestCase {
     }
 
     func testPrintNestsShownRowsUnderAHeading() throws {
-        var heading = row("h", title: "Launch context"); heading["is_heading"] = .bool(true)
-        let tasks = [heading, row("a", parent: "h", order: 1, title: "Draft"), row("s", parent: "h", order: 2, title: "Second phase"),
-                     row("l", parent: "s", order: 1, title: "Layout")]
+        var heading = row("h", project: nil, title: "Launch context"); heading["is_heading"] = .bool(true)
+        let tasks = [heading, row("a", parent: "h", order: 1, project: nil, title: "Draft"), row("s", parent: "h", order: 2, project: nil, title: "Second phase"),
+                     row("l", parent: "s", order: 1, project: nil, title: "Layout")]
         let shown = [tasks[1], tasks[3], tasks[0]] // Today: the dated rows and their heading, as the list orders them
         let document = try PrintDocument.capture(title: "Today", subtitle: "", groups: [("", shown)], projects: [], labels: [], hierarchyRoots: tasks, expandOrdinaryChecklists: true)
         XCTAssertEqual(document.groups[0].items.map { "\($0.depth):\($0.title)" }, ["0:Launch context", "1:Draft", "1:Layout"], "No shown row is dropped")
