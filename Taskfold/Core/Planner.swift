@@ -734,3 +734,17 @@ final class TaskDayGroupsReadCache {
         return value
     }
 }
+
+extension TaskPlanner {
+    /// Minutes past midnight on the wall clock, for placing an instant on a grid whose hour rows are labelled 0:00–23:00.
+    /// Read from the calendar's hour, minute and second, not elapsed time: a daylight-saving changeover day lasts 23 or
+    /// 25 hours, and elapsed minutes put everything after the change an hour off its label. Clamped to `day`: earlier
+    /// instants read as the day's start, its end (the next midnight) and later as 1440. Positions only; estimates,
+    /// lanes and capacity keep elapsed time (`PlannerBlock.minute`, `PlannerTimelineItem.minute`).
+    static func wallMinute(_ date: Date, on day: Date, calendar: Calendar = .current) -> Double {
+        guard let bounds = calendar.dateInterval(of: .day, for: day) else { return 0 }
+        guard date < bounds.end else { return 1440 }
+        let parts = calendar.dateComponents([.hour, .minute, .second], from: max(date, bounds.start))
+        return Double((parts.hour ?? 0) * 60 + (parts.minute ?? 0)) + Double(parts.second ?? 0) / 60
+    }
+}
