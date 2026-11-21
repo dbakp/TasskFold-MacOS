@@ -615,6 +615,13 @@ final class Store {
     func republishSystemSurfaces() { publishWidgetSnapshot(scheduleCapacityRefresh: false) }
     var audioConversationRevision = UUID()
     var teamOrganizationReadable: Bool { workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
+    /// A recorded team action (a completion or a batch) is still unsent or waiting for its saved-status review. Until
+    /// it is settled the cold-start path talks to the server only for the access boundary and that status; optional
+    /// reads (workflow Undo discovery, the once-per-launch place-draft conversion) wait for the next sync.
+    var teamActionAwaitingReview: Bool {
+        syncConflict?.completionReview != nil || syncConflict?.completionBatchReview != nil
+            || snapshot.pending.contains { $0.teamCompletion != nil || $0.teamTaskBatch != nil }
+    }
     var sharedCaptureAvailable: Bool { !accountRemovalBlocked && workspaceCacheReadable && (signedIn || localMode) && !signingOut && !userID.isEmpty }
     var backupWarning: String?
     @ObservationIgnored private var dailyBackupRunning = false
@@ -3094,10 +3101,15 @@ final class Store {
             traceTeamAudioNativeSync("Boundary")
             #endif
             let workflowService: WorkflowUndoService?
-            do { workflowService = try await backend.workflowUndoService(account: account) }
-            catch is AccountSessionAuthorizationRequired { throw AccountSessionAuthorizationRequired() }
-            catch is CancellationError { throw CancellationError() }
-            catch { workflowService = nil } // Optional discovery must not hold unrelated ordinary sync.
+            // A recorded team action reads only the access boundary and its own saved status before it is reviewed;
+            // optional discovery waits until that review is settled and keeps the last known service meanwhile.
+            if teamActionAwaitingReview { workflowService = snapshot.workflowUndoService }
+            else {
+                do { workflowService = try await backend.workflowUndoService(account: account) }
+                catch is AccountSessionAuthorizationRequired { throw AccountSessionAuthorizationRequired() }
+                catch is CancellationError { throw CancellationError() }
+                catch { workflowService = nil } // Optional discovery must not hold unrelated ordinary sync.
+            }
             guard generation == accountGeneration else { return }
             if snapshot.workflowUndoService != workflowService { snapshot.workflowUndoService = workflowService }
             let boundary:TeamWorkspaceBoundary?
@@ -5327,11 +5339,14 @@ extension Store {
                 if ProcessInfo.processInfo.arguments.contains("--team-repeat-future") { row["recurrence_pattern"] = .object(["type": .string("hourly"), "future": .bool(true)]) }
             }
             if TeamBatchRecoveryNativePeer.recurring {
-                row["is_recurring"] = .bool(true); row["due_date"] = .string("2026-10-25"); row["due_time"] = .string("09:00"); row["time_zone"] = .string("Europe/Copenhagen")
-                row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
-                row["recurrence_end_date"] = .string("2027-10-25")
+                // Due today in Copenhagen, so the next daily occurrence is tomorrow whenever the test runs (a fixed past
+                // date made completion catch up to the day after today, not the day after the fixture's date).
                 var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: "Europe/Copenhagen")!
-                row["scheduled_at"] = .string(ISO8601DateFormatter().string(from: calendar.date(from: DateComponents(year: 2026, month: 10, day: 25, hour: 9))!))
+                let today = calendar.startOfDay(for: Date()), day = DateFormatter(); day.calendar = calendar; day.timeZone = calendar.timeZone; day.locale = Locale(identifier: "en_US_POSIX"); day.dateFormat = "yyyy-MM-dd"
+                row["is_recurring"] = .bool(true); row["due_date"] = .string(day.string(from: today)); row["due_time"] = .string("09:00"); row["time_zone"] = .string("Europe/Copenhagen")
+                row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+                row["recurrence_end_date"] = .string(day.string(from: calendar.date(byAdding: .year, value: 1, to: today)!))
+                row["scheduled_at"] = .string(ISO8601DateFormatter().string(from: calendar.date(bySettingHour: 9, minute: 0, second: 0, of: today)!))
             }
             if TaskFileViewerFixture.enabled {
                 row["task_generation"] = .string(TaskFileViewerFixture.generation)
