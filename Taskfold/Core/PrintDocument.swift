@@ -123,7 +123,9 @@ struct PrintDocument: Equatable, Sendable {
             let csv = CSVSource(values: task.fields.filter { fields.contains($0.key) }, project: project, labels: namedLabels, assignee: assigned,
                 parentPath: depth == 0 ? parentContext[task.id] ?? "" : parentTitles.joined(separator: " › "), parentSource: parentSource, readable: readable)
             var result = [Item(sourceID: task.id, title: name, metadata: metadata, notes: notes, completed: task.completed, depth: depth, heading: TaskKind(task) == .heading, completable: TaskKind.mayComplete(task), csv: csv)]
-            if noteOnly || (hierarchyRoots != nil && (!expandOrdinaryChecklists || TaskKind(task) != .task)) { return result }
+            // Shown rows below a heading nest under it like rows below a task: the caller has already dropped them from the
+            // top level because a shown ancestor holds them, so stopping here for headings lost them from print and CSV.
+            if noteOnly || (hierarchyRoots != nil && !expandOrdinaryChecklists) { return result }
             if nestRows, let rowTree {
                 // Shown descendants whose nearest shown ancestor is this task (a hidden level in between is skipped).
                 for child in rowTree.descendants(of: task.id) where shownRows.contains(TaskTree.key(child.id)) &&

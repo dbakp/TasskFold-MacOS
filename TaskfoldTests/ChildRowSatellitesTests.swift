@@ -176,6 +176,18 @@ final class ChildRowSatellitesTests: XCTestCase {
         XCTAssertTrue(flat.groups[0].items[0].metadata.contains("Subtask of Trip › Pack"))
     }
 
+    func testPrintNestsShownRowsUnderAHeading() throws {
+        var heading = row("h", title: "Launch context"); heading["is_heading"] = .bool(true)
+        let tasks = [heading, row("a", parent: "h", order: 1, title: "Draft"), row("s", parent: "h", order: 2, title: "Second phase"),
+                     row("l", parent: "s", order: 1, title: "Layout")]
+        let shown = [tasks[1], tasks[3], tasks[0]] // Today: the dated rows and their heading, as the list orders them
+        let document = try PrintDocument.capture(title: "Today", subtitle: "", groups: [("", shown)], projects: [], labels: [], hierarchyRoots: tasks, expandOrdinaryChecklists: true)
+        XCTAssertEqual(document.groups[0].items.map { "\($0.depth):\($0.title)" }, ["0:Launch context", "1:Draft", "1:Layout"], "No shown row is dropped")
+        let csv = try TaskRowCSV.make(document)
+        XCTAssertEqual(csv.rows.map { $0[2] }, ["", "row-1", "row-1"], "Both rows reference the heading row")
+        XCTAssertEqual(try TaskRowCSV.make(document, options: .init(notes: true, checklists: false)).rows.count, 1)
+    }
+
     // MARK: Local mode
 
     func testLocalWorkspaceConvertsOnceWithMarker() throws {
