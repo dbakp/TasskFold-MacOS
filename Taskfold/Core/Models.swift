@@ -1103,7 +1103,7 @@ struct QuickEntry {
         title = references.title; updates = references.updates; tokens = references.tokens; warnings = references.warnings; knownLabels = context.labels; referenceProjectBlocked = references.blockedProject
         var literals = references.literals
         func protect(_ pattern: String, removeEscape: Bool = false) {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return }
+            guard let regex = QuickPatternCache.caseInsensitive(pattern) else { return }
             while let found = regex.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)), let range = Range(found.range, in: title) {
                 let original = String(title[range])
                 let marker = "\u{E000}" + UUID().uuidString + "\u{E001}"
@@ -1123,7 +1123,7 @@ struct QuickEntry {
         var planningMatches: [(slot: PlanningSlot, raw: String, marker: String, literal: Int)] = []
         if context.planning && !disabled.contains("planning") {
             for slot in PlanningSlot.allCases {
-                guard let regex = try? NSRegularExpression(pattern: slot == .evening ? Planning.eveningPattern : Planning.somedayPattern, options: .caseInsensitive) else { continue }
+                guard let regex = QuickPatternCache.caseInsensitive(slot == .evening ? Planning.eveningPattern : Planning.somedayPattern) else { continue }
                 let source = title
                 for found in regex.matches(in: source, range: NSRange(source.startIndex..., in: source)).reversed() {
                     guard let range = Range(found.range, in: source), let target = Range(found.range, in: title) else { continue }
@@ -1135,7 +1135,7 @@ struct QuickEntry {
         }
         var reminderRows = ReminderSpec.rows(task)
         let reminderSeed = reminderRows.map { $0.object["id"]?.text ?? "" }.joined(separator: "|")
-        if let regex = try? NSRegularExpression(pattern: QuickReminderText.pattern, options: .caseInsensitive) {
+        if let regex = QuickPatternCache.caseInsensitive(QuickReminderText.pattern) {
             let input = title
             let matches = regex.matches(in: input, range: NSRange(input.startIndex..., in: input))
             var seen = Set<String>()
@@ -1170,7 +1170,7 @@ struct QuickEntry {
             if !acceptedReminders.isEmpty { updates["reminder_specs"] = .array(reminderRows) }
         }
         func match(_ pattern: String) -> [String]? {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+            guard let regex = QuickPatternCache.caseInsensitive(pattern),
                   let m = regex.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)) else { return nil }
             return (0..<m.numberOfRanges).map { Range(m.range(at: $0), in: title).map { String(title[$0]) } ?? "" }
         }
@@ -1202,9 +1202,9 @@ struct QuickEntry {
             if (1...10080).contains(minutes) { updates["duration_minutes"] = .number(Double(minutes)); take("duration_minutes", m[0], "\(minutes) min") }
         }
         if enabled("priority"), let m = match(#"\b(?:p|priority\s*)([1-4])\b"#) { updates["priority"] = .number(Double(m[1]) ?? 4); take("priority", m[0], "P" + m[1]) }
-        if let regex = try? NSRegularExpression(pattern: QuickPlannedClockText.pattern, options: .caseInsensitive) {
+        if let regex = QuickPatternCache.caseInsensitive(QuickPlannedClockText.pattern) {
             let source = title, clocks = regex.matches(in: title, range: NSRange(title.startIndex..., in: title))
-            let relative = (try? NSRegularExpression(pattern: #"\bin\s+\d+\s+(?:hours?|minutes?)\b"#, options: .caseInsensitive))?.matches(in: title, range: NSRange(title.startIndex..., in: title)) ?? []
+            let relative = (QuickPatternCache.caseInsensitive(#"\bin\s+\d+\s+(?:hours?|minutes?)\b"#))?.matches(in: title, range: NSRange(title.startIndex..., in: title)) ?? []
             let clockCount = (enabled("due_time") ? clocks.count : 0) + (enabled("due_date") ? relative.count : 0)
             let candidates = (clocks + (clockCount > 1 ? relative : [])).sorted { $0.range.location > $1.range.location }
             for candidate in candidates {
@@ -1227,7 +1227,7 @@ struct QuickEntry {
         }
         let weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
         var recurrenceCandidate: (QuickRecurrenceText.Parsed, String)?
-        if let regex = try? NSRegularExpression(pattern: QuickRecurrenceText.pattern, options: .caseInsensitive) {
+        if let regex = QuickPatternCache.caseInsensitive(QuickRecurrenceText.pattern) {
             let source = title
             let matches = regex.matches(in: source, range: NSRange(source.startIndex..., in: source))
             for found in matches.reversed() {
@@ -1434,7 +1434,7 @@ extension QuickEntry {
         let alternatives = cleaned.prefix(50).map { name in words(foldable ? fold(name) : name).map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: #"\s+"#) }.joined(separator: "|")
         // "at the gym" and "at my gym" find a place saved as "Gym".
         let pattern = #"(?<!\S)(?:(arrive|leave)(?:\s+at)?|(at))\s+(?:(?:the|my)\s+)?("# + alternatives + #")(?![\p{L}\p{N}_])"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
+        guard let regex = QuickPatternCache.caseInsensitive(pattern) else { return nil }
         let whole = NSRange(title.startIndex..., in: title)
         // Quoted text, escaped words and links stay literal.
         let literal = try? NSRegularExpression(pattern: #""[^"\n]*"|(?<!\S)(?:https?://|www\.)\S+|\\\S+"#)
@@ -1452,7 +1452,7 @@ extension QuickEntry {
     /// Returns the typed words and the name a new place would get ("Gym"). Nothing is stored.
     static func unknownPlace(in title: String, names: [String]) -> (raw: String, name: String)? {
         guard title.utf16.count < 2_000, place(in: title, names: names) == nil,
-              let regex = try? NSRegularExpression(pattern: #"(?<!\S)at\s+((?:(?:the|my)\s+)?\p{L}[\p{L}'’&-]*(?:\s+\p{L}[\p{L}'’&-]*)?)\s*$"#, options: .caseInsensitive),
+              let regex = QuickPatternCache.caseInsensitive(#"(?<!\S)at\s+((?:(?:the|my)\s+)?\p{L}[\p{L}'’&-]*(?:\s+\p{L}[\p{L}'’&-]*)?)\s*$"#),
               let match = regex.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)),
               let full = Range(match.range, in: title), let words = Range(match.range(at: 1), in: title),
               title[..<full.lowerBound].trimmingCharacters(in: .whitespaces).count > 0,
@@ -1483,7 +1483,7 @@ private struct QuickEntryReferences {
         // The first two alternatives skip escaped pieces and ordinary quoted literals. URLs,
         // email addresses, arithmetic and file paths are not reference-token boundaries.
         let pattern = #"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)|"[^"\n]*"|(?<!\S)([#/@%+])(?:(project|label|section|person):)?(?:"([^"\n]+)"|([\p{L}\p{N}_@.-]+))(?![\p{L}\p{N}_@./-])"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return }
+        guard let regex = QuickPatternCache.caseInsensitive(pattern) else { return }
         let matches = regex.matches(in: input, range: NSRange(input.startIndex..., in: input))
         var references: [Reference] = []
         for match in matches.reversed() {
@@ -3392,5 +3392,19 @@ enum LocalModeDefaults {
             return .some(snapshot)
         }
         if clear { defaults.set(false, forKey: key) }
+    }
+}
+
+/// Quick Add and the task editor parse the title on every render; compile each pattern once instead of each pass.
+enum QuickPatternCache {
+    private static let lock = NSLock()
+    private static var compiled: [String: NSRegularExpression] = [:]
+    static func caseInsensitive(_ pattern: String) -> NSRegularExpression? {
+        lock.lock(); defer { lock.unlock() }
+        if let hit = compiled[pattern] { return hit }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
+        if compiled.count >= 256 { compiled.removeAll() } // some patterns embed project and label names
+        compiled[pattern] = regex
+        return regex
     }
 }
