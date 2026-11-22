@@ -107,6 +107,14 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
         if previous?.boundary==boundary {quarantined=previous!.quarantined}
     }
     private enum CodingKeys:String,CodingKey {case boundary,knownTeams,knownTasks,quarantined}
+    /// Sets are written in a stable order: Swift seeds set iteration per process, so an unchanged cache would otherwise
+    /// be rewritten in a different order on every launch.
+    func encode(to encoder:Encoder) throws {
+        var c=encoder.container(keyedBy:CodingKeys.self)
+        try c.encode(boundary,forKey:.boundary);try c.encode(knownTeams,forKey:.knownTeams)
+        try c.encode(knownTasks.sorted(),forKey:.knownTasks)
+        try c.encode(quarantined.sorted{$0.uuidString<$1.uuidString},forKey:.quarantined)
+    }
     init(from decoder:Decoder) throws {
         let c=try decoder.container(keyedBy:CodingKeys.self)
         boundary=try c.decode(TeamWorkspaceBoundary.self,forKey:.boundary);knownTeams=try c.decode([String:String].self,forKey:.knownTeams)

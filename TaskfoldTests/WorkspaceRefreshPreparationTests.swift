@@ -45,6 +45,19 @@ final class WorkspaceRefreshPreparationTests: XCTestCase {
         }
         for changed in changes { XCTAssertNil(result.admitted(in: changed)) }
     }
+    func testTeamWorkspaceCacheEncodesKnownTasksInAStableOrder() throws {
+        let f = try fixture(), account = f["account"]!.text
+        let boundary = try TeamWorkspaceBoundary(f["active"]!.object, account: account, origin: "https://backend.example")
+        let tasks = (1...12).map { index -> Record in
+            var task = Record.task(user: account, project: f["project"]!.text)
+            task["id"] = .string(String(format: "ec240000-0000-4000-8000-%012d", 40 - index)); return task
+        }
+        let cache = try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: tasks)
+        let data = try JSONEncoder().encode(cache)
+        let known = try XCTUnwrap((JSONSerialization.jsonObject(with: data) as? [String: Any])?["knownTasks"] as? [String])
+        XCTAssertEqual(known, tasks.map(\.id).sorted(), "An unchanged cache is written byte-for-byte the same on every launch")
+        XCTAssertEqual(try JSONDecoder().decode(TeamWorkspaceCache.self, from: data), cache)
+    }
     func testTeamRefreshAndReviewKeepExistingAccessRules() throws {
         let f = try fixture(), account = f["account"]!.text
         let boundary = try TeamWorkspaceBoundary(f["active"]!.object, account: account, origin: "https://backend.example")
