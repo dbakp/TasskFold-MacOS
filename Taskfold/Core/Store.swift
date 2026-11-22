@@ -5316,7 +5316,11 @@ extension Store {
                 let privateProject = Record(["id": .string("ec240000-0000-4000-8000-000000000012"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private test project")])
                 var privateTask = Record.task(user: TeamEditorNativeFixture.account, project: privateProject.id)
                 privateTask["title"] = .string("Private test work"); privateTask["labels"] = .array([.string("Private project label")])
-                tasks = [row, privateTask]; projects.append(privateProject)
+                // Another task in the shared project carries "Review", which the shared labels sheet offers as a project suggestion.
+                var sibling = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
+                sibling["id"] = .string("ec240000-0000-4000-8000-000000000013"); sibling["title"] = .string("Keep the workshop notes")
+                sibling["labels"] = .array([.string("Review")])
+                tasks = [row, privateTask, sibling]; projects.append(privateProject)
             }
             if ProcessInfo.processInfo.arguments.contains("--team-reminder-testing") {
                 var local = ReminderSpec.relative(-5, id: "ec240000-0000-4000-8000-000000000021").raw
