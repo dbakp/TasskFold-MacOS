@@ -88,6 +88,8 @@ struct TeamTaskRecurrenceEditor: View {
         .frame(minWidth: 480, idealWidth: 540, minHeight: 420, idealHeight: 600)
         #endif
         .onAppear {
+            // A disappearance before any edit retires the session; if the sheet shows again, later edits need a new one.
+            if finished, !changed, session?.closed == true { finished = false; session = nil }
             guard available, session == nil else { return }
             do { session = try store.beginEditorSession(request.record) }
             catch { message = "Your repeat draft cannot be protected. Close and reopen this editor." }
